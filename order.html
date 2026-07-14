@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>委託板｜虛擬角色陪玩</title>
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+:root{
+  --night:#241B33; --night2:#2E2344;
+  --paper:#F4E9D4; --paper2:#EDDFC2;
+  --candle:#F2A65A; --candle-deep:#D9853B;
+  --lav:#A78BDB; --ink:#3B2F2F; --ink-soft:#7A6A5F;
+  --ok:#7FBF8E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--night);color:var(--paper);font-family:'Kiwi Maru','Noto Sans TC',sans-serif;min-height:100vh;
+  background-image:radial-gradient(circle at 20% 10%, rgba(167,139,219,.14), transparent 40%),radial-gradient(circle at 85% 30%, rgba(242,166,90,.10), transparent 45%)}
+.wrap{max-width:520px;margin:0 auto;padding:20px 16px 60px}
+header{text-align:center;padding:18px 0 6px}
+header .lantern{font-size:34px}
+header h1{font-size:22px;letter-spacing:4px;margin-top:6px}
+header p{font-size:12px;color:var(--lav);letter-spacing:2px;margin-top:4px}
+.tabs{display:flex;gap:8px;margin:18px 0 14px}
+.tabs button{flex:1;padding:10px;border-radius:14px;font-family:inherit;font-size:14px;cursor:pointer;
+  background:var(--night2);color:var(--lav);border:1px solid rgba(167,139,219,.35)}
+.tabs button.on{background:var(--candle);color:var(--ink);font-weight:700;border-color:var(--candle)}
+.card{background:var(--paper);color:var(--ink);border-radius:18px;padding:16px;margin-bottom:14px;
+  box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.card h2{font-size:14px;color:var(--candle-deep);letter-spacing:2px;margin-bottom:10px}
+.chars{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.char{border:2px solid var(--paper2);border-radius:14px;padding:12px 10px;text-align:center;cursor:pointer;background:#FBF4E4}
+.char .em{font-size:30px}
+.char .nm{font-weight:700;margin-top:4px}
+.char .tg{font-size:11px;color:var(--ink-soft);margin-top:2px}
+.char.sel{border-color:var(--candle);background:#FFF3DF;box-shadow:0 0 0 3px rgba(242,166,90,.3)}
+.char.off{opacity:.4;pointer-events:none}
+.char .st{font-size:10px;margin-top:6px;display:inline-block;padding:2px 8px;border-radius:20px;background:var(--ok);color:#fff}
+.char.off .st{background:#B7AA9B}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{padding:9px 14px;border-radius:20px;border:2px solid var(--paper2);background:#FBF4E4;cursor:pointer;font-size:13px}
+.pill small{display:block;font-size:11px;color:var(--ink-soft)}
+.pill.sel{border-color:var(--lav);background:#F1EAFB}
+.qty{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:6px}
+.qty button{width:42px;height:42px;border-radius:50%;border:none;background:var(--lav);color:#fff;font-size:20px;cursor:pointer}
+.qty span{font-size:22px;font-weight:700;min-width:70px;text-align:center}
+.total{display:flex;justify-content:space-between;align-items:center;background:#FFF3DF;border:2px dashed var(--candle);border-radius:14px;padding:12px 14px;margin-top:12px}
+.total b{font-size:24px;color:var(--candle-deep)}
+input,textarea{width:100%;padding:11px 12px;border:2px solid var(--paper2);border-radius:12px;font-family:inherit;font-size:14px;background:#FBF4E4;color:var(--ink);margin-top:8px}
+input:focus,textarea:focus{outline:none;border-color:var(--lav)}
+label{font-size:12px;color:var(--ink-soft);display:block;margin-top:10px}
+.btn{width:100%;padding:14px;border:none;border-radius:16px;background:var(--candle);color:var(--ink);font-family:inherit;font-size:16px;font-weight:700;letter-spacing:3px;cursor:pointer;margin-top:6px;box-shadow:0 4px 0 var(--candle-deep)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--candle-deep)}
+.btn:disabled{opacity:.5;box-shadow:none}
+.done{text-align:center;padding:26px 16px}
+.done .em{font-size:44px}
+.done .no{font-size:22px;font-weight:700;color:var(--candle-deep);letter-spacing:2px;margin:10px 0}
+.done p{font-size:13px;color:var(--ink-soft);line-height:1.7}
+.order{border:2px solid var(--paper2);border-radius:14px;padding:12px;margin-bottom:10px;background:#FBF4E4;font-size:13px}
+.order .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.order .no{font-weight:700;letter-spacing:1px}
+.stamp{font-size:11px;padding:3px 10px;border-radius:20px;border:2px dashed;font-weight:700}
+.s-pending{color:#B08A2E;border-color:#B08A2E;background:#FFF6DC}
+.s-accepted{color:#5B8DBE;border-color:#5B8DBE;background:#E7F1FB}
+.s-declined{color:#B06A6A;border-color:#B06A6A;background:#FBEAEA}
+.s-done{color:#6A9E78;border-color:#6A9E78;background:#EAF7EE}
+.s-verified{color:#8A6ACB;border-color:#8A6ACB;background:#F0EAFB}
+.order .meta{color:var(--ink-soft);font-size:12px;line-height:1.7}
+.empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:24px 0}
+.hint{font-size:11px;color:var(--lav);text-align:center;margin-top:6px;line-height:1.7}
+#pgQuery,#pgDone{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="lantern">🏮</div>
+    <h1>酒館委託板</h1>
+    <p>VIRTUAL COMPANION · 張貼你的委託</p>
+  </header>
+
+  <div class="tabs">
+    <button id="tabNew" class="on" onclick="showTab('new')">✍️ 我要下單</button>
+    <button id="tabQuery" onclick="showTab('query')">📜 我的委託</button>
+  </div>
+
+  <!-- 下單 -->
+  <div id="pgNew">
+    <div class="card">
+      <h2>① 選擇角色</h2>
+      <div class="chars" id="charList"><div class="empty">召喚角色中…</div></div>
+    </div>
+    <div class="card">
+      <h2>② 選擇委託內容</h2>
+      <div class="pills" id="svcList"><div class="empty">翻開價目表中…</div></div>
+      <div class="qty" id="qtyBox" style="display:none">
+        <button onclick="chQty(-1)">−</button>
+        <span id="qtyVal">1</span>
+        <button onclick="chQty(1)">＋</button>
+      </div>
+      <div class="total"><span>委託報酬</span><b id="totalVal">NT$ 0</b></div>
+    </div>
+    <div class="card">
+      <h2>③ 冒險者資料</h2>
+      <label>你的暱稱</label>
+      <input id="bossName" placeholder="怎麼稱呼你？">
+      <label>Discord / LINE ID（查詢委託用）</label>
+      <input id="bossContact" placeholder="例：boss#1234">
+      <label>轉帳帳號後五碼（對帳用）</label>
+      <input id="last5" placeholder="例：12345" maxlength="5" inputmode="numeric">
+      <label>備註（想玩的模式、時間等，選填）</label>
+      <textarea id="note" rows="2" placeholder="例：今晚 9 點，想排位上分"></textarea>
+    </div>
+    <button class="btn" id="submitBtn" onclick="submitOrder()">張貼委託 ✦</button>
+    <p class="hint">送出後角色會盡快確認接單，可隨時到「我的委託」查看狀態。<br>金流全程可查詢——這是我們對你的承諾。</p>
+  </div>
+
+  <!-- 送出成功 -->
+  <div id="pgDone">
+    <div class="card done">
+      <div class="em">🕯️</div>
+      <div>委託已張貼！</div>
+      <div class="no" id="doneNo"></div>
+      <p>角色接單後狀態會更新為「已接單」。<br>用你填的 ID 到「我的委託」隨時查詢。</p>
+      <button class="btn" onclick="location.reload()">再張貼一張委託</button>
+    </div>
+  </div>
+
+  <!-- 查詢 -->
+  <div id="pgQuery">
+    <div class="card">
+      <h2>查詢我的委託</h2>
+      <input id="qContact" placeholder="輸入下單時填的 Discord / LINE ID">
+      <button class="btn" onclick="queryOrders()">召喚我的委託 🔍</button>
+    </div>
+    <div id="qResult"></div>
+  </div>
+</div>
+
+<script>
+/* ====== 貼上你的 Firebase 設定（三個頁面用同一份）====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",
+  authDomain: "my-shop-0520.firebaseapp.com",
+  databaseURL: "https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-shop-0520",
+  storageBucket: "my-shop-0520.firebasestorage.app",
+  messagingSenderId: "430482271005",
+  appId: "1:430482271005:web:967059c91a9b7970bdcff4",
+  measurementId: "G-NN7HQ5W8T1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ROOT = "peiwan";
+
+const STATUS = {pending:"待接單",accepted:"已接單",declined:"已婉拒",done:"已完成",verified:"已對帳",settled:"已結算"};
+let chars={}, svcs={}, selChar=null, selSvc=null, qty=1;
+
+function showTab(t){
+  pgNew.style.display = t==='new'?'block':'none';
+  pgQuery.style.display = t==='query'?'block':'none';
+  pgDone.style.display='none';
+  tabNew.classList.toggle('on',t==='new');
+  tabQuery.classList.toggle('on',t==='query');
+}
+
+db.ref(ROOT+"/characters").on("value",s=>{
+  chars=s.val()||{};
+  const list=Object.entries(chars).filter(([,c])=>c.active);
+  charList.innerHTML = list.length? list.map(([id,c])=>`
+    <div class="char ${c.available?'':'off'}" onclick="pickChar('${id}',this)">
+      <div class="em">${c.emoji||'✨'}</div>
+      <div class="nm">${c.name}</div>
+      <div class="tg">${c.tagline||''}</div>
+      <div class="st">${c.available?'可接單':'休息中'}</div>
+    </div>`).join('') : '<div class="empty">角色們還在準備中</div>';
+});
+db.ref(ROOT+"/config/services").on("value",s=>{
+  svcs=s.val()||{};
+  const list=Object.entries(svcs).filter(([,v])=>v.active).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
+  svcList.innerHTML = list.length? list.map(([id,v])=>`
+    <div class="pill" onclick="pickSvc('${id}',this)">${v.name}
+      <small>NT$${v.price}${v.mode==='package'?'／套餐':'／'+(v.unitLabel||(v.mode==='hour'?'小時':'局'))}</small>
+    </div>`).join('') : '<div class="empty">價目表尚未建立</div>';
+});
+
+function pickChar(id,el){ if(!chars[id]||!chars[id].available)return; selChar=id;
+  document.querySelectorAll('.char').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel'); }
+function pickSvc(id,el){ selSvc=id; qty=1; qtyVal.textContent=1;
+  document.querySelectorAll('.pill').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+  qtyBox.style.display = svcs[id].mode==='package'?'none':'flex';
+  calc(); }
+function chQty(d){ qty=Math.min(12,Math.max(1,qty+d)); qtyVal.textContent=qty; calc(); }
+function calc(){ if(!selSvc){totalVal.textContent='NT$ 0';return 0;}
+  const v=svcs[selSvc];
+  const amt = v.mode==='package'? v.price : v.price*qty;
+  totalVal.textContent='NT$ '+amt.toLocaleString(); return amt; }
+
+function submitOrder(){
+  const name=bossName.value.trim(), contact=bossContact.value.trim(), l5=last5.value.trim();
+  if(!selChar) return alert("先選一位角色喔");
+  if(!selSvc) return alert("選一個委託內容吧");
+  if(!name||!contact) return alert("暱稱和聯絡 ID 都要填，才能幫你對上委託");
+  if(!/^\d{5}$/.test(l5)) return alert("後五碼要填 5 位數字，對帳才對得起來");
+  const v=svcs[selSvc], amt=calc();
+  const now=new Date();
+  const no=`${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
+  submitBtn.disabled=true;
+  db.ref(ROOT+"/orders").push({
+    no, cid:selChar, charName:chars[selChar].name,
+    sid:selSvc, serviceName:v.name, mode:v.mode,
+    qty: v.mode==='package'?1:qty, amount:amt,
+    boss:{name,contact}, last5:l5, note:note.value.trim(),
+    status:"pending", createdAt:firebase.database.ServerValue.TIMESTAMP,
+    month:`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+  }).then(()=>{
+    pgNew.style.display='none'; pgDone.style.display='block';
+    doneNo.textContent="委託編號 "+no;
+  }).catch(e=>{alert("張貼失敗："+e.message);submitBtn.disabled=false;});
+}
+
+function queryOrders(){
+  const c=qContact.value.trim();
+  if(!c) return alert("輸入下單時填的 ID");
+  qResult.innerHTML='<div class="card"><div class="empty">翻找中…</div></div>';
+  db.ref(ROOT+"/orders").limitToLast(300).once("value",s=>{
+    const all=s.val()||{};
+    const mine=Object.values(all).filter(o=>o.boss&&o.boss.contact===c).sort((a,b)=>b.createdAt-a.createdAt);
+    qResult.innerHTML = mine.length? '<div class="card">'+mine.map(o=>`
+      <div class="order">
+        <div class="top"><span class="no">📜 ${o.no}</span>
+          <span class="stamp s-${o.status==='settled'?'verified':o.status}">${STATUS[o.status]||o.status}</span></div>
+        <div class="meta">${o.charName}｜${o.serviceName}${o.mode==='package'?'':' × '+o.qty}｜NT$${o.amount.toLocaleString()}<br>
+        ${new Date(o.createdAt).toLocaleString('zh-TW')}</div>
+      </div>`).join('')+'</div>'
+    : '<div class="card"><div class="empty">找不到這個 ID 的委託，確認一下有沒有打錯？</div></div>';
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色手札｜虛擬角色陪玩</title>
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+:root{
+  --night:#241B33; --night2:#2E2344;
+  --paper:#F4E9D4; --paper2:#EDDFC2;
+  --candle:#F2A65A; --candle-deep:#D9853B;
+  --lav:#A78BDB; --ink:#3B2F2F; --ink-soft:#7A6A5F;
+  --ok:#7FBF8E; --ok-deep:#5E9C6E; --warn:#E08A8A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--night);color:var(--paper);font-family:'Kiwi Maru','Noto Sans TC',sans-serif;min-height:100vh;
+  background-image:radial-gradient(circle at 20% 10%, rgba(167,139,219,.14), transparent 40%),radial-gradient(circle at 85% 30%, rgba(242,166,90,.10), transparent 45%)}
+.wrap{max-width:520px;margin:0 auto;padding:20px 16px 60px}
+header{text-align:center;padding:14px 0 4px}
+header h1{font-size:20px;letter-spacing:4px}
+header p{font-size:12px;color:var(--lav);letter-spacing:2px;margin-top:4px}
+.card{background:var(--paper);color:var(--ink);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.card h2{font-size:14px;color:var(--candle-deep);letter-spacing:2px;margin-bottom:10px}
+input{width:100%;padding:12px;border:2px solid var(--paper2);border-radius:12px;font-family:inherit;font-size:16px;background:#FBF4E4;color:var(--ink);text-align:center;letter-spacing:6px}
+input:focus{outline:none;border-color:var(--lav)}
+.btn{width:100%;padding:14px;border:none;border-radius:16px;background:var(--candle);color:var(--ink);font-family:inherit;font-size:16px;font-weight:700;letter-spacing:3px;cursor:pointer;margin-top:12px;box-shadow:0 4px 0 var(--candle-deep)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--candle-deep)}
+.me{display:flex;align-items:center;gap:12px}
+.me .em{font-size:38px}
+.me .nm{font-weight:700;font-size:18px}
+.me .tg{font-size:12px;color:var(--ink-soft)}
+.toggle{margin-left:auto;text-align:center;cursor:pointer;user-select:none}
+.toggle .sw{width:58px;height:30px;border-radius:20px;background:#C9BBA6;position:relative;transition:.2s}
+.toggle .sw::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on .sw{background:var(--ok)}
+.toggle.on .sw::after{left:31px}
+.toggle .lb{font-size:11px;margin-top:4px;color:var(--ink-soft)}
+.tabs{display:flex;gap:8px;margin:4px 0 14px}
+.tabs button{flex:1;padding:10px 4px;border-radius:14px;font-family:inherit;font-size:13px;cursor:pointer;background:var(--night2);color:var(--lav);border:1px solid rgba(167,139,219,.35)}
+.tabs button.on{background:var(--candle);color:var(--ink);font-weight:700;border-color:var(--candle)}
+.order{border:2px solid var(--paper2);border-radius:14px;padding:12px;margin-bottom:10px;background:#FBF4E4;font-size:13px}
+.order .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.order .no{font-weight:700;letter-spacing:1px}
+.order .amt{color:var(--candle-deep);font-weight:700}
+.order .meta{color:var(--ink-soft);font-size:12px;line-height:1.8}
+.order .note{background:#F1EAFB;border-radius:8px;padding:6px 10px;margin-top:6px;font-size:12px;color:#5A4A7A}
+.row{display:flex;gap:8px;margin-top:10px}
+.row button{flex:1;padding:10px;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.b-ok{background:var(--ok);color:#fff;box-shadow:0 3px 0 var(--ok-deep)}
+.b-no{background:#EFE5D0;color:var(--ink-soft)}
+.b-done{background:var(--lav);color:#fff;box-shadow:0 3px 0 #8A6ACB}
+.empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:24px 0}
+.stat{display:flex;gap:10px;text-align:center;margin-bottom:12px}
+.stat div{flex:1;background:#FFF3DF;border:2px dashed var(--candle);border-radius:14px;padding:10px 4px}
+.stat b{display:block;font-size:20px;color:var(--candle-deep)}
+.stat span{font-size:11px;color:var(--ink-soft)}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;border:2px dashed;font-weight:700}
+.s-done{color:#6A9E78;border-color:#6A9E78;background:#EAF7EE}
+.s-verified{color:#8A6ACB;border-color:#8A6ACB;background:#F0EAFB}
+.s-settled{color:#B08A2E;border-color:#B08A2E;background:#FFF6DC}
+.hint{font-size:11px;color:var(--lav);text-align:center;margin-top:6px;line-height:1.7}
+.logout{background:none;border:none;color:var(--lav);font-family:inherit;font-size:12px;cursor:pointer;text-decoration:underline;display:block;margin:0 auto}
+#pgMain{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🕯️ 角色手札</h1>
+    <p>PARTNER · 你的委託都在這</p>
+  </header>
+
+  <!-- 登入 -->
+  <div id="pgLogin">
+    <div class="card">
+      <h2>輸入你的角色 PIN 碼</h2>
+      <input id="pinInput" maxlength="6" inputmode="numeric" placeholder="••••">
+      <button class="btn" onclick="login()">開啟手札 ✦</button>
+      <p class="hint" style="color:var(--ink-soft)">PIN 碼由經理發給你，忘記就去敲經理</p>
+    </div>
+  </div>
+
+  <!-- 主頁 -->
+  <div id="pgMain">
+    <div class="card">
+      <div class="me">
+        <div class="em" id="meEmoji">✨</div>
+        <div><div class="nm" id="meName"></div><div class="tg" id="meTag"></div></div>
+        <div class="toggle" id="availToggle" onclick="toggleAvail()">
+          <div class="sw"></div><div class="lb" id="availLb">休息中</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button id="tb0" class="on" onclick="showTab(0)">🔔 新委託<span id="cntNew"></span></button>
+      <button id="tb1" onclick="showTab(1)">⚔️ 進行中<span id="cntRun"></span></button>
+      <button id="tb2" onclick="showTab(2)">📖 本月紀錄</button>
+    </div>
+
+    <div id="tab0"></div>
+    <div id="tab1" style="display:none"></div>
+    <div id="tab2" style="display:none"></div>
+
+    <button class="logout" onclick="logout()">登出手札</button>
+  </div>
+</div>
+
+<script>
+/* ====== 貼上你的 Firebase 設定（三個頁面用同一份）====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",
+  authDomain: "my-shop-0520.firebaseapp.com",
+  databaseURL: "https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-shop-0520",
+  storageBucket: "my-shop-0520.firebasestorage.app",
+  messagingSenderId: "430482271005",
+  appId: "1:430482271005:web:967059c91a9b7970bdcff4",
+  measurementId: "G-NN7HQ5W8T1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ROOT = "peiwan";
+
+let cid = sessionStorage.getItem("peiwan_cid") || null;
+let me = null, orders = {}, curTab = 0;
+
+function login(){
+  const pin = pinInput.value.trim();
+  if(!pin) return alert("輸入 PIN 碼");
+  db.ref(ROOT+"/characters").once("value", s=>{
+    const chars = s.val()||{};
+    const hit = Object.entries(chars).find(([,c])=>String(c.pin)===pin && c.active);
+    if(!hit) return alert("PIN 碼不對，或角色未啟用。再試一次或問經理");
+    cid = hit[0];
+    sessionStorage.setItem("peiwan_cid", cid);
+    boot();
+  });
+}
+function logout(){ sessionStorage.removeItem("peiwan_cid"); location.reload(); }
+
+function boot(){
+  pgLogin.style.display="none"; pgMain.style.display="block";
+  db.ref(ROOT+"/characters/"+cid).on("value", s=>{
+    me = s.val();
+    if(!me){ logout(); return; }
+    meEmoji.textContent = me.emoji||"✨";
+    meName.textContent = me.name;
+    meTag.textContent = me.tagline||"";
+    availToggle.classList.toggle("on", !!me.available);
+    availLb.textContent = me.available? "可接單" : "休息中";
+  });
+  db.ref(ROOT+"/orders").limitToLast(500).on("value", s=>{
+    orders = s.val()||{};
+    render();
+  });
+}
+function toggleAvail(){
+  db.ref(ROOT+"/characters/"+cid+"/available").set(!me.available);
+}
+
+function showTab(i){
+  curTab = i;
+  for(let k=0;k<3;k++){
+    document.getElementById("tab"+k).style.display = k===i?"block":"none";
+    document.getElementById("tb"+k).classList.toggle("on", k===i);
+  }
+}
+
+function mine(status){
+  return Object.entries(orders)
+    .filter(([,o])=>o.cid===cid && status.includes(o.status))
+    .sort((a,b)=>b[1].createdAt-a[1].createdAt);
+}
+function fmt(t){ return t? new Date(t).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}) : ""; }
+
+function render(){
+  /* 新委託 */
+  const news = mine(["pending"]);
+  cntNew.textContent = news.length? ` ${news.length}` : "";
+  tab0.innerHTML = news.length? '<div class="card">'+news.map(([id,o])=>`
+    <div class="order">
+      <div class="top"><span class="no">📜 ${o.no}</span><span class="amt">NT$${o.amount.toLocaleString()}</span></div>
+      <div class="meta">${o.serviceName}${o.mode==='package'?'':' × '+o.qty}｜老板：${o.boss.name}（${o.boss.contact}）<br>${fmt(o.createdAt)} 張貼</div>
+      ${o.note? `<div class="note">💬 ${o.note}</div>`:""}
+      <div class="row">
+        <button class="b-no" onclick="setStatus('${id}','declined')">無法接</button>
+        <button class="b-ok" onclick="setStatus('${id}','accepted')">接下委託 ✦</button>
+      </div>
+    </div>`).join('')+'</div>'
+  : '<div class="card"><div class="empty">目前沒有新委託，泡杯茶等等吧 🍵</div></div>';
+
+  /* 進行中 */
+  const run = mine(["accepted"]);
+  cntRun.textContent = run.length? ` ${run.length}` : "";
+  tab1.innerHTML = run.length? '<div class="card">'+run.map(([id,o])=>`
+    <div class="order">
+      <div class="top"><span class="no">📜 ${o.no}</span><span class="amt">NT$${o.amount.toLocaleString()}</span></div>
+      <div class="meta">${o.serviceName}${o.mode==='package'?'':' × '+o.qty}｜老板：${o.boss.name}（${o.boss.contact}）</div>
+      ${o.note? `<div class="note">💬 ${o.note}</div>`:""}
+      <div class="row"><button class="b-done" onclick="finish('${id}')">委託完成 ✔</button></div>
+    </div>`).join('')+'</div>'
+  : '<div class="card"><div class="empty">沒有進行中的委託</div></div>';
+
+  /* 本月紀錄 */
+  const now = new Date();
+  const m = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const hist = mine(["done","verified","settled"]).filter(([,o])=>o.month===m);
+  const total = hist.reduce((a,[,o])=>a+o.amount,0);
+  const share = me && me.share!=null ? me.share : 70;
+  const STATUS = {done:"已完成",verified:"已對帳",settled:"已結算"};
+  tab2.innerHTML = `
+    <div class="card">
+      <div class="stat">
+        <div><b>${hist.length}</b><span>本月委託</span></div>
+        <div><b>${total.toLocaleString()}</b><span>委託總額</span></div>
+        <div><b>${Math.round(total*share/100).toLocaleString()}</b><span>預估分潤（${share}%）</span></div>
+      </div>
+      ${hist.length? hist.map(([,o])=>`
+        <div class="order">
+          <div class="top"><span class="no">📜 ${o.no}</span><span class="badge s-${o.status}">${STATUS[o.status]}</span></div>
+          <div class="meta">${o.serviceName}${o.mode==='package'?'':' × '+o.qty}｜NT$${o.amount.toLocaleString()}｜${fmt(o.doneAt||o.createdAt)}</div>
+        </div>`).join('') : '<div class="empty">這個月還沒有完成的委託</div>'}
+      <p class="hint" style="color:var(--ink-soft)">「已對帳」代表經理已核對老板款項，月底照這裡結算——帳目對你全透明。</p>
+    </div>`;
+}
+
+function setStatus(id, st){
+  const upd = {status:st};
+  if(st==="accepted") upd.acceptedAt = firebase.database.ServerValue.TIMESTAMP;
+  db.ref(ROOT+"/orders/"+id).update(upd);
+}
+function finish(id){
+  if(!confirm("確認這筆委託已經完成？")) return;
+  db.ref(ROOT+"/orders/"+id).update({status:"done", doneAt:firebase.database.ServerValue.TIMESTAMP});
+}
+
+if(cid) boot();
+</script>
+</body>
+</html>
