@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客服派單台｜虛擬角色陪玩</title>
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+:root{
+  --night:#241B33; --night2:#2E2344;
+  --paper:#F4E9D4; --paper2:#EDDFC2;
+  --candle:#F2A65A; --candle-deep:#D9853B;
+  --lav:#A78BDB; --ink:#3B2F2F; --ink-soft:#7A6A5F;
+  --ok:#7FBF8E; --ok-deep:#5E9C6E; --warn:#E08A8A; --warn-deep:#C56A6A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--night);color:var(--paper);font-family:'Kiwi Maru','Noto Sans TC',sans-serif;min-height:100vh;
+  background-image:radial-gradient(circle at 20% 10%, rgba(167,139,219,.14), transparent 40%),radial-gradient(circle at 85% 30%, rgba(242,166,90,.10), transparent 45%)}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+header{text-align:center;padding:14px 0 4px}
+header h1{font-size:20px;letter-spacing:4px}
+header p{font-size:12px;color:var(--lav);letter-spacing:2px;margin-top:4px}
+.card{background:var(--paper);color:var(--ink);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.card h2{font-size:14px;color:var(--candle-deep);letter-spacing:2px;margin-bottom:10px}
+input,select,textarea{width:100%;padding:11px 12px;border:2px solid var(--paper2);border-radius:12px;font-family:inherit;font-size:14px;background:#FBF4E4;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--lav)}
+label{font-size:12px;color:var(--ink-soft);display:block;margin:10px 0 2px}
+.loginBox{max-width:420px;margin:0 auto}
+.loginBox input{text-align:center;letter-spacing:6px;font-size:16px}
+.btn{width:100%;padding:14px;border:none;border-radius:16px;background:var(--candle);color:var(--ink);font-family:inherit;font-size:16px;font-weight:700;letter-spacing:3px;cursor:pointer;margin-top:12px;box-shadow:0 4px 0 var(--candle-deep)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--candle-deep)}
+.btn:disabled{opacity:.5;box-shadow:none}
+.btn.sm{width:auto;padding:7px 12px;font-size:12px;border-radius:10px;margin:0}
+.btn.ok{background:var(--ok);color:#fff;box-shadow:0 3px 0 var(--ok-deep)}
+.btn.warn{background:var(--warn);color:#fff;box-shadow:0 3px 0 var(--warn-deep)}
+.btn.ghost{background:#EFE5D0;color:var(--ink-soft);box-shadow:none}
+.me{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.me .nm{font-weight:700;font-size:16px}
+.me .logout{margin-left:auto;background:none;border:none;color:var(--lav);font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit}
+.chars{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px}
+.char{border:2px solid var(--paper2);border-radius:12px;padding:8px 4px;text-align:center;cursor:pointer;background:#FBF4E4;font-size:13px}
+.char .em{font-size:22px}
+.char.sel{border-color:var(--candle);background:#FFF3DF;box-shadow:0 0 0 3px rgba(242,166,90,.3)}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pill{padding:8px 12px;border-radius:20px;border:2px solid var(--paper2);background:#FBF4E4;cursor:pointer;font-size:13px}
+.pill small{display:block;font-size:11px;color:var(--ink-soft)}
+.pill.sel{border-color:var(--lav);background:#F1EAFB}
+.qty{display:flex;align-items:center;gap:14px;margin-top:8px}
+.qty button{width:38px;height:38px;border-radius:50%;border:none;background:var(--lav);color:#fff;font-size:18px;cursor:pointer}
+.qty span{font-size:20px;font-weight:700;min-width:50px;text-align:center}
+.total{display:flex;justify-content:space-between;align-items:center;background:#FFF3DF;border:2px dashed var(--candle);border-radius:14px;padding:11px 14px;margin-top:12px}
+.total b{font-size:22px;color:var(--candle-deep)}
+.tabs{display:flex;gap:8px;margin:4px 0 14px}
+.tabs button{flex:1;padding:10px;border-radius:14px;font-family:inherit;font-size:14px;cursor:pointer;background:var(--night2);color:var(--lav);border:1px solid rgba(167,139,219,.35)}
+.tabs button.on{background:var(--candle);color:var(--ink);font-weight:700;border-color:var(--candle)}
+.filters{display:flex;gap:8px;margin-bottom:10px}
+.filters select{flex:1}
+.order{border:2px solid var(--paper2);border-radius:14px;padding:12px;margin-bottom:10px;background:#FBF4E4;font-size:13px}
+.order.unpaid{border-color:var(--warn);background:#FCEEEE}
+.order .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.order .no{font-weight:700;letter-spacing:1px}
+.order .amt{color:var(--candle-deep);font-weight:700}
+.order .meta{color:var(--ink-soft);font-size:12px;line-height:1.8}
+.order .actions{display:flex;gap:8px;margin-top:8px;align-items:center}
+.pay{font-size:11px;padding:3px 10px;border-radius:20px;border:2px dashed;font-weight:700}
+.pay.no{color:var(--warn-deep);border-color:var(--warn-deep);background:#FCEAEA}
+.pay.yes{color:var(--ok-deep);border-color:var(--ok-deep);background:#EAF7EE}
+.prog{font-size:11px;padding:3px 10px;border-radius:20px;background:#EDE3F5;color:#6A55A0}
+.empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:24px 0}
+.stat{display:flex;gap:10px;text-align:center;margin-bottom:12px}
+.stat div{flex:1;background:#FFF3DF;border:2px dashed var(--candle);border-radius:14px;padding:10px 4px}
+.stat b{display:block;font-size:20px;color:var(--candle-deep)}
+.stat span{font-size:11px;color:var(--ink-soft)}
+.hint{font-size:11px;color:var(--ink-soft);margin-top:8px;line-height:1.7}
+#pgMain{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📮 客服派單台</h1>
+    <p>KEFU · 派單 · 收款 · 建單</p>
+  </header>
+
+  <!-- 登入 -->
+  <div id="pgLogin" class="loginBox">
+    <div class="card">
+      <h2>輸入你的客服 PIN 碼</h2>
+      <input id="kefuPin" maxlength="6" inputmode="numeric" placeholder="••••">
+      <button class="btn" onclick="login()">開始上工 ✦</button>
+      <p class="hint">PIN 由老闆在後台建立。忘記就問老闆。</p>
+    </div>
+  </div>
+
+  <!-- 主頁 -->
+  <div id="pgMain">
+    <div class="card">
+      <div class="me">
+        <span class="nm" id="meName"></span>
+        <button class="logout" onclick="logout()">登出</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button id="tb0" class="on" onclick="showTab(0)">✍️ 派單建立</button>
+      <button id="tb1" onclick="showTab(1)">📋 單子管理<span id="cntUnpaid"></span></button>
+    </div>
+
+    <!-- 建單 -->
+    <div id="tab0">
+      <div class="card">
+        <h2>① 派給哪位陪玩</h2>
+        <div class="chars" id="charList"><div class="empty">載入角色中…</div></div>
+      </div>
+      <div class="card">
+        <h2>② 服務內容</h2>
+        <div class="pills" id="svcList"><div class="empty">載入價目表中…</div></div>
+        <div class="qty" id="qtyBox" style="display:none">
+          <button onclick="chQty(-1)">−</button><span id="qtyVal">1</span><button onclick="chQty(1)">＋</button>
+          <span style="font-size:12px;color:var(--ink-soft)" id="qtyUnit"></span>
+        </div>
+        <div class="total"><span>金額</span><b id="totalVal">NT$ 0</b></div>
+      </div>
+      <div class="card">
+        <h2>③ 客人與備註</h2>
+        <label>客人代號（DC 暱稱 / ID）</label>
+        <input id="custName" placeholder="例：阿明#1234">
+        <label>備註（選填）</label>
+        <textarea id="note" rows="2" placeholder="例：今晚 9 點、想上鑽石"></textarea>
+        <label>付款狀態</label>
+        <select id="paidSel">
+          <option value="false">尚未付款（之後收到再改）</option>
+          <option value="true">已付款（現在就收到了）</option>
+        </select>
+      </div>
+      <button class="btn" id="submitBtn" onclick="submitOrder()">建立這筆單 ✦</button>
+      <p class="hint" style="text-align:center">建單＝這筆已派給陪玩。付款可先掛「未付款」，收到錢後到「單子管理」一鍵改「已付款」。</p>
+    </div>
+
+    <!-- 單子管理 -->
+    <div id="tab1" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+/* ====== 貼上你的 Firebase 設定（三個頁面用同一份）====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",
+  authDomain: "my-shop-0520.firebaseapp.com",
+  databaseURL: "https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-shop-0520",
+  storageBucket: "my-shop-0520.firebasestorage.app",
+  messagingSenderId: "430482271005",
+  appId: "1:430482271005:web:967059c91a9b7970bdcff4",
+  measurementId: "G-NN7HQ5W8T1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ROOT = "peiwan";
+const PROG = {pending:"待陪玩核對",confirmed:"陪玩已確認",settled:"已結算"};
+
+let kefu=null, kefuId=null, chars={}, svcs={}, orders={};
+let selChar=null, selSvc=null, qty=1, curTab=0, fPaid="", fChar="";
+
+kefuId = sessionStorage.getItem("peiwan_kefu") || null;
+
+function login(){
+  const pin=kefuPin.value.trim();
+  if(!pin) return alert("輸入 PIN");
+  db.ref(ROOT+"/staff").once("value",s=>{
+    const staff=s.val()||{};
+    const hit=Object.entries(staff).find(([,k])=>String(k.pin)===pin && k.active!==false);
+    if(!hit) return alert("PIN 不對，或帳號未啟用。問老闆。");
+    kefuId=hit[0]; sessionStorage.setItem("peiwan_kefu",kefuId); boot();
+  });
+}
+function logout(){ sessionStorage.removeItem("peiwan_kefu"); location.reload(); }
+
+function boot(){
+  pgLogin.style.display="none"; pgMain.style.display="block";
+  db.ref(ROOT+"/staff/"+kefuId).on("value",s=>{
+    kefu=s.val(); if(!kefu){logout();return;}
+    meName.textContent="👤 "+kefu.name;
+  });
+  db.ref(ROOT+"/characters").on("value",s=>{chars=s.val()||{};renderChars();});
+  db.ref(ROOT+"/config/services").on("value",s=>{svcs=s.val()||{};renderSvcs();});
+  db.ref(ROOT+"/orders").limitToLast(500).on("value",s=>{orders=s.val()||{};renderManage();});
+}
+function showTab(i){curTab=i;
+  tab0.style.display=i===0?"block":"none"; tab1.style.display=i===1?"block":"none";
+  tb0.classList.toggle("on",i===0); tb1.classList.toggle("on",i===1);
+}
+
+/* 選陪玩 */
+function renderChars(){
+  const list=Object.entries(chars).filter(([,c])=>c.active);
+  charList.innerHTML = list.length? list.map(([id,c])=>`
+    <div class="char ${selChar===id?'sel':''}" onclick="pickChar('${id}',this)">
+      <div class="em">${c.emoji||'✨'}</div><div>${c.name}</div></div>`).join('')
+    : '<div class="empty">後台還沒建角色</div>';
+}
+function pickChar(id,el){selChar=id;
+  document.querySelectorAll('.char').forEach(e=>e.classList.remove('sel')); el.classList.add('sel');}
+
+/* 選服務 */
+function renderSvcs(){
+  const list=Object.entries(svcs).filter(([,v])=>v.active).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
+  svcList.innerHTML = list.length? list.map(([id,v])=>`
+    <div class="pill ${selSvc===id?'sel':''}" onclick="pickSvc('${id}',this)">${v.name}
+      <small>NT$${v.price}${v.mode==='package'?'／套餐':'／'+(v.unitLabel||(v.mode==='hour'?'小時':'局'))}</small></div>`).join('')
+    : '<div class="empty">後台還沒建價目表</div>';
+}
+function pickSvc(id,el){selSvc=id; qty=1; qtyVal.textContent=1;
+  document.querySelectorAll('.pill').forEach(e=>e.classList.remove('sel')); el.classList.add('sel');
+  const v=svcs[id];
+  qtyBox.style.display=v.mode==='package'?'none':'flex';
+  qtyUnit.textContent=v.mode==='package'?'':(v.unitLabel||(v.mode==='hour'?'小時':'局'));
+  calc();
+}
+function chQty(d){qty=Math.min(24,Math.max(1,qty+d)); qtyVal.textContent=qty; calc();}
+function calc(){if(!selSvc){totalVal.textContent='NT$ 0';return 0;}
+  const v=svcs[selSvc]; const amt=v.mode==='package'?v.price:v.price*qty;
+  totalVal.textContent='NT$ '+amt.toLocaleString(); return amt;}
+
+function submitOrder(){
+  if(!selChar) return alert("先選一位陪玩");
+  if(!selSvc) return alert("選一個服務內容");
+  const cust=custName.value.trim();
+  if(!cust) return alert("填一下客人代號，之後才對得起來");
+  const v=svcs[selSvc], amt=calc(), now=new Date();
+  const no=`${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
+  submitBtn.disabled=true;
+  db.ref(ROOT+"/orders").push({
+    no, cid:selChar, charName:chars[selChar].name,
+    sid:selSvc, serviceName:v.name, mode:v.mode,
+    qty:v.mode==='package'?1:qty, amount:amt,
+    customer:cust, note:note.value.trim(),
+    paid: paidSel.value==="true",
+    paidAt: paidSel.value==="true"? firebase.database.ServerValue.TIMESTAMP : null,
+    status:"pending",
+    kefuId, kefuName:kefu.name,
+    createdAt:firebase.database.ServerValue.TIMESTAMP,
+    month:`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+  }).then(()=>{
+    selChar=null; selSvc=null; qty=1; custName.value=""; note.value=""; paidSel.value="false";
+    qtyBox.style.display="none"; totalVal.textContent='NT$ 0';
+    renderChars(); renderSvcs();
+    submitBtn.disabled=false;
+    alert("已建單 "+no+"！\n可到「單子管理」查看或更新付款。");
+    showTab(1);
+  }).catch(e=>{alert("建單失敗："+e.message); submitBtn.disabled=false;});
+}
+
+/* 單子管理 */
+function fmt(t){return t? new Date(t).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"—";}
+function esc(x){return String(x==null?"":x).replace(/</g,"&lt;");}
+function renderManage(){
+  let list=Object.entries(orders).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+  const unpaidCnt=list.filter(([,o])=>!o.paid).length;
+  cntUnpaid.textContent=unpaidCnt?` ${unpaidCnt}`:"";
+  if(fPaid==="unpaid") list=list.filter(([,o])=>!o.paid);
+  if(fPaid==="paid") list=list.filter(([,o])=>o.paid);
+  if(fChar) list=list.filter(([,o])=>o.cid===fChar);
+  const unpaidSum=Object.values(orders).filter(o=>!o.paid).reduce((a,o)=>a+o.amount,0);
+  tab1.innerHTML=`<div class="card">
+    <div class="stat">
+      <div><b>${unpaidCnt}</b><span>未收款單數</span></div>
+      <div><b>${unpaidSum.toLocaleString()}</b><span>未收款金額</span></div>
+    </div>
+    <div class="filters">
+      <select onchange="fPaid=this.value;renderManage()">
+        <option value="">全部付款狀態</option>
+        <option value="unpaid" ${fPaid==='unpaid'?'selected':''}>只看未付款</option>
+        <option value="paid" ${fPaid==='paid'?'selected':''}>只看已付款</option>
+      </select>
+      <select onchange="fChar=this.value;renderManage()">
+        <option value="">全部陪玩</option>
+        ${Object.entries(chars).map(([id,c])=>`<option value="${id}" ${id===fChar?'selected':''}>${esc(c.name)}</option>`).join("")}
+      </select>
+    </div>
+    ${list.length? list.map(([id,o])=>`
+      <div class="order ${o.paid?'':'unpaid'}">
+        <div class="top"><span class="no">📄 ${o.no}</span><span class="amt">NT$${o.amount.toLocaleString()}</span></div>
+        <div class="meta">
+          ${chars[o.cid]?(chars[o.cid].emoji||''):''} ${esc(o.charName)}｜${esc(o.serviceName)}${o.mode==='package'?'':' ×'+o.qty}<br>
+          客人：${esc(o.customer)}｜派單：${esc(o.kefuName||'—')}<br>
+          ${fmt(o.createdAt)}${o.note?'｜💬 '+esc(o.note):''}
+        </div>
+        <div class="actions">
+          <span class="pay ${o.paid?'yes':'no'}">${o.paid?'已付款':'未付款'}</span>
+          <span class="prog">${PROG[o.status]||o.status}</span>
+          ${o.paid
+            ? `<button class="btn sm ghost" onclick="setPaid('${id}',false)">改回未付款</button>`
+            : `<button class="btn sm ok" onclick="setPaid('${id}',true)">確認收款 ✔</button>`}
+        </div>
+      </div>`).join("")
+    : '<div class="empty">目前沒有符合的單</div>'}
+    <p class="hint">紅色 = 還沒收到錢。收到款項後按「確認收款」，這筆才會進老闆的月結。</p>
+  </div>`;
+}
+function setPaid(id,val){
+  db.ref(ROOT+"/orders/"+id).update({
+    paid:val, paidAt: val? firebase.database.ServerValue.TIMESTAMP : null
+  });
+}
+
+if(kefuId) boot();
+</script>
+</body>
+</html>

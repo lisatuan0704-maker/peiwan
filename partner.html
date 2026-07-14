@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色手札｜虛擬角色陪玩</title>
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+:root{
+  --night:#241B33; --night2:#2E2344;
+  --paper:#F4E9D4; --paper2:#EDDFC2;
+  --candle:#F2A65A; --candle-deep:#D9853B;
+  --lav:#A78BDB; --ink:#3B2F2F; --ink-soft:#7A6A5F;
+  --ok:#7FBF8E; --ok-deep:#5E9C6E; --warn:#E08A8A; --warn-deep:#C56A6A;
+  --live:#5CB88A; --live-deep:#3E9A6C;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--night);color:var(--paper);font-family:'Kiwi Maru','Noto Sans TC',sans-serif;min-height:100vh;
+  background-image:radial-gradient(circle at 20% 10%, rgba(167,139,219,.14), transparent 40%),radial-gradient(circle at 85% 30%, rgba(242,166,90,.10), transparent 45%)}
+.wrap{max-width:520px;margin:0 auto;padding:20px 16px 60px}
+header{text-align:center;padding:14px 0 4px}
+header h1{font-size:20px;letter-spacing:4px}
+header p{font-size:12px;color:var(--lav);letter-spacing:2px;margin-top:4px}
+.card{background:var(--paper);color:var(--ink);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.card h2{font-size:14px;color:var(--candle-deep);letter-spacing:2px;margin-bottom:10px}
+input{width:100%;padding:12px;border:2px solid var(--paper2);border-radius:12px;font-family:inherit;font-size:16px;background:#FBF4E4;color:var(--ink);text-align:center;letter-spacing:6px}
+input:focus{outline:none;border-color:var(--lav)}
+.btn{width:100%;padding:14px;border:none;border-radius:16px;background:var(--candle);color:var(--ink);font-family:inherit;font-size:16px;font-weight:700;letter-spacing:3px;cursor:pointer;margin-top:12px;box-shadow:0 4px 0 var(--candle-deep)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--candle-deep)}
+.me{display:flex;align-items:center;gap:12px}
+.me .em{font-size:38px}
+.me .nm{font-weight:700;font-size:18px}
+.me .tg{font-size:12px;color:var(--ink-soft)}
+.me .logout{margin-left:auto;background:none;border:none;color:var(--lav);font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit}
+.tabs{display:flex;gap:8px;margin:4px 0 14px}
+.tabs button{flex:1;padding:10px 4px;border-radius:14px;font-family:inherit;font-size:13px;cursor:pointer;background:var(--night2);color:var(--lav);border:1px solid rgba(167,139,219,.35)}
+.tabs button.on{background:var(--candle);color:var(--ink);font-weight:700;border-color:var(--candle)}
+.order{border:2px solid var(--paper2);border-radius:14px;padding:12px;margin-bottom:10px;background:#FBF4E4;font-size:13px}
+.order.live{border-color:var(--live);background:#EAF7EF;box-shadow:0 0 0 3px rgba(92,184,138,.2)}
+.order .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.order .no{font-weight:700;letter-spacing:1px}
+.order .amt{color:var(--candle-deep);font-weight:700}
+.order .meta{color:var(--ink-soft);font-size:12px;line-height:1.8}
+.order .note{background:#F1EAFB;border-radius:8px;padding:6px 10px;margin-top:6px;font-size:12px;color:#5A4A7A}
+.row{display:flex;gap:8px;margin-top:10px}
+.row button{flex:1;padding:10px;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.b-ok{background:var(--ok);color:#fff;box-shadow:0 3px 0 var(--ok-deep)}
+.b-no{background:#F5D9D9;color:var(--warn-deep)}
+.b-start{background:var(--live);color:#fff;box-shadow:0 3px 0 var(--live-deep)}
+.b-pause{background:#F3E2B8;color:#9A7B2E}
+.b-end{background:var(--lav);color:#fff;box-shadow:0 3px 0 #8A6ACB}
+.timer{text-align:center;margin:10px 0 4px}
+.timer .clock{font-size:38px;font-weight:700;letter-spacing:2px;font-family:monospace;color:var(--live-deep)}
+.timer .clock.paused{color:#9A7B2E}
+.timer .lb{font-size:11px;color:var(--ink-soft);letter-spacing:2px}
+.pay{font-size:11px;padding:2px 9px;border-radius:20px;border:2px dashed;font-weight:700;margin-left:6px}
+.pay.no{color:var(--warn-deep);border-color:var(--warn-deep);background:#FCEAEA}
+.pay.yes{color:var(--ok-deep);border-color:var(--ok-deep);background:#EAF7EE}
+.empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:24px 0}
+.stat{display:flex;gap:10px;text-align:center;margin-bottom:12px}
+.stat div{flex:1;background:#FFF3DF;border:2px dashed var(--candle);border-radius:14px;padding:10px 4px}
+.stat b{display:block;font-size:20px;color:var(--candle-deep)}
+.stat span{font-size:11px;color:var(--ink-soft)}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#EDE3F5;color:#6A55A0;font-weight:700}
+.hint{font-size:11px;color:var(--ink-soft);margin-top:6px;line-height:1.7}
+#pgMain{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🕯️ 角色手札</h1>
+    <p>PARTNER · 核對 · 計時 · 回報</p>
+  </header>
+
+  <div id="pgLogin">
+    <div class="card">
+      <h2>輸入你的角色 PIN 碼</h2>
+      <input id="pinInput" maxlength="6" inputmode="numeric" placeholder="••••">
+      <button class="btn" onclick="login()">開啟手札 ✦</button>
+      <p class="hint" style="text-align:center">PIN 碼由老闆發給你，忘記就去敲老闆</p>
+    </div>
+  </div>
+
+  <div id="pgMain">
+    <div class="card">
+      <div class="me">
+        <div class="em" id="meEmoji">✨</div>
+        <div><div class="nm" id="meName"></div><div class="tg" id="meTag"></div></div>
+        <button class="logout" onclick="logout()">登出</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button id="tb0" class="on" onclick="showTab(0)">🔔 待核對<span id="cntNew"></span></button>
+      <button id="tb1" onclick="showTab(1)">⏱️ 進行中<span id="cntRun"></span></button>
+      <button id="tb2" onclick="showTab(2)">📖 本月</button>
+    </div>
+    <div id="tab0"></div>
+    <div id="tab1" style="display:none"></div>
+    <div id="tab2" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+/* ====== 貼上你的 Firebase 設定（三個頁面用同一份）====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",
+  authDomain: "my-shop-0520.firebaseapp.com",
+  databaseURL: "https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-shop-0520",
+  storageBucket: "my-shop-0520.firebasestorage.app",
+  messagingSenderId: "430482271005",
+  appId: "1:430482271005:web:967059c91a9b7970bdcff4",
+  measurementId: "G-NN7HQ5W8T1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ROOT = "peiwan";
+const PROG = {pending:"待核對",confirmed:"待開始",serving:"服務中",done:"已完成",settled:"已結算",disputed:"回報中"};
+
+let cid=sessionStorage.getItem("peiwan_cid")||null;
+let me=null, orders={}, ticker=null;
+
+function login(){
+  const pin=pinInput.value.trim();
+  if(!pin) return alert("輸入 PIN 碼");
+  db.ref(ROOT+"/characters").once("value",s=>{
+    const chars=s.val()||{};
+    const hit=Object.entries(chars).find(([,c])=>String(c.pin)===pin && c.active);
+    if(!hit) return alert("PIN 碼不對，或角色未啟用。再試一次或問老闆");
+    cid=hit[0]; sessionStorage.setItem("peiwan_cid",cid); boot();
+  });
+}
+function logout(){ sessionStorage.removeItem("peiwan_cid"); location.reload(); }
+
+function boot(){
+  pgLogin.style.display="none"; pgMain.style.display="block";
+  db.ref(ROOT+"/characters/"+cid).on("value",s=>{
+    me=s.val(); if(!me){logout();return;}
+    meEmoji.textContent=me.emoji||"✨"; meName.textContent=me.name; meTag.textContent=me.tagline||"";
+  });
+  db.ref(ROOT+"/orders").limitToLast(500).on("value",s=>{orders=s.val()||{};render();});
+  // 每秒更新進行中的計時顯示
+  if(ticker) clearInterval(ticker);
+  ticker=setInterval(tick,1000);
+}
+function showTab(i){
+  for(let k=0;k<3;k++){document.getElementById("tab"+k).style.display=k===i?"block":"none";
+    document.getElementById("tb"+k).classList.toggle("on",k===i);}
+}
+function mine(status){
+  return Object.entries(orders).filter(([,o])=>o.cid===cid && status.includes(o.status)).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+}
+function fmt(t){return t? new Date(t).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"";}
+function esc(x){return String(x==null?"":x).replace(/</g,"&lt;");}
+
+/* 計時：已累計秒數 + 若運行中，加上(現在-本段開始) */
+function elapsedSec(o){
+  let s=o.accumSec||0;
+  if(o.running && o.segStart) s += Math.floor((Date.now()-o.segStart)/1000);
+  return s;
+}
+function hms(sec){
+  const h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=sec%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+/* 每秒只更新畫面上運行中的時鐘，不重繪整頁 */
+function tick(){
+  mine(["serving"]).forEach(([id,o])=>{
+    const el=document.getElementById("clock-"+id);
+    if(el) el.textContent=hms(elapsedSec(o));
+  });
+}
+
+function render(){
+  /* 待核對 */
+  const news=mine(["pending"]);
+  cntNew.textContent=news.length?` ${news.length}`:"";
+  tab0.innerHTML = news.length? '<div class="card">'+news.map(([id,o])=>`
+    <div class="order">
+      <div class="top"><span class="no">📄 ${o.no}</span><span class="amt">NT$${o.amount.toLocaleString()}</span></div>
+      <div class="meta">${esc(o.serviceName)}${o.mode==='package'?'':' × '+o.qty}｜客人：${esc(o.customer)}<br>
+      派單：${esc(o.kefuName||'—')}｜${fmt(o.createdAt)}
+      <span class="pay ${o.paid?'yes':'no'}">${o.paid?'已付款':'未付款'}</span></div>
+      ${o.note? `<div class="note">💬 ${esc(o.note)}</div>`:""}
+      <div class="row">
+        <button class="b-no" onclick="report('${id}')">有問題</button>
+        <button class="b-ok" onclick="confirmOrder('${id}')">核對無誤 ✔</button>
+      </div>
+    </div>`).join('')+'</div>'
+  : '<div class="card"><div class="empty">目前沒有待核對的單，泡杯茶等等吧 🍵</div></div>';
+
+  /* 進行中：待開始 / 服務中 */
+  const run=mine(["confirmed","serving"]);
+  cntRun.textContent=run.length?` ${run.length}`:"";
+  tab1.innerHTML = run.length? '<div class="card">'+run.map(([id,o])=>{
+    const serving=o.status==="serving";
+    const running=!!o.running;
+    return `<div class="order ${serving?'live':''}">
+      <div class="top"><span class="no">📄 ${o.no}</span><span class="amt">NT$${o.amount.toLocaleString()}</span></div>
+      <div class="meta">${esc(o.serviceName)}${o.mode==='package'?'':' × '+o.qty}｜客人：${esc(o.customer)}</div>
+      ${o.note? `<div class="note">💬 ${esc(o.note)}</div>`:""}
+      ${serving? `
+        <div class="timer">
+          <div class="clock ${running?'':'paused'}" id="clock-${id}">${hms(elapsedSec(o))}</div>
+          <div class="lb">${running?'● 計時中':'⏸ 已暫停'}</div>
+        </div>
+        <div class="row">
+          ${running
+            ? `<button class="b-pause" onclick="pauseTimer('${id}')">暫停 ⏸</button>`
+            : `<button class="b-start" onclick="resumeTimer('${id}')">繼續 ▶</button>`}
+          <button class="b-end" onclick="endTimer('${id}')">結束陪玩 ✔</button>
+        </div>`
+      : `
+        <div class="row">
+          <button class="b-start" onclick="startTimer('${id}')">開始計時 ▶</button>
+        </div>`}
+    </div>`;
+  }).join('')+'</div>'
+  : '<div class="card"><div class="empty">沒有進行中的單。核對過的單會出現在這裡等你開始 ☕</div></div>';
+
+  /* 本月 */
+  const now=new Date();
+  const m=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const hist=mine(["done","settled"]).filter(([,o])=>o.month===m);
+  const total=hist.reduce((a,[,o])=>a+o.amount,0);
+  const share=me&&me.share!=null?me.share:80;
+  tab2.innerHTML=`
+    <div class="card">
+      <div class="stat">
+        <div><b>${hist.length}</b><span>本月完成</span></div>
+        <div><b>${total.toLocaleString()}</b><span>服務總額</span></div>
+        <div><b>${Math.round(total*share/100).toLocaleString()}</b><span>預估分潤（${share}%）</span></div>
+      </div>
+      ${hist.length? hist.map(([,o])=>`
+        <div class="order">
+          <div class="top"><span class="no">📄 ${o.no}</span><span class="badge">${PROG[o.status]}</span></div>
+          <div class="meta">${esc(o.serviceName)}${o.mode==='package'?'':' × '+o.qty}｜NT$${o.amount.toLocaleString()}
+          ${o.accumSec?`｜實際 ${hms(o.accumSec)}`:''}｜${fmt(o.doneAt||o.createdAt)}</div>
+        </div>`).join('') : '<div class="empty">這個月還沒有完成的單</div>'}
+      <p class="hint">分潤只計入你「已完成」且客服「已收款」的單，月底照這裡結算——帳目對你全透明。</p>
+    </div>`;
+}
+
+/* 核對 */
+function confirmOrder(id){
+  db.ref(ROOT+"/orders/"+id).update({status:"confirmed",confirmedAt:firebase.database.ServerValue.TIMESTAMP});
+}
+function report(id){
+  const msg=prompt("這筆單哪裡有問題？（會回報給客服 / 老闆）");
+  if(msg===null) return;
+  db.ref(ROOT+"/orders/"+id).update({status:"disputed",dispute:msg,disputeAt:firebase.database.ServerValue.TIMESTAMP});
+  alert("已回報，客服會處理。");
+}
+
+/* 計時器 */
+function startTimer(id){
+  db.ref(ROOT+"/orders/"+id).update({
+    status:"serving", running:true, accumSec:0,
+    segStart:Date.now(), startedAt:firebase.database.ServerValue.TIMESTAMP
+  });
+}
+function pauseTimer(id){
+  const o=orders[id]; if(!o) return;
+  const add=o.segStart? Math.floor((Date.now()-o.segStart)/1000):0;
+  db.ref(ROOT+"/orders/"+id).update({running:false, accumSec:(o.accumSec||0)+add, segStart:null});
+}
+function resumeTimer(id){
+  db.ref(ROOT+"/orders/"+id).update({running:true, segStart:Date.now()});
+}
+function endTimer(id){
+  const o=orders[id]; if(!o) return;
+  if(!confirm("結束這筆陪玩並記錄時長？")) return;
+  const add=(o.running && o.segStart)? Math.floor((Date.now()-o.segStart)/1000):0;
+  db.ref(ROOT+"/orders/"+id).update({
+    status:"done", running:false, accumSec:(o.accumSec||0)+add, segStart:null,
+    doneAt:firebase.database.ServerValue.TIMESTAMP
+  });
+}
+
+if(cid) boot();
+</script>
+</body>
+</html>
