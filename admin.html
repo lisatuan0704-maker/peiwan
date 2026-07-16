@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>掌櫃台帳｜虛擬角色陪玩</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<style>
+:root{
+  --void:#160C06; --outline:#241407;
+  --parch:#F6E7C4; --parch2:#E5CD9E; --parch-lite:#FCF2D9;
+  --amber:#FFB544; --amber-dk:#C97E1F;
+  --grape:#9E7BE0; --grape-dk:#68459E;
+  --ink:#3B2712; --ink-soft:#7C6446;
+  --leaf:#7CC15C; --leaf-dk:#4C8A31;
+  --rose:#E8705E; --rose-dk:#A83E2C;
+  --live:#5CC08C; --live-dk:#2F8A5C;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--void);color:var(--parch);
+  font-family:'DotGothic16','Noto Sans TC',sans-serif;min-height:100vh;
+  background-image:radial-gradient(ellipse at 50% -10%, rgba(255,181,68,.09), transparent 60%)}
+
+/* ===== 整頁 = 一塊掛在牆上的告示板 ===== */
+.wrap{max-width:none;margin:20px 28px 48px;padding:64px 26px 40px;position:relative;
+  background-color:#3A2312;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Crect width='48' height='48' fill='%233A2312'/%3E%3Crect y='22' width='48' height='3' fill='%23241407'/%3E%3Crect x='12' width='3' height='22' fill='%23241407'/%3E%3Crect x='30' y='25' width='3' height='23' fill='%23241407'/%3E%3Crect x='20' y='8' width='3' height='3' fill='%23503318'/%3E%3Crect x='38' y='34' width='3' height='3' fill='%23503318'/%3E%3Crect x='6' y='38' width='3' height='3' fill='%23503318'/%3E%3C/svg%3E");image-rendering:pixelated;
+  box-shadow:0 -8px 0 0 var(--outline),0 8px 0 0 var(--outline),-8px 0 0 0 var(--outline),8px 0 0 0 var(--outline),
+    16px 20px 0 0 rgba(0,0,0,.5)}
+/* 板頂彩旗 */
+.wrap::before{content:"";position:absolute;top:10px;left:0;right:0;height:26px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='26'%3E%3Crect width='64' height='4' fill='%23241407'/%3E%3Cg fill='%23FFB544'%3E%3Crect x='0' y='4' width='32' height='5'/%3E%3Crect x='4' y='9' width='24' height='5'/%3E%3Crect x='9' y='14' width='14' height='4'/%3E%3Crect x='13' y='18' width='6' height='4'/%3E%3C/g%3E%3Cg fill='%239E7BE0'%3E%3Crect x='32' y='4' width='32' height='5'/%3E%3Crect x='36' y='9' width='24' height='5'/%3E%3Crect x='41' y='14' width='14' height='4'/%3E%3Crect x='45' y='18' width='6' height='4'/%3E%3C/g%3E%3C/svg%3E");background-repeat:repeat-x;image-rendering:pixelated;pointer-events:none}
+/* 板底掛繩釘 */
+.wrap::after{content:"";position:absolute;top:-8px;left:38px;width:12px;height:12px;background:#9A8A72;box-shadow:0 0 0 4px var(--outline)}
+
+header{text-align:center;padding:10px 0 4px;position:relative}
+header .lantern{font-size:30px;display:inline-block;animation:flick 1.1s steps(2,end) infinite}
+@keyframes flick{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+/* 標題=吊掛木牌 */
+header h1{display:inline-block;font-size:20px;letter-spacing:6px;margin-top:8px;padding:10px 26px;
+  background:#553415;color:var(--amber);text-shadow:2px 2px 0 var(--outline);
+  box-shadow:0 -5px 0 0 var(--outline),0 5px 0 0 var(--outline),-5px 0 0 0 var(--outline),5px 0 0 0 var(--outline),
+    inset 0 -5px 0 rgba(0,0,0,.3),inset 0 4px 0 rgba(255,255,255,.08)}
+header p{font-size:11px;color:var(--grape);letter-spacing:3px;margin-top:12px;text-shadow:2px 2px 0 var(--outline)}
+
+/* ===== 羊皮紙告示(容器卡) ===== */
+.card{background:var(--parch);color:var(--ink);border:none;padding:18px 16px 16px;margin-bottom:22px;position:relative;
+  box-shadow:0 -5px 0 0 var(--outline),0 5px 0 0 var(--outline),-5px 0 0 0 var(--outline),5px 0 0 0 var(--outline),
+    9px 10px 0 0 rgba(0,0,0,.35);
+  background-image:repeating-linear-gradient(0deg, rgba(59,39,18,.04) 0 2px, transparent 2px 6px)}
+/* 卡片左上角釘一根釘子 */
+.card::before{content:"";position:absolute;top:-2px;left:14px;width:10px;height:10px;background:#B9A98F;
+  box-shadow:0 0 0 3px var(--outline),inset -2px -2px 0 rgba(0,0,0,.35)}
+.card h2{font-size:13px;color:var(--amber-dk);letter-spacing:2px;margin-bottom:12px;
+  border-bottom:3px double var(--parch2);padding-bottom:7px}
+.card h2::before{content:"◆ ";color:var(--rose)}
+
+input,select,textarea{width:100%;padding:11px 12px;border:3px solid var(--ink);border-radius:0;
+  font-family:inherit;font-size:14px;background:var(--parch-lite);color:var(--ink);
+  box-shadow:inset 3px 3px 0 rgba(59,39,18,.12)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--grape-dk)}
+label{font-size:13px;color:var(--ink-soft);display:block;margin:10px 0 4px}
+div.loginBox{max-width:420px;margin:0 auto}
+.loginBox input{width:100%;text-align:center;letter-spacing:6px;font-size:16px;padding:12px}
+.loginBox .btn{width:100%;margin-top:14px}
+#pgLogin .btn,#pgNew .btn,#pgDone .btn,#pgQuery .btn{width:100%;margin-top:14px}
+
+/* ===== 按鈕:厚實斜面積木 ===== */
+.btn{padding:13px 18px;border:none;background:var(--amber);color:var(--ink);
+  font-family:inherit;font-size:15px;font-weight:700;letter-spacing:3px;cursor:pointer;position:relative;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    0 9px 0 -1px var(--outline),
+    inset 0 -5px 0 var(--amber-dk),inset 0 4px 0 rgba(255,255,255,.35)}
+.btn:active{transform:translateY(5px);
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    inset 0 -3px 0 var(--amber-dk)}
+.btn:disabled{opacity:.5}
+.btn.sm{padding:7px 12px;font-size:12px;letter-spacing:1px;
+  box-shadow:0 -3px 0 0 var(--outline),0 3px 0 0 var(--outline),-3px 0 0 0 var(--outline),3px 0 0 0 var(--outline),
+    0 7px 0 -1px var(--outline),inset 0 -4px 0 rgba(0,0,0,.22),inset 0 3px 0 rgba(255,255,255,.3)}
+.btn.sm:active{transform:translateY(4px);
+  box-shadow:0 -3px 0 0 var(--outline),0 3px 0 0 var(--outline),-3px 0 0 0 var(--outline),3px 0 0 0 var(--outline)}
+.btn.lav{background:var(--grape);color:#fff}
+.btn.ok{background:var(--leaf);color:#173A08}
+.btn.warn{background:var(--rose);color:#fff}
+.btn.ghost{background:var(--parch2);color:var(--ink-soft)}
+
+/* ===== 分頁:板上掛的小木牌 ===== */
+.tabs{display:flex;gap:14px;margin:8px 2px 20px;flex-wrap:wrap}
+.tabs button{flex:1;min-width:88px;padding:11px 6px;border:none;position:relative;
+  font-family:inherit;font-size:13px;letter-spacing:1px;cursor:pointer;background:#553415;color:#D9B98A;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    inset 0 -4px 0 rgba(0,0,0,.3)}
+.tabs button.on{background:var(--amber);color:var(--ink);font-weight:700;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    inset 0 -4px 0 var(--amber-dk),inset 0 3px 0 rgba(255,255,255,.35)}
+
+.me{display:flex;align-items:center;gap:12px}
+.me .em{font-size:36px}
+.me .nm{font-weight:700;font-size:17px}
+.me .tg{font-size:12px;color:var(--ink-soft)}
+.me .logout,.logout{margin-left:auto;background:none;border:none;color:var(--grape-dk);font-size:12px;
+  text-decoration:underline;cursor:pointer;font-family:inherit;display:inline-block}
+button.logout{display:block;margin:0 auto}
+
+.chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px;margin-top:8px}
+.char{border:3px solid var(--ink);padding:10px 6px;text-align:center;cursor:pointer;
+  background:var(--parch-lite);font-size:13px;box-shadow:4px 4px 0 rgba(0,0,0,.2)}
+.char .em{font-size:26px}
+.char .nm{font-weight:700;margin-top:4px}
+.char .tg{font-size:11px;color:var(--ink-soft);margin-top:2px}
+.char.sel{background:#FFE7B0;border-color:var(--amber-dk);box-shadow:4px 4px 0 var(--amber-dk)}
+.char.off{opacity:.4;pointer-events:none}
+.char .st{font-size:10px;margin-top:6px;display:inline-block;padding:2px 8px;border:2px solid var(--leaf-dk);background:#EAF6E2;color:var(--leaf-dk)}
+.char.off .st{border-color:#9A8A72;background:#EFE5D0;color:#9A8A72}
+
+.pills{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.pill{padding:9px 13px;border:3px solid var(--ink);background:var(--parch-lite);
+  cursor:pointer;font-size:13px;box-shadow:4px 4px 0 rgba(0,0,0,.2)}
+.pill small{display:block;font-size:11px;color:var(--ink-soft)}
+.pill.sel{background:#EFE3FB;border-color:var(--grape-dk);box-shadow:4px 4px 0 var(--grape-dk)}
+
+.qty{display:flex;align-items:center;gap:16px;margin-top:12px;justify-content:center}
+.qty button{width:42px;height:42px;border:none;background:var(--grape);color:#fff;font-size:18px;cursor:pointer;
+  box-shadow:0 -3px 0 0 var(--outline),0 3px 0 0 var(--outline),-3px 0 0 0 var(--outline),3px 0 0 0 var(--outline),
+    0 7px 0 -1px var(--outline),inset 0 -4px 0 var(--grape-dk)}
+.qty button:active{transform:translateY(4px);
+  box-shadow:0 -3px 0 0 var(--outline),0 3px 0 0 var(--outline),-3px 0 0 0 var(--outline),3px 0 0 0 var(--outline)}
+.qty span{min-width:60px;text-align:center;font-family:'Press Start 2P',monospace;font-size:16px}
+
+.total{display:flex;justify-content:space-between;align-items:center;background:#FFF0C8;
+  border:3px dashed var(--amber-dk);padding:12px 14px;margin-top:16px}
+.total b{font-size:16px;color:var(--amber-dk);font-family:'Press Start 2P',monospace}
+
+/* ===== 單子=釘在板上的便條(微歪+圖釘) ===== */
+.order{border:none;padding:16px 12px 12px;margin:6px 4px 18px;background:var(--parch-lite);font-size:14px;position:relative;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    7px 8px 0 0 rgba(0,0,0,.28);
+  background-image:repeating-linear-gradient(0deg, rgba(59,39,18,.05) 0 2px, transparent 2px 7px)}
+.order::before{content:"";position:absolute;top:-6px;left:50%;margin-left:-6px;width:12px;height:12px;background:var(--rose);
+  box-shadow:0 0 0 3px var(--outline),inset -3px -3px 0 var(--rose-dk)}
+.order:nth-child(odd){transform:rotate(.7deg)}
+.order:nth-child(even){transform:rotate(-.6deg)}
+.order.unpaid{background:#FBE9DE}
+.order.unpaid::before{background:#C9B037}
+.order.live{background:#E9F6E4}
+.order.live::before{background:var(--live);box-shadow:0 0 0 3px var(--outline),inset -3px -3px 0 var(--live-dk)}
+.order .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.order .no{font-weight:700;letter-spacing:1px}
+.order .amt{color:var(--amber-dk);font-family:'Press Start 2P',monospace;font-size:12px}
+.order .meta{color:var(--ink-soft);font-size:13px;line-height:1.9}
+.order .note{background:#EFE3FB;border:2px dashed var(--grape-dk);padding:6px 10px;margin-top:8px;font-size:12px;color:#54407E}
+.order .actions{display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap}
+
+.row{display:flex;gap:12px;margin-top:14px}
+.row button{flex:1;padding:11px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  box-shadow:0 -3px 0 0 var(--outline),0 3px 0 0 var(--outline),-3px 0 0 0 var(--outline),3px 0 0 0 var(--outline),
+    0 7px 0 -1px var(--outline),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 3px 0 rgba(255,255,255,.3)}
+.row button:active{transform:translateY(4px);
+  box-shadow:0 -3px 0 0 var(--outline),0 3px 0 0 var(--outline),-3px 0 0 0 var(--outline),3px 0 0 0 var(--outline)}
+.b-ok{background:var(--leaf);color:#173A08}
+.b-no{background:#F0CFC7;color:var(--rose-dk)}
+.b-start{background:var(--live);color:#0E3A22}
+.b-pause{background:#EFD79A;color:#7A5C12}
+.b-end{background:var(--grape);color:#fff}
+
+.timer{text-align:center;margin:16px 0 6px}
+.timer .clock{font-family:'Press Start 2P',monospace;font-size:24px;letter-spacing:1px;color:var(--live-dk);text-shadow:2px 2px 0 rgba(0,0,0,.12)}
+.timer .clock.paused{color:#A87B22}
+.timer .lb{font-size:11px;color:var(--ink-soft);letter-spacing:3px;margin-top:10px}
+
+.pay,.prog,.badge,.stamp{font-size:11px;padding:3px 9px;border:2px solid;font-weight:700;white-space:nowrap;background:transparent;transform:rotate(-2deg);display:inline-block}
+.pay.no{color:var(--rose-dk);border-color:var(--rose-dk);background:#FBE4DE}
+.pay.yes{color:var(--leaf-dk);border-color:var(--leaf-dk);background:#EAF6E2}
+.prog{color:#54407E;border-color:#54407E;background:#EFE3FB}
+.prog.disputed{color:var(--rose-dk);border-color:var(--rose-dk);background:#FBE4DE}
+.badge{color:#54407E;border-color:#54407E;background:#EFE3FB}
+.s-pending{color:#8A6A1E;border-color:#8A6A1E;background:#FBF0CE}
+.s-accepted{color:#3F6E9E;border-color:#3F6E9E;background:#E2EEF9}
+.s-declined,.s-disputed{color:var(--rose-dk);border-color:var(--rose-dk);background:#FBE4DE}
+.s-done{color:var(--leaf-dk);border-color:var(--leaf-dk);background:#EAF6E2}
+.s-verified,.s-settled{color:#54407E;border-color:#54407E;background:#EFE3FB}
+
+.empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:26px 0}
+.empty::before{content:"· · ·";display:block;letter-spacing:6px;color:var(--parch2);margin-bottom:6px;font-size:16px}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:12px;line-height:1.8}
+#pgNew>.hint,#pgLogin~.hint{color:var(--grape)}
+
+.stat{display:flex;gap:14px;text-align:center;margin-bottom:16px;flex-wrap:wrap}
+.stat div{flex:1;min-width:100px;background:#FFF0C8;border:3px solid var(--ink);padding:12px 4px;
+  box-shadow:inset 0 -4px 0 rgba(201,126,31,.25),4px 4px 0 rgba(0,0,0,.2)}
+.stat b{display:block;font-size:15px;color:var(--amber-dk);font-family:'Press Start 2P',monospace;margin-bottom:7px}
+.stat span{font-size:12px;color:var(--ink-soft)}
+
+.filters{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.filters select{flex:1;min-width:110px;width:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.grid input,.grid select{width:100%}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--amber-dk);font-size:13px;letter-spacing:1px;padding:8px 6px;border-bottom:3px solid var(--ink)}
+td{padding:10px 6px;border-bottom:2px dashed var(--parch2);vertical-align:middle}
+td select,td input{width:auto;padding:6px 8px;font-size:13px}
+.mono{font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:0}
+
+.done{text-align:center;padding:26px 16px}
+.done .em{font-size:42px}
+.done .no{font-size:15px;font-weight:700;color:var(--amber-dk);letter-spacing:1px;margin:14px 0;font-family:'Press Start 2P',monospace}
+.done p{font-size:13px;color:var(--ink-soft);line-height:1.8}
+
+.face{width:84px;height:84px;image-rendering:pixelated;vertical-align:bottom;display:block;margin:0 auto -6px}
+.face.sm{width:40px;height:40px;display:inline-block;margin:0;vertical-align:middle}
+.face.me{width:96px;height:96px;display:block;margin:0;align-self:flex-end;margin-bottom:-16px}
+.me{align-items:flex-end}
+.me:has(.face.me){padding-top:6px}
+.wrap{max-width:1560px;margin-left:auto;margin-right:auto}
+#pgMain{display:none}
+#pgQuery,#pgDone{display:none}
+@media(max-width:640px){
+  th,td{padding:7px 4px;font-size:12px}
+  .wrap{margin:14px 8px 40px;padding:56px 12px 30px;max-width:none}
+  header h1{font-size:16px;letter-spacing:3px;padding:9px 16px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🗝️ 掌櫃台帳</h1>
+    <p>OWNER · 全店總覽 · 月結分潤</p>
+  </header>
+
+  <div id="pgLogin" class="loginBox">
+    <div class="card">
+      <h2 id="loginTitle">掌櫃登入</h2>
+      <input id="adminUser" placeholder="帳號" style="text-align:left;letter-spacing:1px">
+      <input id="adminPw" type="password" placeholder="密碼（至少 6 碼）" style="text-align:left;letter-spacing:1px;margin-top:10px">
+      <button class="btn" onclick="adminLogin()">開啟台帳 ✦</button>
+      <p class="hint" id="loginHint"></p>
+    </div>
+  </div>
+
+  <div id="pgMain">
+    <div class="tabs">
+      <button id="tb0" class="on" onclick="showTab(0)">📄 委託總覽</button>
+      <button id="tb1" onclick="showTab(1)">📊 月結</button>
+      <button id="tb2" onclick="showTab(2)">🏷️ 價目表</button>
+      <button id="tb3" onclick="showTab(3)">🎭 角色</button>
+      <button id="tb4" onclick="showTab(4)">👤 客服</button>
+    </div>
+    <div id="tab0"></div>
+    <div id="tab1" style="display:none"></div>
+    <div id="tab2" style="display:none"></div>
+    <div id="tab3" style="display:none"></div>
+    <div id="tab4" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+/* ====== 貼上你的 Firebase 設定（三個頁面用同一份）====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",
+  authDomain: "my-shop-0520.firebaseapp.com",
+  databaseURL: "https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-shop-0520",
+  storageBucket: "my-shop-0520.firebasestorage.app",
+  messagingSenderId: "430482271005",
+  appId: "1:430482271005:web:967059c91a9b7970bdcff4",
+  measurementId: "G-NN7HQ5W8T1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ROOT = "peiwan";
+const PROG = {pending:"待核對",confirmed:"待開始",serving:"服務中",done:"已完成",settled:"已結算",disputed:"回報中"};
+const COMPANY_CUT = 20; // 公司抽成 %，陪玩拿 80
+
+const auth=firebase.auth();
+const EMAIL_DOMAIN="@peiwan-tavern.com";
+function toEmail(u){return u.toLowerCase()+EMAIL_DOMAIN;}
+function genCode(){return Math.random().toString(36).slice(2,8).toUpperCase();}
+let orders={}, chars={}, svcs={}, staff={}, links={}, invites={}, adminUid=null, entered=false;
+let fMonth="", fProg="", fChar="", fKefu="", fPaid="";
+
+db.ref(ROOT+"/config/adminUid").on("value",sv=>{
+  adminUid=sv.val();
+  if(!adminUid){ loginTitle.textContent="首次使用：建立掌櫃帳號"; loginHint.textContent="帳號限英數 3-20 字、密碼至少 6 碼。這組是最高權限，設定後記牢。"; }
+  else{ loginTitle.textContent="掌櫃登入"; }
+  tryAuto();
+});
+auth.onAuthStateChanged(()=>tryAuto());
+function tryAuto(){
+  const u=auth.currentUser;
+  if(u && adminUid && u.uid===adminUid && !entered) enter();
+}
+function adminLogin(){
+  const un=adminUser.value.trim(), pw=adminPw.value;
+  if(!/^[a-zA-Z0-9_.-]{3,20}$/.test(un)) return alert("帳號限英數 3-20 字");
+  if(pw.length<6) return alert("密碼至少 6 碼");
+  if(!adminUid){
+    auth.createUserWithEmailAndPassword(toEmail(un),pw)
+      .then(c=>db.ref(ROOT+"/config/adminUid").set(c.user.uid))
+      .then(()=>enter())
+      .catch(e=>alert("建立失敗："+e.message));
+  }else{
+    auth.signInWithEmailAndPassword(toEmail(un),pw)
+      .then(c=>{ if(c.user.uid!==adminUid){auth.signOut();alert("這不是掌櫃帳號");} else enter(); })
+      .catch(()=>alert("帳號或密碼不對"));
+  }
+}
+function enter(){
+  if(entered) return; entered=true;
+  pgLogin.style.display="none"; pgMain.style.display="block";
+  db.ref(ROOT+"/links").on("value",sv=>{links=sv.val()||{};render();});
+  db.ref(ROOT+"/invites").on("value",sv=>{invites=sv.val()||{};render();});
+  const now=new Date(); fMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  db.ref(ROOT+"/orders").on("value",s=>{orders=s.val()||{};render();});
+  db.ref(ROOT+"/characters").on("value",s=>{chars=s.val()||{};render();});
+  db.ref(ROOT+"/config/services").on("value",s=>{svcs=s.val()||{};render();});
+  db.ref(ROOT+"/staff").on("value",s=>{staff=s.val()||{};render();});
+}
+function showTab(i){
+  for(let k=0;k<5;k++){document.getElementById("tab"+k).style.display=k===i?"block":"none";
+    document.getElementById("tb"+k).classList.toggle("on",k===i);}
+}
+function fmt(t){return t? new Date(t).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"—";}
+function hmsShort(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return h?`${h}時${m}分`:`${m}分`;}
+function esc(x){return String(x==null?"":x).replace(/</g,"&lt;");}
+function months(){
+  const set=new Set(Object.values(orders).map(o=>o.month).filter(Boolean));
+  const now=new Date(); set.add(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`);
+  return [...set].sort().reverse();
+}
+function render(){ renderAll(); renderSettle(); renderSvcs(); renderChars(); renderStaff(); }
+function inviteOf(refId,type){const e=Object.entries(invites).find(([,v])=>v.refId===refId&&v.type===type);return e?e[0]:null;}
+function linkOf(refId,type){const e=Object.entries(links).find(([,v])=>v.refId===refId&&v.type===type);return e?e[0]:null;}
+function makeInvite(refId,type){db.ref(ROOT+"/invites/"+genCode()).set({type,refId});}
+function unbind(refId,type){
+  const uid=linkOf(refId,type);
+  if(!uid) return;
+  if(!confirm("解除此帳號綁定？對方需用邀請碼以新帳號重新註冊。")) return;
+  db.ref(ROOT+"/links/"+uid).remove();
+}
+
+
+/* ---------- 委託總覽 ---------- */
+function renderAll(){
+  const ms=months();
+  let list=Object.entries(orders).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+  if(fMonth) list=list.filter(([,o])=>o.month===fMonth);
+  if(fProg) list=list.filter(([,o])=>o.status===fProg);
+  if(fChar) list=list.filter(([,o])=>o.cid===fChar);
+  if(fKefu) list=list.filter(([,o])=>o.kefuId===fKefu);
+  if(fPaid==="paid") list=list.filter(([,o])=>o.paid);
+  if(fPaid==="unpaid") list=list.filter(([,o])=>!o.paid);
+
+  const sum=list.reduce((a,[,o])=>a+o.amount,0);
+  const unpaid=list.filter(([,o])=>!o.paid).length;
+  const disputed=Object.values(orders).filter(o=>o.status==="disputed").length;
+  const serving=Object.values(orders).filter(o=>o.status==="serving").length;
+
+  const servingList=Object.values(orders).filter(o=>o.status==="serving");
+  const liveBar = servingList.length? `<div style="margin-bottom:12px;padding:10px 12px;border:2px solid var(--ok-deep);border-radius:12px;background:#EAF7EF">
+    <b style="color:var(--ok-deep);font-size:13px">🟢 現在有 ${servingList.length} 位陪玩在陣：</b>
+    <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">${servingList.map(o=>`${chars[o.cid]?(chars[o.cid].emoji||''):''}${esc(o.charName)}（${esc(o.customer)}・${o.running?'計時中':'暫停中'}）`).join("、")}</div></div>` : "";
+
+  tab0.innerHTML=`<div class="card">
+    ${liveBar}
+    <div class="stat">
+      <div><b>${list.length}</b><span>單數（篩選後）</span></div>
+      <div><b>${sum.toLocaleString()}</b><span>金額</span></div>
+      <div><b>${serving}</b><span>服務中</span></div>
+      <div><b>${unpaid}</b><span>未收款</span></div>
+      <div><b>${disputed}</b><span>陪玩回報中</span></div>
+    </div>
+    <div class="filters">
+      <select onchange="fMonth=this.value;renderAll()">${ms.map(m=>`<option ${m===fMonth?'selected':''}>${m}</option>`).join("")}<option value="" ${fMonth===""?'selected':''}>全部月份</option></select>
+      <select onchange="fKefu=this.value;renderAll()"><option value="">全部客服</option>${Object.entries(staff).map(([id,k])=>`<option value="${id}" ${id===fKefu?'selected':''}>${esc(k.name)}</option>`).join("")}</select>
+      <select onchange="fChar=this.value;renderAll()"><option value="">全部陪玩</option>${Object.entries(chars).map(([id,c])=>`<option value="${id}" ${id===fChar?'selected':''}>${esc(c.name)}</option>`).join("")}</select>
+      <select onchange="fPaid=this.value;renderAll()"><option value="">全部付款</option><option value="unpaid" ${fPaid==='unpaid'?'selected':''}>未付款</option><option value="paid" ${fPaid==='paid'?'selected':''}>已付款</option></select>
+      <select onchange="fProg=this.value;renderAll()"><option value="">全部進度</option>${Object.entries(PROG).map(([k,v])=>`<option value="${k}" ${k===fProg?'selected':''}>${v}</option>`).join("")}</select>
+    </div>
+    ${list.length? `<table><tr><th>編號</th><th>陪玩</th><th>內容</th><th>金額</th><th>實際時長</th><th>客人</th><th>客服</th><th>付款</th><th>進度</th><th></th></tr>
+      ${list.map(([id,o])=>`<tr>
+        <td class="mono">${o.no}</td>
+        <td>${chars[o.cid]?(chars[o.cid].emoji||''):''} ${esc(o.charName)}</td>
+        <td>${esc(o.serviceName)}${o.mode==='package'?'':' ×'+o.qty}${o.dispute?`<br><span style="font-size:11px;color:var(--warn-deep)">⚠ ${esc(o.dispute)}</span>`:(o.note?`<br><span style="font-size:11px;color:var(--ink-soft)">💬 ${esc(o.note)}</span>`:"")}</td>
+        <td>NT$ ${o.amount.toLocaleString()}</td>
+        <td class="mono" style="font-size:12px">${o.accumSec?hmsShort(o.accumSec):(o.status==='serving'?'計時中…':'—')}</td>
+        <td>${esc(o.customer)}</td>
+        <td>${esc(o.kefuName||'—')}</td>
+        <td><button class="btn sm ${o.paid?'ok':'ghost'}" onclick="db.ref(ROOT+'/orders/${id}').update({paid:${!o.paid},paidAt:${o.paid?'null':'firebase.database.ServerValue.TIMESTAMP'}})">${o.paid?'已付款':'未付款'}</button></td>
+        <td><select onchange="db.ref(ROOT+'/orders/${id}/status').set(this.value)" class="${o.status==='disputed'?'':''}">${Object.entries(PROG).map(([k,v])=>`<option value="${k}" ${k===o.status?'selected':''}>${v}</option>`).join("")}</select></td>
+        <td><button class="btn sm ghost" onclick="delOrder('${id}','${o.no}')">刪</button></td>
+      </tr>`).join("")}</table>`
+    : `<div class="empty">這個條件下沒有單</div>`}
+    <p class="hint">付款欄可直接點切換（跟客服頁同步）。進度欄可手動改。建錯或取消的單可按「刪」移除（會確認）。</p>
+  </div>`;
+}
+function delOrder(id,no){
+  if(!confirm("確定刪除單 "+no+"？此動作無法復原。")) return;
+  db.ref(ROOT+"/orders/"+id).remove();
+}
+
+/* ---------- 月結 80/20 ---------- */
+let sMonth="";
+function renderSettle(){
+  const ms=months(); if(!sMonth) sMonth=ms[0]||"";
+  // 只計入：已付款 + (已完成或已結算)
+  const rows={};
+  Object.entries(orders).forEach(([id,o])=>{
+    if(o.month!==sMonth) return;
+    if(!o.paid) return;
+    if(!["done","settled"].includes(o.status)) return;
+    (rows[o.cid]=rows[o.cid]||{name:o.charName,emoji:chars[o.cid]?chars[o.cid].emoji:'',n:0,total:0});
+    rows[o.cid].n++; rows[o.cid].total+=o.amount;
+  });
+  const entries=Object.entries(rows);
+  let grand=0, grandPay=0;
+  const body=entries.map(([cidK,r])=>{
+    const share=chars[cidK]&&chars[cidK].share!=null?chars[cidK].share:(100-COMPANY_CUT);
+    const pay=Math.round(r.total*share/100);
+    grand+=r.total; grandPay+=pay;
+    return `<tr><td>${r.emoji||''} <b>${esc(r.name)}</b></td><td>${r.n}</td><td>NT$ ${r.total.toLocaleString()}</td>
+      <td>${share}%</td><td><b>NT$ ${pay.toLocaleString()}</b></td>
+      <td><button class="btn sm lav" onclick="settle('${cidK}')">標記已結算</button></td></tr>`;
+  }).join("");
+  // 待收款警示
+  const unpaidWait=Object.values(orders).filter(o=>o.month===sMonth&&!o.paid&&["confirmed","serving","done","pending"].includes(o.status));
+  tab1.innerHTML=`<div class="card">
+    <div class="filters">
+      <select onchange="sMonth=this.value;renderSettle()">${ms.map(m=>`<option ${m===sMonth?'selected':''}>${m}</option>`).join("")}</select>
+      <button class="btn sm" onclick="exportCsv()">匯出 CSV 📥</button>
+    </div>
+    <div class="stat">
+      <div><b>${grand.toLocaleString()}</b><span>計入營收</span></div>
+      <div><b>${grandPay.toLocaleString()}</b><span>應付陪玩（80%）</span></div>
+      <div><b>${(grand-grandPay).toLocaleString()}</b><span>公司留存（20%）</span></div>
+    </div>
+    ${entries.length? `<table><tr><th>陪玩</th><th>單數</th><th>營收</th><th>分潤</th><th>應付</th><th></th></tr>${body}</table>`
+      : `<div class="empty">${sMonth} 還沒有「已付款＋已確認」的單</div>`}
+    ${unpaidWaitBlock(unpaidWait)}
+    <p class="hint">月結只計入「已付款 ＋ 陪玩已完成計時」的單。客服抽成不在此系統計算，請另行處理。「標記已結算」代表該角色本月分潤已匯出。</p>
+  </div>`;
+}
+function unpaidWaitBlock(list){
+  if(!list.length) return "";
+  return `<div style="margin-top:12px;padding:10px;border:2px dashed var(--warn);border-radius:12px;background:#FCEEEE">
+    <b style="color:var(--warn-deep);font-size:13px">⚠ ${list.length} 筆單尚未收款、暫不列入月結：</b>
+    <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">${list.map(o=>`${o.no}（${esc(o.charName)}・NT$ ${o.amount}）`).join("、")}</div></div>`;
+}
+function settle(cidK){
+  if(!confirm("將該角色本月「已付款＋已完成」的單標記為已結算？（代表分潤已匯出）")) return;
+  Object.entries(orders).forEach(([id,o])=>{
+    if(o.cid===cidK&&o.month===sMonth&&o.paid&&o.status==="done")
+      db.ref(ROOT+"/orders/"+id).update({status:"settled",settledAt:firebase.database.ServerValue.TIMESTAMP});
+  });
+}
+function exportCsv(){
+  const list=Object.values(orders).filter(o=>o.month===sMonth).sort((a,b)=>a.createdAt-b.createdAt);
+  if(!list.length) return alert("這個月沒有單");
+  const head="編號,日期,陪玩,內容,模式,數量,金額,實際時長,客人,客服,付款,進度\n";
+  const body=list.map(o=>[o.no,new Date(o.createdAt).toLocaleString("zh-TW"),o.charName,o.serviceName,
+    {hour:"小時",round:"局",package:"套餐"}[o.mode]||o.mode,o.qty,o.amount,
+    o.accumSec?hmsShort(o.accumSec):"",o.customer,o.kefuName,
+    o.paid?"已付款":"未付款",PROG[o.status]||o.status]
+    .map(x=>`"${String(x==null?"":x).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob=new Blob(["\uFEFF"+head+body],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`委託帳目_${sMonth}.csv`; a.click();
+}
+
+/* ---------- 價目表 ---------- */
+function renderSvcs(){
+  const list=Object.entries(svcs).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
+  tab2.innerHTML=`<div class="card">
+    <h2>價目表（客服建單頁即時同步）</h2>
+    ${list.length? `<table><tr><th>名稱</th><th>計費</th><th>單價</th><th>單位</th><th>上架</th><th></th></tr>
+      ${list.map(([id,v])=>`<tr>
+        <td>${esc(v.name)}</td><td>${{hour:"按小時",round:"按局",package:"套餐"}[v.mode]||v.mode}</td>
+        <td>NT$ ${v.price}</td><td>${esc(v.unitLabel||"—")}</td>
+        <td><button class="btn sm ${v.active?'ok':'ghost'}" onclick="db.ref(ROOT+'/config/services/${id}/active').set(${!v.active})">${v.active?'上架中':'已下架'}</button></td>
+        <td><button class="btn sm ghost" onclick="if(confirm('刪除「${esc(v.name)}」？'))db.ref(ROOT+'/config/services/${id}').remove()">刪</button></td>
+      </tr>`).join("")}</table>` : `<div class="empty">還沒有價目，先新增或一鍵建立範例</div>`}
+    <h2 style="margin-top:16px">新增項目</h2>
+    <div class="grid">
+      <input id="svName" placeholder="名稱，例：技術陪玩">
+      <select id="svMode"><option value="hour">按小時</option><option value="round">按局</option><option value="package">套餐</option></select>
+      <input id="svPrice" type="number" placeholder="單價 NT$">
+      <input id="svUnit" placeholder="單位字，例：小時／局">
+    </div>
+    <button class="btn sm" onclick="addSvc()">新增 ＋</button>
+    ${list.length? "" : `<button class="btn sm lav" style="margin-left:8px" onclick="seedSvcs()">一鍵建立範例價目表</button>`}
+  </div>`;
+}
+function addSvc(){
+  const name=svName.value.trim(), price=Number(svPrice.value);
+  if(!name||!price) return alert("名稱和單價都要填");
+  db.ref(ROOT+"/config/services").push({name,mode:svMode.value,price,unitLabel:svUnit.value.trim(),active:true,order:Date.now()});
+}
+function seedSvcs(){
+  [["技術陪玩","hour",300,"小時"],["娛樂陪玩","hour",250,"小時"],["排位上分","round",150,"局"],["暢玩套餐 3hr","package",800,""]]
+  .forEach(([name,mode,price,unitLabel],i)=>db.ref(ROOT+"/config/services").push({name,mode,price,unitLabel,active:true,order:i}));
+}
+
+/* ---------- 角色 ---------- */
+function renderChars(){
+  const list=Object.entries(chars);
+  tab3.innerHTML=`<div class="card">
+    <h2>角色名冊（真人身分只存在這裡，客人／客服前台只見角色）</h2>
+    ${list.length? `<table><tr><th>角色</th><th>介紹</th><th>帳號</th><th>分潤%</th><th>啟用</th><th></th></tr>
+      ${list.map(([id,c])=>`<tr>
+        <td>${c.avatar?`<img class="face sm" src="${c.avatar}"> `:(c.emoji||"✨")+" "}<b>${esc(c.name)}</b><br>
+          <input placeholder="img/xxx.png" value="${esc(c.avatar||'')}" style="width:140px;font-size:11px;padding:4px;margin-top:4px" onchange="db.ref(ROOT+'/characters/${id}/avatar').set(this.value.trim()||null)"></td>
+        <td style="font-size:12px;color:var(--ink-soft)">${esc(c.tagline||"")}</td>
+        <td style="font-size:12px">${linkOf(id,'char')
+          ? `<span style="color:var(--leaf-dk)">✔ 已綁定</span> <button class="btn sm ghost" onclick="unbind('${id}','char')">解除</button>`
+          : (inviteOf(id,'char')
+            ? `邀請碼 <b class="mono" style="font-size:10px">${inviteOf(id,'char')}</b>`
+            : `<button class="btn sm" onclick="makeInvite('${id}','char')">產生邀請碼</button>`)}</td>
+        <td><input type="number" value="${c.share!=null?c.share:80}" style="width:60px" onchange="db.ref(ROOT+'/characters/${id}/share').set(Number(this.value))"></td>
+        <td><button class="btn sm ${c.active?'ok':'ghost'}" onclick="db.ref(ROOT+'/characters/${id}/active').set(${!c.active})">${c.active?'啟用中':'停用'}</button></td>
+        <td><button class="btn sm ghost" onclick="if(confirm('刪除角色「${esc(c.name)}」？單子紀錄會保留'))db.ref(ROOT+'/characters/${id}').remove()">刪</button></td>
+      </tr>`).join("")}</table>` : `<div class="empty">還沒有角色，新增第一位吧</div>`}
+    <h2 style="margin-top:16px">新增角色</h2>
+    <div class="grid">
+      <input id="chEmoji" placeholder="emoji，例：🐰" maxlength="4">
+      <input id="chName" placeholder="角色名">
+      <input id="chTag" placeholder="一句話介紹">
+      <input id="chShare" type="number" placeholder="分潤%（預設 80）">
+      <input id="chAvatar" placeholder="頭像圖檔（選填，例 img/cat-black.png）">
+    </div>
+    <button class="btn sm" onclick="addChar()">新增 ＋</button>
+    <p class="hint">新增後會產生一組「邀請碼」——把邀請碼給該陪玩，對方在「角色手札」用邀請碼註冊自己的帳號密碼（一碼綁一人）。分潤預設 80%（公司留 20%）。</p>
+  </div>`;
+}
+function addChar(){
+  const name=chName.value.trim();
+  if(!name) return alert("角色名要填");
+  const ref=db.ref(ROOT+"/characters").push({
+    name, emoji:chEmoji.value.trim()||"✨", tagline:chTag.value.trim(),
+    share:Number(chShare.value)||80, active:true, avatar:chAvatar.value.trim()||null
+  });
+  makeInvite(ref.key,'char');
+}
+
+/* ---------- 客服 ---------- */
+function renderStaff(){
+  const list=Object.entries(staff);
+  tab4.innerHTML=`<div class="card">
+    <h2>客服名冊（含你和管理，前期都當客服派單）</h2>
+    ${list.length? `<table><tr><th>名字</th><th>帳號</th><th>本月派單</th><th>啟用</th><th></th></tr>
+      ${list.map(([id,k])=>{
+        const now=new Date(); const m=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        const cnt=Object.values(orders).filter(o=>o.kefuId===id&&o.month===m).length;
+        return `<tr>
+          <td><b>${esc(k.name)}</b></td>
+          <td style="font-size:12px">${linkOf(id,'staff')
+            ? `<span style="color:var(--leaf-dk)">✔ 已綁定</span> <button class="btn sm ghost" onclick="unbind('${id}','staff')">解除</button>`
+            : (inviteOf(id,'staff')
+              ? `邀請碼 <b class="mono" style="font-size:10px">${inviteOf(id,'staff')}</b>`
+              : `<button class="btn sm" onclick="makeInvite('${id}','staff')">產生邀請碼</button>`)}</td>
+          <td>${cnt} 筆</td>
+          <td><button class="btn sm ${k.active!==false?'ok':'ghost'}" onclick="db.ref(ROOT+'/staff/${id}/active').set(${k.active===false})">${k.active!==false?'啟用中':'停用'}</button></td>
+          <td><button class="btn sm ghost" onclick="if(confirm('刪除客服「${esc(k.name)}」？派過的單會保留'))db.ref(ROOT+'/staff/${id}').remove()">刪</button></td>
+        </tr>`;
+      }).join("")}</table>` : `<div class="empty">還沒有客服，先把你和管理加進來</div>`}
+    <h2 style="margin-top:16px">新增客服</h2>
+    <div class="grid">
+      <input id="kfName" placeholder="名字，例：老闆／管理">
+    </div>
+    <button class="btn sm" onclick="addStaff()">新增 ＋</button>
+    <p class="hint">新增後會產生「邀請碼」——給該客服，對方在「客服派單台」用邀請碼註冊帳號密碼。你自己也要建一個客服身分才能派單。</p>
+  </div>`;
+}
+function addStaff(){
+  const name=kfName.value.trim();
+  if(!name) return alert("名字要填");
+  const ref=db.ref(ROOT+"/staff").push({name,active:true});
+  makeInvite(ref.key,'staff');
+}
+</script>
+</body>
+</html>
