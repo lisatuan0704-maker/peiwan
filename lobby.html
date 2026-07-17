@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>酒館大廳｜Tiny Tavern 小小酒館</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<meta name="theme-color" content="#FF9EB5">
+<meta property="og:site_name" content="Tiny Tavern 小小酒館">
+<meta property="og:title" content="酒館大廳｜Tiny Tavern">
+<meta property="og:description" content="闆闆們都在這裡 ✦ 進來看看今天誰在酒館">
+<meta property="og:image" content="https://tinytavern.tw/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Press+Start+2P&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+:root{
+  --outline:#5A3D4E; --berry:#FF9EB5; --berry-dk:#D96A8B;
+  --milk:#FFFDF8; --ink:#5A3D4E; --ink-soft:#A5798D; --lav:#C3A6EC; --lav-dk:#8E68C8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Huninn','Noto Sans TC',sans-serif;color:var(--ink);overflow:hidden;
+  background:#3A2312}
+/* 大廳舞台 */
+#hall{position:fixed;inset:0;background:#5C4032 url('img/lobbybase.png') center/cover no-repeat;image-rendering:pixelated}
+/* 頂部招牌 */
+#sign{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:20;text-align:center}
+#sign .plate{display:inline-block;padding:10px 26px;background:var(--berry);color:#fff;font-size:18px;letter-spacing:4px;
+  text-shadow:2px 2px 0 var(--berry-dk);
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    inset 0 -4px 0 var(--berry-dk),inset 0 3px 0 rgba(255,255,255,.35)}
+#sign .sub{margin-top:8px;font-size:12px;color:#FFE7EF;letter-spacing:2px;text-shadow:1px 1px 0 rgba(0,0,0,.5)}
+/* 右下入口鈕 */
+#joinBtn{position:fixed;right:20px;bottom:20px;z-index:20;padding:12px 18px;border:none;cursor:pointer;
+  background:var(--lav);color:#fff;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:2px;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    0 8px 0 -1px var(--outline),inset 0 -4px 0 var(--lav-dk)}
+#joinBtn:active{transform:translateY(4px)}
+/* NPC 娃娃 */
+.npc{position:absolute;cursor:pointer;text-align:center;will-change:left,top}
+.npc:hover .tag{background:var(--berry-dk)}
+.npc canvas{image-rendering:pixelated;display:block;margin:0 auto;filter:drop-shadow(0 6px 0 rgba(0,0,0,.22))}
+.npc .tag{display:inline-block;margin-top:2px;padding:3px 10px;background:rgba(90,61,78,.88);color:#FFE7EF;
+  font-size:12px;letter-spacing:1px;white-space:nowrap;
+  box-shadow:0 -2px 0 0 rgba(0,0,0,.3),0 2px 0 0 rgba(0,0,0,.3),-2px 0 0 0 rgba(0,0,0,.3),2px 0 0 0 rgba(0,0,0,.3)}
+/* 名片泡泡 */
+#bubble{position:fixed;z-index:30;display:none;max-width:280px;background:var(--milk);color:var(--ink);
+  padding:14px 16px;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    7px 8px 0 0 rgba(0,0,0,.3)}
+#bubble .nm{font-size:18px;font-weight:700}
+#bubble .tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#bubble .tg{font-size:11px;padding:3px 8px;background:#EFE4FB;color:var(--lav-dk);border:2px solid var(--lav-dk)}
+#bubble .qt{font-size:13px;color:var(--ink-soft);line-height:1.6}
+#bubble .close{position:absolute;top:4px;right:8px;background:none;border:none;font-family:inherit;
+  color:var(--ink-soft);cursor:pointer;font-size:14px}
+/* 空大廳 */
+#emptyMsg{position:fixed;left:50%;top:55%;transform:translate(-50%,-50%);z-index:5;text-align:center;display:none;
+  color:#FFE7EF;text-shadow:2px 2px 0 rgba(0,0,0,.5);font-size:15px;line-height:2;letter-spacing:1px}
+#cnt{color:#FFD3DF}
+@media(max-width:640px){
+  #sign .plate{font-size:14px;padding:8px 16px;letter-spacing:2px}
+}
+</style>
+</head>
+<body>
+<div id="hall"></div>
+
+<div id="sign">
+  <div class="plate">🏮 Tiny Tavern・酒館大廳</div>
+  <div class="sub">今天有 <span id="cnt">…</span> 位闆闆在酒館裡</div>
+</div>
+
+<div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐 🍵<br>成為第一位在大廳留下身影的人吧！</div>
+
+<button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
+
+<div id="bubble">
+  <button class="close" onclick="bubble.style.display='none'">✕</button>
+  <div class="nm" id="bNm"></div>
+  <div class="tags" id="bTags"></div>
+  <div class="qt" id="bQt"></div>
+</div>
+
+<script>
+/* ====== Firebase(同一份)====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",
+  authDomain: "my-shop-0520.firebaseapp.com",
+  databaseURL: "https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-shop-0520",
+  storageBucket: "my-shop-0520.firebasestorage.app",
+  messagingSenderId: "430482271005",
+  appId: "1:430482271005:web:967059c91a9b7970bdcff4",
+  measurementId: "G-NN7HQ5W8T1"
+};
+let db=null;
+try{ firebase.initializeApp(firebaseConfig); db=firebase.database(); }
+catch(e){ console.warn("Firebase 未載入", e); }
+const ROOT="peiwan";
+
+/* ====== 紙娃娃引擎(與 card.html 同一套,繪師部件上線時兩邊一起換)====== */
+const SKINS=['#F5D5B8','#EDBE97','#C98F62','#8A5A38'];
+const HAIRS=[
+  ['#3B2A1E','#241407'],['#1F1B22','#0D0B10'],['#C9973F','#8F6420'],['#D96A6A','#9E3E3E'],
+  ['#8A6ADB','#5A3E9E'],['#5E86C9','#37578E'],['#67B27C','#3E7A50'],['#E8A0C6','#B05E8A']
+];
+function P(ctx,x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
+function drawBody(ctx,skin){
+  const s=SKINS[skin]||SKINS[0], sd='rgba(0,0,0,.15)';
+  P(ctx,20,9,24,1,s);P(ctx,19,10,26,21,s);P(ctx,20,31,24,1,s);
+  P(ctx,29,32,6,3,s);P(ctx,24,35,16,13,s);
+  P(ctx,21,36,3,9,s);P(ctx,40,36,3,9,s);
+  P(ctx,21,45,3,3,s);P(ctx,40,45,3,3,s);
+  P(ctx,26,48,5,7,s);P(ctx,33,48,5,7,s);
+  P(ctx,25,55,6,3,'#4A3226');P(ctx,33,55,6,3,'#4A3226');
+  P(ctx,19,29,26,2,sd);
+}
+const BACKS=[
+  {d:()=>{}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,14,h);P(c,16,26,4,4,h);P(c,44,26,4,4,h);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,15,12,34,16,h);P(c,15,28,7,26,h);P(c,42,28,7,26,h);P(c,15,52,7,3,hd);P(c,42,52,7,3,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,12,h);P(c,10,14,7,22,h);P(c,47,14,7,22,h);P(c,10,34,7,3,hd);P(c,47,34,7,3,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,12,h);P(c,24,2,16,8,h);P(c,26,1,12,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,15,12,34,16,h);P(c,14,28,8,16,h);P(c,42,28,8,16,h);P(c,16,44,6,5,h);P(c,42,44,6,5,h);P(c,14,40,8,2,hd);P(c,42,40,8,2,hd);}},
+];
+const FRONTS=[
+  {d:(c,[h,hd])=>{P(c,18,7,28,7,h);P(c,18,14,4,5,h);P(c,42,14,4,5,h);P(c,24,13,4,3,h);P(c,32,13,4,3,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,6,h);P(c,18,13,10,5,h);P(c,18,18,5,4,h);P(c,40,13,6,4,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,5,h);P(c,18,12,8,8,h);P(c,38,12,8,8,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,8,28,6,h);P(c,24,13,4,3,h);P(c,36,13,4,3,h);P(c,30,2,3,7,h);P(c,32,1,3,4,h);P(c,18,8,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,7,h);P(c,18,14,12,7,h);P(c,42,14,4,4,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,9,28,5,h);P(c,20,5,4,5,h);P(c,27,3,4,7,h);P(c,34,4,4,6,h);P(c,41,6,4,4,h);P(c,18,9,28,2,hd);}},
+];
+const FACES=[
+  {d:c=>{P(c,25,20,3,4,'#241407');P(c,36,20,3,4,'#241407');P(c,29,27,6,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');P(c,39,25,3,2,'#F0A9A0');}},
+  {d:c=>{P(c,24,21,5,2,'#241407');P(c,35,21,5,2,'#241407');P(c,29,27,6,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');P(c,39,25,3,2,'#F0A9A0');}},
+  {d:c=>{P(c,25,20,3,3,'#241407');P(c,26,19,1,1,'#FFB544');P(c,36,20,3,3,'#241407');P(c,37,19,1,1,'#FFB544');P(c,28,27,8,3,'#A83E2C');P(c,29,28,6,1,'#E8705E');}},
+  {d:c=>{P(c,25,21,3,3,'#241407');P(c,36,21,3,3,'#241407');P(c,29,28,6,1,'#241407');}},
+  {d:c=>{P(c,24,20,2,2,'#241407');P(c,27,22,2,2,'#241407');P(c,24,24,2,2,'#241407');P(c,38,20,2,2,'#241407');P(c,35,22,2,2,'#241407');P(c,38,24,2,2,'#241407');P(c,29,27,6,3,'#A83E2C');}},
+  {d:c=>{P(c,25,20,3,4,'#241407');P(c,35,22,5,2,'#241407');P(c,29,27,5,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');}},
+];
+const CLOTHS=[
+  {d:c=>{P(c,23,34,18,15,'#E8944A');P(c,23,34,18,3,'#C97E1F');P(c,29,37,6,8,'#C97E1F');P(c,20,36,4,10,'#E8944A');P(c,40,36,4,10,'#E8944A');}},
+  {d:c=>{P(c,23,34,18,15,'#9E7BE0');P(c,23,34,18,3,'#68459E');P(c,29,37,6,8,'#68459E');P(c,20,36,4,10,'#9E7BE0');P(c,40,36,4,10,'#9E7BE0');}},
+  {d:c=>{P(c,23,34,18,14,'#F4F0E6');P(c,23,34,18,4,'#37578E');P(c,29,34,6,5,'#E8705E');P(c,20,36,4,9,'#F4F0E6');P(c,40,36,4,9,'#F4F0E6');P(c,23,46,18,2,'#37578E');}},
+  {d:c=>{P(c,23,34,18,10,'#E8A0C6');P(c,21,44,22,9,'#E8A0C6');P(c,21,51,22,2,'#B05E8A');P(c,29,36,6,2,'#fff');P(c,20,36,4,9,'#E8A0C6');P(c,40,36,4,9,'#E8A0C6');}},
+  {d:c=>{P(c,23,34,18,15,'#2E2A33');P(c,29,34,6,8,'#F4F0E6');P(c,31,36,2,4,'#A83E2C');P(c,20,36,4,10,'#2E2A33');P(c,40,36,4,10,'#2E2A33');}},
+  {d:c=>{P(c,23,34,18,15,'#67B27C');P(c,23,38,18,2,'#3E7A50');P(c,23,43,18,2,'#3E7A50');P(c,20,36,4,10,'#67B27C');P(c,40,36,4,10,'#67B27C');P(c,27,33,10,2,'#3E7A50');}},
+];
+const ACCS=[
+  {d:()=>{}},
+  {d:c=>{P(c,19,2,7,7,'#4A3226');P(c,21,4,3,4,'#E8A0C6');P(c,38,2,7,7,'#4A3226');P(c,40,4,3,4,'#E8A0C6');}},
+  {d:c=>{P(c,15,8,6,12,'#8A6A4A');P(c,16,18,4,4,'#8A6A4A');P(c,43,8,6,12,'#8A6A4A');P(c,44,18,4,4,'#8A6A4A');}},
+  {d:c=>{P(c,23,19,7,6,'#241407');P(c,24,20,5,4,'#CFE6F0');P(c,34,19,7,6,'#241407');P(c,35,20,5,4,'#CFE6F0');P(c,30,21,4,2,'#241407');}},
+  {d:c=>{P(c,26,4,5,5,'#E8705E');P(c,33,4,5,5,'#E8705E');P(c,30,5,4,4,'#A83E2C');}},
+  {d:c=>{P(c,17,16,4,8,'#37578E');P(c,43,16,4,8,'#37578E');P(c,18,6,28,3,'#37578E');}},
+  {d:c=>{P(c,20,3,4,4,'#A83E2C');P(c,21,1,2,3,'#E8705E');P(c,40,3,4,4,'#A83E2C');P(c,41,1,2,3,'#E8705E');}},
+];
+function drawDollTo(cv, doll){
+  const ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,64,64);
+  const d=doll||{};
+  const hair=HAIRS[d.hair]||HAIRS[0];
+  (BACKS[d.back]||BACKS[0]).d(ctx,hair);
+  drawBody(ctx, d.skin||0);
+  (CLOTHS[d.cloth]||CLOTHS[0]).d(ctx);
+  (FACES[d.face]||FACES[0]).d(ctx);
+  (FRONTS[d.front]||FRONTS[0]).d(ctx,hair);
+  (ACCS[d.acc]||ACCS[0]).d(ctx);
+}
+
+/* ====== 大廳住民:會走動的 2.5D NPC ====== */
+function hash(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
+const FLOOR={x0:0.04,x1:0.90,y0:0.55,y1:0.86};   // 地板活動範圍(背景圖到了可再校準)
+const hall=document.getElementById('hall');
+const agents=new Map();
+let bosses={};
+
+function makeAgent(key,b){
+  const h=hash(key);
+  const el=document.createElement('div');
+  el.className='npc';
+  const cv=document.createElement('canvas');cv.width=64;cv.height=64;
+  const tag=document.createElement('div');tag.className='tag';
+  el.appendChild(cv);el.appendChild(tag);
+  el.onclick=(ev)=>{ev.stopPropagation();showBubble(agents.get(key).b,ev.clientX,ev.clientY);};
+  hall.appendChild(el);
+  const a={key,b,el,cv,tag,
+    x:FLOOR.x0+((h%1000)/1000)*(FLOOR.x1-FLOOR.x0),
+    y:FLOOR.y0+(((h>>5)%1000)/1000)*(FLOOR.y1-FLOOR.y0),
+    tx:0,ty:0,state:'idle',timer:1.5+(h%50)/10,flip:(h>>3)%2===1,seed:h%10};
+  a.tx=a.x;a.ty=a.y;
+  drawDollTo(cv,b.doll);
+  tag.textContent=b.name||'？';
+  return a;
+}
+function pickTarget(a){
+  // 以現在位置為中心散步,偶爾跨大步
+  const far=Math.random()<.25;
+  const r=far?0.5:0.14;
+  a.tx=Math.min(FLOOR.x1,Math.max(FLOOR.x0, a.x+(Math.random()-0.5)*2*r));
+  a.ty=Math.min(FLOOR.y1,Math.max(FLOOR.y0, a.y+(Math.random()-0.5)*2*r*0.5));
+}
+let last=performance.now();
+function tick(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  const W=window.innerWidth,H=window.innerHeight;
+  agents.forEach(a=>{
+    const depthNow=0.75+(a.y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)*0.45;
+    if(a.state==='idle'){
+      a.timer-=dt;
+      if(a.timer<=0){
+        if(Math.random()<0.8){pickTarget(a);a.state='walk';}
+        else a.timer=2+Math.random()*4;
+      }
+    }else{
+      const dxp=(a.tx-a.x)*W, dyp=(a.ty-a.y)*H;
+      const dist=Math.hypot(dxp,dyp);
+      const sp=27*depthNow;   // 走速(近的走快,遠的走慢,透視感)
+      if(dist<4){a.state='idle';a.timer=2+Math.random()*6;}
+      else{
+        a.x+=dxp/dist*sp*dt/W; a.y+=dyp/dist*sp*dt/H;
+        if(Math.abs(dxp)>2) a.flip=dxp<0;
+      }
+    }
+    const depth=0.75+(a.y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)*0.45;
+    const size=Math.round(118*depth);
+    const walking=a.state==='walk';
+    const bob=Math.sin(now/1000*(walking?11:2.4)+a.seed)* (walking?3.5:2);
+    a.el.style.left=(a.x*W-size/2)+'px';
+    a.el.style.top=(a.y*H-size+bob)+'px';
+    a.el.style.zIndex=Math.round(a.y*1000);
+    a.cv.style.width=size+'px';a.cv.style.height=size+'px';
+    a.cv.style.transform=a.flip?'scaleX(-1)':'';
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+function sync(){
+  const keys=Object.keys(bosses);
+  cnt.textContent=keys.length;
+  emptyMsg.style.display=keys.length?'none':'block';
+  agents.forEach((a,k)=>{ if(!bosses[k]){a.el.remove();agents.delete(k);} });
+  Object.entries(bosses).forEach(([k,b])=>{
+    if(agents.has(k)){
+      const a=agents.get(k); a.b=b;
+      drawDollTo(a.cv,b.doll); a.tag.textContent=b.name||'？';
+    }else agents.set(k,makeAgent(k,b));
+  });
+}
+function showBubble(b,x,y){
+  bNm.textContent=b.name||'？';
+  bTags.innerHTML=(b.tags||[]).map(t=>`<span class="tg">${String(t).replace(/</g,'&lt;')}</span>`).join('');
+  bQt.textContent=b.quote? '「'+b.quote+'」' : '';
+  bubble.style.display='block';
+  const bw=280, bh=bubble.offsetHeight||140;
+  bubble.style.left=Math.min(window.innerWidth-bw-12, Math.max(12,x-bw/2))+'px';
+  bubble.style.top=Math.max(12, y-bh-24)+'px';
+}
+document.body.addEventListener('click',()=>{bubble.style.display='none';});
+
+if(db){
+  db.ref(ROOT+'/lobby').limitToLast(120).on('value',s=>{bosses=s.val()||{};sync();});
+}else{
+  cnt.textContent='0';emptyMsg.style.display='block';
+}
+</script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+:root{
+  --outline:#5A3D4E; --berry:#FF9EB5; --berry-dk:#D96A8B;
+  --milk:#FFFDF8; --ink:#5A3D4E; --ink-soft:#A5798D; --lav:#C3A6EC; --lav-dk:#8E68C8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Huninn','Noto Sans TC',sans-serif;color:var(--ink);overflow:hidden;
+  background:#3A2312}
+/* 大廳舞台 */
+#hall{position:fixed;inset:0;background:#5C4032 url('img/lobbybase.png') center/cover no-repeat;image-rendering:pixelated}
+/* 頂部招牌 */
+#sign{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:20;text-align:center}
+#sign .plate{display:inline-block;padding:10px 26px;background:var(--berry);color:#fff;font-size:18px;letter-spacing:4px;
+  text-shadow:2px 2px 0 var(--berry-dk);
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    inset 0 -4px 0 var(--berry-dk),inset 0 3px 0 rgba(255,255,255,.35)}
+#sign .sub{margin-top:8px;font-size:12px;color:#FFE7EF;letter-spacing:2px;text-shadow:1px 1px 0 rgba(0,0,0,.5)}
+/* 右下入口鈕 */
+#joinBtn{position:fixed;right:20px;bottom:20px;z-index:20;padding:12px 18px;border:none;cursor:pointer;
+  background:var(--lav);color:#fff;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:2px;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    0 8px 0 -1px var(--outline),inset 0 -4px 0 var(--lav-dk)}
+#joinBtn:active{transform:translateY(4px)}
+/* NPC 娃娃 */
+.npc{position:absolute;cursor:pointer;text-align:center;will-change:left,top}
+.npc:hover .tag{background:var(--berry-dk)}
+.npc canvas{image-rendering:pixelated;display:block;margin:0 auto;filter:drop-shadow(0 6px 0 rgba(0,0,0,.22))}
+.npc .tag{display:inline-block;margin-top:2px;padding:3px 10px;background:rgba(90,61,78,.88);color:#FFE7EF;
+  font-size:12px;letter-spacing:1px;white-space:nowrap;
+  box-shadow:0 -2px 0 0 rgba(0,0,0,.3),0 2px 0 0 rgba(0,0,0,.3),-2px 0 0 0 rgba(0,0,0,.3),2px 0 0 0 rgba(0,0,0,.3)}
+/* 名片泡泡 */
+#bubble{position:fixed;z-index:30;display:none;max-width:280px;background:var(--milk);color:var(--ink);
+  padding:14px 16px;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    7px 8px 0 0 rgba(0,0,0,.3)}
+#bubble .nm{font-size:18px;font-weight:700}
+#bubble .tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#bubble .tg{font-size:11px;padding:3px 8px;background:#EFE4FB;color:var(--lav-dk);border:2px solid var(--lav-dk)}
+#bubble .qt{font-size:13px;color:var(--ink-soft);line-height:1.6}
+#bubble .close{position:absolute;top:4px;right:8px;background:none;border:none;font-family:inherit;
+  color:var(--ink-soft);cursor:pointer;font-size:14px}
+/* 空大廳 */
+#emptyMsg{position:fixed;left:50%;top:55%;transform:translate(-50%,-50%);z-index:5;text-align:center;display:none;
+  color:#FFE7EF;text-shadow:2px 2px 0 rgba(0,0,0,.5);font-size:15px;line-height:2;letter-spacing:1px}
+#cnt{color:#FFD3DF}
+@media(max-width:640px){
+  #sign .plate{font-size:14px;padding:8px 16px;letter-spacing:2px}
+}
+</style>
+</head>
+<body>
+<div id="hall"></div>
+
+<div id="sign">
+  <div class="plate">🏮 Tiny Tavern・酒館大廳</div>
+  <div class="sub">今天有 <span id="cnt">…</span> 位闆闆在酒館裡</div>
+</div>
+
+<div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐 🍵<br>成為第一位在大廳留下身影的人吧！</div>
+
+<button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
+
+<div id="bubble">
+  <button class="close" onclick="bubble.style.display='none'">✕</button>
+  <div class="nm" id="bNm"></div>
+  <div class="tags" id="bTags"></div>
+  <div class="qt" id="bQt"></div>
+</div>
+
+<script>
+/* ====== Firebase(同一份)====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",
+  authDomain: "my-shop-0520.firebaseapp.com",
+  databaseURL: "https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-shop-0520",
+  storageBucket: "my-shop-0520.firebasestorage.app",
+  messagingSenderId: "430482271005",
+  appId: "1:430482271005:web:967059c91a9b7970bdcff4",
+  measurementId: "G-NN7HQ5W8T1"
+};
+let db=null;
+try{ firebase.initializeApp(firebaseConfig); db=firebase.database(); }
+catch(e){ console.warn("Firebase 未載入", e); }
+const ROOT="peiwan";
+
+/* ====== 紙娃娃引擎(與 card.html 同一套,繪師部件上線時兩邊一起換)====== */
+const SKINS=['#F5D5B8','#EDBE97','#C98F62','#8A5A38'];
+const HAIRS=[
+  ['#3B2A1E','#241407'],['#1F1B22','#0D0B10'],['#C9973F','#8F6420'],['#D96A6A','#9E3E3E'],
+  ['#8A6ADB','#5A3E9E'],['#5E86C9','#37578E'],['#67B27C','#3E7A50'],['#E8A0C6','#B05E8A']
+];
+function P(ctx,x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
+function drawBody(ctx,skin){
+  const s=SKINS[skin]||SKINS[0], sd='rgba(0,0,0,.15)';
+  P(ctx,20,9,24,1,s);P(ctx,19,10,26,21,s);P(ctx,20,31,24,1,s);
+  P(ctx,29,32,6,3,s);P(ctx,24,35,16,13,s);
+  P(ctx,21,36,3,9,s);P(ctx,40,36,3,9,s);
+  P(ctx,21,45,3,3,s);P(ctx,40,45,3,3,s);
+  P(ctx,26,48,5,7,s);P(ctx,33,48,5,7,s);
+  P(ctx,25,55,6,3,'#4A3226');P(ctx,33,55,6,3,'#4A3226');
+  P(ctx,19,29,26,2,sd);
+}
+const BACKS=[
+  {d:()=>{}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,14,h);P(c,16,26,4,4,h);P(c,44,26,4,4,h);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,15,12,34,16,h);P(c,15,28,7,26,h);P(c,42,28,7,26,h);P(c,15,52,7,3,hd);P(c,42,52,7,3,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,12,h);P(c,10,14,7,22,h);P(c,47,14,7,22,h);P(c,10,34,7,3,hd);P(c,47,34,7,3,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,12,h);P(c,24,2,16,8,h);P(c,26,1,12,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,15,12,34,16,h);P(c,14,28,8,16,h);P(c,42,28,8,16,h);P(c,16,44,6,5,h);P(c,42,44,6,5,h);P(c,14,40,8,2,hd);P(c,42,40,8,2,hd);}},
+];
+const FRONTS=[
+  {d:(c,[h,hd])=>{P(c,18,7,28,7,h);P(c,18,14,4,5,h);P(c,42,14,4,5,h);P(c,24,13,4,3,h);P(c,32,13,4,3,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,6,h);P(c,18,13,10,5,h);P(c,18,18,5,4,h);P(c,40,13,6,4,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,5,h);P(c,18,12,8,8,h);P(c,38,12,8,8,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,8,28,6,h);P(c,24,13,4,3,h);P(c,36,13,4,3,h);P(c,30,2,3,7,h);P(c,32,1,3,4,h);P(c,18,8,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,7,h);P(c,18,14,12,7,h);P(c,42,14,4,4,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,9,28,5,h);P(c,20,5,4,5,h);P(c,27,3,4,7,h);P(c,34,4,4,6,h);P(c,41,6,4,4,h);P(c,18,9,28,2,hd);}},
+];
+const FACES=[
+  {d:c=>{P(c,25,20,3,4,'#241407');P(c,36,20,3,4,'#241407');P(c,29,27,6,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');P(c,39,25,3,2,'#F0A9A0');}},
+  {d:c=>{P(c,24,21,5,2,'#241407');P(c,35,21,5,2,'#241407');P(c,29,27,6,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');P(c,39,25,3,2,'#F0A9A0');}},
+  {d:c=>{P(c,25,20,3,3,'#241407');P(c,26,19,1,1,'#FFB544');P(c,36,20,3,3,'#241407');P(c,37,19,1,1,'#FFB544');P(c,28,27,8,3,'#A83E2C');P(c,29,28,6,1,'#E8705E');}},
+  {d:c=>{P(c,25,21,3,3,'#241407');P(c,36,21,3,3,'#241407');P(c,29,28,6,1,'#241407');}},
+  {d:c=>{P(c,24,20,2,2,'#241407');P(c,27,22,2,2,'#241407');P(c,24,24,2,2,'#241407');P(c,38,20,2,2,'#241407');P(c,35,22,2,2,'#241407');P(c,38,24,2,2,'#241407');P(c,29,27,6,3,'#A83E2C');}},
+  {d:c=>{P(c,25,20,3,4,'#241407');P(c,35,22,5,2,'#241407');P(c,29,27,5,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');}},
+];
+const CLOTHS=[
+  {d:c=>{P(c,23,34,18,15,'#E8944A');P(c,23,34,18,3,'#C97E1F');P(c,29,37,6,8,'#C97E1F');P(c,20,36,4,10,'#E8944A');P(c,40,36,4,10,'#E8944A');}},
+  {d:c=>{P(c,23,34,18,15,'#9E7BE0');P(c,23,34,18,3,'#68459E');P(c,29,37,6,8,'#68459E');P(c,20,36,4,10,'#9E7BE0');P(c,40,36,4,10,'#9E7BE0');}},
+  {d:c=>{P(c,23,34,18,14,'#F4F0E6');P(c,23,34,18,4,'#37578E');P(c,29,34,6,5,'#E8705E');P(c,20,36,4,9,'#F4F0E6');P(c,40,36,4,9,'#F4F0E6');P(c,23,46,18,2,'#37578E');}},
+  {d:c=>{P(c,23,34,18,10,'#E8A0C6');P(c,21,44,22,9,'#E8A0C6');P(c,21,51,22,2,'#B05E8A');P(c,29,36,6,2,'#fff');P(c,20,36,4,9,'#E8A0C6');P(c,40,36,4,9,'#E8A0C6');}},
+  {d:c=>{P(c,23,34,18,15,'#2E2A33');P(c,29,34,6,8,'#F4F0E6');P(c,31,36,2,4,'#A83E2C');P(c,20,36,4,10,'#2E2A33');P(c,40,36,4,10,'#2E2A33');}},
+  {d:c=>{P(c,23,34,18,15,'#67B27C');P(c,23,38,18,2,'#3E7A50');P(c,23,43,18,2,'#3E7A50');P(c,20,36,4,10,'#67B27C');P(c,40,36,4,10,'#67B27C');P(c,27,33,10,2,'#3E7A50');}},
+];
+const ACCS=[
+  {d:()=>{}},
+  {d:c=>{P(c,19,2,7,7,'#4A3226');P(c,21,4,3,4,'#E8A0C6');P(c,38,2,7,7,'#4A3226');P(c,40,4,3,4,'#E8A0C6');}},
+  {d:c=>{P(c,15,8,6,12,'#8A6A4A');P(c,16,18,4,4,'#8A6A4A');P(c,43,8,6,12,'#8A6A4A');P(c,44,18,4,4,'#8A6A4A');}},
+  {d:c=>{P(c,23,19,7,6,'#241407');P(c,24,20,5,4,'#CFE6F0');P(c,34,19,7,6,'#241407');P(c,35,20,5,4,'#CFE6F0');P(c,30,21,4,2,'#241407');}},
+  {d:c=>{P(c,26,4,5,5,'#E8705E');P(c,33,4,5,5,'#E8705E');P(c,30,5,4,4,'#A83E2C');}},
+  {d:c=>{P(c,17,16,4,8,'#37578E');P(c,43,16,4,8,'#37578E');P(c,18,6,28,3,'#37578E');}},
+  {d:c=>{P(c,20,3,4,4,'#A83E2C');P(c,21,1,2,3,'#E8705E');P(c,40,3,4,4,'#A83E2C');P(c,41,1,2,3,'#E8705E');}},
+];
+function drawDollTo(cv, doll){
+  const ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,64,64);
+  const d=doll||{};
+  const hair=HAIRS[d.hair]||HAIRS[0];
+  (BACKS[d.back]||BACKS[0]).d(ctx,hair);
+  drawBody(ctx, d.skin||0);
+  (CLOTHS[d.cloth]||CLOTHS[0]).d(ctx);
+  (FACES[d.face]||FACES[0]).d(ctx);
+  (FRONTS[d.front]||FRONTS[0]).d(ctx,hair);
+  (ACCS[d.acc]||ACCS[0]).d(ctx);
+}
+
+/* ====== 大廳擺位:穩定偽隨機(同一位闆闆每次進來都站同一位置)====== */
+function hash(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
+function place(key, idx, total){
+  const h=hash(key);
+  // 地板區:垂直 55%~86%,水平 4%~88%,依索引分欄避免全疊
+  const cols=Math.max(4, Math.ceil(Math.sqrt(total*2)));
+  const col=idx%cols, row=Math.floor(idx/cols);
+  const jx=((h%100)/100-0.5)*0.6/cols;
+  const jy=(((h>>7)%100)/100-0.5)*0.10;
+  const x=0.05+ (col+0.5)/cols*0.84 + jx;
+  const y=0.58+ (row%3)*0.11 + jy;
+  return {x:Math.min(0.90,Math.max(0.03,x)), y:Math.min(0.86,Math.max(0.55,y)), flip:(h>>3)%2===1, delay:(h%24)/10};
+}
+
+const hall=document.getElementById('hall');
+let bosses={};
+function render(){
+  document.querySelectorAll('.npc').forEach(e=>e.remove());
+  const entries=Object.entries(bosses).sort((a,b)=>(a[1].updatedAt||0)-(b[1].updatedAt||0));
+  cnt.textContent=entries.length;
+  emptyMsg.style.display=entries.length?'none':'block';
+  const H=window.innerHeight, W=window.innerWidth;
+  entries.forEach(([key,b],i)=>{
+    const p=place(key,i,entries.length);
+    const depth=0.75+ (p.y-0.55)/0.31*0.45;   // 越下面越大(近)
+    const size=Math.round(120*depth);
+    const el=document.createElement('div');
+    el.className='npc';
+    el.style.left=(p.x*W)+'px';
+    el.style.top=(p.y*H - size)+'px';
+    el.style.zIndex=Math.round(p.y*100);
+    el.style.animationDelay=p.delay+'s';
+    const cv=document.createElement('canvas');
+    cv.width=64;cv.height=64;
+    cv.style.width=size+'px';cv.style.height=size+'px';
+    if(p.flip) cv.style.transform='scaleX(-1)';
+    drawDollTo(cv,b.doll);
+    el.appendChild(cv);
+    const tag=document.createElement('div');
+    tag.className='tag';tag.textContent=b.name||'？';
+    el.appendChild(tag);
+    el.onclick=(ev)=>{ev.stopPropagation();showBubble(b,ev.clientX,ev.clientY);};
+    hall.appendChild(el);
+  });
+}
+function showBubble(b,x,y){
+  bNm.textContent=b.name||'？';
+  bTags.innerHTML=(b.tags||[]).map(t=>`<span class="tg">${String(t).replace(/</g,'&lt;')}</span>`).join('');
+  bQt.textContent=b.quote? '「'+b.quote+'」' : '';
+  bubble.style.display='block';
+  const bw=280, bh=bubble.offsetHeight||140;
+  bubble.style.left=Math.min(window.innerWidth-bw-12, Math.max(12,x-bw/2))+'px';
+  bubble.style.top=Math.max(12, y-bh-24)+'px';
+}
+document.body.addEventListener('click',()=>{bubble.style.display='none';});
+window.addEventListener('resize',render);
+
+if(db){
+  db.ref(ROOT+'/lobby').limitToLast(120).on('value',s=>{bosses=s.val()||{};render();});
+}else{
+  cnt.textContent='0';emptyMsg.style.display='block';
+}
+</script>
+</body>
+</html>
