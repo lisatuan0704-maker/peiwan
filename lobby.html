@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>酒館大廳｜Tiny Tavern 小小酒館</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<meta name="theme-color" content="#FF9EB5">
+<meta property="og:site_name" content="Tiny Tavern 小小酒館">
+<meta property="og:title" content="酒館大廳｜Tiny Tavern">
+<meta property="og:description" content="闆闆們都在這裡 ✦ 進來看看今天誰在酒館">
+<meta property="og:image" content="https://tinytavern.tw/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Press+Start+2P&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+:root{
+  --outline:#5A3D4E; --berry:#FF9EB5; --berry-dk:#D96A8B;
+  --milk:#FFFDF8; --ink:#5A3D4E; --ink-soft:#A5798D; --lav:#C3A6EC; --lav-dk:#8E68C8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Huninn','Noto Sans TC',sans-serif;color:var(--ink);overflow:hidden;
+  background:#3A2312}
+/* 大廳舞台 */
+#hall{position:fixed;inset:0;overflow:hidden;background:#2A1C24}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#worldbg{position:absolute;left:0;top:0;image-rendering:pixelated;
+  background:#5C4032 center/cover no-repeat;background-size:cover}
+#fade{position:fixed;inset:0;z-index:80;background:#1E1218;opacity:0;pointer-events:none;transition:opacity .35s}
+#fade.on{opacity:1;pointer-events:auto}
+.door{position:absolute;z-index:14;cursor:pointer;text-align:center;font-size:26px;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.door .dl{font-size:11px;color:#FFE7EF;background:rgba(90,61,78,.85);padding:2px 8px;margin-top:2px;
+  letter-spacing:1px;white-space:nowrap}
+/* 頂部招牌 */
+#sign{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:20;text-align:center}
+#sign .plate{display:inline-block;padding:10px 26px;background:var(--berry);color:#fff;font-size:18px;letter-spacing:4px;
+  text-shadow:2px 2px 0 var(--berry-dk);
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    inset 0 -4px 0 var(--berry-dk),inset 0 3px 0 rgba(255,255,255,.35)}
+#sign .sub{margin-top:8px;font-size:12px;color:#FFE7EF;letter-spacing:2px;text-shadow:1px 1px 0 rgba(0,0,0,.5)}
+/* 右下入口鈕 */
+#hint2{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:20;
+  background:rgba(90,61,78,.82);color:#FFE7EF;font-size:12px;letter-spacing:1px;padding:7px 16px;
+  box-shadow:0 -2px 0 0 rgba(0,0,0,.3),0 2px 0 0 rgba(0,0,0,.3),-2px 0 0 0 rgba(0,0,0,.3),2px 0 0 0 rgba(0,0,0,.3)}
+.spot{position:absolute;z-index:15;cursor:pointer}
+.spot .fx{position:absolute;left:50%;top:0;transform:translateX(-50%);font-size:22px;opacity:0;pointer-events:none}
+.spot .fx.go{animation:heartUp 1.1s ease-out forwards}
+@keyframes heartUp{0%{opacity:0;transform:translate(-50%,0) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-46px) scale(1.15)}}
+#joinBtn{position:fixed;right:20px;bottom:20px;z-index:20;padding:12px 18px;border:none;cursor:pointer;
+  background:var(--lav);color:#fff;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:2px;
+  box-shadow:0 -4px 0 0 var(--outline),0 4px 0 0 var(--outline),-4px 0 0 0 var(--outline),4px 0 0 0 var(--outline),
+    0 8px 0 -1px var(--outline),inset 0 -4px 0 var(--lav-dk)}
+#joinBtn:active{transform:translateY(4px)}
+/* NPC 娃娃 */
+.npc{position:absolute;cursor:pointer;text-align:center;will-change:left,top}
+.npc:hover .tag{background:var(--berry-dk)}
+.npc{transform-style:preserve-3d}
+.npc .shadow{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
+  background:rgba(40,20,30,.28);border-radius:50%;filter:blur(1px);pointer-events:none;z-index:-1}
+.npc canvas{image-rendering:pixelated;display:block;margin:0 auto;
+  transform-origin:50% 100%;transition:none;
+  filter:drop-shadow(1px 3px 1px rgba(40,20,30,.25))}
+.npc .tag{display:inline-block;margin-top:2px;padding:3px 10px;background:rgba(90,61,78,.88);color:#FFE7EF;
+  font-size:12px;letter-spacing:1px;white-space:nowrap;
+  box-shadow:0 -2px 0 0 rgba(0,0,0,.3),0 2px 0 0 rgba(0,0,0,.3),-2px 0 0 0 rgba(0,0,0,.3),2px 0 0 0 rgba(0,0,0,.3)}
+.npc.staff .tag{background:rgba(47,102,71,.9)}
+.npc .led{position:absolute;left:50%;transform:translateX(-50%);top:-26px;
+  padding:2px 8px;font-size:11px;white-space:nowrap;letter-spacing:1px;
+  background:rgba(40,20,30,.85);color:#fff;display:none}
+.npc .led.g{display:block;color:#B6F2C2}
+.npc .led.g::before{content:'●';color:#5AE07C;margin-right:4px}
+.npc .led.r{display:block;color:#FFC9C9}
+.npc .led.r::before{content:'●';color:#FF5A5A;margin-right:4px}
+/* 名片泡泡 */
+#cardOverlay{position:fixed;inset:0;z-index:40;display:none;
+  background:rgba(40,20,30,.78);align-items:center;justify-content:center;padding:24px}
+#cardOverlay.on{display:flex}
+#cardBox{position:relative;max-width:92vw;max-height:88vh}
+#cardBox.show{animation:cardIn .34s cubic-bezier(.2,1.3,.4,1)}
+@keyframes cardIn{0%{opacity:0;transform:translateY(24px) scale(.86)}100%{opacity:1;transform:translateY(0) scale(1)}}
+#popcv{image-rendering:pixelated;display:block;width:auto;height:auto;max-width:92vw;max-height:82vh;
+  box-shadow:0 -6px 0 0 var(--outline),0 6px 0 0 var(--outline),-6px 0 0 0 var(--outline),6px 0 0 0 var(--outline),12px 14px 0 0 rgba(0,0,0,.4)}
+#cardClose{position:absolute;top:-14px;right:-14px;width:44px;height:44px;border:none;cursor:pointer;
+  background:var(--berry-dk);color:#fff;font-size:20px;font-family:inherit;border-radius:50%;
+  box-shadow:0 -3px 0 0 var(--outline),0 3px 0 0 var(--outline),-3px 0 0 0 var(--outline),3px 0 0 0 var(--outline)}
+#cardClose:active{transform:translateY(2px)}
+/* 空大廳 */
+#emptyMsg{position:fixed;left:50%;top:55%;transform:translate(-50%,-50%);z-index:5;text-align:center;display:none;
+  color:#FFE7EF;text-shadow:2px 2px 0 rgba(0,0,0,.5);font-size:15px;line-height:2;letter-spacing:1px}
+#cnt{color:#FFD3DF}
+@media(max-width:640px){
+  #sign .plate{font-size:14px;padding:8px 16px;letter-spacing:2px}
+}
+</style>
+</head>
+<body>
+<div id="hall"><div id="world"><div id="worldbg"></div></div></div>
+<div id="fade"></div>
+
+<div id="sign">
+  <div class="plate">🏮 Tiny Tavern・酒館大廳</div>
+  <div class="sub">今天有 <span id="cnt">…</span> 位闆闆在酒館裡</div>
+</div>
+
+<div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐 🍵<br>成為第一位在大廳留下身影的人吧！</div>
+
+<div style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:rgba(255,231,239,.45)">v7</div>
+<div id="hint2">點地板移動你的小人 ·  方向鍵也可以 · 閒置一下他會自己逛</div>
+<button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
+
+<div id="cardOverlay">
+  <div id="cardBox">
+    <canvas id="popcv" width="1280" height="800"></canvas>
+    <button id="cardClose" onclick="closeCard()">✕</button>
+  </div>
+</div>
+
+<script>
+/* ====== Firebase(同一份)====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",
+  authDomain: "my-shop-0520.firebaseapp.com",
+  databaseURL: "https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "my-shop-0520",
+  storageBucket: "my-shop-0520.firebasestorage.app",
+  messagingSenderId: "430482271005",
+  appId: "1:430482271005:web:967059c91a9b7970bdcff4",
+  measurementId: "G-NN7HQ5W8T1"
+};
+let db=null;
+try{ firebase.initializeApp(firebaseConfig); db=firebase.database(); }
+catch(e){ console.warn("Firebase 未載入", e); }
+const ROOT="peiwan";
+
+/* ====== 紙娃娃引擎(與 card.html 同一套,繪師部件上線時兩邊一起換)====== */
+const SKINS=['#F5D5B8','#EDBE97','#C98F62','#8A5A38'];
+const HAIRS=[
+  ['#3B2A1E','#241407'],['#1F1B22','#0D0B10'],['#C9973F','#8F6420'],['#D96A6A','#9E3E3E'],
+  ['#8A6ADB','#5A3E9E'],['#5E86C9','#37578E'],['#67B27C','#3E7A50'],['#E8A0C6','#B05E8A'],
+  ['#232025','#0B090D'],['#F2EAD8','#CDBFA3'],['#C6C6D0','#94949F']
+];
+function P(ctx,x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
+function drawBody(ctx,skin,pose){
+  const s=SKINS[skin]||SKINS[0], sd='rgba(0,0,0,.15)';
+  P(ctx,20,9,24,1,s);P(ctx,19,10,26,21,s);P(ctx,20,31,24,1,s);
+  P(ctx,29,32,6,3,s);P(ctx,24,35,16,13,s);
+  const sw = pose==='a'?1:(pose==='b'?-1:0);      // 手臂前後擺
+  P(ctx,21,36+sw,3,9,s);P(ctx,40,36-sw,3,9,s);
+  P(ctx,21,45+sw,3,3,s);P(ctx,40,45-sw,3,3,s);
+  if(pose==='a'){                                   // 左腳抬、右腳踩
+    P(ctx,26,46,5,6,s);P(ctx,25,52,6,3,'#4A3226');
+    P(ctx,33,48,5,7,s);P(ctx,33,55,6,3,'#4A3226');
+  }else if(pose==='b'){                             // 右腳抬、左腳踩
+    P(ctx,26,48,5,7,s);P(ctx,25,55,6,3,'#4A3226');
+    P(ctx,33,46,5,6,s);P(ctx,33,52,6,3,'#4A3226');
+  }else{
+    P(ctx,26,48,5,7,s);P(ctx,33,48,5,7,s);
+    P(ctx,25,55,6,3,'#4A3226');P(ctx,33,55,6,3,'#4A3226');
+  }
+  P(ctx,19,29,26,2,sd);
+}
+const BACKS=[
+  {d:()=>{}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,14,h);P(c,16,26,4,4,h);P(c,44,26,4,4,h);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,15,12,34,16,h);P(c,15,28,7,26,h);P(c,42,28,7,26,h);P(c,15,52,7,3,hd);P(c,42,52,7,3,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,12,h);P(c,10,14,7,22,h);P(c,47,14,7,22,h);P(c,10,34,7,3,hd);P(c,47,34,7,3,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,16,12,32,12,h);P(c,24,2,16,8,h);P(c,26,1,12,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,17,8,30,6,hd);P(c,15,12,34,16,h);P(c,14,28,8,16,h);P(c,42,28,8,16,h);P(c,16,44,6,5,h);P(c,42,44,6,5,h);P(c,14,40,8,2,hd);P(c,42,40,8,2,hd);}},
+];
+const FRONTS=[
+  {d:(c,[h,hd])=>{P(c,18,7,28,7,h);P(c,18,14,4,5,h);P(c,42,14,4,5,h);P(c,24,13,4,3,h);P(c,32,13,4,3,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,6,h);P(c,18,13,10,5,h);P(c,18,18,5,4,h);P(c,40,13,6,4,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,5,h);P(c,18,12,8,8,h);P(c,38,12,8,8,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,8,28,6,h);P(c,24,13,4,3,h);P(c,36,13,4,3,h);P(c,30,2,3,7,h);P(c,32,1,3,4,h);P(c,18,8,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,7,28,7,h);P(c,18,14,12,7,h);P(c,42,14,4,4,h);P(c,18,7,28,2,hd);}},
+  {d:(c,[h,hd])=>{P(c,18,9,28,5,h);P(c,20,5,4,5,h);P(c,27,3,4,7,h);P(c,34,4,4,6,h);P(c,41,6,4,4,h);P(c,18,9,28,2,hd);}},
+];
+const FACES=[
+  {d:c=>{P(c,25,20,3,4,'#241407');P(c,36,20,3,4,'#241407');P(c,29,27,6,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');P(c,39,25,3,2,'#F0A9A0');}},
+  {d:c=>{P(c,24,21,5,2,'#241407');P(c,35,21,5,2,'#241407');P(c,29,27,6,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');P(c,39,25,3,2,'#F0A9A0');}},
+  {d:c=>{P(c,25,20,3,3,'#241407');P(c,26,19,1,1,'#FFB544');P(c,36,20,3,3,'#241407');P(c,37,19,1,1,'#FFB544');P(c,28,27,8,3,'#A83E2C');P(c,29,28,6,1,'#E8705E');}},
+  {d:c=>{P(c,25,21,3,3,'#241407');P(c,36,21,3,3,'#241407');P(c,29,28,6,1,'#241407');}},
+  {d:c=>{P(c,24,20,2,2,'#241407');P(c,27,22,2,2,'#241407');P(c,24,24,2,2,'#241407');P(c,38,20,2,2,'#241407');P(c,35,22,2,2,'#241407');P(c,38,24,2,2,'#241407');P(c,29,27,6,3,'#A83E2C');}},
+  {d:c=>{P(c,25,20,3,4,'#241407');P(c,35,22,5,2,'#241407');P(c,29,27,5,2,'#A83E2C');P(c,22,25,3,2,'#F0A9A0');}},
+];
+const CLOTHS=[
+  {d:c=>{P(c,23,34,18,15,'#E8944A');P(c,23,34,18,3,'#C97E1F');P(c,29,37,6,8,'#C97E1F');P(c,20,36,4,10,'#E8944A');P(c,40,36,4,10,'#E8944A');}},
+  {d:c=>{P(c,23,34,18,15,'#9E7BE0');P(c,23,34,18,3,'#68459E');P(c,29,37,6,8,'#68459E');P(c,20,36,4,10,'#9E7BE0');P(c,40,36,4,10,'#9E7BE0');}},
+  {d:c=>{P(c,23,34,18,14,'#F4F0E6');P(c,23,34,18,4,'#37578E');P(c,29,34,6,5,'#E8705E');P(c,20,36,4,9,'#F4F0E6');P(c,40,36,4,9,'#F4F0E6');P(c,23,46,18,2,'#37578E');}},
+  {d:c=>{P(c,23,34,18,10,'#E8A0C6');P(c,21,44,22,9,'#E8A0C6');P(c,21,51,22,2,'#B05E8A');P(c,29,36,6,2,'#fff');P(c,20,36,4,9,'#E8A0C6');P(c,40,36,4,9,'#E8A0C6');}},
+  {d:c=>{P(c,23,34,18,15,'#2E2A33');P(c,29,34,6,8,'#F4F0E6');P(c,31,36,2,4,'#A83E2C');P(c,20,36,4,10,'#2E2A33');P(c,40,36,4,10,'#2E2A33');}},
+  {d:c=>{P(c,23,34,18,15,'#67B27C');P(c,23,38,18,2,'#3E7A50');P(c,23,43,18,2,'#3E7A50');P(c,20,36,4,10,'#67B27C');P(c,40,36,4,10,'#67B27C');P(c,27,33,10,2,'#3E7A50');}},
+];
+const ACCS=[
+  {d:()=>{}},
+  {d:c=>{P(c,19,2,7,7,'#4A3226');P(c,21,4,3,4,'#E8A0C6');P(c,38,2,7,7,'#4A3226');P(c,40,4,3,4,'#E8A0C6');}},
+  {d:c=>{P(c,15,8,6,12,'#8A6A4A');P(c,16,18,4,4,'#8A6A4A');P(c,43,8,6,12,'#8A6A4A');P(c,44,18,4,4,'#8A6A4A');}},
+  {d:c=>{P(c,23,19,7,6,'#241407');P(c,24,20,5,4,'#CFE6F0');P(c,34,19,7,6,'#241407');P(c,35,20,5,4,'#CFE6F0');P(c,30,21,4,2,'#241407');}},
+  {d:c=>{P(c,26,4,5,5,'#E8705E');P(c,33,4,5,5,'#E8705E');P(c,30,5,4,4,'#A83E2C');}},
+  {d:c=>{P(c,17,16,4,8,'#37578E');P(c,43,16,4,8,'#37578E');P(c,18,6,28,3,'#37578E');}},
+  {d:c=>{P(c,20,3,4,4,'#A83E2C');P(c,21,1,2,3,'#E8705E');P(c,40,3,4,4,'#A83E2C');P(c,41,1,2,3,'#E8705E');}},
+];
+function drawDollTo(cv, doll, pose){
+  const ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,64,64);
+  const d=doll||{};
+  const hair=HAIRS[d.hair]||HAIRS[0];
+  (BACKS[d.back]||BACKS[0]).d(ctx,hair);
+  drawBody(ctx, d.skin||0, pose||'idle');
+  (CLOTHS[d.cloth]||CLOTHS[0]).d(ctx);
+  (FACES[d.face]||FACES[0]).d(ctx);
+  (FRONTS[d.front]||FRONTS[0]).d(ctx,hair);
+  (ACCS[d.acc]||ACCS[0]).d(ctx);
+}
+
+/* ====== 測試模式:?test=1 載入繪師測試造型(僅內部試跑,公開訪客不載入) ====== */
+const TEST_MODE = new URLSearchParams(location.search).get('test')!=='0';   // 預設繪師測試部件;?test=0 占位版
+const TP = {"parts": {"後髮": [{"n": "露亞長髮", "d": "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", "g": false}, {"n": "小莓短髮", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAQrSURBVHja7JxNSBRxGIffSVGLApFWKcSTYHTakoo6V5fo41BEQgc1iCAK+qJTUB2CwkPHLtZBCvFUUR3qHETUeqqUTkuQ2hIejL6U7bD7avu2szPbjvPhPs9FnF3mi+f9/d//zOw4+XxeoH5ZxSlAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABIJo1hbchxnFAPbHfPvmX5ydOLiSeBHkjUv8wiAUiAZONW6SN7TxQq7OdUoNs7LpJfzkQgASBUnLDGoKB6AFvxWumWlp0pERHJ3hkXEZFUT0NN211obRcRka+vPouIyLmpZ4H0BvQAQAJUU/n3Dg6ULF+b7ij7/S+v3/la7/e3v0r+b9uxQUREGmZnCuuZWCj5fPXWppL/Tz19WFMSkABAAvip/NHBC4WKnf5WqPzeVl+Vn9q2ueL69fs2CSxa+V7rO3z1RlVJQAIACVCp8u8PXhYRkaZOx1cla4XOfMyGclzt3V01JQEJACTA3+zZtCsvInL3wPmqunxb+W6VGTRe2zty7ZKIiDz/8NIhAYAE8Kr8kdPXRUTkd3bWVwJEVflBJQEJAJES27uBtvK95vdr5poj3V+t/KiTiASAZPUAduxXmtuaK475lrnx6Yo9Q1x6AtsL0ANAffcAmdxkxc/nM2+Kld+biMpPGiQACRANbmO/ok/ybNye7BOcHS4cR9dAmgQAEsCT6bH3IrL0ZE5jQsf2xesCZvnYlZs6G9D23yEBgATQyu86mS7p/kWCTYCl9RZPwJbeisuZBQAJEGbl+6Xa+b+tcL/LV3oSkAAkQLTYytfKbkn4iV1MlnUpEgBIgEXsM396xa/aHiBpxPWeBQlAAkRT+VoJ+tcmwXzmk69K8ltZbvN9r+9zHQBIgDDQa/9edwFb8poM/zeWeiVBvVQ+CQDRJoCO3ZEduEmCsCvf60koEgBWVgLoU7D9xbds6WxA0Xfv/Hs3sDLVzgbCHvOj/r0CCQDx6gFsEgx19JVUvkWfo9cnaX44nYVKT+gJ1+PJ5XIOCQD1lwB6RVAr2m12kNS7gdq7aFLZXiUzPBmr/SUBSIB482D/0bK9gO36a50NBMWxx6NSbpbTfeZQrMZ+EgCinQXoc/G2F9DKdbsb6DX/DzsJNJmUoc6+RAlAAtQ5sXk/gE0CrSw7lnolgdL/aCiU4/J6m5nX2M/7AaC+E8Amge0V7HK3CixT+U5xPTXtd+7ibRERWX/rbMl+2u3aBPDb9ZMAQALUgltyLDd2u/b+vt/5PgkA9ZEAwHUAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAADD8GQBhNLKYlayaNwAAAABJRU5ErkJggg==", "g": false}, {"n": "灰階捲髮(可換色)", "d": "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", "g": true}], "前髮": [{"n": "露亞瀏海", "d": "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", "g": false}, {"n": "小莓瀏海", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAVYSURBVHja7JxdaBxVGIbfqRHSqiCJ1RR/YkqgNonQWpumBgspoqBYkhLBi5gqYnshKfjTm7UXXmhAFAKmUhposTEXom1TGhC8SbBSool/0G1UCLa01UQt1QupBRuPF2cm9ExmNrPtmswmz3OzO9/MOXtmeb93vnN2djxjjGDxsoSvAAEAAgAEAAgAEAAgAEAAgAAAAQACAAQACAAQACAAQACAAAABAAIABAAIABAAIABAAIAAAAEAAgAEAAgAioeShXIinudFxvc1tgdvE/0NeseJXi9J+x0nep12xhgPBwAcIC3sa2x3MnZL7cakTY0kbX/6WUlSz4fvS5Ieqqx1DjpZ+VbYgUwxOgIOsMjxFsoTQoIaIMj8PDI+kmOnhvNyjor7V7nj6dg8/dZ3BBwAcIDCs2fIk6Ts8Oi/V4frNq7P2Sw7PBoZD9pNnvwxMrPD7Wb7nLATzCg45vn7xwGYBRTXvH46c7oHy/2MvJAkE+MyPc4Zwvvj4sUODkANYIrKAcz+zysl6Ur23BlJKqm7O1F/V7LnXOvz282Ir6zI3c9Pk5HHx8VnqwWoAQAHSOIApntwiV+dT0VV51p2Y14OEFsUtTa4gR9+tq/33en2d+iL3P3EOJP3/MOpWh/AAZgFFAfZ4dEpSap7vMndUXWbu336QvSJrqu2b8bOR3/AE2vsa+2K6P2heIkaHCcoWVpqd9TcFd0+PE5mAYADJMD0jayVpJ69e+w8XE1uRsVlbNgJzvzqZmjgBHlmfjhecnpl7lwKjdP8+bctAG5daqJmBTgA4ABO1dxW/43vBMkyPxyPqQlir9XXSuAw996RbJzUAIAD5Lr2dw+ukJwVtOubRYyN2RoiyNAg/t7HNv7iU/ll7KmJBSEAHAAHSOm1v2PzL861P+6aHs7YIDNDxwXrB53vdEqSMq9m8us338yfpb/gvIJ7CefrHkIcAAcoUuKq+7h4mNIbHGeYPP61JKliosrun/jDvj5S42b+Wb//KfvSsvM5SdLe1p22fajGmDz4qY1ve4waAHCA/80JjvR+IEna2v6Mn5nbJEn9fbbK18VLbrvLU85mxYY6m7FfZu122U12x+Gv3Lh/XEDZslsinSXcfzDO44eOSZI2tW7BAQAHmDMCR5hqrPb8bSNJ/W/3OMcdGLHX7Ewo08O88PquvyTpwPkRawGf6DdJ2r9p3XLHgd49yDoA4ACFI/gVb5a1/PX3rIqMDwwMSJIaGhqsE+zabq4+PvNtvydJnWtbjCRlOl6JdIaq8oqbJcmctT/qtZTXLM81nulrf80DOACkhzTfE2hXyMIrgXEO4Mdf/qhbktQ1bv8x1Fy22jnBoxe/z2vF7c01zeHf7Y0kvfbdUeeevoi7mI0kfda822b+gxts9NI/zvi9tnr5/bASCNQA103X+NDv+WR8Agf0orYzCccznfnMAgAHmBvSUtR4kuTtftLWMm8M4ACAA+SfQW317mwgfFfvzPWA29N0Es1lq6kBAAeYM16qbrrszwbSNbBg/o8DAA5QiFogIPRfv67xodJUn01KVgBxALBCLKInhCRygOn2nVsdB4ldNCjQ+cc+0SRzxETNVnAAoAYoaC2QMg4/2pEz8zXP/wrGAaBo1wGinSDuyR9zjOkbiSwq0pb5OAAUrQOktSYoqszHASDd6wDXMA83UQ4xa9oWfh0gr3HwnEDAAQAHAAQACAAQACAAQACAAAABAAIABAAIABAAIABAAIAAAAEAAgAEAAgAEAAgAEAAgAAAAQACAAQACAAQACAAQACAAAABAAIABAAIABAAIABAAIAAAAEAAkAAfAUIABYx/w0ACkKf5vpHEQEAAAAASUVORK5CYII=", "g": false}, {"n": "灰階瀏海(可換色)", "d": "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", "g": true}], "衣服": [{"n": "露亞裝A", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAANOSURBVHja7JpPSBRRHMe/L60o8uZZw3/UqUvUpSgUpEMQesxwswiC/kCXDgUSVCAECq1Cdqi2skuQLHSIDmGHCCGQLgWaYtvFg5cgwv7I6zD7lt7szDoQLjv2+dxm329n9y2f33femx1jrRX8v2ziJ0AAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAIiiPu0TMMb80/t/3JuwSeq2nurzPqhue5uVpNXvnyp+AWstCQA13EC1bmjSBEg8j5klr7Aw/laSNPXiVWT54SOd3nj/5FU/Qg8cVKUkIAGANUBVJtLQ5rXa6rd5I0mZTMar65xqiO7s4UtBQW+LJGm2fSRy/GHPTe98rvNteaubNPxuJAAJkG7qdrRaSVrouyVJatq/W5J08vWQJOnBlWteffbLaRN0tqwk9S9mg4FnC15dx1zQ8R3uheL419YPkqQLJ8aCZNC5uIu8TUMSkADsAtK9C3DX/t+3n0ePXzwqSRrZ12wk6Vj7+cgJN93p8Tq98PK9twZwawZHfm7US4ISA7uUprUACUACbOwEKO33pz8Gnd69p3JdsfNdXfg4THbsjJcE7+YnJEl7b1xnFwAkwPpPoPxOoDehbFeXitf+ROcrrQVmF4vbgZ1BEpydjKwfXMlLknK5HHcCgQSouQRwnes6++f9J5KkLQPHE3V6XCK448LwjCSp5dFlSeX/CZAAQAJUOQEqJsFaDK7kjSTdPdRtJWlpelvFa//jp28iO58EABKgmglQbXgiCEiANCRArjm495/5PGr+Pg7jxuPeH677tbxsJWlzYyMJACRAzSWA69zwv3jN472RT/CYmBPF1YWThQSAVFK/0SYU1/kRyRH3LF8i3PlzxSeL1koCEgBIgGoS95x/XBIkHXcJk/T8JACwCwASABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQANadPwMA3pUbd25Zt3wAAAAASUVORK5CYII=", "g": false}, {"n": "露亞裝B", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAMCSURBVHja7Nm/S1VxGMfxzymhJTOFhraopqBFoqDVPYSCSmgNavXvcAoSgqbAagik3TXIva2irSFQSpeG+DZ4j3mO9+q9eTW113u5nJ/33Mv7+ZznOacqpQT/Lyf8BQQAAUAAEAAEAAFAABAABAABQAAQAAQAAUAAEAAEAAFAABAABAABQAAQAAQAAUAAEAAEAAFAABAABAABQAAQAAQAAUAAEAAEAAFAABAABAABQAAQAAQAAUAAEAAEAAFAABAABAABQAAQAAQAAUAAEAAEAAFAABAABAABQAAQAAQAAUAAEAAEAAHQjZHDciFVVf3T7y9vPpUkqW5fqvpZ3/M8pUgASIAjR13hdcVv3aQHwPEV/7Dcs/5VD7Ays9j1D5hYmK66ba/X6wGgBzjK1JU9fvtq9+3pvr1ev1sSSABIgP0a2fvpzsvsUuNmXM1NNfYfPz/aPODdl43Pmxca9/pyvnOezvptx0kAmAIOZgooncquK3qgOb1OhHYSDD2eTAGQAMNNgEblbzuuRxJcOXsnSfJh9XmSZL56ONAPfZzXVZI8zd3Sz34SABLgQBLgwfWNzxfLfSXBydOXSpI8Wb+WJJm6fCNJcu76xSTJt+XPXb906eP7xv419XETC9Odiv9ebVz/mASA5wD7T6vyt7DWSIxOZY6MTiZJ7s3cT5K8Wni5sVenwmvald4rEerjNqeRaqyv5xISABJgTz3Cn3t8uk0FZ6pTX5PkR/m546O6OgnaT/Tm5541lh/NPmysr5ePGxLAFHBop4Ad5/82q1/XGsvtLn1kdLIkybdbc439Bn62X08hrZ6kTqhSSiUBoAfYA31Vfrvi26zMLLa69BM7nue4veWTADhyPUCj8ner8Pa9vl35vTj3djZJ8mv90477D5oIegBIgCFNAYNeUNWth+g3EXZjMwn6fAfhXQAkwJCeAwx1qug1Jexa+T3u9b0SSAJAAhyyBBgoGf6i54gEgATA0UQCEAAEAAFAABAABAABQAAQAAQAAUAAEAAEwLHk9wDpZew4DCnk3gAAAABJRU5ErkJggg==", "g": false}, {"n": "小莓裝", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAKBSURBVHja7No/j0xRGMDh9whb6CR8Af92ky1EZZvdqLGhUFDQ8QE0lBqJbSglqGi2kZiCQkljP4AGm4goNSuhIHEU1+XOdWfM7mTdO+N5Ouu47OR33jlnVso5B/+vHV4CASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACoMnOafuGUkqbWn9n7miu/np+drZx3VJvNW3l35NzNgHo8IbpeqHbPQHq3/+t8zM5IuLKjeXiC/sfpXH+PhMAE6DlCfC9/K2IiOenz0VExKlnGxERsfH+doqISPvmRnoh8t0HxcMuX4zqc1/Grr4/fyx/TZPwepkAbgFTK1d3bN2nXrGD9xwZvu6PCVPb+TcPHCp2/vq7vnVrqThLdH0SmADOANN5BpjfeyYiIl59fJyHvZe/ePJ0U89fvH+9b0evLCz3Pf94bRKYAJgALd8CGt/jy52/ePLE0OcNWlc/C5Sv48rBwzki4urb124BuAX8c79O5T9dW3+zPVeM358H5OokmJSdbwIwnROgfgof9T190G1g0Lq/nR1MANwC2lR+EldaiG+N68qfDZSWequNX68r15Xv/QPPCn4aiAnQ7ucArTIBcAvo1I6797B5waULWxodXZs4JgDOAKMo/wfP2d0zERHx4cvnNM46ZwBMgEmcAJXPCdI460wATADcAhAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIgBb8GABQ9rEU2ddaLAAAAABJRU5ErkJggg==", "g": false}], "眼睛": [{"n": "露亞眼", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAKgSURBVHja7N09SJQBHMfx3yOihUQ4OBfSYG8QvRA41eIqQdTQVhANDTXlEA3RWBHREATR0Fi0VINLEC3R2xYHQURN4SDRIEl4DY9PeccpdHrHoZ/Popzecyrf//+e5xyuqNfrYePq8ycQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAKgW/o3yi/649HYim+OtPV4rVjL47Z7PBsAG6ATE7/cRBZFdXPbA1skSfO7r1WP3+ubwAbY4Ir18r6B/ya5N/Xq39kGcA6wMf1696ZhJAcPHCpWc5x2728D4BygE+cCLSa89XPzTHmWPv/1539NcovJrzd9PUnyrG+oSJJj+3baANgAHTf//m19pYlf9ix9pr3r9WJk5VcYq00wsP9gYQPgKqALk7+wNO5arZYkGTt9Lkky93K64X6b+wcaJrndTTD3e77heNXjDo4tHtfrANgAHbTkOXZh6QQ2G7/+KUnyYWr34g1Hyom9f7etyd9+9l7D5FfHq9ycnPC/AGyArjlzYqpv6XX5th2j5aTuOdV6ghdvr74vs5/X5Of4e7weZwPYAOvTpjsPy09uXUmSDI+OJ0kmDu8qP74oz8qnX39c1eNUxz3ZdLzvF67aANgAXff4+YMkye0bFxsm8Un1nD91LUlyaXFiXw0/LTfG7GRbj1fdf+hoeVXx5fzlJMnI3i3lN3yLqwB617r7XwA2AAJAAAgAASAABIAAEAACQAAIAAEgAASAAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAPScPwMAu3aYZi1vy1MAAAAASUVORK5CYII=", "g": false}, {"n": "小莓眼", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAM0SURBVHja7N0/SJRhHMDx73MaFVGCNkRhZFiUERSmSUtLSAQVREhUJFZQtrhE5NBkk5sEBSH9gSaHoCBoCbKhP5pQkAgmkbQ0pJEZIqlvw+s73KGllqfp97OIcu+93PF9fu89d8KFKIrQ4pXyKTAAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkAMqu3IXyQEIIU7pdw5Gq335FypX7LeFv7mey4+frN7M4ARa5sFC+M2iyCZC5Uqe6wmcqOV/meZwAcgJkcwJMthKzJfP8TgA5AebDLmCuOAHk+wDzyaeWh2lLsrDqUJjL+3ECyAkwG4Y72gFYXlYRAQy1v0xWaJhoJU91BSe3X71haQBI5eTHKyqVEwGMjY0GJ4DcBczVLiBz5f9JsmKT45aWlk1psiS3S1Z+5v25C5ATIBtGvn6Lf/a8AmBFxYG0B7Y2bIyv3SPdaccVFGxK+72/v2da1+78/OIIoK/vfbwLyN0MQN6W9QC8vn0pACwrq3QCyF3A7E2A8ZW/q6YxbeWPjPwE4OC6GgDuFZUAUDcQ/71p1RIAjr9tAyAnb+W0zpscn0ySpsL49+qupwBcuDgUAdxqrQxOADkBZkuy8rvGV16y8hPFW+PXAHxoy85EGj9/KpUKALd8H0BOgFnU2fkkTLQfHxgYAGD78FsATp47A8D3B/FrhvIda5Jr/4yu0eX79wFw9c1nALaVFAEwODj4XzxvTgAnwMLyo/1FALh24lgEcLb5NgBHH41fhW80A1B7eDcA3b29/+S8tZfjXcbNxrsAFI2OOgE0/y3YzwKGOuJX+18630UA1589BqD1efyO3d498b69obY+AOSW7pzReeur4//9a3v3EYA7decBKDx12s8C5ASQrwFkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAGYAMQAYgA5AByABkADIAxX4NAK7a3n8MY/fzAAAAAElFTkSuQmCC", "g": false}], "身體後配件": [{"n": "無", "d": null, "g": false}, {"n": "尾巴", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAIoSURBVHja7NgxS1tRHMbh94rSUdC5UJDSDs0QRKhLP4Ad7NrR71DQwbGDLg7F3Q/RyaHQrdkqSKFqpWLntu4djoMVvPE2JkFMpM+zmUtuQvI7f09OVUoJ/68JH4EAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAARA3eRdv2BVVcM+tfzrlgPdpBTfugnAyCbAsCu/k6nGi8/zpwwzCTABSFLd9f/EHnuAnm9kY+5xz/uuHR/1tSewBzABGLM9QEmSFwvtJMn0zEzt4vvdD0mS1W+HFw98eZck2Vze9u2ZANznPUBJksV2q3Z9arI+lFaXHyRJll69TpJsvX2TJHn6bD5J8nK9M9B5gD2ACcCIJ0Djyr98G529/cbdf2tltvb4oCvfBDABGKdfAd0LsXvlX578ffz79/7Oz8brTgJNAO75OcC1bcLVld05PunrSYvtVkmST58vJsmTRw+TJAcnP0wGE4CxPQfoXvlN24UbVn5fr/vr91mS5Ov3UxPBBGAcJsCt/aAY8BzABDABGNkEwARAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAALgFpwDAAD//wMApfRm+o89CAcAAAAASUVORK5CYII=", "g": false}], "後髮前配件": [{"n": "無", "d": null, "g": false}, {"n": "耳環", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAGcSURBVHja7NexTcNQFIbR34gVaM0I2SJ9WCL0zEFvlsgA2SIjJC1DXAr0JMcSUgJCPJRzmsRO82J979oeqircrjuXQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAAC4DL3vS9wGIaz4+N2V/Pjx7enocd1H7e79rWWfylJxmljAmACXLOjKknG9er8fD7P9zIJ2s4f16tKktP+kPm6T/tDzSeBCYAJcM3OX+6o9tkmwThtvrWzls8aP1DeAjABftv780uS5GF67Wpd7VmkTaSmTa72e01lAtDBa3ZV37esdm9evv9/tfP+i16uuwlgApSrcMNMAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAA/twHAAAA//8DANlHQm2lHXJoAAAAAElFTkSuQmCC", "g": false}, {"n": "髮飾", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAHqSURBVHja7NyxLkNRGMDx74jFAxgsvIDJJh7AJJE7S4cujafAbLFJF0NjvrvNIiYmD4BFwkMcw3WlGtWWJu5Nf79FIpLeyP98/c7QppxzsLiW/AsEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIADaablpD5RSmurvjjYPvnyk6eThMv3ldWf9hNT13ln18/HuV8/RlE9kmQAmQDuMnvjuThEREeu97eoXncjzmARTT4CPk388OI2IiOf+7efhnudkMgEwAb47+SvloDp5/3TS6tfr9os8/DzdohMRERc3pVsAzZea9v0A9S1g0nt+2lpr5Htrvn/JwzvB6CSoJ4dbAHaAn7b90RP/tntYnfx+0eitup5Mr6v71S3h6nzcLSGZANgBJu0A9STYaPjJH+epV+bhXcAOgB1gFm25T7f1+U0AO4DvCVxkJoAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABLLh3AAAA//8DAAFibkkBZ9aqAAAAAElFTkSuQmCC", "g": false}, {"n": "貓耳朵", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAJtSURBVHja7NzdcdNAFIDRFcOrKMBqwDTgBnAB0AAVuJ00QAWpww2gBuQCtAWIB61I9GPFJnFYT855ILZjBk3m2+vdjIai67rAx/XJj0AACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAO7f51wvrCiK6Uvnbl8uMrv0i64zl7uxTQATIHtdCCFsy+3iN+tYd5lMgv46N2eu85TNdZoA3NcEGCvHT4fJ8B9X2OrKdwrABLjFyp/apBV4epoE73pKaEObHn159mcIv3b9dVX7Q//1cMhqL2ACmAB57/7DZCUNvh+P/YM4mQTlZvT8FE9vveK6xX8vPs2C/np3/Yrf7e0BMAH+2fDZXqUV9XcixH7J/Tz+Xv/784nwqpU/X/HLhgn1mJ5X33YmACbA9WLaXcc43XYvv332YPxCmY4T8aUlPFdM9hQXTYI2vaGyB8AEeNVBezwJqq9V2gv0r/9o6tGKjCHe6pxdLJ0GVkbA8gQzATABrhkAwwpq23Of+rde+ecmQVibCMOkml+3CYAJcMEhIK3wJp2rq+0218/U1YlQPTwUJgDZKXL9n0Kf3RPYhRBCWfbn9+PkN4JN04QQQtjXdXFPP3j3BGIP8BbubeXbA2APcOUeYLwXmNwa9I7nfnsATADsARAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEIAAEgAASAABAAAkAACICP4M8AC/qMGKHfFwUAAAAASUVORK5CYII=", "g": false}], "前髮前配件": [{"n": "無", "d": null, "g": false}, {"n": "額冠", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAHKSURBVHja7N2xSkJxGMbh91QQrdHsLZygqGiqxb2lW8ixS2msW2jQvaWmsCjIG3A4c7RGQ/wbVDBxDEJ9nk0R4Rx+3+fxDFqVUsLqWnMKBIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAE8C+aTq80nV5Z1PcXAH9qYwWPuUqSdIclSZq7QZKkdX1W/XpRNXr4dv9UkqQ+3h89v7leJcnsbyxPpr7Vrn0EYAMszCZotesyM8GjCf/6LknSP79JkvSvXjP9fNPpTTbG7ORXNgCLMwX+L2CsO8z0RA+235Mkn+PJP7q9SJIMHl+SJPXHTsbXENX4GsLXQGyApTF4eC7TG2Bi63JvtAFODqplOE4bwAawAeaemJn7ABO7p4dz7wPYANgA2AAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAABIAAEgAAQAAJAAAgAASAABIAAEABL6wcAAP//AwBSMl3N16k24QAAAABJRU5ErkJggg==", "g": false}, {"n": "蝴蝶結(可換色)", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAJbSURBVHja7NtBThNhGIDhb9rCooYDuKDSG2C5kFHcYTmLwE5U4lK9CoUbQHThAYxNFOm4IJPwTzp2mjDJjD7PDqbMTJr3//gnTbM8z4P/V89bIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAAdNmgazecZVmt1/UH/VpfeLj6+j054ejxMDn+5ds8IiLG21tLz9fr3a2hm183tW6sbd/DMAFMgH9LsfJPjk+WHt+bTCIi4nw2W7qy+4N+8vrx9lbcP1/57wvTw2m+ziQwATABmnRxPqv1+2JlH7w6iIiIF8+eJ8ffnr1Lfj59c/rX6+6MdyIi4vrq2gSgA5vqrn07eNVTQLEHKK/kusorvu553n84q/U04CkAE6CJCVDe/U8Pp8nxxWKRPLeXFcdvf98mF9jY3Kj1Bh29Pkr2EuXzmACYAE1MgPLKL3b5+y/3k1178b+9amWua/Rk9DMi4vPHT5v3r/N0b5JMoPKewATABGhiAlTt1uvuzte16rpVE8cEwARoYgKs8lD/+6smQd3rmgCYAA8xAR4Nh3lExI/5vNWfvpXv0wSgVTr3aWCxoi4uL++eu3d3WzkJqu4zIjITAHsAewATABMAEwABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAAF4CwSAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAALTMnwEAXw7IAj0CL+0AAAAASUVORK5CYII=", "g": true}], "最上方配件": [{"n": "無", "d": null, "g": false}, {"n": "麥克風", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAHGSURBVHja7NgxLoRBHMbhd8QJ6DSChFrhCBQbCpVI6OiUCnGCjSgkJAouoNKIgiMoVAoF4gBItIpRWBLJEoVi8+3zNJsv02y+/Oa/s1NqraF/DXgFAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAfzPoFfyvUkqSZHx6rXZbv78+LklSazUBMAEa53PnLx4cdV0/3cjn1i8mACZAU+1OPSVJNm+Hvz2f+heACdAHvnb+63nnueUeABOgD88ALWcAelfplRuppni++Pic2VqvSXJ32U6STMxuJUmu2kclSYbmTACcARr42//28Ov6zstjkqSdURMAE6BxWiNjSZKTH9YXJkd76vuaACYA/2l1ZT5Jsny4Xzqn/5okS3vbJUlWOusPN2cmAO4BMAEQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACoLt3AAAA//8DANyXP7MeXchOAAAAAElFTkSuQmCC", "g": false}, {"n": "草莓鈴鐺", "d": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAK2SURBVHja7NqxS1VhHMfh7wmhNKkhEOxfkBZrNOgPSIOiIYgiUKolEtqam4NWhaAaTcikxoJqkXQJWxraEsKoINTFTsO5xzqiJGF1xedZxOs9F7l83t9938MtyrIMu9ceb4EAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAC/0+Et2B5FUWzpeV3pLJOkTFldl+q6pSxv6QXKsjQBMAHa3s+V3rRYPk6S3Jy6myS5NXQpSXKoGCyridBa6a2fy1ucDCYAf/bRtd2fKbt9D1Cv/Jmxi0mSvuHbSZK5wyON5x9feJgkedF7pvF4/4exJMn8+GiSZPDKRJLk/epiYQ+APUC76sy+8tcV3ff6dLWSM9pc4ScvVCt/uvn73PS9xsrvm6mun+j5liS58flVvfQLEwAToO32AOsW5vyxycYeIMNp7AXWr/z6s3/t+npytCZFT7HXKQAToG2V6078m+0BBhaqXX3GJhqTY2a8u3l9aw8wl2pC7O8wAXAfoP3vA9SngaWRqeoP105U9weOHEiSLGdlw138wXSXSfJlZLLx+Nn716vTwMpb9wEwAdp+AtRme8+XSdI/VO3287360TV2asPrly4/ajyvPh0cXXjQeGETAKeAnWDtXn9rK1Cf+5fefN34gjvPGyv/6uKzf/J/mgAmAH9D/Q2fgYWJMkle1vf+N3n+7JNq5Z/7+DRJ8m71U2EC4BSwU08Bm+lsfV8gvhOICcB/ZwIIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAATADvJjAN4eowXM+xHUAAAAAElFTkSuQmCC", "g": false}]}, "body": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAATKSURBVHja7JxNbxtVGIXPtZ20KGlDyg7SGvoBYoNRCwKZViCWSLCgBNqfgkQ3gFR+ARskVkgF+vETkBBRNqURQUiIJlRYwI5CTRtDWo+HxcwtmfE4nrFnpuPx82ycscfjG+u85577enSN67qC6aXCV4AAAAEAAgAEAAgAEAAgAEAAgAAAAQACAAQACAAQACAAQACAAAABAAIABAAIABAAIABAAIAAAAEAAgAEAAgAEABMArWiDswYk+r15upPproRwlbr+lgDLMq+DDgADlBOwhXf/vqrVK+/8PKrbpqOgAPAg5lqi7pHUNIMkHXFx3AESdI/v25Kknq9niEDAA6QtQPYys+74ocxe/jQrk6AAwAOMI4ThCu/Wn8s8LrT+j3wvD3u4+F96Qz01u1EToADAH2Acdb3cef8vspPq+KHOckAR6APADhAFmQ+x4/oCHf//MvrEzSed6XidQxxABygnHP/A6v8CQMHwAFKRkErv71+1esLHFi0DQCDAwAOUPbKJwMADpBr+gccAKYpAxRs7nd6XsivVgwOADjA1DGo8mcPLEqSHjp4lN8CAAdIjL3r1sKqAAeAaXKAW9dWA8eFaqgnYKt1HQcAHGAo848/5UZV/v8O4HtAL3h3rclp/e04jpf6q1UyAOAAufH95c8lSY3ls8EskHPnbdIrHweAyXSA4y+8JElau3hBkvTM6TO+lGcKOV7bASzqggUHwAGKyZ1ffjJxVgP3VwXde16Z1YrhBB1+DQQcIAO6Swe9uX/pTKHHafsEszOeI7VXVyRJC82TOAAUh4nZHyB8b6A7vzfaIVo3whcIPVb8B1/7/mNtqT7S+O7d8Hv7A77HxeapwCrg3+1t/3T2BwAcIL4D7Az8u2aE9WteZXadyNdnagM6ePWjow2wtRkdrhonvMGu/mgkyTSfDv4TOACwCkhW+YG5dBALb5x1JemPK59Fz9m+Mwx0gnG/0FDl0wcAHCBP7A4cj5x6xZWkTqcTeP2DN99O5XPOXflyJIfCAYBVwJgZIDJNxz2/Uqm4knTY1/7G2tVkltlc9lYbWxsmyecOGjcOAGSATBW+31vfm55Xct2VS8ETGs8mul539aL3xc0dc/1KNjuPw1nA6WySAYAMkHsGsJUvv3PotDeysdC5YzYTRD7vdDbZLRzIALnP+UMrf/27kTJA+H2dby5EZwXfEWw2GOQEOADgAGlQnT/i/WHT/u3o9P3h6XckSe9++on3vpjXd9p/S5LOv39ekvTe5S/K4ZjUAA4w2f/AvuCc37fOz4juzZteBdWfkCTdXfs2cLz30Isq8tyPA0A5+gD35/6wA4TSfd/cv7A/0XhsBtjz6Il45w+pfPoAQAYoMrbiLT98/FGiCmcVAGSAPDKAHf+w1UDt5FuSpO3f1mJlAJsZXn/OyxiN17w7iez9AOM6ABkAyACpztl3frarAuNX/EglZp0kr34CDgA4QBZOoNDdudX5I26cyrfvsw5SdifAAXCAcrOjU2gkac/S8V1/LbTP2zt6yACAAMpAd+XS1CR7BABkgF0wfuqPvI+/77zmcvC8imtwAChPNRR9hxDAAQABAAIABAAIABAAIABAAIAAAAEAAgAEAAgAEAAgAEAAgAAAAQACgFj8NwCfQITRl7t/HwAAAABJRU5ErkJggg==", "closed": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAGOSURBVHja7NexbcJAFIDhd0CTLRCBLICUAVLAOGkzAi3rpGAApEyAQNkiTeDRgGScAkMQQeH7OiT7kE//PdklM4P71bIFAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABMAldP7bA5VSGl339THP6u+H4XP5zf8eWy8zTQBu8MDcapnnGvefDh7ofbkop5zgUydB0/tMAEyAa74DdNrtjIh46fYiImL2uTq4bjV9i4iI3uskqtc1nRh7o8dBVtevr7vZbe96/V1MAEyAv/oKqJ/UvXNP/o/PqdrEqa/nHQATABMAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAhAALZAAAgAASAABMCd2QIAAP//AwBuvk3vE5nq/wAAAABJRU5ErkJggg=="};
+const TPimgs={};
+function tpImg(d){ if(!TPimgs[d]){const i=new Image();i.src='data:image/png;base64,'+d;
+  i.onload=()=>{ if(typeof tpReady==='function') tpReady(); };
+  TPimgs[d]=i;} return TPimgs[d]; }
+function tpFind(cat,name){ const o=TP.parts[cat].find(x=>x.n.indexOf(name)===0); return o; }
+function hexHsl(hex){
+  const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h=0,l=(mx+mn)/2,s2=0;
+  if(mx!==mn){const d2=mx-mn;s2=l>0.5?d2/(2-mx-mn):d2/(mx+mn);
+    if(mx===r)h=((g-b)/d2+(g<b?6:0))/6;else if(mx===g)h=((b-r)/d2+2)/6;else h=((r-g)/d2+4)/6;}
+  return [h,s2,l];
+}
+const TINTC={};
+function tpTint(d,hi){
+  const key=d.slice(0,20)+'_'+hi;
+  if(TINTC[key]) return TINTC[key];
+  const im=tpImg(d); if(!im.complete) return null;
+  const c=document.createElement('canvas');c.width=128;c.height=128;
+  const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(im,0,0,128,128);
+  const dd=g.getImageData(0,0,128,128),p=dd.data;
+  const [H,S,L]=hexHsl(HAIRS[hi][0]);
+  for(let i=0;i<p.length;i+=4){
+    if(p[i+3]===0)continue;
+    const lum=(0.299*p[i]+0.587*p[i+1]+0.114*p[i+2])/255;
+    let l=Math.min(1,Math.max(0,lum*0.8*(L*2)+0.05));
+    const a2=S*Math.min(l,1-l);
+    const f=n=>{const k=(n+H*12)%12;return Math.round((l-a2*Math.max(-1,Math.min(k-3,9-k,1)))*255);};
+    p[i]=f(0);p[i+1]=f(8);p[i+2]=f(4);
+  }
+  g.putImageData(dd,0,0);TINTC[key]=c;return c;
+}
+function tpDraw(g,part,hi){
+  if(!part||!part.d)return;
+  if(part.g){const t=tpTint(part.d,hi); if(t)g.drawImage(t,0,0,64,64); return;}
+  const im=tpImg(part.d); if(im.complete)g.drawImage(im,0,0,64,64);
+}
+const TACCP=[
+  {n:'無'},
+  {n:'貓耳+尾巴', m:[['後髮前配件','貓耳朵']], b:[['身體後配件','尾巴']]},
+  {n:'髮飾+耳環', m:[['後髮前配件','髮飾'],['後髮前配件','耳環']]},
+  {n:'額冠', f:[['前髮前配件','額冠']]},
+  {n:'蝴蝶結(隨髮色)', f:[['前髮前配件','蝴蝶結']]},
+  {n:'麥克風', t:[['最上方配件','麥克風']]},
+  {n:'草莓鈴鐺', t:[['最上方配件','草莓鈴鐺']]},
+];
+function accLayer(g,list,hi){ (list||[]).forEach(([c2,n2])=>tpDraw(g,tpFind(c2,n2),hi)); }
+if(TEST_MODE){
+  drawDollTo = function(cv, doll, pose){
+    const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
+    const d=doll||{};
+    const hi=(d.hair||0)%HAIRS.length;
+    const ap=TACCP[(d.acc||0)%TACCP.length];
+    tpDraw(g, TP.parts['後髮'][(d.back||0)%3], hi);
+    accLayer(g, ap.b, hi);
+    accLayer(g, ap.m, hi);
+    const bi=tpImg(TP.body); if(bi.complete)g.drawImage(bi,0,0,64,64);
+    tpDraw(g, TP.parts['衣服'][(d.cloth||0)%3], hi);
+    tpDraw(g, TP.parts['眼睛'][(d.face||0)%2], hi);
+    tpDraw(g, TP.parts['前髮'][(d.front||0)%3], hi);
+    accLayer(g, ap.f, hi);
+    accLayer(g, ap.t, hi);
+  };
+}
+function tpReady(){
+  if(typeof agents==='undefined')return;
+  agents.forEach(a=>{
+    if(a.frames && a.b){
+      ['idle','a','b'].forEach(p=>{ if(a.frames[p]) drawDollTo(a.frames[p], a.b.doll, p); });
+      const c=a.frame; a.frame=null; setFrame(a,c||'idle');
+    }
+  });
+}
+
+/* 史萊姆(程式繪製,Q彈果凍) */
+function drawSlime(cv, hue){
+  const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,64,64);
+  const body=hue==='pink'?'#F2A9BE':'#9FD9B4', dk=hue==='pink'?'#D77F98':'#6FB287', hi='#FFFFFF';
+  P(c,20,34,24,16,body);P(c,16,38,32,10,body);P(c,18,36,28,14,body);
+  P(c,22,32,20,4,body);P(c,26,30,12,3,body);
+  P(c,16,46,32,3,dk);P(c,20,48,24,2,dk);
+  P(c,24,33,5,4,hi);
+  P(c,25,40,3,3,'#4A3540');P(c,36,40,3,3,'#4A3540');
+  P(c,30,45,4,2,'#C96A80');
+}
+const SLIME_SPOTS=[[0.45,0.72],[0.68,0.80],[0.82,0.66]];
+function ensureSlimes(){
+  SLIME_SPOTS.forEach((sp,i)=>{
+    const key='slime_'+i;
+    if(agents.has(key)) { agents.get(key).el.style.display=''; return; }
+    const el=document.createElement('div');el.className='npc';
+    const cv=document.createElement('canvas');cv.width=64;cv.height=64;
+    drawSlime(cv, i%2?'mint':'pink');
+    const sh=document.createElement('div');sh.className='shadow';
+    el.appendChild(sh);el.appendChild(cv);
+    world.appendChild(el);
+    const a={key,el,cv,sh:sh,x:sp[0],y:sp[1],tx:sp[0],ty:sp[1],
+      state:'idle',timer:1+i,seed:i*2.3,faceLeft:i%2===0,flipT:i%2===0?-1:1,flipping:false,
+      sitting:false,slime:true,frames:null,frame:'idle',bopT:0};
+    el.onclick=(ev)=>{ev.stopPropagation();
+      const m=me(); if(!m||curMap!=='forest') return;
+      const c=clampFloor(a.x, a.y+0.03);
+      m.tx=c[0]; m.ty=c[1]; m.state='walk'; m.player=true; m.idleFor=0; m.bopTarget=a;
+    };
+    agents.set(key,a);
+  });
+}
+function bopSlime(sl){
+  sl.bopT=1;
+  spawnHeart(sl);
+  // 被打到跳走一步
+  const c=clampFloor(sl.x+(Math.random()-0.5)*0.2, sl.y+(Math.random()-0.5)*0.1);
+  sl.tx=c[0]; sl.ty=c[1]; sl.state='walk';
+}
+/* ====== 店員占位造型(正式部件10月到貨後替換) ====== */
+const STAFF_LOOKS=[
+  {skin:0,hair:3,back:0,front:0,face:0,cloth:0,acc:3},   // 露亞系
+  {skin:0,hair:7,back:1,front:1,face:1,cloth:2,acc:1},   // 小莓系(貓耳尾巴)
+  {skin:0,hair:9,back:2,front:2,face:0,cloth:1,acc:4},   // 灰階換色米白系
+];
+function drawCloak(cv){
+  const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,64,64);
+  const A='#8B7A99',B='#6B5A7E',D='#4E4060';
+  P(c,22,14,20,6,A);P(c,18,20,28,26,A);P(c,16,30,32,18,A);
+  P(c,18,46,28,8,B);P(c,20,52,24,4,D);
+  P(c,24,10,16,6,B);P(c,26,8,12,3,D);
+  P(c,27,22,10,8,'#2E2438');
+  P(c,29,25,2,2,'#FFD98A');P(c,33,25,2,2,'#FFD98A');
+  P(c,18,20,28,2,'rgba(255,255,255,.18)');
+}
+
+/* ====== 大廳住民:會走動的 2.5D NPC ====== */
+function hash(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
+// 地板梯形可走區(依當前地圖動態)
+let FLOOR = null;   // 於 MAPS 定義後指定
+// 給定 y,回傳該高度地板允許的 x 範圍
+function floorXrange(y){
+  const t=Math.min(1,Math.max(0,(y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)));
+  return [FLOOR.farX0+(FLOOR.nearX0-FLOOR.farX0)*t,
+          FLOOR.farX1+(FLOOR.nearX1-FLOOR.farX1)*t];
+}
+function clampFloor(x,y){
+  const cy=Math.min(FLOOR.y1,Math.max(FLOOR.y0,y));
+  const [lo,hi]=floorXrange(cy);
+  return [Math.min(hi,Math.max(lo,x)), cy];
+}
+let myKey=new URLSearchParams(location.search).get('me');
+if(!myKey){ try{ myKey=localStorage.getItem('tt_me')||null; }catch(e){} }
+if(myKey){ try{ localStorage.setItem('tt_me', myKey); }catch(e){} }
+/* 完整闆卡(用 card.html 同款底圖與版面,只顯示公開欄位) */
+function drawFullCard(b){
+  const cv=document.getElementById('popcv');
+  const g=cv.getContext('2d'); g.imageSmoothingEnabled=false;
+  const CW=1280,CH=800;
+  if(cardbaseReady) g.drawImage(CARDBASE,0,0,CW,CH);
+  else{ g.fillStyle='#FFF7F0';g.fillRect(0,0,CW,CH);
+        g.fillStyle='#5A3D4E';g.fillRect(0,0,CW,14);g.fillRect(0,CH-14,CW,14);g.fillRect(0,0,14,CH);g.fillRect(CW-14,0,14,CH); }
+  g.textAlign='left';
+  // 娃娃入拱門
+  const tmp=document.createElement('canvas');tmp.width=64;tmp.height=64;
+  drawDollTo(tmp,b.doll,'idle');
+  g.drawImage(tmp,0,0,64,64, 132,209, 296,296);
+  // 稱號+名字(右上大格)
+  g.fillStyle='#D96A8B'; g.font='26px Huninn'; g.fillText('◆ 老闆資訊卡 ◆', 600, 130);
+  g.fillStyle='#5A3D4E'; g.font='74px Huninn'; g.fillText(b.name||'？', 600, 204);
+  // 生日(中排左格)
+  g.fillStyle='#D96A8B'; g.font='30px Huninn'; g.fillText('🎂 生日', 600, 294);
+  g.fillStyle='#5A3D4E'; g.font='44px Huninn';
+  g.fillText((b.bm||'?')+' 月 '+(b.bd||'?')+' 日', 600, 348);
+  // 常玩(中排右格)
+  g.fillStyle='#D96A8B'; g.font='30px Huninn'; g.fillText('🎮 常玩', 920, 294);
+  g.fillStyle='#5A3D4E';
+  let gf=44, games=b.games||'—'; g.font=gf+'px Huninn';
+  let gshow=games;
+  while(g.measureText(gshow).width>250 && gf>28){gf-=2;g.font=gf+'px Huninn';}
+  while(g.measureText(gshow).width>250 && gshow.length>2){gshow=gshow.slice(0,-2)+'…';}
+  g.fillText(gshow, 920, 348);
+  // 標籤章(下方大格頂部)
+  let cx=600, cy=484; g.font='30px Huninn';
+  (b.tags||[]).forEach(t=>{
+    const w=g.measureText(t).width+38;
+    if(cx+w>1170){cx=600;cy+=60;}
+    g.fillStyle='#F0E6FB';g.fillRect(cx,cy-36,w,52);
+    g.fillStyle='#8E68C8';g.fillRect(cx,cy-36,w,4);g.fillRect(cx,cy+12,w,4);g.fillRect(cx,cy-36,4,52);g.fillRect(cx+w-4,cy-36,4,52);
+    g.fillStyle='#6D4FA8';g.fillText(t,cx+19,cy+2);
+    cx+=w+18;
+  });
+  // 一段話(標籤下方,格內)
+  if(b.quote){
+    const qy=Math.min(cy+66,624);
+    g.fillStyle='#5A3D4E'; g.font='38px Huninn';
+    g.fillText('「'+b.quote+'」', 600, qy);
+  }
+  // 品牌帶
+  g.textAlign='center';
+  g.fillStyle='#FDF6EC'; g.font='23px "Press Start 2P"';
+  g.fillText('TINY TAVERN', CW/2, 718);
+  g.textAlign='left';
+}
+let popTarget=null;
+let cardOpen=false;
+ // 目前顯示闆卡的 agent
+
+const hall=document.getElementById('hall');
+const world=document.getElementById('world');
+const worldbg=document.getElementById('worldbg');
+// 虛擬世界尺寸(小人與座標都以此為基準;鏡頭在其中平移縮放)
+const WORLD={w:1600,h:900};
+const MAPS={
+  hall:{ bg:'img/lobbybase.jpg',
+    floor:{y0:0.52,y1:0.97,farX0:0.16,farX1:0.84,nearX0:0.04,nearX1:0.96},
+    door:{x:0.945,y:0.66,emo:'🌲',label:'往森林小徑',to:'forest',spawn:[0.18,0.78]} },
+  forest:{ bg:'img/forestbase.jpg',
+    floor:{y0:0.52,y1:0.95,farX0:0.05,farX1:0.98,nearX0:0.05,nearX1:0.95},
+    door:{x:0.11,y:0.70,emo:'🏮',label:'回酒館',to:'hall',spawn:[0.88,0.72]} },
+};
+let curMap='hall';
+FLOOR = MAPS.hall.floor;
+const CARDBASE=new Image(); let cardbaseReady=false;
+CARDBASE.onload=()=>{cardbaseReady=true;};
+CARDBASE.src="img/cardbase.png";
+worldbg.style.width=WORLD.w+'px';worldbg.style.height=WORLD.h+'px';
+world.style.width=WORLD.w+'px';world.style.height=WORLD.h+'px';
+// 鏡頭
+const cam={x:WORLD.w/2, y:WORLD.h*0.62, zoom:1.7, tzoom:1.7};
+// 互動點位(相對座標,配合底圖;之後可依實際底圖微調)
+const SPOTS=[
+  {x:0.315,y:0.57,emo:'🍺'},{x:0.385,y:0.57,emo:'☕'},
+  {x:0.455,y:0.57,emo:'🍰'},{x:0.545,y:0.57,emo:'✨'},
+  {x:0.615,y:0.57,emo:'🍮'},{x:0.685,y:0.57,emo:'💕'}
+];
+const agents=new Map();
+/* 傳送門 */
+const doorEl=document.createElement('div');doorEl.className='door';
+doorEl.innerHTML='<div id="doorEmo"></div><div class="dl" id="doorLbl"></div>';
+world.appendChild(doorEl);
+function layoutDoor(){
+  const d=MAPS[curMap].door;
+  doorEl.style.left=(d.x*WORLD.w-24)+'px';
+  doorEl.style.top=(d.y*WORLD.h-40)+'px';
+  document.getElementById('doorEmo').textContent=d.emo;
+  document.getElementById('doorLbl').textContent=d.label;
+}
+doorEl.onclick=(ev)=>{ev.stopPropagation();
+  const a=me(); if(!a) return;
+  const d=MAPS[curMap].door;
+  a.tx=Math.min(FLOOR.y1,d.x); // 走向門
+  const c=clampFloor(d.x,d.y); a.tx=c[0]; a.ty=c[1];
+  a.state='walk'; a.player=true; a.idleFor=0; a.goDoor=true;
+};
+let switching=false;
+function switchMap(to){
+  if(switching) return; switching=true;
+  const fade=document.getElementById('fade');
+  fade.classList.add('on');
+  setTimeout(()=>{
+    curMap=to;
+    FLOOR=MAPS[to].floor;
+    worldbg.style.backgroundImage="url('"+MAPS[to].bg+"')";
+    // 我的小人移到入口
+    const a=me();
+    if(a){ const sp=MAPS[to].spawn||MAPS[to].door.spawn;
+      const c=clampFloor(sp[0],sp[1]); a.x=c[0];a.y=c[1];a.tx=c[0];a.ty=c[1];
+      a.state='idle';a.timer=2;a.player=true;a.idleFor=0;a.goDoor=false; }
+    // 顯示/隱藏:酒館住民只在 hall,史萊姆只在 forest
+    spotEls.forEach(e=>e.style.display=(to==='hall')?'':'none');
+    document.getElementById('sign').style.display=(to==='hall')?'':'none';
+    layoutDoor();
+    if(to==='forest') ensureSlimes();
+    setTimeout(()=>{fade.classList.remove('on');switching=false;},120);
+  },380);
+}
+let bosses={};
+
+function makeAgent(key,b){
+  const h=hash(key);
+  const el=document.createElement('div');
+  el.className='npc';
+  const cv=document.createElement('canvas');cv.width=64;cv.height=64;
+  const sh=document.createElement('div');sh.className='shadow';
+  const tag=document.createElement('div');tag.className='tag';
+  el.appendChild(sh);el.appendChild(cv);el.appendChild(tag);
+  // 自訂雙擊判定:300ms 內點兩下同一隻 → 開闆卡;單下 → 走過去
+  let lastTap=0;
+  el.addEventListener('click',(ev)=>{
+    ev.stopPropagation();
+    if(cardOpen) return;
+    const now=Date.now();
+    if(now-lastTap<300){          // 雙擊
+      lastTap=0;
+      const a=agents.get(key);
+      if(!me() && !myKey){
+        if(confirm('把這隻設為你操控的小人？')){ claimMe(key); return; }
+      }
+      openCard(a);
+    }else{                        // 單擊:走過去
+      lastTap=now;
+      const w=screenToWorld(ev.clientX,ev.clientY);
+      moveMeTo(w.x,w.y);
+    }
+  });
+  world.appendChild(el);
+  const a={key,b,el,cv,tag,
+    x:0.5, y:FLOOR.y0+0.04+(((h>>5)%1000)/1000)*(FLOOR.y1-FLOOR.y0-0.06),
+    tx:0,ty:0,state:'idle',timer:1.5+(h%50)/10,seed:h%10,
+    isMe:(key===myKey),idleFor:0,sitting:false,
+    sh:sh, faceLeft:((h>>3)%2===1), flipT:1};
+  if(a.isMe){ el.style.filter='drop-shadow(0 0 0 #fff)'; }
+  { const r=floorXrange(a.y); a.x=r[0]+0.03+((h%1000)/1000)*(r[1]-r[0]-0.06); }
+  { const c=clampFloor(a.x,a.y); a.x=c[0]; a.y=c[1]; }
+  a.tx=a.x;a.ty=a.y;
+  a.frames={};
+  ['idle','a','b'].forEach(p=>{
+    const f=document.createElement('canvas');f.width=64;f.height=64;
+    drawDollTo(f,b.doll,p);a.frames[p]=f;
+  });
+  a.frame=null; setFrame(a,'idle');
+  tag.textContent=(key===myKey?'★ ':'')+(b.name||'？');
+  if(key===myKey) tag.style.background='var(--berry-dk)';
+  return a;
+}
+function setFrame(a,p){
+  if(!a.frames) return;
+  if(a.frame===p) return;
+  a.frame=p;
+  const g=a.cv.getContext('2d');
+  g.imageSmoothingEnabled=false;
+  g.clearRect(0,0,64,64);
+  g.drawImage(a.frames[p],0,0);
+}
+function pickTarget(a){
+  const far=Math.random()<.25;
+  const r=far?0.4:0.14;
+  const nx=a.x+(Math.random()-0.5)*2*r;
+  const ny=a.y+(Math.random()-0.5)*2*r*0.5;
+  const c=clampFloor(nx,ny); a.tx=c[0]; a.ty=c[1];
+}
+function spawnHeart(a){
+  const f=document.createElement('div');
+  f.textContent='💕';f.style.cssText='position:absolute;left:'+(a.x*WORLD.w)+'px;top:'+(a.y*WORLD.h-60)+'px;z-index:40;font-size:26px;pointer-events:none;transform:translateX(-50%)';
+  world.appendChild(f);
+  f.animate([{opacity:0,transform:'translate(-50%,0) scale(.6)'},{opacity:1,offset:.3},{opacity:0,transform:'translate(-50%,-46px) scale(1.2)'}],{duration:1100,easing:'ease-out'});
+  setTimeout(()=>f.remove(),1100);
+}
+let last=performance.now();
+function tick(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  const W=window.innerWidth,H=window.innerHeight;
+  agents.forEach(a=>{
+    const depthNow=0.82+(a.y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)*0.33;
+    // 我的小人:方向鍵控制(有按鍵就直接移動並跳過 AI 邏輯)
+    let keyMoved=false;
+    if(a.isMe && !cardOpen){
+      let vx=0,vy=0;
+      if(keys['ArrowLeft']||keys['a']||keys['A'])vx-=1;
+      if(keys['ArrowRight']||keys['d']||keys['D'])vx+=1;
+      if(keys['ArrowUp']||keys['w']||keys['W'])vy-=1;
+      if(keys['ArrowDown']||keys['s']||keys['S'])vy+=1;
+      if(vx||vy){
+        keyMoved=true;
+        const sp=0.09*depthNow, L=Math.hypot(vx,vy);   // 每秒移動比例(慢速,配合大角色)
+        const c=clampFloor(a.x+vx/L*sp*dt, a.y+vy/L*sp*dt);
+        a.x=c[0]; a.y=c[1];
+        a.state='walkKey'; a.sitting=false; a.player=true; a.idleFor=0; a.tx=a.x; a.ty=a.y;
+        if(vx){const nl=vx<0; if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
+      }else if(a.state==='walkKey'){ a.state='idle'; a.timer=1.5; }
+    }
+    if(a.slime){
+      if(curMap!=='forest'){ /* 不在森林不動 */ }
+      else if(a.state==='idle'){
+        a.timer-=dt;
+        if(a.timer<=0){
+          const c=clampFloor(a.x+(Math.random()-0.5)*0.16, a.y+(Math.random()-0.5)*0.08);
+          a.tx=c[0];a.ty=c[1];a.state='walk';
+        }
+      }else{
+        const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
+        if(dist<5){a.state='idle';a.timer=1.5+Math.random()*3;}
+        else{
+          const sp=70*depthNow;
+          a.x+=dxp/dist*sp*dt/WORLD.w; a.y+=dyp/dist*sp*dt/WORLD.h;
+          if(Math.abs(dxp)>12){const nl=dxp<0;if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
+        }
+      }
+      if(a.bopT>0) a.bopT=Math.max(0,a.bopT-dt*3);
+    }
+    else if(a.staff){
+      const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
+      if(a.state==='post'){ /* 站崗 */ }
+      else if(a.state==='serving'){
+        a.hb=(a.hb||1.5)-dt;
+        if(a.hb<=0){ spawnHeart(a); a.hb=3+Math.random()*2.5; }
+      }
+      else if(dist<6){
+        if(a.state==='enter'||a.state==='back'){ a.state='post'; }
+        else if(a.state==='toDoor'){
+          a.mapLoc='forest';
+          const sp2=MAPS.hall.door.spawn; a.x=sp2[0]; a.y=sp2[1];
+          a.tx=a.serveSpot[0]; a.ty=a.serveSpot[1]; a.state='toServe';
+        }
+        else if(a.state==='toServe'){ a.state='serving'; spawnHeart(a); }
+        else if(a.state==='toDoorBack'){
+          a.mapLoc='hall';
+          const sp3=MAPS.forest.door.spawn; a.x=sp3[0]; a.y=sp3[1];
+          a.tx=a.post[0]; a.ty=a.post[1]; a.state='back';
+        }
+        else if(a.state==='exit'){ a.el.remove(); agents.delete(a.key); return; }
+      }else{
+        const sp=125*depthNow;
+        a.x+=dxp/dist*sp*dt/WORLD.w; a.y+=dyp/dist*sp*dt/WORLD.h;
+        if(Math.abs(dxp)>12){const nl=dxp<0;if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
+      }
+    }
+    else if(a.cloak){
+      if(a.state==='follow' && a.follow && agents.has(a.follow.key)){
+        const f=a.follow;
+        if(f.mapLoc!==a.mapLoc){ a.mapLoc=f.mapLoc; a.x=f.x+0.04; a.y=f.y+0.01; }
+        a.tx=f.x+0.034*(f.faceLeft?1:-1); a.ty=f.y+0.012;
+        const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
+        if(dist>4 && !f.sitting){
+          const sp=135*depthNow;
+          a.x+=dxp/dist*sp*dt/WORLD.w; a.y+=dyp/dist*sp*dt/WORLD.h;
+          if(Math.abs(dxp)>12){const nl=dxp<0;if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
+          a.moving=true;
+        }else a.moving=false;
+        a.sitting=!!f.sitting;
+      }else if(a.state==='leave'){
+        const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
+        if(dist<6){ a.el.remove(); agents.delete(a.key); return; }
+        const sp=140*depthNow;
+        a.x+=dxp/dist*sp*dt/WORLD.w; a.y+=dyp/dist*sp*dt/WORLD.h;
+        if(dxp>2 && a.faceLeft){a.faceLeft=false;a.flipping=true;}
+        a.moving=true;
+      }
+    }
+    else if(!keyMoved && a.state==='idle'){
+      a.idleFor+=dt;
+      a.timer-=dt;
+      if(a.isMe && a.player && a.idleFor>8){ a.player=false; }
+      if(a.timer<=0){
+        const canWander = !a.isMe || !a.player;
+        if(canWander && Math.random()<0.8){pickTarget(a);a.state='walk';a.goSit=false;}
+        else a.timer=2+Math.random()*4;
+      }
+    }else if(!keyMoved && a.state==='walk'){
+      const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h;
+      const dist=Math.hypot(dxp,dyp);
+      const sp=(a.isMe?165:120)*depthNow;
+      if(dist<6){
+        a.state='idle';a.timer=2+Math.random()*6;a.idleFor=0;
+        if(a.goSit){ a.sitting=true; a.goSit=false; spawnHeart(a); }
+        if(a.isMe && a.goDoor){ a.goDoor=false; switchMap(MAPS[curMap].door.to); }
+        if(a.isMe && a.bopTarget){ bopSlime(a.bopTarget); a.bopTarget=null; }
+      }else{
+        const c=clampFloor(a.x+dxp/dist*sp*dt/WORLD.w, a.y+dyp/dist*sp*dt/WORLD.h);
+        a.x=c[0]; a.y=c[1];
+        if(Math.abs(dxp)>12){const nl=dxp<0; if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
+      }
+    }
+    { const c=clampFloor(a.x,a.y); a.x=c[0]; a.y=c[1]; }
+    const depth=0.9+(a.y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)*0.5;
+    const size=Math.round(150*depth);
+    let walking=(a.state==='walk'||a.state==='walkKey'||(a.staff&&(a.state==='enter'||a.state==='toDoor'||a.state==='toServe'||a.state==='toDoorBack'||a.state==='back'||a.state==='exit'))||(a.cloak&&a.moving));
+    if(a.slime) walking=(a.state==='walk');
+    const tt=now/1000;
+    let bob=0, hopRot=0, sqx=1, sqy=1;
+    if(walking){
+      // F.勇者輕彈跳(D 實測定案:快步蹦跳,幅度收斂版)
+      const ph=(tt*5.5+a.seed)%1;
+      const jump=Math.abs(Math.sin(ph*Math.PI));
+      bob=-jump*5;
+      const landing=jump<0.25;
+      sqy=landing?0.958:1+jump*0.021;
+      sqx=landing?1.035:1;
+      hopRot=Math.sin(tt*11+a.seed)*1.05;
+      setFrame(a,(Math.floor(tt*5.5+a.seed)%2)?'a':'b');   // 每跳換一次腳
+    }else{
+      // B.整體呼吸壓扁(D 實測定案:速度2.3、幅度2.2%)
+      const ph=Math.sin(tt*(a.slime?4.5:2.3)*Math.PI+a.seed);
+      sqy=1-Math.max(0,ph)*(a.slime?0.10:0.044);
+      sqx=1+Math.max(0,ph)*(a.slime?0.08:0.031);
+      setFrame(a,'idle');
+    }
+    if(a.slime && a.bopT>0){ sqy*=1-0.35*a.bopT; sqx*=1+0.30*a.bopT; }
+    const vm = a.slime ? 'forest' : (a.isMe ? curMap : (a.mapLoc||'hall'));
+    const vis = (vm===curMap);
+    a.el.style.display = vis ? '' : 'none';
+    if(!vis){ return; }
+    a.el.style.left=(a.x*WORLD.w-size/2)+'px';
+    a.el.style.top=(a.y*WORLD.h-size+bob)+'px';
+    a.el.style.zIndex=Math.round(a.y*1000);
+    a.cv.style.width=size+'px';a.cv.style.height=size+'px';
+    // 紙片翻轉:flipT 在 [-1,1] 之間,過 0 的瞬間就是紙片側面(看起來被翻過去)
+    if(a.flipping){
+      const goal=a.faceLeft?-1:1;
+      a.flipT += (goal-a.flipT)*Math.min(1,dt*14);
+      if(Math.abs(goal-a.flipT)<0.02){a.flipT=goal;a.flipping=false;}
+    }else{
+      a.flipT=a.faceLeft?-1:1;
+    }
+    let tf='rotate('+hopRot+'deg) scaleX('+(a.flipT*sqx)+') scaleY('+sqy+')';
+    if(a.sitting) tf+=' scaleY(.86) translateY(6%)';
+    a.cv.style.transform=tf;
+    // 地面陰影:大小隨小人尺寸,坐下時縮小
+    const shW=size*0.5*(a.sitting?0.8:(1+bob/22));
+    a.sh.style.width=shW+'px';
+    a.sh.style.height=(shW*0.28)+'px';
+  });
+  updateCamera(dt, now);
+  updateCardpop();
+  requestAnimationFrame(tick);
+}
+let camView={x:0,y:0};
+let camFocus=null;
+function updateCamera(dt, now){
+  const a=camFocus||me();
+  const vw=hall.clientWidth, vh=hall.clientHeight;
+  let tx = a? a.x*WORLD.w : WORLD.w/2;
+  let ty = a? a.y*WORLD.h - 40 : WORLD.h*0.6;
+  const moving = a && (a.state==='walk');
+  // 看闆卡時推更近;移動時略近;平常基準
+  cam.tzoom = camFocus? 2.2 : (moving? 2.0 : 1.75);
+  cam.zoom += (cam.tzoom-cam.zoom)*Math.min(1,dt*4);
+  cam.x += (tx-cam.x)*Math.min(1,dt*5);
+  cam.y += (ty-cam.y)*Math.min(1,dt*5);
+  // 換算成 world 左上角位移,並夾在世界邊界內(避免露出世界外的黑邊)
+  const halfW=vw/cam.zoom/2, halfH=vh/cam.zoom/2;
+  let vx=Math.min(WORLD.w-halfW, Math.max(halfW, cam.x));
+  let vy=Math.min(WORLD.h-halfH, Math.max(halfH, cam.y));
+  if(WORLD.w < halfW*2) vx=WORLD.w/2;
+  if(WORLD.h < halfH*2) vy=WORLD.h/2;
+  camView.x=vx-halfW; camView.y=vy-halfH;
+  world.style.transform='scale('+cam.zoom+') translate('+(-camView.x)+'px,'+(-camView.y)+'px)';
+}
+requestAnimationFrame(tick);
+
+function sync(){
+  const keys=Object.keys(bosses);
+  cnt.textContent=keys.length;
+  emptyMsg.style.display=keys.length?'none':'block';
+  agents.forEach((a,k)=>{ if(!a.staff && !a.cloak && !bosses[k]){a.el.remove();agents.delete(k);} });
+  Object.entries(bosses).forEach(([k,b])=>{
+    if(agents.has(k)){
+      const a=agents.get(k); a.b=b;
+      ['idle','a','b'].forEach(p=>drawDollTo(a.frames[p],b.doll,p));
+      const cur=a.frame; a.frame=null; setFrame(a,cur||'idle');
+      a.tag.textContent=b.name||'？';
+    }else agents.set(k,makeAgent(k,b));
+  });
+}
+const cardOverlay=document.getElementById('cardOverlay');
+const cardBox=document.getElementById('cardBox');
+async function openCard(a){
+  if(!a) return;
+  popTarget=a; cardOpen=true;
+  await document.fonts.ready;
+  drawFullCard(a.b);
+  cardOverlay.classList.add('on');
+  cardBox.classList.remove('show');void cardBox.offsetWidth;cardBox.classList.add('show');
+}
+function closeCard(){ popTarget=null; cardOpen=false; cardOverlay.classList.remove('on'); camFocus=null; }
+function updateCardpop(){ /* overlay 置中,不需跟隨 */ }
+function me(){ return [...agents.values()].find(a=>a.isMe); }
+function claimMe(key){
+  myKey=key; try{localStorage.setItem('tt_me',key);}catch(e){}
+  const a=agents.get(key);
+  if(a){ a.isMe=true; a.tag.textContent='★ '+(a.b.name||'？'); a.tag.style.background='var(--berry-dk)'; camFocus=null; }
+}
+function screenToWorld(sx,sy){
+  const r=hall.getBoundingClientRect();
+  return { x:(sx-r.left)/cam.zoom + camView.x, y:(sy-r.top)/cam.zoom + camView.y };
+}
+function moveMeTo(wx,wy){
+  const a=me(); if(!a) return;
+  const c=clampFloor(wx/WORLD.w, wy/WORLD.h);
+  a.tx=c[0]; a.ty=c[1];
+  a.state='walk'; a.sitting=false; a.idleFor=0; a.player=true;
+}
+hall.addEventListener('click',ev=>{
+  if(cardOpen) return;                     // 闆卡開著時不移動
+  const w=screenToWorld(ev.clientX,ev.clientY);
+  moveMeTo(w.x, w.y);
+});
+cardOverlay.addEventListener('click',ev=>{ if(ev.target===cardOverlay) closeCard(); });
+const keys={};
+addEventListener('keydown',e=>{keys[e.key]=true;});
+addEventListener('keyup',e=>{keys[e.key]=false;});
+
+// 互動點
+const spotEls=[];
+function layoutSpots(){
+  spotEls.forEach(e=>e.remove()); spotEls.length=0;
+  SPOTS.forEach(sp=>{
+    const el=document.createElement('div');el.className='spot';
+    el.style.left=(sp.x*WORLD.w-28)+'px';el.style.top=(sp.y*WORLD.h-28)+'px';
+    el.style.width='56px';el.style.height='56px';
+    const fx=document.createElement('div');fx.className='fx';fx.textContent=sp.emo;
+    el.appendChild(fx);
+    el.onclick=(ev)=>{ev.stopPropagation();
+      const a=me(); if(a){ moveMeTo(sp.x*WORLD.w, sp.y*WORLD.h); a.goSit=true; }
+      fx.classList.remove('go');void fx.offsetWidth;fx.classList.add('go');
+    };
+    world.appendChild(el);spotEls.push(el);
+  });
+}
+
+
+layoutSpots();
+layoutDoor();
+worldbg.style.backgroundImage="url('"+MAPS.hall.bg+"')";
+/* ====== 店員 NPC 層 ====== */
+const POSTS=[[0.32,0.565],[0.50,0.565],[0.68,0.565]];
+const SERVE=[[0.50,0.74],[0.68,0.82],[0.84,0.68]];   // 森林陪玩點(史萊姆附近)
+function makeStaff(cid, st, idx){
+  const el=document.createElement('div');el.className='npc staff';
+  const cv=document.createElement('canvas');cv.width=64;cv.height=64;
+  const sh=document.createElement('div');sh.className='shadow';
+  const tag=document.createElement('div');tag.className='tag';
+  const led=document.createElement('div');led.className='led';
+  el.appendChild(sh);el.appendChild(led);el.appendChild(cv);el.appendChild(tag);
+  world.appendChild(el);
+  const look=STAFF_LOOKS[hash(cid)%STAFF_LOOKS.length];
+  const post=POSTS[idx%POSTS.length];
+  const a={key:'staff_'+cid,cid,el,cv,tag,sh:sh,led,
+    x:1.04,y:post[1],tx:post[0],ty:post[1],
+    post, serveSpot:SERVE[idx%SERVE.length], mapLoc:'hall',
+    state:'enter',timer:0,seed:hash(cid)%10,
+    faceLeft:true,flipT:-1,flipping:false,sitting:false,
+    staff:true,busy:false,cloakA:null,b:{name:st.name||'店員',doll:look}};
+  a.frames={};
+  ['idle','a','b'].forEach(p=>{
+    const f=document.createElement('canvas');f.width=64;f.height=64;
+    drawDollTo(f,look,p);a.frames[p]=f;
+  });
+  a.frame=null; setFrame(a,'idle');
+  tag.textContent='🏮 '+(st.name||'店員');
+  agents.set(a.key,a);
+  return a;
+}
+function setStaffServe(a, busy){
+  if(busy===a.busy) return;
+  if(busy){
+    a.busy=true; a.led.className='led r'; a.led.textContent='接單中'; a.sitting=false;
+    const d=MAPS.hall.door;
+    a.state='toDoor'; a.tx=d.x-0.02; a.ty=Math.min(FLOOR? d.y+0.04 : d.y, 0.95);
+    if(!a.cloakA) a.cloakA=makeCloak(a);
+  }else{
+    a.busy=false; a.led.className='led g'; a.led.textContent='待接單'; a.sitting=false;
+    if(a.cloakA){ const c=a.cloakA; c.state='leave'; c.follow=null;
+      const dd=MAPS[c.mapLoc||'hall'].door; c.tx=dd.x; c.ty=dd.y+0.05; a.cloakA=null; }
+    if(a.mapLoc==='forest'){ const d=MAPS.forest.door; a.state='toDoorBack'; a.tx=d.x+0.02; a.ty=d.y+0.04; }
+    else { a.state='back'; a.tx=a.post[0]; a.ty=a.post[1]; }
+  }
+}
+function makeCloak(staffA){
+  const el=document.createElement('div');el.className='npc';
+  const cv=document.createElement('canvas');cv.width=64;cv.height=64;
+  drawCloak(cv);
+  const sh=document.createElement('div');sh.className='shadow';
+  const tag=document.createElement('div');tag.className='tag';tag.textContent='神秘旅人';
+  el.appendChild(sh);el.appendChild(cv);el.appendChild(tag);
+  world.appendChild(el);
+  const a={key:'cloak_'+staffA.cid+'_'+(Date.now()%1000000),el,cv,tag,sh:sh,mapLoc:staffA.mapLoc||'hall',
+    x:Math.min(1.0,staffA.x+0.035),y:staffA.y,tx:0,ty:staffA.y,state:'follow',follow:staffA,
+    seed:(staffA.seed+5)%10,faceLeft:true,flipT:-1,flipping:false,sitting:false,cloak:true,
+    frames:null,frame:'idle'};
+  agents.set(a.key,a);
+  return a;
+}
+if(db) db.ref(ROOT+'/staffStatus').on('value',snap=>{
+  const all=snap.val()||{};
+  let idx=0;
+  Object.entries(all).forEach(([cid,st])=>{
+    const key='staff_'+cid;
+    let a=agents.get(key);
+    if(st.on){
+      if(!a){ a=makeStaff(cid,st,idx); a.led.className='led g'; a.led.textContent='待接單'; }
+      a.b.name=st.name||'店員'; a.tag.textContent='🏮 '+a.b.name;
+      if(st.busy!==undefined) setStaffServe(a, !!st.busy);
+    }else if(a){
+      a.led.className='led'; a.state='exit'; a.sitting=false; a.busy=false;
+      a.tx=1.06; a.ty=a.y;
+      if(a.cloakA){ const c=a.cloakA; c.state='leave'; c.follow=null;
+        const dd=MAPS[c.mapLoc||'hall'].door; c.tx=dd.x; c.ty=dd.y+0.05; a.cloakA=null; }
+    }
+    idx++;
+  });
+});
+
+if(TEST_MODE){
+  const demos=['demo1','demo2','demo3'];
+  setTimeout(()=>{
+    demos.forEach((cid,i)=>{
+      if(!agents.has('staff_'+cid)){
+        const a=makeStaff(cid,{name:'測試店員'+(i+1)},i);
+        a.led.className='led g'; a.led.textContent='待接單';
+      }
+    });
+  }, 800);
+  let di=0;
+  setInterval(()=>{
+    const a=agents.get('staff_'+demos[di%3]); di++;
+    if(!a||a.busy) return;
+    setStaffServe(a, true);
+    setTimeout(()=>{ if(agents.has(a.key)) setStaffServe(a, false); }, 9000);
+  }, 13000);
+}
+if(db){
+  db.ref(ROOT+'/lobby').limitToLast(120).on('value',s=>{bosses=s.val()||{};sync();});
+}else{
+  cnt.textContent='0';emptyMsg.style.display='block';
+}
+</script>
+</body>
+</html>
