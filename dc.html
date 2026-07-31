@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discord 綁定｜Tiny Tavern 小小酒館</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  font-family:'Huninn',system-ui,sans-serif;color:#4A3B63;
+  background:linear-gradient(180deg,#BFCCF4 0%,#D3C6F0 45%,#E9D5EC 100%)}
+.card{background:#F7F3FC;border-radius:18px;padding:30px 28px;max-width:340px;width:calc(100% - 40px);text-align:center;
+  box-shadow:0 0 0 4px #fff,0 0 0 8px #C4ADEC,0 20px 44px rgba(70,50,100,.35)}
+h1{font-size:18px;color:#6E58A6;margin:0 0 10px;letter-spacing:1px}
+p{font-size:13.5px;color:#8E7AB0;line-height:1.8;margin:0 0 6px}
+img.av{width:64px;height:64px;border-radius:50%;box-shadow:0 0 0 3px #fff,0 0 0 6px #F6CE5A;margin-bottom:10px}
+.nm{font-size:16px;font-weight:700;color:#4A3B63;margin-bottom:14px}
+a.btn{display:block;text-decoration:none;background:linear-gradient(180deg,#FBB6D0,#F28FB2);color:#fff;
+  font-size:14px;font-weight:700;padding:12px;border-radius:12px;box-shadow:inset 0 -4px 0 #E27FA6;margin-top:14px}
+.spin{width:34px;height:34px;border-radius:50%;border:4px solid #E4D8F6;border-top-color:#C4ADEC;
+  margin:0 auto 14px;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="spin"></div>
+  <h1>正在完成 Discord 綁定…</h1>
+  <p>馬上就好,別走開</p>
+</div>
+<script>
+(function(){
+  const card=document.getElementById('card');
+  function fail(msg){
+    card.innerHTML='<h1>綁定沒有成功</h1><p>'+msg+'</p><a class="btn" href="lobby.html">回酒館大廳</a>';
+  }
+  const h=new URLSearchParams(location.hash.replace(/^#/,''));
+  const tok=h.get('access_token');
+  if(!tok){ fail('沒有拿到授權,請回大廳再點一次「綁定 Discord」。'); return; }
+  fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+tok}})
+    .then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then(u=>{
+      const dc={id:u.id,username:u.username,global_name:u.global_name||'',avatar:u.avatar||''};
+      try{ localStorage.setItem('tt_dc',JSON.stringify(dc)); }catch(e){}
+      try{ history.replaceState(null,'',location.pathname); }catch(e){}
+      const av=dc.avatar?('https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=128'):'';
+      card.innerHTML=(av?'<img class="av" src="'+av+'" alt="">':'')
+        +'<h1>綁定成功!</h1><div class="nm">@'+(dc.global_name||dc.username)+'</div>'
+        +'<p>之後點單會自動帶上你的 Discord 名稱,接單店員直接找得到你。</p>'
+        +'<a class="btn" href="lobby.html">回酒館大廳</a>';
+      setTimeout(()=>{ location.href='lobby.html'; },2600);
+    })
+    .catch(()=>fail('連不上 Discord,請稍後再試一次。'));
+})();
+</script>
+</body>
+</html>
