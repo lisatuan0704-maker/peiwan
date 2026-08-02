@@ -6,6 +6,8 @@
 <title>Discord 綁定｜Tiny Tavern 小小酒館</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
   font-family:'Huninn',system-ui,sans-serif;color:#4A3B63;
@@ -30,6 +32,24 @@ a.btn{display:block;text-decoration:none;background:linear-gradient(180deg,#FBB6
   <p>馬上就好,別走開</p>
 </div>
 <script>
+const firebaseConfig={apiKey:"AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",authDomain:"my-shop-0520.firebaseapp.com",databaseURL:"https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"my-shop-0520",storageBucket:"my-shop-0520.firebasestorage.app",messagingSenderId:"430482271005",appId:"1:430482271005:web:967059c91a9b7970bdcff4"};
+let _db=null; try{ firebase.initializeApp(firebaseConfig); _db=firebase.database(); }catch(e){}
+const ROOT='peiwan';
+/* 換裝置找回帳號:此 DC 帳號若已綁過闆卡,把角色鑰匙還原到本機 */
+function restoreAccount(dcid){
+  return new Promise(res=>{
+    if(!_db){ res(false); return; }
+    _db.ref(ROOT+'/accounts/'+dcid).once('value').then(s=>{
+      const a=s.val();
+      if(a&&a.myKey){
+        _db.ref(ROOT+'/lobby/'+a.myKey).once('value').then(cs=>{
+          if(cs.val()){ try{ localStorage.setItem('tt_me',a.myKey); }catch(e){} res(true); }
+          else res(false);
+        }).catch(()=>res(false));
+      } else res(false);
+    }).catch(()=>res(false));
+  });
+}
 (function(){
   const card=document.getElementById('card');
   function fail(msg){
@@ -45,11 +65,13 @@ a.btn{display:block;text-decoration:none;background:linear-gradient(180deg,#FBB6
       try{ localStorage.setItem('tt_dc',JSON.stringify(dc)); }catch(e){}
       try{ history.replaceState(null,'',location.pathname); }catch(e){}
       const av=dc.avatar?('https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=128'):'';
-      card.innerHTML=(av?'<img class="av" src="'+av+'" alt="">':'')
-        +'<h1>綁定成功!</h1><div class="nm">@'+(dc.global_name||dc.username)+'</div>'
-        +'<p>之後點單會自動帶上你的 Discord 名稱,接單店員直接找得到你。</p>'
-        +'<a class="btn" href="lobby.html">回酒館大廳</a>';
-      setTimeout(()=>{ location.href='lobby.html'; },2600);
+      restoreAccount(dc.id).then(restored=>{
+        card.innerHTML=(av?'<img class="av" src="'+av+'" alt="">':'')
+          +'<h1>綁定成功!</h1><div class="nm">@'+(dc.global_name||dc.username)+'</div>'
+          +(restored?'<p>已找回你的闆卡與帳號資料 —— 換了裝置也回得來。</p>':'<p>之後點單會自動帶上你的 Discord 名稱,接單店員直接找得到你。</p>')
+          +'<a class="btn" href="lobby.html">回酒館大廳</a>';
+        setTimeout(()=>{ location.href='lobby.html'; },2600);
+      });
     })
     .catch(()=>fail('連不上 Discord,請稍後再試一次。'));
 })();
