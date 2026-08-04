@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>新手指南｜Tiny Tavern 小小酒館</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#C4ADEC">
+<meta name="description" content="小小酒館新手指南 ✦ 三步入館、怎麼找陪玩、VIP 與時裝間、常見問題一次看懂。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tiny Tavern 小小酒館">
+<meta property="og:title" content="新手指南｜Tiny Tavern 小小酒館">
+<meta property="og:description" content="三步入館、怎麼找陪玩、VIP 與時裝間 —— 第一次來看這裡就懂。">
+<meta property="og:image" content="https://tinytavern.tw/og-cover.png">
+<meta property="og:url" content="https://tinytavern.tw/guide.html">
+<meta name="twitter:card" content="summary_large_image">
+<link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#F7A8C6;--pinkd:#E27FA6;--lav:#C4ADEC;--lavd:#9E86D6;--blue:#A7C4F2;--mint:#A9DCC0;--gold:#F6CE5A;--ink:#4A3B63;--panel:#F7F3FC;--line:#DBCDEF}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Huninn',system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(180deg,#BFCCF4 0%,#D3C6F0 45%,#E9D5EC 100%);background-attachment:fixed;min-height:100vh;padding:0 0 50px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.14) 1px,transparent 1px);background-size:30px 30px}
+.wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:0 16px}
+header{text-align:center;padding:34px 0 22px}
+header .logo{width:88px;height:88px;border-radius:22px;background:rgba(255,255,255,.6);display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 4px #fff,0 0 0 8px rgba(196,173,236,.7),0 14px 30px rgba(70,50,100,.25)}
+header .logo img{width:60px;height:60px;image-rendering:pixelated}
+header h1{font-size:24px;letter-spacing:3px;color:#5A4880;margin:16px 0 4px;text-shadow:0 2px 0 rgba(255,255,255,.6)}
+header .sub{font-size:12px;letter-spacing:4px;color:var(--lavd)}
+.card{background:#fff;border-radius:18px;padding:20px 22px;margin-bottom:16px;
+  box-shadow:0 0 0 2px var(--line),0 8px 0 rgba(219,205,239,.5)}
+.card h2{font-size:17px;color:#6E58A6;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+.card h2 .no{width:28px;height:28px;flex:none;border-radius:9px;background:linear-gradient(180deg,#FBB6D0,#F28FB2);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:inset 0 -3px 0 var(--pinkd)}
+.card p{font-size:14px;line-height:1.95;color:#5A4880;margin-bottom:8px}
+.card p.lite{color:#8E7AB0;font-size:13px}
+.steps{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.step{display:flex;gap:12px;align-items:flex-start;background:#FBF8FF;border-radius:13px;padding:12px 14px;box-shadow:inset 0 0 0 1.5px var(--line)}
+.step .n{width:30px;height:30px;flex:none;border-radius:50%;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px}
+.step:nth-child(1) .n{background:var(--pink)}.step:nth-child(2) .n{background:var(--blue)}.step:nth-child(3) .n{background:var(--mint)}
+.step .t{font-size:14.5px;font-weight:700;color:#5A4880}
+.step .d{font-size:12.5px;color:#8E7AB0;margin-top:2px;line-height:1.7}
+.faq{border-bottom:1.5px dashed var(--line);padding:12px 0}
+.faq:last-child{border-bottom:none}
+.faq .q{font-size:14.5px;font-weight:700;color:#6E58A6;cursor:pointer;display:flex;align-items:center;gap:8px}
+.faq .q::before{content:'Q';width:22px;height:22px;flex:none;border-radius:7px;background:#EDE4F7;color:#8E7AB0;display:flex;align-items:center;justify-content:center;font-size:12px}
+.faq .a{font-size:13.5px;color:#5A4880;line-height:1.9;max-height:0;overflow:hidden;transition:max-height .3s ease,margin .3s;margin:0}
+.faq.open .a{max-height:240px;margin:9px 0 2px 30px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.tag{background:#FBF8FF;border-radius:9px;padding:5px 11px;font-size:12.5px;font-weight:700;color:#6E58A6;box-shadow:inset 0 0 0 1.5px var(--line)}
+.cta{display:flex;gap:11px;margin-top:8px;flex-wrap:wrap}
+.btn{flex:1;min-width:130px;text-align:center;text-decoration:none;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;
+  color:#fff;padding:15px;border-radius:14px;transition:transform .1s}
+.btn:active{transform:translateY(2px)}
+.btn.pink{background:linear-gradient(180deg,#FBB6D0,#F28FB2);box-shadow:inset 0 -4px 0 var(--pinkd)}
+.btn.lav{background:linear-gradient(180deg,#D3C1F2,#B79EE6);box-shadow:inset 0 -4px 0 var(--lavd)}
+.foot{text-align:center;color:#8E7AB0;font-size:12px;line-height:1.9;margin-top:22px}
+.foot a{color:#8E68C8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="logo"><img src="/icon-192.png" alt="小小酒館"></span>
+    <h1>小小酒館・新手指南</h1>
+    <div class="sub">TINY TAVERN · GUIDE</div>
+  </header>
+
+  <div class="card">
+    <h2><span class="no">✦</span>這是什麼地方?</h2>
+    <p>小小酒館是一間<b>像素風的虛擬角色陪玩小酒館</b>。你會捏一隻專屬自己的「闆卡」小人,走進共同的 2.5D 大廳,和其他人一起逛、聊天;想被陪玩時,就找店員陪你打遊戲、語音聊天。</p>
+    <p class="lite">乾淨無擦邊、金流透明 —— 這裡是輕鬆自在的小天地。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">1</span>三步入館</h2>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><div><div class="t">製作闆卡</div><div class="d">捏一隻你在酒館裡的樣子(髮型、服裝、臉、配件)。闆卡每人一張,之後活動都用這個形象。</div></div></div>
+      <div class="step"><span class="n">2</span><div><div class="t">走進大廳</div><div class="d">做好闆卡就能進場!點地板或用 WASD 移動,空白鍵和物件互動,點小人看闆卡。</div></div></div>
+      <div class="step"><span class="n">3</span><div><div class="t">綁定 Discord(推薦)</div><div class="d">綁定後闆卡、金幣、訂單、成就都跟著帳號走 —— 換手機也回得來,點單還會自動帶上你的名字。</div></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">2</span>金幣錢包 · 本店的貨幣</h2>
+    <p>店內消費使用<b>金幣</b>(1 金幣＝1 元)。點左上角頭像旁的<b>金幣</b>打開錢包:選儲值方案 → 轉帳並上傳截圖 → 掌櫃核帳後金幣自動入帳,常有<b>儲值加贈</b>活動。</p>
+    <p class="lite">之後點單、買時裝直接扣金幣、立即成立,不用每筆等對帳。錢包裡看得到每一筆交易紀錄。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">3</span>怎麼找陪玩?</h2>
+    <p>點右下角的<b>酒杯(我要點單)</b>→ 選「找陪玩一起玩」。</p>
+    <div class="tags"><span class="tag">即時:選在班的陪玩,付完金幣馬上開始</span><span class="tag">預約:挑日期+時間(可自訂分鐘)</span></div>
+    <p style="margin-top:10px">點大廳裡的陪玩小人可以看他的<b>資訊卡</b>(擅長遊戲、介紹、已被預約的時段)。預約單送出後,等陪玩本人確認時段——確認了會通知你「準時赴約 ✦」,接不上也會通知並由掌櫃協助改期或退款。</p>
+    <p class="lite">右下角<b>單據(我的訂單)</b>分「進行中/歷史紀錄」;完成的訂單如有問題,點「這筆有問題?」直接回報給掌櫃。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">4</span>VIP 與優惠券</h2>
+    <p><b>儲值當下就累積 VIP</b>(依實付金額),每升一級解鎖:<b>點單優惠券</b>、VIP 專屬時裝/寵物/椅子、限定對話框,最高階還送實體周邊。點左上角頭像卡的 <b>VIP</b> 看等級與進度。</p>
+    <p class="lite">優惠券張數有限、結帳時勾選折抵。(等級門檻正式上線前會公告確認。)</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">5</span>時裝間 · 換裝區 · 背包</h2>
+    <p><b>時裝間</b>(右下角衣服鈕):試穿免費,喜歡就用金幣購買,立刻穿上身並永久收進<b>背包</b>。</p>
+    <p><b>換裝區(自由搭配)</b>:從背包或時裝間進入,把已擁有的部件<b>自由混搭</b>——背髮、瀏海、服裝、表情、配件、髮色隨你配;灰色是還沒擁有的部件,點它可以看屬於哪一套、什麼時候買得到。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">6</span>信箱與小提醒</h2>
+    <p>左上角的<b>信箱</b>會收到掌櫃的通知與活動消息,有新信會亮紅點。大廳請互相尊重——看到不舒服的發言,右鍵(長按)那句話即可<b>檢舉</b>,掌櫃都會處理。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">?</span>常見問題</h2>
+    <div class="faq"><div class="q">儲值後多久入帳?</div><div class="a">掌櫃核對銀行到帳後手動確認,通常<b>幾分鐘內</b>。入帳時大廳會跳「金幣已入帳!」通知;深夜時段可能稍等。</div></div>
+    <div class="faq"><div class="q">換了手機/清了瀏覽器,東西會不見嗎?</div><div class="a">不會。用<b>同一個 Discord</b> 綁定就會找回闆卡、金幣、訂單與成就。進場頁點「已經有帳號了?綁定 Discord 找回」。</div></div>
+    <div class="faq"><div class="q">可以退款嗎?</div><div class="a">訂單有狀況(陪玩臨時無法赴約等)由掌櫃取消後,<b>金幣自動退回錢包</b>並留有紀錄。其他退款需求請到 Discord 找掌櫃。</div></div>
+    <div class="faq"><div class="q">闆卡可以重做嗎?</div><div class="a">闆卡每人一張。想換造型用<b>時裝間與換裝區</b>;真的需要重做,請到 Discord 聯絡掌櫃。</div></div>
+    <div class="faq"><div class="q">付款安全嗎?</div><div class="a">採<b>銀行轉帳＋截圖對帳</b>,掌櫃以銀行實際入帳為準;金額建立後鎖定,任何更正都留紀錄,金流公開透明。</div></div>
+    <div class="faq"><div class="q">幾歲可以玩?</div><div class="a">本店為乾淨、無擦邊的陪玩服務。未成年請在家長同意與陪同下使用,並注意消費。</div></div>
+    <div class="faq"><div class="q">手機怎麼玩比較順?</div><div class="a">直式有專屬首頁(點單、錢包、信箱都在);想體驗完整 2.5D 大廳把手機<b>轉橫</b>。也可「加入主畫面」像 App 一樣開啟。</div></div>
+  </div>
+
+  <div class="cta">
+    <a class="btn pink" href="card.html">開始製作闆卡</a>
+    <a class="btn lav" href="lobby.html">走進酒館大廳</a>
+  </div>
+
+  <div class="foot">
+    有問題想問掌櫃?到 <a href="https://discord.gg/aK9GFarxm" target="_blank" rel="noopener">Discord</a> 找我們 ✦<br>
+    Tiny Tavern 小小酒館
+  </div>
+</div>
+<script>
+document.querySelectorAll('.faq .q').forEach(q=>q.addEventListener('click',()=>q.parentElement.classList.toggle('open')));
+/* 點擊火花(與大廳同手感) */
+document.addEventListener('pointerdown',function(e){
+  const t=e.target.closest&&e.target.closest('.btn,.faq .q,.step'); if(!t) return;
+  for(let i=0;i<5;i++){ const s=document.createElement('div'); const cc=['#F6CE5A','#F7A8C6','#C4ADEC','#fff'][i%4],sz=4+Math.random()*4;
+    s.style.cssText='position:fixed;z-index:99;pointer-events:none;left:'+e.clientX+'px;top:'+e.clientY+'px;width:'+sz+'px;height:'+sz+'px;background:'+cc;
+    s.style.clipPath='polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%)';
+    s.animate([{transform:'translate(0,0) scale(.4)',opacity:1},{transform:'translate('+(Math.random()*40-20)+'px,'+(Math.random()*40-20)+'px) scale(1)',opacity:0}],{duration:600,easing:'ease-out',fill:'forwards'});
+    document.body.appendChild(s); setTimeout(()=>s.remove(),620); }
+},{passive:true});
+</script>
+</body>
+</html>
