@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小小酒館・裝置檢測</title>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:22px 14px 40px;font-family:'Huninn','Noto Sans TC',sans-serif;
+  background:linear-gradient(175deg,#F6EEFB,#EADFF7);color:#5A4880;display:flex;flex-direction:column;align-items:center}
+.card{width:100%;max-width:460px;background:linear-gradient(175deg,#FFFDFE,#F5EDFB);border-radius:20px;padding:20px 18px;
+  box-shadow:0 0 0 2.5px #D7C6EE,0 0 0 6px rgba(255,255,255,.6),0 14px 34px rgba(90,60,110,.2);margin-bottom:14px}
+h1{font-size:19px;margin:0 0 4px;color:#6B4E96;letter-spacing:1px}
+.sub{font-size:12.5px;color:#9E86B8;margin-bottom:14px;line-height:1.7}
+.row{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed #E9DCF6;font-size:13px;align-items:flex-start}
+.row:last-child{border-bottom:none}
+.k{flex:0 0 96px;color:#9E86B8}
+.v{flex:1;font-weight:700;word-break:break-word}
+.ok{color:#2F8A5C}.bad{color:#D0455F}.warn{color:#C97B2B}
+#stage{width:100%;height:120px;border-radius:14px;background:#2E2438;position:relative;overflow:hidden;margin:10px 0 6px}
+.dot{position:absolute;width:14px;height:14px;border-radius:50%;background:#F7A8C6;box-shadow:0 0 10px #F7A8C6}
+.big{font-size:30px;font-weight:800;text-align:center;letter-spacing:1px;margin:6px 0 2px}
+button{width:100%;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:#fff;padding:14px;
+  border-radius:999px;background:linear-gradient(180deg,#B99BE8,#8E68C8);box-shadow:inset 0 -3px 0 #7B55B5;margin-top:10px}
+button:active{transform:scale(.97)}
+textarea{width:100%;height:132px;border-radius:12px;border:none;box-shadow:inset 0 0 0 1.5px #DECFF2;padding:10px;
+  font-family:monospace;font-size:11.5px;color:#5A4880;background:#FCFAFE;resize:none;margin-top:10px}
+</style></head><body>
+
+<div class="card">
+  <h1>小小酒館・裝置檢測</h1>
+  <div class="sub">這頁不會動到任何資料,只是測一下你的瀏覽器畫圖有多快。等下面的測試跑完(約 6 秒),把結果截圖或複製給掌櫃就好。</div>
+  <div id="stage"></div>
+  <div class="big" id="fpsNow">測試中…</div>
+  <div class="sub" style="text-align:center;margin:0" id="fpsHint">請不要切換視窗,讓它跑完</div>
+</div>
+
+<div class="card">
+  <div class="row"><div class="k">流暢度</div><div class="v" id="rFps">—</div></div>
+  <div class="row"><div class="k">硬體加速</div><div class="v" id="rAccel">—</div></div>
+  <div class="row"><div class="k">顯示卡</div><div class="v" id="rGpu">—</div></div>
+  <div class="row"><div class="k">螢幕</div><div class="v" id="rScreen">—</div></div>
+  <div class="row"><div class="k">縮放倍率</div><div class="v" id="rDpr">—</div></div>
+  <div class="row"><div class="k">瀏覽器</div><div class="v" id="rUa">—</div></div>
+  <div class="row"><div class="k">處理器核心</div><div class="v" id="rCpu">—</div></div>
+  <div class="row"><div class="k">記憶體</div><div class="v" id="rMem">—</div></div>
+  <div class="row"><div class="k">省電模式</div><div class="v" id="rSave">—</div></div>
+  <button id="copyBtn">複製檢測結果</button>
+  <textarea id="out" readonly></textarea>
+</div>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage'), dots=[];
+  for(var i=0;i<60;i++){
+    var d=document.createElement('div'); d.className='dot';
+    d.style.left=(Math.random()*94)+'%'; d.style.top=(Math.random()*82)+'%';
+    d.style.background=['#F7A8C6','#F6CE5A','#C4ADEC','#8FD3AE'][i%4];
+    stage.appendChild(d); dots.push({el:d,x:Math.random()*94,y:Math.random()*82,vx:(Math.random()-.5)*40,vy:(Math.random()-.5)*40});
+  }
+  var frames=0,t0=performance.now(),last=t0,phase=1,fpsIdle=0,fpsLoad=0;
+  function loop(now){
+    var dt=(now-last)/1000; last=now; frames++;
+    if(phase===2){
+      for(var i=0;i<dots.length;i++){ var o=dots[i];
+        o.x+=o.vx*dt; o.y+=o.vy*dt;
+        if(o.x<0||o.x>94)o.vx*=-1; if(o.y<0||o.y>82)o.vy*=-1;
+        o.el.style.transform='translate('+o.x*0.01*stage.clientWidth+'px,'+o.y*0.01*stage.clientHeight+'px)';
+      }
+    }
+    var el=now-t0;
+    if(phase===1&&el>3000){ fpsIdle=Math.round(frames/el*1000); phase=2; frames=0; t0=now;
+      document.getElementById('fpsHint').textContent='第二階段:動畫壓力測試…'; }
+    else if(phase===2&&el>3000){ fpsLoad=Math.round(frames/el*1000); done(); return; }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function gpuInfo(){
+    try{
+      var c=document.createElement('canvas'), gl=c.getContext('webgl')||c.getContext('experimental-webgl');
+      if(!gl) return {accel:false,name:'無法建立 WebGL(硬體加速可能關閉)'};
+      var dbg=gl.getExtension('WEBGL_debug_renderer_info');
+      var name=dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):'(瀏覽器未提供型號)';
+      var soft=/swiftshader|llvmpipe|software|basic render/i.test(name);
+      return {accel:!soft,name:name};
+    }catch(e){ return {accel:false,name:'偵測失敗'}; }
+  }
+
+  function done(){
+    var g=gpuInfo();
+    var fps=Math.min(fpsIdle,fpsLoad);
+    var cls=fps>=50?'ok':(fps>=30?'warn':'bad');
+    var word=fps>=50?'順暢':(fps>=30?'普通(偏卡)':'很卡');
+    document.getElementById('fpsNow').innerHTML='<span class="'+cls+'">'+fps+' FPS・'+word+'</span>';
+    document.getElementById('fpsHint').textContent='測試完成,把下面的結果給掌櫃即可';
+    document.getElementById('rFps').innerHTML='<span class="'+cls+'">靜態 '+fpsIdle+' / 動畫 '+fpsLoad+' FPS</span>';
+    document.getElementById('rAccel').innerHTML=g.accel?'<span class="ok">開啟(正常)</span>':'<span class="bad">關閉或使用軟體繪圖</span>';
+    document.getElementById('rGpu').textContent=g.name;
+    document.getElementById('rScreen').textContent=screen.width+'×'+screen.height+'(視窗 '+innerWidth+'×'+innerHeight+')';
+    var dpr=window.devicePixelRatio||1;
+    document.getElementById('rDpr').innerHTML=dpr+'×'+(dpr>1.5?' <span class="warn">(高倍率,繪圖負擔較大)</span>':'');
+    document.getElementById('rUa').textContent=navigator.userAgent.replace(/Mozilla\/5\.0 \(|\) AppleWebKit.*?Chrome\//,' Chrome/').slice(0,110);
+    document.getElementById('rCpu').textContent=(navigator.hardwareConcurrency||'?')+' 核';
+    document.getElementById('rMem').textContent=(navigator.deviceMemory?navigator.deviceMemory+' GB 以上':'(瀏覽器未提供)');
+    var sd=navigator.connection&&navigator.connection.saveData;
+    document.getElementById('rSave').textContent=sd?'省流量模式開啟':'未開啟';
+    document.getElementById('out').value=
+      '【小小酒館裝置檢測】\n'+
+      'FPS 靜態/動畫:'+fpsIdle+' / '+fpsLoad+'\n'+
+      '硬體加速:'+(g.accel?'開啟':'關閉或軟體繪圖')+'\n'+
+      '顯示卡:'+g.name+'\n'+
+      '螢幕:'+screen.width+'x'+screen.height+' 視窗:'+innerWidth+'x'+innerHeight+' DPR:'+dpr+'\n'+
+      'CPU 核心:'+(navigator.hardwareConcurrency||'?')+' 記憶體:'+(navigator.deviceMemory||'?')+'\n'+
+      'UA:'+navigator.userAgent;
+  }
+  document.getElementById('copyBtn').onclick=function(){
+    var t=document.getElementById('out'); t.select();
+    try{ document.execCommand('copy'); this.textContent='已複製!貼給掌櫃就好 ✦'; }
+    catch(e){ this.textContent='請手動選取下方文字複製'; }
+  };
+})();
+</script>
+</body></html>
