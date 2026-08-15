@@ -1701,6 +1701,7 @@ function repSetTab(t){ _repTab=t; _repShow=20; renderReports(); }
 function repMore(){ _repShow+=20; renderReports(); }
 function renderReports(){
   const el=document.getElementById("tab5"); if(!el) return;
+  const shortId=k=>k?('#'+String(k).slice(-5).toUpperCase()):'';
   const all=Object.entries(reports).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
   const openN=all.filter(([,r])=>!r.done).length, doneN=all.length-openN;
   const pending=openN + Object.values(orderIssues||{}).filter(x=>x&&!x.done).length;
@@ -1724,17 +1725,21 @@ function renderReports(){
     +'<p style="color:var(--ink-soft);text-align:center;padding:16px 0">'+(_repTab==='done'?'還沒有處理完的紀錄':'太好了,目前沒有待處理的檢舉 ✿')+'</p></div>'; return; }
   el.innerHTML=pre+'<div class="card"><h2>🚨 檢舉紀錄</h2>'+tabs+list.map(([id,r])=>{
     const open=openRep.has(id);
-    const ctx=(r.context||[]).map(c=>{
+    const ctx=(r.context||r.ctx||[]).map(c=>{
       const hit=(c.x===r.targetText && c.n===r.targetName);
       return '<div style="font-size:12px;padding:1px 4px;'+(hit?'background:#FFE0E6;font-weight:700':'')+'">'
         +'<span style="color:#8E5A75">'+esc(c.n||'?')+'</span>：'+esc(c.x||'')+'</div>';
     }).join('');
     return '<div style="border:2px solid '+(r.done?'#D8D0D4':'#F0A8B8')+';padding:10px 12px;margin-bottom:10px;background:'+(r.done?'#FAFAFA':'#FFF6F8')+'">'
       +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;align-items:center">'
-      +'<div style="flex:1 1 240px;min-width:0"><b style="color:#C0392B">'+esc(r.targetName||'?')+'</b>：'+esc(r.targetText||'')
+      +'<div style="flex:1 1 240px;min-width:0"><b style="color:#C0392B">'+esc(r.targetName||'?')+'</b>'
+      +(r.targetKey?'<span style="font-size:11px;color:#8E5A75;background:#F4E3E9;border-radius:6px;padding:1px 7px;margin-left:6px">ID '+esc(shortId(r.targetKey))+'</span>':'')
+      +'：'+esc(r.targetText||'')
+      +(!r.reasons&&r.reason?'<div style="margin-top:5px"><span style="display:inline-block;background:#E14E6B;color:#fff;font-size:11px;padding:2px 8px;margin:2px 4px 2px 0">'+esc(r.reason)+'</span></div>':'')
       +(r.reasons&&r.reasons.length?'<div style="margin-top:5px">'+r.reasons.map(x=>'<span style="display:inline-block;background:#E14E6B;color:#fff;font-size:11px;padding:2px 8px;margin:2px 4px 2px 0">'+esc(x)+'</span>').join('')+'</div>':'')
       +(r.note?'<div style="font-size:12px;color:#5A3D4E;background:#FFF;border-left:3px solid #F0A8B8;padding:4px 8px;margin-top:5px">補充：'+esc(r.note)+'</div>':'')
-      +'<div style="font-size:11px;color:var(--ink-soft);margin-top:3px">檢舉人 '+esc(r.byName||'匿名')
+      +'<div style="font-size:11px;color:var(--ink-soft);margin-top:3px">檢舉人 '+esc(r.byName||r.reporterName||'匿名')
+      +((r.byKey&&r.byKey!=='anon')||r.reporterKey?'(ID '+esc(shortId(r.byKey&&r.byKey!=='anon'?r.byKey:r.reporterKey))+')':'')
       +'｜'+new Date(r.at||0).toLocaleString("zh-TW")+'｜'+(r.map==='forest'?'森林':'酒館')+'</div></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
       +'<button onclick="toggleRep(\''+id+'\')" style="border:none;background:#F4E3E9;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">'+(open?'收合':'看前後文')+'</button>'
