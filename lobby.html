@@ -1657,7 +1657,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v200</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v201</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -5249,7 +5249,28 @@ function tryServeNudge(staff){
   function build(){
     const el=document.getElementById('wardBody'); if(!el) return;
     const d=myDoll();
-    if(!d){ el.innerHTML='<div class="ghint" style="text-align:center;padding:18px 0">先做一張闆卡,就能來自由搭配 ✦</div>'; return; }
+    if(!d){
+      /* v201:自己的小人資料還沒載到(剛開頁/換裝置常見)——
+         以前這段提示只寫進隱藏的 wardBody,手帳裡開換裝間會整頁空白;
+         現在提示寫進「目前看得到的那個容器」,並每 0.7 秒偷看一次,資料到了自動補畫 */
+      const bm=document.getElementById('bookM');
+      const bl=document.getElementById('bkWardL'), br=document.getElementById('bkWardR');
+      const inBook=!!(bl&&br&&bm&&bm.classList.contains('on'));
+      const hint='<div class="ghint" style="text-align:center;padding:26px 0;line-height:2">造型資料載入中,稍等一下下 ✦<br>若一直沒出現,可能還沒有闆卡——先做一張就能自由搭配囉</div>';
+      if(inBook){ bl.innerHTML=hint; br.innerHTML=''; }
+      else el.innerHTML=hint;
+      clearInterval(window._wdWaitT);
+      window._wdWaitT=setInterval(function(){
+        try{
+          const on=function(id){ const e=document.getElementById(id); return !!(e&&e.classList.contains('on')); };
+          const wardVisible=on('wardM')||(on('bookM')&&(typeof _bkTab!=='undefined')&&_bkTab==='ward');
+          if(!wardVisible){ clearInterval(window._wdWaitT); return; }
+          if(myDoll()){ clearInterval(window._wdWaitT); build(); }
+        }catch(e){ clearInterval(window._wdWaitT); }
+      },700);
+      return;
+    }
+    clearInterval(window._wdWaitT);
     if(!_wd){
       _wd=Object.assign({back:0,front:0,cloth:0,face:0,brow:0,acc:0,hair:0},d);
       if(_wd.set){
