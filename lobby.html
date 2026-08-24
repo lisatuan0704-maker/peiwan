@@ -1657,7 +1657,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v203</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v204</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -6667,10 +6667,22 @@ document.addEventListener('keydown',e=>{
     try{
       db.ref(ROOT+'/accounts/'+dc.id).once('value').then(s=>{
         const a=s.val()||{};
-        /* v191:帳號被掌櫃刪除 → 清掉本機登入,回到入口(不再自動綁回) */
+        /* v191:帳號被掌櫃刪除 → 清掉本機登入,回到入口(不再自動綁回)。
+           v204:但「刪除≠封鎖」——客人重新做了一張有效闆卡就算重新入店,
+           要把 deleted 旗標清掉;不然旗標永遠留著,一綁回 Discord 就被踢回入口,無限循環 */
         if(a.deleted){
-          try{ localStorage.removeItem('tt_dc'); localStorage.removeItem('tt_me'); }catch(e){}
-          location.replace(location.pathname); return;
+          const mine2=(typeof myKey!=='undefined'&&myKey)?myKey:null;
+          const kick=function(){
+            try{ localStorage.removeItem('tt_dc'); localStorage.removeItem('tt_me'); }catch(e){}
+            location.replace(location.pathname);
+          };
+          if(mine2){
+            db.ref(ROOT+'/lobby/'+mine2).once('value').then(cs=>{
+              if(cs.val()) db.ref(ROOT+'/accounts/'+dc.id).set(Object.assign({myKey:mine2},base));
+              else kick();
+            }).catch(function(){});
+          } else kick();
+          return;
         }
         const mine=(typeof myKey!=='undefined'&&myKey)?myKey:null;
         /* 帳號已綁定的角色為準:本機與它不同時,還原成帳號的角色(換裝置找回),不覆寫 */
