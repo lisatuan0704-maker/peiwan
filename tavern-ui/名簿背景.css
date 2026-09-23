@@ -1,0 +1,193 @@
+/* 名簿草樣專用：放在既有樣式之後；只改陪玩名簿視窗內的氣氛。 */
+.roster-window {
+  --ink: #526080;
+  --cream: #f8f9ff;
+  --window-shadow: 0 5px 0 #7b84a1, 0 18px 65px #24122555;
+  border-color: #7a85a2;
+  background: linear-gradient(138deg, #f2f8ff 0%, #f5f3ff 52%, #fbf3f9 100%);
+  isolation: isolate;
+}
+
+.roster-window::before {
+  border-color: #c4cce0;
+}
+
+.roster-window > .window-head,
+.roster-window > .window-body,
+.roster-window > .window-foot {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+.roster-window > .window-head {
+  background: linear-gradient(110deg, #ffffff42, #e8eafb40 60%, #f7eaf330);
+}
+
+/* 用幾何細線取代原來的粉色移動點陣，避免同時疊加兩套氣氛。 */
+.roster-window > .window-head::before {
+  display: none;
+  animation: none;
+}
+
+.roster-window .brand-mark {
+  fill: #fcfcff;
+  filter: drop-shadow(0 3px 0 #bcc4dc);
+}
+
+.roster-window .close {
+  background: #fbfcff;
+  border-color: #8995b1;
+  box-shadow: 0 3px 0 #bbc4db;
+}
+
+.roster-window .close:hover {
+  background: #efeffb;
+}
+
+.roster-window .close:active {
+  box-shadow: 0 1px 0 #bbc4db;
+}
+
+.roster-window .segmented {
+  background: #ffffffc7;
+  border-color: #a6b2cc;
+}
+
+.roster-window .segmented button[aria-pressed="true"] {
+  background: #7884a4;
+}
+
+.roster-window .cast-row {
+  border-color: #acb6cd;
+  background: #fbfcff;
+  box-shadow: 0 3px 0 #d1d8e7;
+}
+
+.roster-window .cast-row:hover,
+.roster-window .cast-row:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 4px 0 var(--accent), 0 0 0 3px #fff;
+}
+
+.roster-window .row-arrow {
+  background: #fbfcff;
+  border-color: #b5bfd5;
+}
+
+.roster-window .any-btn {
+  background: #edf1fa;
+  border-color: #acb8d2;
+}
+
+.roster-window .any-btn:hover {
+  background: #e4eafa;
+}
+
+.roster-window > .window-foot {
+  border-top-color: #d8ddeb;
+}
+
+/* 幾何層只存在於窗框內；每個圖形都避開名牌文字的主要範圍。 */
+.roster-window > .roster-atmosphere {
+  position: absolute;
+  inset: 5px;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.roster-window > .roster-atmosphere > i {
+  position: absolute;
+  display: block;
+  width: var(--size, 62px);
+  height: var(--size, 62px);
+  border: 1px solid var(--line, #92a7c374);
+  background: transparent;
+  opacity: .66;
+  transform: translate3d(0, 0, 0) rotate(var(--angle, 0deg));
+  animation: roster-outline-drift 24s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.roster-window > .roster-atmosphere > i:nth-child(1) {
+  --size: 80px;
+  --angle: -8deg;
+  --dx: 8px;
+  --dy: 7px;
+  left: -39px;
+  top: 92px;
+  border-radius: 50%;
+  animation-delay: -3s;
+}
+
+.roster-window > .roster-atmosphere > i:nth-child(2) {
+  --size: 58px;
+  --line: #a693c579;
+  --angle: 28deg;
+  --dx: -7px;
+  --dy: 9px;
+  right: -27px;
+  top: 45%;
+  border-radius: 5px;
+  animation-delay: -11s;
+}
+
+.roster-window > .roster-atmosphere > i:nth-child(3) {
+  --size: 42px;
+  --line: #c89eb56b;
+  --angle: 45deg;
+  --dx: 6px;
+  --dy: -6px;
+  left: 67%;
+  top: -22px;
+  border-radius: 2px;
+  animation-delay: -18s;
+}
+
+.roster-window > .roster-atmosphere > i:nth-child(4) {
+  --size: 62px;
+  --line: #96acc470;
+  --angle: -20deg;
+  --dx: -8px;
+  --dy: -6px;
+  right: 37px;
+  bottom: -32px;
+  border-radius: 50%;
+  animation-delay: -7s;
+}
+
+.roster-window > .roster-atmosphere > i:nth-child(5) {
+  --size: 51px;
+  --line: #aa9ec777;
+  --angle: 14deg;
+  --dx: 7px;
+  --dy: -8px;
+  left: -31px;
+  bottom: 72px;
+  border-radius: 3px;
+  animation-delay: -21s;
+}
+
+@keyframes roster-outline-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(var(--angle, 0deg));
+  }
+  50% {
+    transform: translate3d(var(--dx, 6px), var(--dy, -7px), 0)
+      rotate(calc(var(--angle, 0deg) + 6deg));
+  }
+}
+
+/* 保留靜態細線裝飾；關閉動態時不影響任何版面或角色。 */
+.motion-off .roster-window > .roster-atmosphere > i {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roster-window > .roster-atmosphere > i {
+    animation: none !important;
+  }
+}

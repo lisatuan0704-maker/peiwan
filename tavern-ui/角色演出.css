@@ -1,0 +1,107 @@
+/* 桃與縭保留原背景光效，卡布反光覆蓋完整卡面。 */
+#profileWindow>.profile-kinetics{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;border-radius:inherit;contain:paint}
+.profile-kinetics *{pointer-events:none}
+.profile-kinetics .registered-light{display:block;width:100%;height:100%;overflow:hidden}
+.profile-kinetics image{display:none}
+#profileWindow[data-cast="RIRA"] .registered-rira{display:block;filter:brightness(1.75) saturate(.8)}
+#profileWindow[data-cast="MOMO"] .registered-momo{display:block;filter:brightness(1.22) saturate(.87)}
+/* 只移動照明遮罩，底圖的位置、比例和圖案完全不移動。 */
+.registered-rira-scan{animation:registered-trace 6s cubic-bezier(.25,.5,.4,1) infinite}
+@keyframes registered-trace{0%{transform:translateX(0);opacity:0}8%{opacity:1}80%{opacity:1}100%{transform:translateX(2300px);opacity:0}}
+.registered-star{animation:registered-star-light 5.6s ease-in-out infinite}
+.registered-star.star-right{animation-delay:-2.8s}
+@keyframes registered-star-light{0%,55%,100%{opacity:0}18%,28%{opacity:.95}40%{opacity:.25}}
+.registered-wave-scan{animation:registered-wave-light 7s cubic-bezier(.25,.5,.4,1) infinite}
+@keyframes registered-wave-light{0%{transform:translateX(0);opacity:0}12%{opacity:1}75%{opacity:1}100%{transform:translateX(2300px);opacity:0}}
+.registered-fan{animation:registered-fan-light 7s ease-in-out infinite}
+.registered-fan.fan-bottom{animation-delay:-3.5s}
+@keyframes registered-fan-light{0%,65%,100%{opacity:0}25%,38%{opacity:.85}}
+#profileWindow[data-cast="MOMO"] .profile-traces,#profileWindow[data-cast="RIRA"] .profile-traces{display:none}
+#profileWindow[hidden] .profile-kinetics *{animation-play-state:paused!important}
+.motion-off .profile-kinetics{display:none!important}
+@media(prefers-reduced-motion:reduce){.profile-kinetics{display:none!important}}
+
+
+/* 保留細幅白色亮膜，背景裝飾獨立留在人物後方。 */
+#profileWindow>.kabuki-card-sheen{display:none;position:absolute;inset:0;z-index:10;pointer-events:none;overflow:hidden;border-radius:inherit}
+#profileWindow[data-cast="KABUKI"]>.kabuki-card-sheen{display:block}
+.kabuki-card-sheen::before{
+ content:'';position:absolute;top:-40%;left:-42%;width:22%;height:180%;
+ background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.025) 16%,rgba(255,255,255,.12) 34%,rgba(255,255,255,.5) 49%,rgba(255,255,255,.38) 54%,rgba(255,255,255,.1) 69%,transparent 100%);
+ transform:translateX(0) skewX(-22deg);will-change:transform;
+ animation:kabuki-full-card-shine 6.2s cubic-bezier(.32,.1,.45,1) infinite;
+}
+@keyframes kabuki-full-card-shine{
+ 0%{transform:translateX(0) skewX(-22deg);opacity:0}
+ 7%{opacity:1}
+ 70%{transform:translateX(750%) skewX(-22deg);opacity:1}
+ 78%,100%{transform:translateX(750%) skewX(-22deg);opacity:0}
+}
+#profileWindow[hidden]>.kabuki-card-sheen::before{animation-play-state:paused}
+.motion-off #profileWindow>.kabuki-card-sheen{display:none}
+@media(prefers-reduced-motion:reduce){#profileWindow>.kabuki-card-sheen{display:none}}
+
+
+/* 卡布構圖：原創小三角底紋與下方水波。 */
+#profileWindow[data-cast="KABUKI"]{background-image:linear-gradient(180deg,#ffffff 0%,#dce8ef 36%,#b0c7d7 70%,#8faec3 100%)}
+#profileWindow[data-cast="KABUKI"]>.profile-traces{display:block;z-index:1}
+#profileWindow[data-cast="KABUKI"]>.profile-kinetics{display:none}
+#profileWindow[data-cast="KABUKI"] .profile-foot{background:#42617a88}
+#profileWindow[data-cast="KABUKI"] .profile-copy{background:#fffffff2;box-shadow:3px 5px 0 #344e6612}
+/* 同一落點的三圈漣漪：貼地橢圓，接連擴散，外圈逐漸消退。 */
+.kabuki-water-ring{fill:none;stroke:#416c8d;stroke-width:.85;vector-effect:non-scaling-stroke;transform-box:view-box;transform-origin:246px 509px;opacity:0;animation:kabuki-water-spread 6.8s linear infinite}
+.kabuki-water-ring.water-second{animation-delay:.6s;stroke-width:.7}
+.kabuki-water-ring.water-third{animation-delay:1.2s;stroke-width:.6}
+@keyframes kabuki-water-spread{
+ 0%{transform:scale(.08);opacity:0}
+ 8%{transform:scale(.32);opacity:.29}
+ 28%{transform:scale(.82);opacity:.21}
+ 52%{transform:scale(1.28);opacity:.11}
+ 80%,100%{transform:scale(1.7);opacity:0}
+}
+.motion-off #profileWindow .kabuki-water-ring{display:none}
+
+/* 左密右疏、上藍下白的三角拼接；呼吸只改明暗，圖案不漂移。 */
+#profileWindow>.kabuki-facet-field{display:none;position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit}
+#profileWindow[data-cast="KABUKI"]>.kabuki-facet-field{display:block}
+.kabuki-facet-field svg{display:block;width:100%;height:100%}
+.kabuki-facet-field polygon{stroke:#ffffff;stroke-width:.55;stroke-opacity:0;vector-effect:non-scaling-stroke;opacity:.66;animation:kabuki-facet-breathe 6.2s ease-in-out var(--facet-delay) infinite}
+@keyframes kabuki-facet-breathe{
+ 0%,100%{opacity:.12;fill:var(--facet-color);stroke-opacity:0}
+ 18%{opacity:1;fill:var(--facet-active);stroke-opacity:.48}
+ 26%{opacity:1;fill:var(--facet-active);stroke-opacity:.18}
+ 66%{opacity:.12;fill:var(--facet-color);stroke-opacity:0}
+}
+#profileWindow[hidden] .kabuki-facet-field polygon{animation-play-state:paused}
+.motion-off .kabuki-facet-field polygon{animation:none;opacity:.66}
+@media(prefers-reduced-motion:reduce){.kabuki-facet-field polygon{animation:none;opacity:.66}}
+@media(prefers-reduced-motion:reduce){#profileWindow .kabuki-water-ring{display:none}}
+
+/* 卡布極簡卡面：同一組冰藍／墨藍色階，細邊界，主要視覺落在人物與切面光波。 */
+#profileWindow[data-cast="KABUKI"]{
+ --ink:#254763;--accent:#72a5c9;--theme-ink:#254763;--theme-button:#254f75;
+ border:1px solid #a6c1d4;border-radius:18px;padding:4px;
+ box-shadow:0 20px 54px #132c493b,inset 0 0 0 2px #ffffffb3;
+ background-image:linear-gradient(180deg,#ffffff 0%,#dce8ef 36%,#b0c7d7 70%,#8faec3 100%);
+}
+#profileWindow[data-cast="KABUKI"]::before{border-color:#ffffffa6;border-radius:13px}
+#profileWindow[data-cast="KABUKI"] .window-head{background:linear-gradient(90deg,#ffffffc9,#ffffff52 55%,#ffffff99);border-bottom:1px solid #c8dbe55c}
+#profileWindow[data-cast="KABUKI"] .brand-mark{stroke:#426580;fill:#f8fcff;filter:none}
+#profileWindow[data-cast="KABUKI"] .close{color:#365b77;border:1px solid #adc4d5;background:#f8fcff;box-shadow:none;border-radius:8px}
+#profileWindow[data-cast="KABUKI"] .profile-copy{border:1px solid #ffffffd9;border-radius:12px;background:#fffffff0;box-shadow:0 7px 24px #3155790a}
+#profileWindow[data-cast="KABUKI"] .profile-name .roman{color:#426c90;background:none;-webkit-text-fill-color:currentColor;animation:none;letter-spacing:3px}
+#profileWindow[data-cast="KABUKI"] .profile-tagline,
+#profileWindow[data-cast="KABUKI"] .intro-note,
+#profileWindow[data-cast="KABUKI"] .status,
+#profileWindow[data-cast="KABUKI"] .facts dt{color:#73899b}
+#profileWindow[data-cast="KABUKI"] .status::before{background:#8babc1}
+#profileWindow[data-cast="KABUKI"] .facts{border-top:1px solid #dce7ee}
+#profileWindow[data-cast="KABUKI"] .tabs{border-bottom:1px solid #c6dce9}
+#profileWindow[data-cast="KABUKI"] .tab[aria-selected=true]{background:#ecf5fb}
+#profileWindow[data-cast="KABUKI"] .tab[aria-selected=true]::after{height:2px;background:#608eb0}
+#profileWindow[data-cast="KABUKI"] .profile-foot{background:#f9fcfff0;border-top:1px solid #ccdde8}
+#profileWindow[data-cast="KABUKI"] .profile-foot .back{color:#486882;text-shadow:none}
+#profileWindow[data-cast="KABUKI"] .profile-foot #pickCast{background:#285577;border:1px solid #285577;border-radius:9px;box-shadow:0 3px 10px #28557722;min-height:43px}
+#profileWindow[data-cast="KABUKI"] .profile-foot #pickCast.multi-profile-selected{background:#e7f2fa;color:#285577}
+@media(max-width:600px){#profileWindow[data-cast="KABUKI"] .profile-copy{border:0;border-radius:0;background:linear-gradient(180deg,transparent 0 195px,#fffffff7 195px 100%);box-shadow:none}}
+@media(max-height:690px) and (max-width:600px){#profileWindow[data-cast="KABUKI"] .profile-copy{background:linear-gradient(180deg,transparent 0 169px,#fffffff7 169px 100%)}}

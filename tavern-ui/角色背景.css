@@ -1,0 +1,116 @@
+/* 角色主題 v2：原創生成底圖，分層圖形另以程式呈現動態。 */
+.profile-window{
+  --profile-image:url('assets/profile-KABUKI-bold-v2.png');
+  --theme-ink:#29496b;--theme-line:#72a5ce;--theme-light:#edf7ff;--theme-button:#377cad;
+  background-image:var(--profile-image);background-size:cover;background-position:center;
+  color:var(--theme-ink);border-color:var(--theme-ink);
+}
+.profile-window[data-cast="MOMO"]{--profile-image:url('assets/profile-MOMO-bold-v2.png');--theme-ink:#6d345d;--theme-line:#c479a5;--theme-light:#fff0f6;--theme-button:#b95382}
+.profile-window[data-cast="RIRA"]{--profile-image:url('assets/profile-RIRA-bold-v2.png');--theme-ink:#43275f;--theme-line:#a380d0;--theme-light:#f5edff;--theme-button:#8552b1}
+.profile-window::before{border-color:#fff9}
+.profile-window>.window-head,.profile-window>.profile-body,.profile-window>.window-foot{position:relative;background:transparent}
+.profile-window>.window-head,.profile-window>.window-foot{z-index:2}
+.profile-window>.profile-body{z-index:auto;gap:0}
+.profile-window .window-head{background:linear-gradient(90deg,#ffffffe0,#ffffff44 56%,#ffffff00);border-bottom:1px solid #ffffff66}
+.profile-window .window-head::before{display:none}
+.profile-window .profile-foot{background:#29496b70;border-top:1px solid #ffffff80}
+.profile-window .profile-foot .back{color:#fff;text-shadow:0 1px 2px #26304a}
+.profile-window .profile-foot #pickCast{background:var(--theme-button);color:white;border-color:var(--theme-ink);box-shadow:inset 0 2px #ffffff66,0 4px var(--theme-ink)}
+.profile-window .profile-foot #pickCast.multi-profile-selected{background:var(--theme-light);color:var(--theme-ink);box-shadow:inset 0 2px #fff,0 4px var(--theme-ink)}
+.profile-window .title{color:var(--theme-ink);filter:drop-shadow(0 2px 0 #fff6)}
+.profile-window .portrait{background:radial-gradient(ellipse at 51% 50%,#fffffff5 0 25%,#ffffffd9 45%,#ffffff77 67%,#ffffff00 85%);border-right:0}
+/* 白底草圖只做顯示融合；不重繪、不改寫繪師原圖。 */
+.profile-window .portrait>svg{mix-blend-mode:multiply}
+.profile-window .portrait-label{color:var(--theme-ink);background:#ffffffe6;border-radius:4px;padding:2px 6px;letter-spacing:1px}
+.profile-window .profile-copy{background:#ffffffe8;margin:12px 12px 12px 0;border:1px solid #ffffffe0;border-radius:2px 13px 13px 2px;padding:14px 19px 10px 16px;box-shadow:4px 5px 0 #36224d14}
+.profile-window[data-cast="RIRA"] .window-head,.profile-window[data-cast="MOMO"] .window-head{background:linear-gradient(90deg,#24133d99,transparent 78%)}
+.profile-window[data-cast="RIRA"] .title,.profile-window[data-cast="MOMO"] .title{color:white;-webkit-text-stroke:2px var(--theme-ink);filter:drop-shadow(0 2px 0 #33213c66)}
+.profile-window[data-cast="RIRA"] .heading small,.profile-window[data-cast="MOMO"] .heading small{background-image:linear-gradient(100deg,#fff,#ffe3fa,#e4dcff,#fff)}
+.profile-window[data-cast="RIRA"] .profile-foot{background:#29183d99}
+.profile-window[data-cast="MOMO"] .profile-foot{background:#6d345d80}
+.profile-window .heading small,.profile-window .profile-name .roman{
+  color:transparent;-webkit-text-fill-color:transparent;
+  background:linear-gradient(100deg,var(--theme-ink),var(--theme-line),#794580,var(--theme-ink));
+  background-size:240% 100%;background-clip:text;-webkit-background-clip:text;
+  animation:brand-colour-flow 9s ease-in-out infinite;
+}
+.profile-window .heading small{font-family:'Lilita One','LINE Seed TW',sans-serif;font-size:12px;letter-spacing:1px;font-weight:400}
+.profile-window .profile-name h2,.profile-window .intro-lead{color:var(--theme-ink)}
+.profile-window .tabs{border-bottom-color:var(--theme-line)}
+.profile-window .tab[aria-selected=true]{background:var(--theme-light)}
+.profile-window .intro-note,.profile-window .profile-tagline,.profile-window .calendar-legend{color:#75617c}
+.profile-window .calendar span{background:#ffffffb8;border-color:#d8cde2}
+.profile-window>.profile-atmosphere{position:absolute;inset:5px;overflow:hidden;border-radius:17px;z-index:0;pointer-events:none;user-select:none}
+.profile-atmosphere i{position:absolute;display:block;color:white;width:var(--size,150px);height:var(--size,150px);opacity:.85;animation:profile-motif-flow 13s ease-in-out infinite;animation-delay:var(--delay,0s)}
+.profile-atmosphere svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.profile-atmosphere i:nth-child(1){--size:210px;--delay:-4s;top:-55px;left:24%;--dx:24px;--dy:16px}
+.profile-atmosphere i:nth-child(2){--size:150px;--delay:-9s;right:-54px;top:22%;--dx:-18px;--dy:27px}
+.profile-atmosphere i:nth-child(3){--size:225px;--delay:-7s;left:-68px;bottom:-31px;--dx:22px;--dy:-23px}
+.profile-atmosphere i:nth-child(4){--size:165px;--delay:-11s;left:43%;bottom:-79px;--dx:25px;--dy:-14px}
+.profile-atmosphere::after{content:'';position:absolute;inset:-45%;background:repeating-linear-gradient(125deg,transparent 0 149px,#ffffff24 150px 152px,transparent 153px 290px);animation:profile-line-drift 22s linear infinite}
+.profile-window[data-cast="KABUKI"] .profile-atmosphere i{animation-name:profile-facet-flow;animation-duration:12s;opacity:.82}
+.profile-window[data-cast="MOMO"] .profile-atmosphere i{animation-duration:19s;opacity:.78}
+.profile-window[data-cast="MOMO"] .profile-atmosphere::after{background:repeating-linear-gradient(145deg,transparent 0 159px,#fff4 160px 162px,transparent 163px 315px)}
+.profile-window[data-cast="RIRA"] .profile-atmosphere i:nth-child(2n){color:#f4c4ed;opacity:1}
+@keyframes profile-motif-flow{0%,100%{transform:translate(0,0) rotate(-8deg)}50%{transform:translate(var(--dx),var(--dy)) rotate(11deg)}}
+@keyframes profile-facet-flow{0%,100%{transform:translate(0,0)}50%{transform:translate(var(--dx),var(--dy))}}
+@keyframes profile-line-drift{from{transform:translate(-35px,18px)}to{transform:translate(35px,-18px)}}
+.motion-off .profile-atmosphere i,.motion-off .profile-atmosphere::after{animation:none!important}
+@media(prefers-reduced-motion:reduce){.profile-atmosphere i,.profile-atmosphere::after{animation:none!important}}
+@media(max-width:600px){
+  .profile-window .heading small{font-size:10px}
+  .profile-window .profile-copy{margin:0;border:0;border-radius:0;box-shadow:none;background:linear-gradient(180deg,#ffffff00 0 153px,#fffffff0 153px 100%);padding:12px 13px 10px}
+  .profile-window .profile-identity{background:linear-gradient(90deg,transparent 0 44%,#ffffffb3 44%,#ffffffe6);margin:-12px -13px 0;padding-right:13px;padding-left:48%;border-bottom:1px solid #ffffffa6}
+  .profile-window .portrait{z-index:auto;border:0;top:0}
+  .profile-window .portrait-label{font-size:7px;letter-spacing:0;max-width:100%;padding:2px 4px}
+  .profile-window .tabs{padding-top:8px;background:#fffffff0;margin:0 -13px;padding-left:13px;padding-right:13px}
+  .profile-atmosphere i:nth-child(1){left:48%;--size:155px}
+  .profile-atmosphere i:nth-child(2){right:-65px;--size:180px;top:30%}
+}
+@media(max-height:690px) and (max-width:600px){.profile-window .profile-copy{padding-top:4px}.profile-window .profile-identity{margin-top:-4px}.profile-window .tabs{padding-top:5px}}
+@media(max-height:480px) and (min-width:601px){.profile-window .profile-copy{margin:5px 7px 5px 0;padding:7px 12px 5px 9px}.profile-window .portrait-label{font-size:7px;padding:0 4px}.profile-atmosphere i{--size:145px!important}}
+
+/* v4：立繪置頂、大幅展示，描線層退至閱讀區與人物下方。 */
+.profile-window.window{width:min(960px,100%);height:min(650px,100%)}
+.profile-window .profile-body{grid-template-columns:48% 52%;overflow:hidden}
+.profile-window>.window-head,.profile-window>.window-foot{z-index:3}
+.profile-window .profile-copy{z-index:2;background:#fffffff5;margin:14px 17px 14px 0;padding:22px 25px 14px 20px;box-shadow:3px 4px 0 #30223d1a}
+.profile-window .portrait{z-index:4;background:none;padding:4px 1px 25px 3px;overflow:hidden}
+.profile-window .portrait>svg{position:relative;z-index:1;mix-blend-mode:normal;filter:drop-shadow(0 5px 3px #241c3322)}
+.profile-window .portrait-label{z-index:2;bottom:7px}
+.profile-window .profile-atmosphere{display:none}
+.profile-window .profile-identity{padding-bottom:21px}
+.profile-window .profile-name h2{font-size:43px}
+.profile-window .profile-name .roman{font-size:21px}
+.profile-window[data-cast="MOMO"]{--profile-image:url('assets/profile-MOMO-soft-v3.png');--theme-ink:#473b42;--theme-line:#bc929e;--theme-light:#f7ece8;--theme-button:#ac7f8d}
+.profile-window[data-cast="MOMO"] .window-head{background:linear-gradient(90deg,#f9f1e9e8,#f9f1e960 65%,transparent)}
+.profile-window[data-cast="MOMO"] .title{color:var(--theme-ink);-webkit-text-stroke:3px #fff8ef;filter:none}
+.profile-window[data-cast="MOMO"] .heading small{background-image:linear-gradient(100deg,#473b42,#927783,#473b42)}
+.profile-window[data-cast="MOMO"] .profile-foot{background:#f0e2d5e6}
+.profile-window[data-cast="MOMO"] .profile-foot .back{color:var(--theme-ink);text-shadow:none}
+.profile-window[data-cast="MOMO"] .profile-copy{background:#fffcf8f5}
+@media(max-width:600px){
+ .profile-window.window{height:min(650px,100%)}
+ .profile-window .profile-body{display:block}
+ .profile-window .portrait{position:absolute;left:0;top:0;width:49%;height:203px;padding:4px 1px 18px;z-index:4}
+ .profile-window .profile-copy{z-index:auto;margin:0;border:0;border-radius:0;box-shadow:none;padding:12px 13px 10px;background:linear-gradient(180deg,transparent 0 195px,#fffffff7 195px 100%)}
+ .profile-window .profile-identity{margin:-12px -13px 0;min-height:195px;padding:10px 10px 10px 52%;background:linear-gradient(90deg,transparent 0 48%,#ffffffe3 48%,#fffffff5)}
+ .profile-window .profile-name h2{font-size:35px}.profile-window .profile-name .roman{font-size:16px}
+ .profile-window .portrait-label{bottom:4px}
+ .profile-window .tabs{position:relative;z-index:3;background:#fffffff7}
+ .profile-window .tab-panel{position:relative;z-index:2;background:#fffffff7}
+ .profile-window[data-cast="MOMO"] .profile-copy{background:linear-gradient(180deg,transparent 0 195px,#fffcf8f7 195px 100%)}
+}
+@media(max-height:690px) and (max-width:600px){
+ .profile-window .portrait{height:176px}
+ .profile-window .profile-copy{padding-top:4px;background:linear-gradient(180deg,transparent 0 169px,#fffffff7 169px 100%)}
+ .profile-window .profile-identity{min-height:169px;margin-top:-4px;padding-top:5px;padding-bottom:5px}
+ .profile-window .profile-name h2{font-size:31px}.profile-window .profile-name .roman{font-size:15px}
+ .profile-window[data-cast="MOMO"] .profile-copy{background:linear-gradient(180deg,transparent 0 169px,#fffcf8f7 169px 100%)}
+}
+@media(max-height:480px) and (min-width:601px){
+ .profile-window.window{width:min(870px,100%);height:100%}
+ .profile-window .profile-body{grid-template-columns:38% 62%}
+ .profile-window .profile-copy{margin:5px 10px 5px 0;padding:7px 12px 5px}
+ .profile-window .portrait{padding:0 0 16px}
+}

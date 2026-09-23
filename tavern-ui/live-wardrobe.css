@@ -1,0 +1,6 @@
+.live-empty{grid-column:1/-1;margin:auto;text-align:center;padding:25px;color:#8b7194;font-size:13px;line-height:1.8}
+.bundle-grid{overflow-y:auto;align-content:start}.saved-hair-colors{height:90px;border-radius:12px;margin:10px 0}
+.item-caption strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}.detail p{max-width:380px}
+.detail .actions{flex-shrink:0}.detail h2{font-size:18px}.bundle .hero canvas{image-rendering:pixelated}
+.grid{overflow:auto}.pager small{color:#a78bab;font-size:10px}.thumb canvas{image-rendering:pixelated}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.detail h2{font-size:12px}.detail p{font-size:9px}.detail .primary{font-size:10px}.bundle-grid{grid-template-columns:1fr}}

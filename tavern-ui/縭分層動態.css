@@ -1,0 +1,24 @@
+/* 原底圖清除靜態星芒後，以同座標圖層演出；人物與閱讀區保持在前。 */
+#profileWindow[data-cast="RIRA"][data-rira-layered="true"]{--profile-image:url('assets/profile-RIRA-animation-plate-v34.png')}
+#profileWindow>.rira-layered-art{display:none;position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;border-radius:inherit}
+#profileWindow[data-cast="RIRA"]>.rira-layered-art{display:block}
+.rira-layered-art svg{display:block;width:100%;height:100%;overflow:hidden}
+.rira-turn-star{transform-box:fill-box;transform-origin:center;animation:rira-star-card-turn 6.4s cubic-bezier(.45,.05,.25,1) var(--turn-delay) infinite}
+.rira-turn-star path{fill:var(--star-face)}
+@keyframes rira-star-card-turn{
+  0%,9%{transform:perspective(650px) rotateY(0deg);filter:brightness(1)}
+  22%{transform:perspective(650px) rotateY(88deg);filter:brightness(1.65)}
+  36%,49%{transform:perspective(650px) rotateY(180deg);filter:brightness(1.08)}
+  64%{transform:perspective(650px) rotateY(272deg);filter:brightness(1.5)}
+  79%,100%{transform:perspective(650px) rotateY(360deg);filter:brightness(1)}
+}
+.rira-stripe{stroke-linecap:butt;stroke-dasharray:100 100;stroke-dashoffset:100;animation:rira-stripe-flick 4.6s cubic-bezier(.2,.75,.25,1) var(--stripe-delay) infinite}
+@keyframes rira-stripe-flick{
+  0%,8%{stroke-dashoffset:100;opacity:0}
+  10%{opacity:1}
+  30%,66%{stroke-dashoffset:0;opacity:1}
+  85%,100%{stroke-dashoffset:-100;opacity:0}
+}
+#profileWindow[hidden] .rira-layered-art *{animation-play-state:paused!important}
+.motion-off .rira-layered-art .rira-turn-star,.motion-off .rira-layered-art .rira-stripe{animation:none;transform:none;filter:none;stroke-dashoffset:0;opacity:1}
+@media(prefers-reduced-motion:reduce){.rira-layered-art .rira-turn-star,.rira-layered-art .rira-stripe{animation:none;transform:none;filter:none;stroke-dashoffset:0;opacity:1}}

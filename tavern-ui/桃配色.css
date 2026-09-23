@@ -1,0 +1,20 @@
+/* 單色花影修正版：花朵只集中兩角，保留前版供比較。 */
+#profileWindow[data-cast="MOMO"][data-momo-tone="refined"]{--profile-image:url('assets/profile-MOMO-monochrome-v9.png');--theme-line:#be839d;--theme-button:#a76580}
+#profileWindow[data-cast="MOMO"][data-momo-tone="refined"] .pt-petal-drift{display:none}
+#profileWindow[data-cast="MOMO"][data-momo-tone="refined"] .profile-traces .pt-momo{--pt-ink:#cda9b7;--pt-light:#cda9b7}
+.momo-color-picker{display:none;align-items:center;gap:7px;margin-left:auto;color:#705965;font-size:11px}
+.momo-color-picker select{font:inherit;color:#51434b;background:#fff9f0;border:1px solid #bd9fae;border-radius:7px;min-height:32px;padding:4px 8px;cursor:pointer}
+.momo-color-picker select:focus-visible{outline:2px solid #956476;outline-offset:3px}
+#profileWindow[data-cast="MOMO"] .momo-color-picker{display:flex}
+#profileWindow[data-cast="MOMO"][data-momo-tone="sakura"]{--profile-image:url('assets/profile-MOMO-sakura-v44.png');--theme-line:#be839d;--theme-button:#a76580}
+#profileWindow[data-cast="MOMO"][data-momo-tone="lotus"]{--profile-image:url('assets/profile-MOMO-lotus-v44.png');--theme-line:#a8849a;--theme-button:#8e6c84}
+#profileWindow[data-cast="MOMO"][data-momo-tone="berry"]{--profile-image:url('assets/profile-MOMO-berry-v44.png');--theme-line:#b46d8a;--theme-button:#a85275}
+#profileWindow[data-cast="MOMO"] .profile-traces .pt-momo{--pt-ink:#6b5260;--pt-light:#ecd0dc}
+@media(max-width:600px){
+ .momo-color-picker{margin-left:0;flex:none;gap:0}.momo-color-picker span{display:none}
+ .momo-color-picker select{width:96px;font-size:10px;padding:3px;min-height:30px}
+ #profileWindow[data-cast="MOMO"] .profile-foot{gap:7px}
+ #profileWindow[data-cast="MOMO"] .profile-foot .back{font-size:10px;white-space:nowrap}
+ #profileWindow[data-cast="MOMO"] #pickCast{font-size:10px;padding:7px 5px;min-width:0}
+}
+@media(max-height:480px) and (min-width:601px){.momo-color-picker select{min-height:26px;font-size:10px}.momo-color-picker{font-size:10px}}

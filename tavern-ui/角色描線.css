@@ -1,0 +1,146 @@
+/* 僅裝飾角色資訊窗；閱讀面板、人物與按鈕的層級由主介面管理。 */
+#profileWindow > .profile-traces {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  contain: paint;
+  --pt-ink: #446ca0;
+  --pt-light: #e7f6ff;
+}
+
+#profileWindow .profile-traces *,
+#profileWindow .profile-traces *::before,
+#profileWindow .profile-traces *::after {
+  pointer-events: none;
+}
+
+#profileWindow .profile-traces .pt-theme {
+  position: absolute;
+  inset: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  overflow: hidden;
+}
+
+#profileWindow[data-cast="KABUKI"] .profile-traces .pt-kabuki,
+#profileWindow[data-cast="RIRA"] .profile-traces .pt-rira,
+#profileWindow[data-cast="MOMO"] .profile-traces .pt-momo {
+  display: block;
+}
+
+#profileWindow .profile-traces .pt-kabuki {
+  --pt-ink: #436998;
+  --pt-light: #effaff;
+}
+
+#profileWindow .profile-traces .pt-rira {
+  --pt-ink: #9475aa;
+  --pt-light: #e9d9ff;
+}
+
+#profileWindow .profile-traces .pt-momo {
+  --pt-ink: #a79487;
+  --pt-light: #f4e9d7;
+}
+
+#profileWindow .profile-traces path,
+#profileWindow .profile-traces circle {
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+#profileWindow .profile-traces .pt-base {
+  stroke: var(--pt-ink);
+  stroke-width: var(--pt-width, 1);
+  opacity: .28;
+}
+
+#profileWindow .profile-traces .pt-run {
+  stroke: var(--pt-light);
+  stroke-width: var(--pt-width, 1);
+  stroke-dasharray: var(--pt-dash, 13 87);
+  stroke-dashoffset: 0;
+  opacity: .72;
+  animation: tt-profile-trace-pass var(--pt-duration, 18s) linear var(--pt-delay, 0s) infinite;
+}
+
+#profileWindow .profile-traces .pt-faint { opacity: .64; }
+#profileWindow .profile-traces .pt-edge { opacity: .66; }
+#profileWindow .profile-traces .pt-anchor {
+  stroke: var(--pt-ink);
+  stroke-width: .8;
+  opacity: .34;
+}
+
+/* 同一條線的前段與轉折段略有速度差，沒有透明度閃爍或整組漂移。 */
+@keyframes tt-profile-trace-pass {
+  0% { stroke-dashoffset: 0; }
+  28% { stroke-dashoffset: -19; }
+  61% { stroke-dashoffset: -58; }
+  82% { stroke-dashoffset: -75; }
+  100% { stroke-dashoffset: -100; }
+}
+
+#profileWindow .profile-traces .pt-route-dot {
+  fill: var(--pt-light);
+  stroke: var(--pt-ink);
+  stroke-width: .55;
+  opacity: .66;
+  offset-anchor: 0px 0px;
+  offset-rotate: 0deg;
+  offset-distance: 0%;
+  animation: tt-profile-trace-dot var(--pt-duration, 20s) linear var(--pt-delay, 0s) infinite;
+}
+
+@keyframes tt-profile-trace-dot {
+  0% { offset-distance: 0%; }
+  28% { offset-distance: 19%; }
+  61% { offset-distance: 58%; }
+  82% { offset-distance: 75%; }
+  100% { offset-distance: 100%; }
+}
+
+/* 桃只保留米紙、玫灰小花瓣與邊角細弧，避免重複大花或大型扇形。 */
+#profileWindow .profile-traces .pt-momo .pt-base { opacity: .27; }
+#profileWindow .profile-traces .pt-momo .pt-run {
+  stroke: #a78f87;
+  opacity: .40;
+}
+#profileWindow .profile-traces .pt-momo .pt-ink { --pt-ink: #756962; opacity: .61; }
+#profileWindow .profile-traces .pt-momo .pt-ink .pt-run { stroke: #8c7c74; }
+#profileWindow .profile-traces .pt-petal-drift {
+  fill: #eddbc7;
+  stroke: #b39a91;
+  stroke-width: .65;
+  offset-anchor: 0px 0px;
+  offset-rotate: 0deg;
+  offset-distance: 0%;
+  opacity: 0;
+  animation: tt-profile-petal-drift var(--pt-duration, 24s) linear var(--pt-delay, 0s) infinite;
+}
+@keyframes tt-profile-petal-drift {
+  0% { offset-distance: 0%; opacity: 0; }
+  12% { offset-distance: 12%; opacity: .48; }
+  78% { offset-distance: 78%; opacity: .48; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* 資訊窗關閉時不計算裝飾動畫；全站動態開關與系統偏好都優先。 */
+#profileWindow[hidden] .profile-traces * { animation-play-state: paused !important; }
+.motion-off #profileWindow .profile-traces * { animation: none !important; }
+.motion-off #profileWindow .profile-traces .pt-run,
+.motion-off #profileWindow .profile-traces .pt-route-dot,
+.motion-off #profileWindow .profile-traces .pt-petal-drift { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  #profileWindow .profile-traces * { animation: none !important; }
+  #profileWindow .profile-traces .pt-run,
+  #profileWindow .profile-traces .pt-route-dot,
+  #profileWindow .profile-traces .pt-petal-drift { visibility: hidden; }
+}

@@ -1,0 +1,4 @@
+#ttApprovedUI{position:fixed;inset:0;z-index:11000;background:#20142b82;display:grid;place-items:center;padding:12px}
+#ttApprovedUI[hidden]{display:none}
+#ttApprovedUI>iframe{border:0;width:100%;height:100%;background:transparent;max-width:1250px;max-height:850px}
+@media(max-width:600px){#ttApprovedUI{padding:5px}}

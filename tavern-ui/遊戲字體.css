@@ -1,0 +1,39 @@
+@import url('assets/fonts/lineseed.css');
+@font-face{font-family:'Tavern Display';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/LilitaOne-Regular.ttf') format('truetype')}
+/* 共用字體系統：中文圓體、英文字標、標題描邊與清楚的閱讀層級。 */
+:root{--tt-ui:'LINE Seed TW','Microsoft JhengHei',sans-serif;--tt-display:'Tavern Display','LINE Seed TW',sans-serif}
+body,body *{font-family:var(--tt-ui)!important;font-synthesis:none}
+button,input,select{font-family:var(--tt-ui)!important}
+button{font-weight:700;letter-spacing:.35px}
+body .brand-wordmark,body .profile-name .roman,body .cast-name span,body .stage-label,body .item-number,body .pager span,body .collection-mark strong{font-family:var(--tt-display)!important;font-weight:400;letter-spacing:1px}
+body h1,body h2,body h3,body strong,body b{font-weight:700}
+body .title{letter-spacing:1.2px;paint-order:stroke fill;line-height:1.25}
+body .paneltitle strong{font-size:19px;letter-spacing:.7px;color:#725486;-webkit-text-stroke:3px #fffaf5;paint-order:stroke fill;text-shadow:0 2px 0 #cfbadb}
+body .catalog-head h2{font-size:24px;line-height:1.25;letter-spacing:1px;font-weight:700;-webkit-text-stroke:3px #fffaf7;paint-order:stroke fill;text-shadow:0 2px 0 #dbc6e2}
+body #inventory .catalog-head h2{color:#805692}
+body .item-caption strong{font-size:13px;letter-spacing:.25px;color:#655074;text-shadow:0 1px #fff}
+body .categories button{font-size:13px;font-weight:700;letter-spacing:.5px}
+body .mode button,body .catalog-mode button,body .bag-tabs button{font-size:12px;font-weight:700;letter-spacing:.45px}
+body .primary{font-size:13px;letter-spacing:.6px;text-shadow:0 1px 0 #7f526c55}
+body .ghost,body .text-button,body .back{font-weight:700;letter-spacing:.2px}
+body .detail h2{font-size:21px;letter-spacing:.8px;line-height:1.3;paint-order:stroke fill;-webkit-text-stroke:1px #8f7399}
+body .detail p,body .hair-hint,body #inventory .hair-hint{font-size:12px;line-height:1.7;letter-spacing:.2px;font-weight:400}
+body .hair-workbench>strong{font-size:19px;letter-spacing:1px;color:#78538b;-webkit-text-stroke:3px #fffaf5;paint-order:stroke fill;text-shadow:0 2px #d8c2e2}
+body .hair-step{font-size:11px;letter-spacing:1px;font-weight:700;color:#9c6dad}
+body .hair-picture-name{font-size:10px;font-weight:700;color:#745a84}
+body .dye-head strong,body .dye-ticket strong{font-size:12px;font-weight:700}
+body .bag-footer,body .hair-workbench>small,body .ticket-state{font-size:10px;font-weight:400;line-height:1.4}
+body .accessory-filter button{font-size:11px;font-weight:700}
+body .intro-lead{font-size:17px;letter-spacing:.3px}
+body .profile-tagline,body .intro-note,body .facts dd{font-size:13px;line-height:1.8}
+body .tab{font-size:12px;font-weight:700}
+body .cast-name b{font-size:27px;letter-spacing:1px;text-shadow:0 1px #fff}
+body .cast-name span{font-size:15px}body .mood-line{font-size:12px}
+body .profile-name h2{paint-order:stroke fill;-webkit-text-stroke:3px #fff8f3;text-shadow:0 2px #d6c4df;letter-spacing:1px}
+body .profile-name .roman{font-size:25px;letter-spacing:2px}
+body .paneltitle span,body .catalog-head small,body .overline{font-size:9px;font-weight:700;letter-spacing:1px}
+@media(max-width:600px){body .paneltitle strong{font-size:12px;-webkit-text-stroke:2px #fffaf5;text-shadow:0 1px #cfbadb}body .catalog-head h2{font-size:14px;-webkit-text-stroke:2px #fffaf7;text-shadow:0 1px #dbc6e2}body .item-caption strong{font-size:11px}body .categories button{font-size:10px}body .mode button,body .catalog-mode button,body .bag-tabs button{font-size:10px;letter-spacing:0}body .primary{font-size:11px;letter-spacing:.1px}body .detail h2{font-size:14px}body .detail p,body .hair-hint,body #inventory .hair-hint{font-size:10px;line-height:1.45}body .hair-workbench>strong{font-size:15px;-webkit-text-stroke:2px #fffaf5}body .hair-step{font-size:9px;letter-spacing:.4px}body .hair-picture-name{font-size:8px}body .dye-head strong,body .dye-ticket strong{font-size:10px}body .bag-footer,body .hair-workbench>small,body .ticket-state{font-size:8px}body .accessory-filter button{font-size:8px;letter-spacing:0}body .intro-lead{font-size:15px}body .profile-tagline,body .intro-note,body .facts dd{font-size:11px}body .tab{font-size:11px}body .cast-name b{font-size:25px}body .cast-name span{font-size:11px}body .mood-line{font-size:10px}body .profile-name .roman{font-size:19px}body .paneltitle span,body .catalog-head small,body .overline{font-size:7px}}
+@media(min-width:601px) and (max-height:390px){body .paneltitle strong{font-size:11px}body .catalog-head h2{font-size:15px}body .categories button,body .item-caption strong,body .primary{font-size:10px}body .mode button,body .catalog-mode button,body .bag-tabs button,body .accessory-filter button{font-size:9px}body .detail h2{font-size:13px}body .hair-workbench>strong{font-size:12px}body .hair-hint,body #inventory .hair-hint{font-size:9px}body .bag-footer,body .hair-workbench>small,body .ticket-state{font-size:7px}body .hair-step{font-size:8px}}
+/* 描邊標題保留實色字面，避免漸層透明字造成對比不足。 */
+body .catalog-head h2{background:none;color:#785486;-webkit-text-fill-color:currentColor;animation:none}
+body .paneltitle strong,body .catalog-head h2,body .item-caption strong,body .hair-workbench>strong{font-weight:700}
