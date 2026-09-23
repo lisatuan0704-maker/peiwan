@@ -33,7 +33,7 @@
   if(current){const btn=document.querySelector('#pickCast');btn.textContent=selected.has(current.cid)?'從名單移出':'加入陪玩名單';btn.disabled=!available(current);}
  }
  function refresh(force=false){
-  people=api.staff();const sig=JSON.stringify([rosterMode,people]);if(!force&&sig===lastSignature)return;lastSignature=sig;
+  const order=['KABUKI','MOMO','RIRA'];people=api.staff().filter(p=>order.includes(p.theme)).sort((a,b)=>order.indexOf(a.theme)-order.indexOf(b.theme));const sig=JSON.stringify([rosterMode,people]);if(!force&&sig===lastSignature)return;lastSignature=sig;
   for(const cid of selected){if(!people.some(p=>p.cid===cid&&available(p)))selected.delete(cid);}
   document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===rosterMode)));
   const list=rosterMode==='now'?people.filter(p=>p.on&&!p.busy):people;

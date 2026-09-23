@@ -13,7 +13,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.src='tavern-ui/index.html?v=210';overlay.append(frame);document.body.append(overlay);
+      frame.src='tavern-ui/index.html?v=211';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
