@@ -13,3 +13,17 @@ html,body.live-site{background:transparent!important}
 
 /* 焦點框收在卡片內，保留鍵盤提示且不被捲動容器裁切。 */
 .live-site .cast-row:focus-visible{outline-offset:-5px}
+
+/* 正式資料的文字長度不固定，日期保留完整單行，內容在自己的欄位換行。 */
+.live-site .profile-copy,.live-site .tab-panel{min-width:0}
+.live-site .tab-panel{overflow-y:auto;overflow-x:hidden;padding-right:6px;scrollbar-width:thin;overflow-wrap:anywhere}
+.live-site .intro-note,.live-site .note-sheet p,.live-site .facts dd{white-space:pre-line;overflow-wrap:anywhere}
+.live-site .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+.live-site .profile-name .roman,.live-site .status{white-space:nowrap}
+.live-site .status::before{flex-shrink:0}
+.live-site .live-calendar{max-height:none;overflow:visible}
+.live-calendar-row{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:10px;line-height:1.7}
+.live-calendar-date{white-space:nowrap;word-break:keep-all;line-height:1.7}
+.live-calendar-content{min-width:0;overflow-wrap:anywhere}
+.live-calendar-content>span{max-width:100%;vertical-align:top}
+#liveBooked{overflow-wrap:anywhere}

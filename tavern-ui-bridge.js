@@ -1,19 +1,20 @@
 /* 正式站介面接線：資料由既有網站供應，選購沿用原結帳流程。 */
 (() => {
   'use strict';
-  const oldStep=shopStep, oldInfo=openPcInfo, oldWard=window.openWardrobe;
+  const oldStep=shopStep, oldInfo=openPcInfo, oldWard=window.openWardrobe, oldBack=backFromPlans, oldShopOpen=shopOpen;
+  const oldBookOpen=window.bookOpen, oldBookGo=window.bkGo;
   const oldDress=document.getElementById('dressBtn').onclick;
   const THEMES={'-OxY46ezlpnRt64hUIw9':'KABUKI','-OxY7C4vDkgsr1zcyWbk':'RIRA','-OzbfbQcF6J6fIR6YYGh':'MOMO'};
   let frame, overlay, trigger, pending, active=false;
   const clone=x=>JSON.parse(JSON.stringify(x));
   function close(){if(overlay)overlay.hidden=true;active=false;trigger?.focus?.();}
   function open(view='roster',cid=null){
-    trigger=document.activeElement;pending={view,cid};active=true;
+    trigger=document.activeElement;pending={view,cid,mode:pkMode};active=true;
     if(!overlay){
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.src='tavern-ui/index.html?v=212';overlay.append(frame);document.body.append(overlay);
+      frame.src='tavern-ui/index.html?v=213';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -101,7 +102,11 @@
     originalWard(){close();oldWard?.();},
     originalDress(){close();oldDress?.();}
   };
-  shopStep=function(kind){if(kind==='play'){pkMode='now';open('roster');}else oldStep(kind);};
+  shopStep=function(kind){if(kind==='play'){selStaff=null;pkMode='now';open('roster');}else oldStep(kind);};
+  shopOpen=function(step,kind){if(step===2&&(kind||curKind)==='shop'){open('shop');return;}return oldShopOpen(step,kind);};
+  if(oldBookOpen)window.bookOpen=function(tab){if(tab==='ward'){open('bag');return;}return oldBookOpen(tab);};
+  if(oldBookGo)window.bkGo=function(tab){if(tab==='ward'){open('bag');return;}return oldBookGo(tab);};
+  backFromPlans=function(){if(curKind==='play')open('roster');else if(curKind==='shop')open('shop');else oldBack();};
   openPcInfo=function(cid,info,i){if(THEMES[cid])open('profile',cid);else oldInfo(cid,info,i);};
   document.getElementById('dressBtn').onclick=()=>open('shop');
   window.openWardrobe=()=>open('bag');

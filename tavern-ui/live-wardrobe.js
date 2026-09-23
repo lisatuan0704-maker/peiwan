@@ -102,10 +102,18 @@
  $('#reset').onclick=()=>{init();render();tell('已還原目前穿搭');};
  $('#showWear').textContent='穿上搭配';$('#showWear').onclick=wear;
  $('#dyeTicket strong').textContent='混搭後染髮';$('#dyeTicket small').textContent='先選瀏海與後髮，再調整髮色';
- $('#dyeTicket').onclick=()=>{if(api.beginDye){api.beginDye(selection,color,{open:(draft)=>{dyeDraft=draft;}});}else api.originalWard();};
+ function closeDye(){ $('#dyeDialog').hidden=true;$('#dyeTicket').focus(); }
+ $('#dyeDialog h2').textContent='混搭染髮，準備中。';
+ $('#dyeDialog>div>p').textContent='先在個人背包選好瀏海與後髮；染髮券功能開放後，就能把這組搭配染成專屬髮色。';
+ $('#dyeDialog .ticket-state').textContent='功能尚未開放，目前不扣券、不保存染色。';
+ $('#dyeDialog .ticket-art').setAttribute('aria-hidden','true');
+ $('#getTicket').textContent='回到試衣間';$('#getTicket').onclick=closeDye;
+ $('#closeDye').onclick=closeDye;
+ $('#toDyedBag').textContent='到背包搭配 →';$('#toDyedBag').onclick=()=>{closeDye();setArea('bag');category='hair';render();};
+ $('#dyeTicket').onclick=()=>{if(api.beginDye){api.beginDye(selection,color,{open:(draft)=>{dyeDraft=draft;}});}else{$('#dyeDialog').hidden=false;$('#closeDye').focus();}};
  document.querySelector('.paneltitle strong').textContent='我的試衣舞臺';document.querySelector('.collection-mark span').textContent='星光換裝間';document.querySelector('.collection-mark strong').textContent='DRESS UP & PLAY';
  window.ttDressArea=next=>{init();setArea(next);};
- document.addEventListener('keydown',e=>{if(e.key==='Escape')api.close();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();if(!$('#dyeDialog').hidden)closeDye();else api.close();}});
  window.addEventListener('resize',()=>render());
  init();render();[200,600,1400,3000].forEach(t=>setTimeout(paint,t));
  setInterval(()=>{if(api.isActive()){const next=api.state();if(JSON.stringify(next.catalog)!==JSON.stringify(data.catalog)||JSON.stringify(next.dyed)!==JSON.stringify(data.dyed)){data=next;render();}}},2000);

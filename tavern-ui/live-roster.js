@@ -54,17 +54,25 @@
   document.querySelector('#introLead').textContent='關於'+p.name+'，想讓你知道的事。';
   document.querySelector('#panel-intro .intro-note').textContent=p.card.intro||'自我介紹更新中。';
   const dd=document.querySelectorAll('#panel-intro .facts dd');if(dd[0])dd[0].textContent=p.card.games||'店員更新中';if(dd[1])dd[1].textContent=p.card.specialty||'歡迎一起玩';
-  document.querySelector('#panel-mood').innerHTML='<div class="note-sheet"><h3>'+esc(p.name)+'的心情便箋</h3><p>'+esc(p.card.mood||'今天的便箋還沒寫下，晚點再來看看。')+'</p></div>';
+  document.querySelector('#panel-mood').innerHTML='<div class="note-sheet"><h3 id="moodTitle">'+esc(p.name)+'的心情便箋</h3><p>'+esc(p.card.mood||'今天的便箋還沒寫下，晚點再來看看。')+'</p></div>';
   syncSelection();
+ }
+ function calendarMarkup(cid){
+  const host=document.createElement('div');host.innerHTML=api.calendar(cid);
+  host.querySelectorAll(':scope > div > div').forEach(row=>{
+   row.classList.add('live-calendar-row');row.style.removeProperty('display');row.style.removeProperty('gap');
+   const date=row.querySelector(':scope > b');if(date){date.classList.add('live-calendar-date');date.style.removeProperty('flex');}
+   const content=row.querySelector(':scope > span');if(content){content.classList.add('live-calendar-content');content.style.removeProperty('flex');}
+  });return host.innerHTML;
  }
  function openInfo(cid){
   const p=people.find(p=>p.cid===cid);if(!p)return;if(!p.theme){api.originalInfo(cid);return;}
   baseProfile(p.theme);updateInfo(p);
-  document.querySelector('#panel-time').innerHTML='<div class="live-calendar">'+api.calendar(cid)+'</div><div id="liveBooked">預約時段查詢中…</div>';
+  document.querySelector('#panel-time').innerHTML='<div class="live-calendar">'+calendarMarkup(cid)+'</div><div id="liveBooked">預約時段查詢中…</div>';
   api.booked(cid).then(times=>{if(current?.cid!==cid)return;document.querySelector('#liveBooked').textContent=times.length?'已預約：'+times.slice(0,20).map(t=>new Date(t).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})).join('、'):'目前沒有已登記的預約時段。';});
  }
- window.ttLiveOpen=({view,cid}={})=>{document.querySelectorAll('.live-choose-backdrop').forEach(x=>x.remove());refresh(true);if(view==='profile')openInfo(cid);else if(view==='shop'||view==='bag'){show('shop',false);const f=document.querySelector('#shopFrame');f.dataset.liveArea=view;f.contentWindow.ttDressArea?.(view==='bag'?'bag':'store');}else show('roster',false);};
+ window.ttLiveOpen=({view,cid,mode}={})=>{if(view==='roster')rosterMode=mode==='book'?'book':'now';document.querySelectorAll('.live-choose-backdrop').forEach(x=>x.remove());refresh(true);if(view==='profile')openInfo(cid);else if(view==='shop'||view==='bag'){show('shop',false);const f=document.querySelector('#shopFrame');f.dataset.liveArea=view;f.contentWindow.ttDressArea?.(view==='bag'?'bag':'store');}else show('roster',false);};
  document.querySelector('#shopFrame').addEventListener('load',()=>{const f=document.querySelector('#shopFrame');f.contentWindow.ttDressArea?.(f.dataset.liveArea==='bag'?'bag':'store');});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();api.close();}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();const chooser=document.querySelector('.live-choose-backdrop');if(chooser)chooser.remove();else if(document.body.dataset.view==='profile')document.querySelector('#backToRoster').click();else api.close();}},true);
  setInterval(()=>{if(api.isActive())refresh();},1500);refresh(true);
 })();
