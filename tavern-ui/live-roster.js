@@ -29,7 +29,7 @@
  function toggle(cid){const p=people.find(p=>p.cid===cid);if(!p||!available(p)){toast('這位店員目前無法接受此類預約');return;}selected.has(cid)?selected.delete(cid):selected.add(cid);syncSelection();}
  function syncSelection(){
   document.querySelector('#liveCount').textContent='已選 '+selected.size+' 位';document.querySelector('#liveNames').textContent=people.filter(p=>selected.has(p.cid)).map(p=>p.name).join('、')||'挑選想一起玩的店員';document.querySelector('#liveNext').disabled=!selected.size;
-  document.querySelectorAll('[data-select-cid]').forEach(b=>{const on=selected.has(b.dataset.selectCid);b.textContent=on?'✓ 已選':'＋選取';b.setAttribute('aria-pressed',String(on));b.closest('.cast-entry').classList.toggle('selected',on);});
+  document.querySelectorAll('[data-select-cid]').forEach(b=>{const on=selected.has(b.dataset.selectCid);b.textContent=on?'✓ 已選':'＋選取';b.setAttribute('aria-pressed',String(on));b.closest('.cast-entry').classList.toggle('is-selected',on);});
   if(current){const btn=document.querySelector('#pickCast');btn.textContent=selected.has(current.cid)?'從名單移出':'加入陪玩名單';btn.disabled=!available(current);}
  }
  function refresh(force=false){

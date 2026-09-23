@@ -1,6 +1,6 @@
 html,body.live-site{background:transparent!important}
 .live-site .stage{inset:10px;max-height:none}.live-site .scene,.live-site .shade,.live-site .review-dock,.live-site .draft-label{display:none}
-.live-site .roster{display:flex;flex-direction:column;overflow-y:auto;min-height:0;flex:1;scrollbar-width:thin;padding:2px}
+.live-site .roster{display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;min-width:0;min-height:0;flex:1;scrollbar-width:thin;padding:4px 10px 7px}
 .live-site .roster>.cast-entry{min-height:96px;height:auto;flex:1 0 96px}.live-site .cast-row{width:100%;height:100%}
 .live-site .cast-row .mood-line{max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .live-site .roster-foot>span{margin-left:auto}.live-site .roster-window .window-foot{flex-shrink:0}
@@ -10,3 +10,6 @@ html,body.live-site{background:transparent!important}
 .live-choose-card{width:min(430px,100%);padding:25px;border:2px solid #baa3d0;border-radius:20px;background:#fff9fa;display:grid;gap:14px}.live-choose-card h2{margin:0}.live-choose-card p{font-size:13px}
 .live-calendar{max-height:220px;overflow:auto;font-size:12px}#liveBooked{font-size:12px;margin-top:12px}
 @media(max-width:600px){.live-site .stage{inset:3px}.live-site .roster>.cast-entry{min-height:90px;flex-basis:90px}.live-site .cast-row .mood-line{max-width:120px}.live-site .profile-window.window,.live-site .roster-window.window{height:100%}}
+
+/* 焦點框收在卡片內，保留鍵盤提示且不被捲動容器裁切。 */
+.live-site .cast-row:focus-visible{outline-offset:-5px}
