@@ -7,6 +7,7 @@
   const attr = value => text(value).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
   const geometry = "<div class=\"geometry\" aria-hidden=\"true\"><svg class=\"signature-geometry\" viewBox=\"0 0 280 200\" aria-hidden=\"true\"><g class=\"signature sig-settings\"><g class=\"frequency-orbit\"><circle cx=\"181\" cy=\"83\" r=\"65\"/><circle cx=\"181\" cy=\"83\" r=\"48\"/><circle cx=\"181\" cy=\"83\" r=\"30\"/></g><g class=\"frequency-bars\"><path d=\"M65 141V128M81 148V107M97 147V118M113 146V95M129 142V111\"/></g></g><g class=\"signature sig-wallet\"><path class=\"hex-fill\" d=\"M195 12 245 41V99L195 128 145 99V41Z\"/><path class=\"hex-outline\" d=\"M195 12 245 41V99L195 128 145 99V41ZM142 89 170 105V137L142 153 114 137V105Z\"/><path class=\"hex-trail\" d=\"M77 173H161L245 89V22\"/><path class=\"hex-glow\" d=\"M77 173H161L245 89V22\"/></g><g class=\"signature sig-orders\"><path class=\"ribbon-fill\" d=\"M111 24H144L36 177H3Z M203 1H216L108 154H95Z M272 34H289L181 187H164Z\"/><g class=\"ribbon-slashes\"><path d=\"M161 104 220 22\"/><path d=\"M177 104 236 22\"/><path d=\"M193 104 252 22\"/><path d=\"M209 104 268 22\"/></g></g><g class=\"signature sig-mail\"><ellipse class=\"letter-orbit\" cx=\"182\" cy=\"88\" rx=\"81\" ry=\"43\" transform=\"rotate(-30 182 88)\"/><ellipse class=\"letter-orbit orbit-two\" cx=\"182\" cy=\"88\" rx=\"61\" ry=\"77\" transform=\"rotate(25 182 88)\"/><g class=\"orbit-dot\"><circle cx=\"182\" cy=\"11\" r=\"4\"/></g><path class=\"orbit-star\" d=\"M229 105Q231 126 252 128Q231 130 229 151Q227 130 206 128Q227 126 229 105Z\"/></g><g class=\"signature sig-menu\"><rect class=\"menu-crystal\" x=\"173\" y=\"38\" width=\"62\" height=\"62\"/><rect class=\"menu-crystal crystal-two\" x=\"138\" y=\"102\" width=\"27\" height=\"27\"/></g></svg><div class=\"facets\" id=\"facets\"></div><div class=\"corner-lines\"><i></i><i></i><i></i></div><div class=\"diamond diamond-a\"></div><div class=\"diamond diamond-b\"></div><div class=\"glint glint-a\"></div><div class=\"glint glint-b\"></div><div class=\"ring ring-a\"></div><div class=\"ring ring-b\"></div><div class=\"dot-field\"></div><div class=\"bottom-cut\"></div><div class=\"light-sweep\"></div></div>\n";
   const definitions = {
+    boardM: ['board', '掌櫃布告欄', '酒館的新鮮事，翻開看看。', 'THE TAVERN JOURNAL', 'JOURNAL'],
     achM: ['achievements', '成就收藏冊', '把一起度過的小日子，收藏起來。', 'THE LITTLE COLLECTION', 'COLLECT'],
     topupM: ['wallet', '金幣錢包', '為下一段陪伴，留一點期待。', 'TAVERN WALLET', 'WALLET'],
     setM: ['settings', '酒館調頻', '調成你喜歡的節奏。', 'MAKE YOURSELF AT HOME', 'TUNE IN'],
@@ -41,11 +42,35 @@
   function close(id) { if ($(id).classList.contains('gwin')) gClose(id); else shopClose(); }
   function open(id, before) {
     window.TinyTavernUI?.close(); shopClose();
-    Object.keys(definitions).forEach(key => $(key).classList.remove('on'));
+    Object.keys(definitions).forEach(key => $(key)?.classList.remove('on'));
     if (before) before();
     if ($(id).classList.contains('gwin')) gOpen(id); else $(id).style.display = 'flex';
   }
   Object.keys(definitions).forEach(shell);
+  shells.boardM.content.querySelector('.btns')?.remove();
+  const originalFriends=window.frOpen;
+  window.frOpen=function(){
+    originalFriends();
+    if(!shells.frM){
+      definitions.frM=['friends','酒館好友','把聊得來的人，留在酒館裡。','OUR LITTLE CIRCLE','TOGETHER'];
+      const content=shell('frM');
+      const cover=document.createElement('aside');cover.className='friend-cover';
+      cover.innerHTML='<span class="issue-label">A PLACE TO BELONG</span><div class="friend-art"><img src="'+asset('chat')+'" alt=""><i></i><b aria-hidden="true">✦</b></div><h2>下次見，<br>也要一起坐。</h2><p>在大廳點開對方的闆卡，<br>就能送出好友邀請。</p><span class="friend-word" aria-hidden="true">HELLO</span>';
+      content.classList.add('friends-layout');content.prepend(cover);
+    }
+  };
+
+  // 大廳的幾何只沿功能區邊緣展開，保持中央場景完整。
+  for(const corner of ['top','bottom']){
+    const art=document.createElement('div');art.className='lobby-geometry '+corner;art.setAttribute('aria-hidden','true');
+    art.innerHTML='<svg viewBox="0 0 350 310"><g class="lobby-lines"><path d="M-50 250 370 -20M-40 300 400 20M65 310 350 110"/><path d="M195 -20V105H305"/></g><g class="lobby-facets"><path d="M250 122 308 220 194 220Z"/><path d="M65 27 103 95 28 95Z"/></g><g class="lobby-diamonds"><path d="m171 42 31 31-31 31-31-31Z"/><path d="m308 102 12 12-12 12-12-12Z"/></g><g class="lobby-stars"><path d="M116 30Q119 45 135 48Q119 51 116 66Q113 51 97 48Q113 45 116 30ZM311 235Q314 248 327 251Q314 254 311 267Q308 254 295 251Q308 248 311 235Z"/></g><path class="lobby-trace" d="M-40 300 400 20"/></svg><span class="lobby-dots"></span>';
+    document.body.append(art);
+  }
+  const chatHeading=document.createElement('div');chatHeading.className='tt-chat-heading';chatHeading.innerHTML='<b>酒館閒聊</b><span>TAVERN CHAT</span>'; $('chatbox').prepend(chatHeading);
+  $('chatin').placeholder='說點什麼…';$('chatin').setAttribute('aria-label','大廳聊天訊息');
+  $('gearBtn').innerHTML='<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 8h18M5 14h18M5 20h18M10 5v6M19 11v6M12 17v6"/></svg>';
+  const cat=document.querySelector('.amCat');
+  if(cat){cat.querySelector('canvas')?.remove();cat.querySelector('.amTag')?.remove();cat.style.left='1080px';cat.style.top='218px';cat.style.width='82px';cat.style.height='90px';cat.setAttribute('role','button');cat.tabIndex=0;cat.setAttribute('aria-label','摸摸吧台上的店貓');cat.title='摸摸店貓';cat.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();cat.click();}});}
 
   // 裝飾只在內容底層；訂單不加裝飾動畫。
   function motion(kind) {
@@ -69,7 +94,7 @@
   hud.append(funds);
   const balance=$('coinBal'); const syncBalance=()=>{$('ttWalletCount').textContent=balance.textContent;};syncBalance();
   new MutationObserver(syncBalance).observe(balance,{childList:true,subtree:true,characterData:true});
-  const bookHint=document.createElement('span');bookHint.className='tt-book-hint';bookHint.textContent='點頭像開啟手帳';hud.querySelector('.h2who').append(bookHint);
+  const bookHint=document.createElement('span');bookHint.className='tt-book-hint';bookHint.textContent='個人手帳 ↗';hud.querySelector('.h2who').append(bookHint);
   const hudAnchor=document.createComment('個人名片原位置');hud.before(hudAnchor);
   function placeHud(){
     const hero=document.querySelector('#mHome .mhHero');
@@ -81,6 +106,8 @@
   const dock=document.createElement('nav');dock.id='ttMainDock';dock.setAttribute('aria-label','酒館功能');document.body.append(dock);
   function newButton(id,icon,label,click){const b=document.createElement('button');b.type='button';b.id=id;b.innerHTML='<img src="'+asset(icon)+'" alt=""><span>'+label+'</span>';b.onclick=click;return b;}
   const friends=newButton('frBtn','chat','好友',()=>frOpen());
+  const mobileFriends=document.createElement('button');mobileFriends.className='mhSub';mobileFriends.textContent='好友';mobileFriends.onclick=()=>frOpen();document.querySelector('.mhSubRow')?.prepend(mobileFriends);
+  const mobileBag=$('mhWard');if(mobileBag){mobileBag.innerHTML='我的背包<small>穿搭・紀念收藏・成就紀錄</small>';}
   friends.insertAdjacentHTML('beforeend','<span id="frDockBadge" class="badge" style="display:none"></span>');dock.append(friends);
   dock.append(newButton('ttAchBtn','star','成就',()=>open('achM',()=>buildAch2())));
   dock.append(newButton('ttWalletBtn','coin','錢包',()=>openTopup()));
@@ -136,7 +163,7 @@
   const controls=document.createElement('section');controls.className='tuning-controls framed-motion';controls.innerHTML='<div class="section-caption"><b>你的舒適小角落</b><span>02 / PERSONAL</span></div>';
   rows.slice(2).forEach(r=>controls.append(r));controls.insertAdjacentHTML('beforeend',motion(2));layout.append(music,controls);settings.prepend(layout);actions.classList.add('actions');
   rows.forEach(r=>r.classList.add('setting'));rows[4].classList.add('quality-section');
-  rows[4].querySelector('.setD').textContent='依照裝置效能調整';
+  rows[4].remove();
   for(const [id,label] of [['tglMusic','背景音樂'],['tglSfx','點擊音效'],['tglWander','掛機漫步']]){$(id).setAttribute('aria-label',label);$(id).setAttribute('role','switch');const sync=()=>{$(id).setAttribute('aria-checked',String($(id).classList.contains('on')));if(id==='tglMusic')music.classList.toggle('playing',$(id).classList.contains('on'));};sync();new MutationObserver(sync).observe($(id),{attributes:true,attributeFilter:['class']});}
   $('volSl2').setAttribute('aria-label','音樂音量');
 
@@ -193,5 +220,5 @@
     $('ordList').querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>ordPage(Number(b.dataset.page)));
   };
   // 公開的唯讀呈現介面供隔離測試驗證，無新增寫入端點。
-  window.TTLivePresentation={version:214,backendNumber,orderCard,renderMyOrders};
+  window.TTLivePresentation={version:215,backendNumber,orderCard,renderMyOrders};
 })();

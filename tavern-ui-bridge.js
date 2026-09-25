@@ -14,8 +14,8 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.src='tavern-ui/index.html?v=213';overlay.append(frame);document.body.append(overlay);
-      frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);};
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=215';overlay.append(frame);document.body.append(overlay);
+      frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
     shopClose();try{gClose('pcM');gClose('wardM');if(typeof bookClose==='function')bookClose();}catch(_){}
@@ -90,6 +90,7 @@
     a.b.doll=d;if(a.frames)POSES.forEach(p=>{if(a.frames[p])drawDollTo(a.frames[p],d,p);});a.frame=null;setFrame(a,'idle');return true;
   }
   window.TinyTavernUI={open,close,isActive:()=>active,staff,state,group,makeDoll,wear,
+    collection:()=>ACH_DEF.filter(a=>TT_STATS.u.includes(a.id)||!!(a.k&&(TT_STATS[a.k]||0)>=a.need)).map(a=>({id:a.id,name:a.n,description:a.d,image:AICON[a.ic],source:'酒館成就',kind:'成就紀錄'})),
     calendar:cid=>calWeekHtml(cid),booked:cid=>new Promise(resolve=>staffBookedTimes(cid,resolve)),
     draw:(cv,d)=>drawDollTo(cv,d,'idle'),
     drawPart(cv,ref,color){const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
@@ -110,6 +111,7 @@
   openPcInfo=function(cid,info,i){if(THEMES[cid])open('profile',cid);else oldInfo(cid,info,i);};
   document.getElementById('dressBtn').onclick=()=>open('shop');
   window.openWardrobe=()=>open('bag');
+  document.getElementById('wardBtn').onclick=()=>open('bag');
   window.__openDressAt=()=>open('shop');
   document.addEventListener('keydown',e=>{if(active&&e.key==='Escape')close();});
 })();

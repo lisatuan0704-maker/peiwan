@@ -4,11 +4,11 @@
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   function sample(seconds,seed=0){
     const phase=seconds*1.45+seed;
-    return {back:Math.sin(phase)*.017,front:Math.sin(phase-.55)*.008};
+    return {back:Math.sin(phase)*.021,front:Math.sin(phase-.55)*.006,frontShift:Math.sin(phase-.55)*.6};
   }
   function draw(actor,now,walking){
     if(!actor.cv||!actor.b?.doll||actor.slime)return;
-    const off=walking||document.hidden||document.body.classList.contains('liteFX')||reduced.matches||
+    const off=walking||document.hidden||reduced.matches||
       (typeof fsOverlayOpen==='function'&&fsOverlayOpen());
     if(off){
       if(actor._ttIdleDrawn){
@@ -17,10 +17,11 @@
       return;
     }
     // 每秒最多十次重繪；沿用主迴圈，不建立另一個計時器。
-    if(now-(actor._ttIdleAt||0)<100)return;
+    const interval=document.body.classList.contains('liteFX')?160:100;
+    if(now-(actor._ttIdleAt||0)<interval)return;
     actor._ttIdleAt=now;
     drawDollTo(actor.cv,{...actor.b.doll,_idleHair:sample(now/1000,actor.seed||0)},'idle');
     actor._ttIdleDrawn=true;
   }
-  window.TTIdleMotion={draw,sample};
+  window.TTIdleMotion={draw,sample,reduced:()=>reduced.matches};
 })();

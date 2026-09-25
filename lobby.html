@@ -1425,8 +1425,8 @@ body.artBub.bub3s .npc .bub{
 /* v180:頭像方塊一律不要底色 —— 照片本身就填滿,像素小人是透明的,有底色只會露出方塊 */
 .ttf .ttfAva{background:none!important}
 </style>
-<link rel="stylesheet" href="tavern-ui-shell.css?v=213">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=214">
+<link rel="stylesheet" href="tavern-ui-shell.css?v=215">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=215">
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
@@ -1659,7 +1659,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v214</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v215</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -2189,7 +2189,7 @@ if(TEST_MODE){
     if(!csSlot(g,d,'brow',hi,hx,hx2)&&!strict){ if(TP.parts['眉毛']) tpDraw(g, TP.parts['眉毛'][(d.brow||0)%TP.parts['眉毛'].length], hi, hx); }
     csAccBy(d,'mid').forEach(v=>csDrawV(g,v,hi,hx,hx2));
     g.save();
-    if(pose==='idle'&&d._idleHair){const v=d._idleHair.front;g.transform(1,0,v,1,-v*14,0);}
+    if(pose==='idle'&&d._idleHair){const v=d._idleHair.front;g.transform(1,0,v,1,-v*14+(d._idleHair.frontShift||0),0);}
     if(!csSlot(g,d,'front',hi,hx,hx2)&&!strict) tpDraw(g, tpPosed('前髮',(d.front||0),3,pose), hi, hx, hx2);
     g.restore();
     if(!strict){ accLayer(g, ap.f, hi, hx); accLayer(g, ap.t, hi, hx); }
@@ -2732,7 +2732,7 @@ function ensureCardbase(){ if(!CARDBASE.src) CARDBASE.src="img/cardbase.png"; }
 worldbg.style.width=WORLD.w+'px';worldbg.style.height=WORLD.h+'px';
 world.style.width=WORLD.w+'px';world.style.height=WORLD.h+'px';
 // 鏡頭
-const cam={x:WORLD.w/2, y:WORLD.h*0.62, zoom:1.7, tzoom:1.7};
+const cam={x:WORLD.w/2, y:WORLD.h/2, zoom:Math.min(hall.clientWidth/WORLD.w,hall.clientHeight/WORLD.h), tzoom:1};
 // 互動點位(相對座標,配合底圖;之後可依實際底圖微調)
 const SPOTS=[
   {x:0.315,y:0.57,emo:'✦'},{x:0.385,y:0.57,emo:'♥'},
@@ -3122,7 +3122,7 @@ function tick(now){
       }
     }
     const depth=0.9+(a.y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)*0.5;
-    const size=Math.round(150*depth);
+    const size=Math.round((a.slime?150:120)*depth);
     let walking=(a.state==='walk'||a.state==='walk2'||a.state==='walkKey'||(a.staff&&(a.state==='enter'||a.state==='toDoor'||a.state==='toServe'||a.state==='toDoorBack'||a.state==='back'||a.state==='exit'||a.chase))||(a.cloak&&a.moving));
     if(a.slime) walking=(a.state==='walk');
     const tt=now/1000;
@@ -3144,10 +3144,12 @@ function tick(now){
       hopRot=Math.sin(tt*11+a.seed)*0.75+lean;
       setFrame(a,WALK_CYCLE[Math.floor(tt*7.5+a.seed)%WALK_CYCLE.length]);   // 有分幀圖時才會有差異
     }else{
-      // B.整體呼吸壓扁(D 實測定案:速度2.3、幅度2.2%)
-      const ph=Math.sin(tt*(a.slime?4.5:2.3)*Math.PI+a.seed);
-      sqy=1-Math.max(0,ph)*(a.slime?0.10:0.044);
-      sqx=1+Math.max(0,ph)*(a.slime?0.08:0.031);
+      // 連續呼吸與微幅重心變化；腳底錨點仍固定在原地。
+      const ph=a.slime?Math.max(0,Math.sin(tt*4.5*Math.PI+a.seed)):(.5+.5*Math.sin(tt*1.75+a.seed));
+      const still=!a.slime&&window.TTIdleMotion?.reduced();
+      sqy=still?1:1-ph*(a.slime?0.10:0.03);
+      sqx=still?1:1+ph*(a.slime?0.08:0.009);
+      if(!a.slime&&!still) hopRot=Math.sin(tt*.85+a.seed)*.6;
       setFrame(a,'idle');
     }
     if(a.slime && a.bopT>0){ sqy*=1-0.35*a.bopT; sqx*=1+0.30*a.bopT; }
@@ -3196,8 +3198,8 @@ function updateCamera(dt, now){
   let tx = a? a.x*WORLD.w : WORLD.w/2;
   let ty = a? a.y*WORLD.h - 40 : WORLD.h*0.6;
   const moving = a && (a.state==='walk');
-  // 全景模式:填滿畫面(cover),避免寬/窄螢幕左右或上下露黑邊;超出的邊緣會被裁切
-  const fitZoom = Math.max(vw/WORLD.w, vh/WORLD.h);
+  // 完整全景：依原圖比例呈現，不再裁去天花板或下方地板。
+  const fitZoom = Math.min(vw/WORLD.w, vh/WORLD.h);
   if(isMobile()){
     // 手機直屏:楓谷式跟隨鏡頭——拉近讓小人變大,上下左右都跟著小人,裁掉多餘空地板
     cam.tzoom = (vh/WORLD.h) * 1.42;
@@ -3941,7 +3943,7 @@ window.snapPhoto=snapPhoto;
 /* 開場測 0.6 秒幀率,過低就自動進入輕量特效模式 */
 (function(){
   try{
-    window.__fxMode='auto'; try{ window.__fxMode=localStorage.getItem('tt_fx')||'auto'; }catch(e){}
+    window.__fxMode='hi'; // 華麗為預設，保留系統減少動態偏好。
     window.applyFxMode=function(){
       const m=window.__fxMode;
       if(m==='lite') document.body.classList.add('liteFX');
@@ -5706,7 +5708,9 @@ const SFX=(function(){
     const bd=document.createElement('div'); bd.className='accB';
     if(html!=null) bd.innerHTML=html;
     if(build) build(bd);
-    h.onclick=()=>a.classList.toggle('open');
+    h.setAttribute('role','button');h.tabIndex=0;h.setAttribute('aria-expanded',String(open));
+    h.onclick=()=>{a.classList.toggle('open');h.setAttribute('aria-expanded',String(a.classList.contains('open')));};
+    h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();h.click();}};
     a.appendChild(h); a.appendChild(bd); return a;
   }
   function openBoard(){
@@ -7365,7 +7369,7 @@ function bkLoadTx(){
 let _bkPerfChecked=false;
 function bkGuard(){
   /* 書開著時持續監看:連續兩秒低於 24fps 就強制輕量模式(顯卡吃不消的機器自救) */
-  if(bkGuard._on) return; bkGuard._on=true;
+  if(window.__fxMode==='hi'||bkGuard._on) return; bkGuard._on=true;
   let n=0,t0=performance.now();
   (function step(){
     const bm=document.getElementById('bookM');
@@ -7482,8 +7486,8 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui-bridge.js?v=213"></script>
-<script src="lobby-ui/idle-motion.js?v=214"></script>
-<script src="lobby-ui/live.js?v=214"></script>
+<script src="tavern-ui-bridge.js?v=215"></script>
+<script src="lobby-ui/idle-motion.js?v=215"></script>
+<script src="lobby-ui/live.js?v=215"></script>
 </body>
 </html>
