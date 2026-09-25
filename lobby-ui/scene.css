@@ -1,4 +1,8 @@
 /* 全部圖層共用世界座標，透明處不攔截走路點擊。 */
+/* 延伸背景沿用同一組原圖，只在舞台底下放大、模糊與壓暗。 */
+#hallBackdrop{position:absolute;inset:-48px;pointer-events:none;user-select:none;filter:blur(24px) brightness(.78);background-position:center;background-repeat:no-repeat;background-size:cover;background-image:url('../img/lobby-layers-v218/food.png'),url('../img/lobby-layers-v218/cat.png'),url('../img/lobby-layers-v218/stools.png'),url('../img/lobby-layers-v218/white.png'),url('../img/lobby-layers-v218/flower.png'),url('../img/lobby-layers-v218/purple.png'),url('../img/lobby-layers-v218/wolf-cushions.png'),url('../img/lobby-layers-v218/fixtures.png'),url('../img/lobby-layers-v218/base.png')}
+body.in-forest #hallBackdrop{background-image:url('../img/forestbase.jpg')}
+#world.tt-soft-sides{-webkit-mask-image:linear-gradient(to right,transparent,#000 var(--tt-edge-fade),#000 calc(100% - var(--tt-edge-fade)),transparent);mask-image:linear-gradient(to right,transparent,#000 var(--tt-edge-fade),#000 calc(100% - var(--tt-edge-fade)),transparent)}
 .tt-scene-layer{position:absolute;left:0;top:0;width:1600px;height:900px;max-width:none;pointer-events:none;user-select:none;image-rendering:pixelated}
 body.in-forest .tt-scene-layer{display:none}
 .npc.tt-scene-actor .shadow{top:calc(var(--tt-foot) - 4px);bottom:auto}
