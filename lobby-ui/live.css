@@ -1,0 +1,126 @@
+/* 正式大廳 v214：共用排版覆寫，保留原生控制節點與頭像框。 */
+.tt-live-ui{font-family:Seed,'Microsoft JhengHei',sans-serif;font-size:16px;color:#5e477a;padding:20px;background:rgba(40,25,39,.32);backdrop-filter:blur(3px)}
+.tt-live-ui .panel{position:relative;inset:auto;transform:none;margin:auto;display:flex;flex-direction:column;width:min(790px,100%);max-width:790px;max-height:calc(100dvh - 40px);padding:0;overflow:hidden;isolation:isolate;animation:ttPanelIn .3s ease both}
+.tt-live-ui .panel-head{flex:none;position:relative;padding:24px 30px 20px;z-index:2}
+.tt-live-ui .panel-head .eyebrow{margin-left:0;font-size:11px}
+.tt-live-ui .panel-head .heading{margin-top:8px}
+.tt-live-ui .panel-head h1{font-size:32px;margin:0;line-height:1.35}
+.tt-live-ui .title-chip{padding:5px 18px 8px 12px;display:inline-flex}
+.tt-live-ui .panel-head p{font-size:15px;margin:12px 0 0;line-height:1.6}
+.tt-live-ui .panel-head .outline-word{right:28px;top:35px;font-size:64px;max-width:65%;overflow:hidden;pointer-events:none}
+.tt-live-ui .panel-head .close{top:17px;right:18px;width:34px;height:34px;z-index:3}
+.tt-live-ui .panel-content{overflow-y:auto;overflow-x:hidden;min-height:0;flex:1;padding:24px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#bdaecc transparent}
+.tt-live-ui .panel-content>.gin{padding:0;overflow:visible;max-height:none}
+.tt-live-ui .panel-footer{flex:none;position:relative;padding:14px 24px;font-size:12px;z-index:2}
+.tt-live-ui .back-menu{background:none;border:0;border-bottom:1px solid currentColor;padding:4px 0;color:inherit;font:inherit}
+.tt-live-ui .footer-mark{font-size:9px;letter-spacing:2px;opacity:.65}
+.tt-live-ui .panel .geometry{pointer-events:none}
+.tt-live-ui .panel h2{line-height:1.45}
+.tt-live-ui .section-caption{margin:16px 0}
+.tt-live-ui .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px}
+.tt-live-ui .feature-tile{position:relative;text-align:left;min-height:230px;padding:20px 16px;border:1px solid #bd97ba;border-radius:12px;background:linear-gradient(145deg,#fffaf0e8,#f1e3f3b0);box-shadow:0 4px #a8789838;overflow:hidden;color:#704764}
+.tt-live-ui .feature-tile:nth-child(2){background:linear-gradient(145deg,#fff5dded,#e6e5f5bd)}
+.tt-live-ui .feature-tile:nth-child(3){background:linear-gradient(145deg,#eef4dbe8,#d7edecbb)}
+.tt-live-ui .feature-tile>img{display:block;width:50px;height:50px;margin:20px 0 14px;image-rendering:pixelated}
+.tt-live-ui .feature-tile h2{font-size:21px;margin:0 0 7px}
+.tt-live-ui .feature-tile p{font-size:13px;margin:0 0 17px;max-width:85%}
+.tt-live-ui .feature-tile .vertical-word{position:absolute;right:9px;top:16px;writing-mode:vertical-rl;font-size:34px;line-height:1;font-weight:bold;color:transparent;-webkit-text-stroke:1px #ab83b45e;letter-spacing:2px}
+.tt-live-ui .tile-number{font-size:11px;letter-spacing:2px}.tt-live-ui .tile-cta{display:inline-block;border:1px solid #c8accd;border-radius:20px;padding:6px 12px;font-size:13px;background:#fffa}
+.tt-live-ui .menu-ribbon{margin:-24px -24px 20px;padding:11px 24px;background:#5f3d65;color:#fff;display:flex;gap:20px}.tt-live-ui .menu-ribbon span{font-size:10px;letter-spacing:1.5px;align-self:center}
+.tt-live-ui .ach-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.tt-live-ui .ach{display:block;text-align:left;font:inherit;color:inherit;min-height:210px;position:relative}
+.tt-live-ui .ach h2{font-size:23px}.tt-live-ui .ach p{font-size:14px}
+.tt-live-ui .ach .badge-art img{max-width:100%;max-height:100%;image-rendering:pixelated}
+.tt-live-ui .ach[aria-pressed=true]{outline:2px solid currentColor;outline-offset:-3px}
+.tt-live-ui .ach[aria-pressed=true] .collect-state{animation:ttStamp .35s ease both}
+.tt-live-ui .collection-cover{min-width:0}.tt-live-ui .collection-cover p{font-size:14px}
+.tt-live-ui .purse-summary{min-height:170px;padding:20px 22px;overflow:hidden}
+.tt-live-ui .wallet-balance strong{font-size:60px}.tt-live-ui .wallet-balance small,.tt-live-ui .body-note{font-size:15px}
+.tt-live-ui .packages{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.tt-live-ui .package{min-height:156px;text-align:left;font:inherit;overflow:hidden}.tt-live-ui .package strong{font-size:31px}.tt-live-ui .tt-bonus{display:block;margin:7px 0;font-size:12px}
+.tt-live-ui .text-links{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px}.tt-live-ui .text-btn{font:inherit;font-size:13px}
+.tt-live-ui .tuning-layout{grid-template-columns:minmax(220px,.9fr) minmax(0,1.2fr);gap:20px}
+.tt-live-ui .music-card,.tt-live-ui .tuning-controls{padding:18px;overflow:hidden;min-width:0}
+.tt-live-ui .setRow{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:0}
+.tt-live-ui .setT{font-size:18px;line-height:1.5;color:inherit}.tt-live-ui .setD{font-size:13px;line-height:1.7;color:inherit;opacity:.8;margin-top:3px}
+.tt-live-ui .setL{min-width:0}.tt-live-ui .tgl{width:47px;min-width:47px;height:29px;border:1px solid #b8a9c8;background:#d8cde4;box-shadow:none;padding:3px;border-radius:20px}
+.tt-live-ui .tgl i{width:21px;height:21px;top:3px;left:3px}.tt-live-ui .tgl.on{background:#8b77ae}.tt-live-ui .tgl.on i{left:21px}
+.tt-live-ui .music-card .setRow{padding:17px 0;background:none;border:0;box-shadow:none;border-bottom:1px dashed #b8a9c866;border-radius:0}
+.tt-live-ui #volRow{flex-direction:column;align-items:stretch}.tt-live-ui #volSl2{max-width:none!important;width:100%;flex:auto!important;accent-color:#8878ac;height:25px}
+.tt-live-ui .quality-section{flex-direction:column;align-items:stretch}.tt-live-ui .fxSeg{display:flex;align-self:flex-start;padding:0;gap:6px;background:none;margin-top:4px}.tt-live-ui .fxSeg button{font-size:14px;min-height:40px;padding:7px 12px;border:1px solid #b9a8d0;border-radius:7px;background:#fff5;color:inherit}.tt-live-ui .fxSeg button.on{background:#8773a9;color:white;box-shadow:0 3px #6e5989}
+.tt-live-ui .actions a{font-size:15px!important}.tt-live-ui .mail-message h2{font-size:30px}
+.tt-live-ui .tt-mail-list>div{font-size:15px!important;background:#ffffff5c!important;border-color:#b3cfdd!important;color:#486b82!important}.tt-live-ui .tt-mail-list button{font-size:13px!important}
+.tt-live-ui .tabs{display:flex;gap:10px;margin:0 0 20px}.tt-live-ui .tabs button{flex:1;border:1px solid #caaf9b!important;border-radius:8px!important;padding:11px 16px!important;background:#fff7!important;color:#956343!important;font-size:16px!important}
+.tt-live-ui .tabs button.active{background:linear-gradient(120deg,#9d6446,#c28b62)!important;color:#fff!important}
+.tt-live-ui .order{margin-bottom:18px;overflow:hidden}.tt-live-ui .order h2{font-size:21px}.tt-live-ui .order-top strong{font-size:23px;white-space:nowrap}.tt-live-ui .ticket-body{min-width:0;padding:20px 22px}.tt-live-ui .order-status{font-size:14px;line-height:1.7;margin:12px 0 17px}
+.tt-live-ui .steps{margin:16px 0 24px}.tt-live-ui .steps span{font-size:13px}.tt-live-ui .steps span small{font-size:10px}.tt-live-ui .ticket-footer{margin-top:16px;display:flex;justify-content:flex-end;border-top:1px solid #a8794d20;padding-top:12px}
+.tt-live-ui .ticket-identity{margin-left:auto}.tt-live-ui .ticket-barcode{stroke:none;fill:currentColor}
+.tt-live-ui .tt-order-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.tt-live-ui .tt-cancel{flex-basis:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px dashed #ba9a7f55;padding-top:12px}.tt-live-ui .tt-cancel span,.tt-live-ui .tt-order-note{font-size:12px}.tt-live-ui .tt-cancel button{background:#fff8;border:1px solid #bd927b;border-radius:6px;font-size:12px;padding:8px;color:#92644f}
+.tt-live-ui .tt-empty{text-align:center;padding:30px 15px}.tt-live-ui .tt-empty img{width:70px;height:70px;image-rendering:pixelated}.tt-live-ui .tt-empty p{font-size:14px;line-height:1.8}.tt-live-ui .tt-empty button{font:inherit;padding:12px 22px}
+.tt-live-ui .ordPg{display:flex;justify-content:center;gap:16px;align-items:center}.tt-live-ui .ordPg button{font-size:13px;padding:9px 14px;border:1px solid #cfb29c;background:#fff7;border-radius:6px}
+.tt-live-ui #ordList{max-height:none!important;overflow:visible!important;padding:0!important}
+body.tt214 #hud2{display:grid;grid-template-columns:auto minmax(145px,auto);column-gap:0;row-gap:0;top:18px;left:18px;max-width:360px;align-items:center!important;transform:none;overflow:visible;border:0!important}
+body.tt214 #hud2 .h2ava{grid-column:1;grid-row:1/3;align-self:center;width:104px;height:104px;overflow:visible;z-index:3}
+body.tt214 #hud2 .h2ava.wr{width:120px;height:120px}
+body.tt214 #hud2 .h2ava:not(.wr) canvas{width:96px;height:96px;left:4px;top:4px}
+body.tt214 #hud2 .h2who{grid-column:2;grid-row:1;margin:0 0 0 -12px;padding:14px 16px 9px 24px;min-height:68px;border:1px solid #eee4eeaa;border-bottom:0;border-radius:13px 13px 0 0;background:linear-gradient(125deg,#fff9efed,#ece6f7df);box-shadow:none;color:#624e6c;min-width:170px;gap:3px}
+body.tt214 #hud2 .h2name{font-size:17px;line-height:1.5;max-width:195px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.tt214 #hud2 .h2nm{font-size:17px;line-height:1.5;max-width:195px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.tt214 #hud2 .h2title{font-size:12px}.tt-book-hint{display:block;font-size:11px;color:#826a92;letter-spacing:.5px;margin-top:3px}
+body.tt214 #hud2 .tt-funds{grid-column:2;grid-row:2;margin-left:-12px;padding:7px 16px 10px 24px;border:1px solid #eee4eeaa;border-top:1px solid #ad98b333;border-radius:0 0 13px 13px;background:linear-gradient(125deg,#fff8e9ed,#ede7f5df);display:flex;gap:16px;align-items:center;color:#8e7040;font-size:11px}
+.tt-funds strong{display:flex;align-items:center;gap:7px;font-size:16px}.tt-funds img{width:24px;height:24px;image-rendering:pixelated}
+body.tt214 #h2ach,body.tt214 #h2bag,body.tt214 #h2mail,body.tt214 #h2coin,body.tt214 #hud2 .h2row,body.tt214 #hud2 .h2btns{display:none!important}
+body.tt214 #hud2 .h2dc,body.tt214 #hud2 .h2wd{font-size:10px;padding:4px 7px;margin-top:3px}
+body.tt214 #gearBtn{width:60px;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;right:20px;top:18px;border-radius:12px;background:linear-gradient(145deg,#fff8fded,#d7caeadc);color:#786191;border:1px solid #fff9;box-shadow:0 4px #694b8340}
+body.tt214 #gearBtn span{font-size:12px}body.tt214 #gearBtn:hover{transform:translateY(-2px)}
+#ttMainDock{position:fixed;right:20px;bottom:22px;display:flex;align-items:end;gap:8px;z-index:71}
+body.tt214 #ttMainDock>button{position:relative!important;inset:auto!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:66px;height:72px;padding:8px 5px;border:1px solid #fff9;border-radius:12px;box-shadow:0 4px #392c4140;cursor:pointer;font-family:inherit;color:#6c566d;background:linear-gradient(145deg,#fff6edee,#e1d6e9e8);font-size:12px;transition:transform .2s}
+body.tt214 #ttMainDock>button:hover{transform:translateY(-4px)}body.tt214 #ttMainDock>button img{width:30px;height:30px;object-fit:contain}
+body.tt214 #ttMainDock>button::after{display:none}body.tt214 #ttMainDock>button span:not(.badge):not(#mailBadge){font-size:12px;line-height:1.3;white-space:nowrap}
+body.tt214 #ttMainDock #ttAchBtn{background:linear-gradient(135deg,#fff8daeF,#edcf8feb);color:#876831}
+body.tt214 #ttMainDock #ttWalletBtn{background:linear-gradient(135deg,#e7fff0ee,#b9dddfeb);color:#3a7a74}
+body.tt214 #ttMainDock #ordBtn{background:linear-gradient(135deg,#fff1dbee,#efc4a8eb);color:#976444}
+body.tt214 #ttMainDock #ttMailBtn{background:linear-gradient(135deg,#eff9ffee,#bcd5eceb);color:#497492}
+body.tt214 #ttMainDock #shopBtn{width:93px;height:86px;background:linear-gradient(140deg,#b45c7c,#8a526f);color:#fff8ef;margin-left:5px;border-color:#f4c6d4;box-shadow:0 5px #61445370}
+body.tt214 #ttMainDock #shopBtn img{width:35px;height:35px}.tt-live-ui .frame-decoration{pointer-events:none}
+body.tt214.mhome-on #ttMainDock{display:none}
+@keyframes ttPanelIn{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
+@keyframes ttStamp{0%{scale:1.14;opacity:.5}100%{scale:1;opacity:1}}
+@media(max-height:760px) and (min-width:701px){.tt-live-ui .panel-head{padding:17px 25px 13px}.tt-live-ui .panel-content{padding:18px 24px}.tt-live-ui .panel-head h1{font-size:29px}.tt-live-ui .panel-head p{margin-top:7px;font-size:14px}.tt-live-ui .ach{min-height:186px}.tt-live-ui .panel-footer{padding:10px 24px}}
+@media(max-width:1000px){body.tt214 #ttMainDock{gap:6px;right:12px;bottom:17px}body.tt214 #ttMainDock>button{width:57px;height:65px}body.tt214 #ttMainDock #shopBtn{width:77px;height:77px}body.tt214 #hud2{scale:.9;transform-origin:top left}}
+@media(max-width:700px){.tt-live-ui{padding:10px}.tt-live-ui .panel,.tt-live-ui .panel[data-view]{width:100%;max-height:calc(100dvh - 20px);border-radius:18px}.tt-live-ui .panel-head{padding:20px 18px 15px}.tt-live-ui .panel-head h1{font-size:26px}.tt-live-ui .panel-head .eyebrow{font-size:9px;letter-spacing:1.7px}.tt-live-ui .panel-head .outline-word{font-size:42px;right:8px;top:42px;max-width:57%;opacity:.55}.tt-live-ui .panel-head p{font-size:13px;padding-right:20px}.tt-live-ui .panel-content{padding:17px 14px}.tt-live-ui .panel-footer{padding:11px 16px}.tt-live-ui .tuning-layout{grid-template-columns:1fr}.tt-live-ui .tuning-controls,.tt-live-ui .music-card{padding:17px}.tt-live-ui .tuning-controls .section-caption{margin-top:0}.tt-live-ui .feature-grid{grid-template-columns:1fr}.tt-live-ui .feature-tile{min-height:160px;padding-left:88px}.tt-live-ui .feature-tile>img{position:absolute;left:18px;top:42px;width:48px;margin:0}.tt-live-ui .feature-tile h2{font-size:22px;margin-top:9px}.tt-live-ui .feature-tile .vertical-word{font-size:28px;right:12px;opacity:.65}.tt-live-ui .menu-ribbon{margin:-17px -14px 17px;padding:12px 16px}.tt-live-ui .menu-ribbon span{font-size:8px}.tt-live-ui .packages{grid-template-columns:1fr}.tt-live-ui .package{min-height:143px}.tt-live-ui .purse-summary{padding:15px 14px;min-height:160px}.tt-live-ui .wallet-balance strong{font-size:47px}.tt-live-ui .wallet-balance p{font-size:12px}.tt-live-ui .ach{min-height:202px;padding:14px 10px}.tt-live-ui .ach h2{font-size:21px}.tt-live-ui .ach p{font-size:12px}.tt-live-ui .collection-cover p{font-size:12px}.tt-live-ui .collection-spine{width:30px}.tt-live-ui .order{grid-template-columns:68px minmax(0,1fr)}.tt-live-ui .ticket-body{padding:14px 12px}.tt-live-ui .order-top{flex-direction:column;gap:5px}.tt-live-ui .order h2{font-size:18px}.tt-live-ui .order-top strong{font-size:20px}.tt-live-ui .order-status{font-size:13px}.tt-live-ui .steps span{font-size:11px}.tt-live-ui .ticket-footer{margin-top:12px}.tt-live-ui .tt-cancel{align-items:flex-start;flex-direction:column}.tt-live-ui .ticket-date b{font-size:23px}.tt-live-ui .ticket-date span{font-size:11px}.tt-live-ui .tabs button{font-size:14px!important;padding:10px 6px!important}body.tt214:not(.mhome-on) #hud2{display:grid;scale:.75;top:10px;left:7px}body.tt214 #ttMainDock{max-width:calc(100% - 16px);gap:4px;right:8px;bottom:12px}body.tt214 #ttMainDock>button{width:43px;height:58px;border-radius:8px}body.tt214 #ttMainDock>button img{width:24px;height:24px}body.tt214 #ttMainDock>button span:not(.badge):not(#mailBadge){font-size:10px}body.tt214 #ttMainDock #shopBtn{width:64px;height:69px;margin-left:2px}body.tt214 #gearBtn{width:45px;height:52px;right:10px;top:10px}}
+@media(prefers-reduced-motion:reduce){.tt-live-ui *,.tt-live-ui *::before,.tt-live-ui *::after{animation:none!important;transition:none!important}}
+body.tt214 #ttMainDock #frBtn{background:linear-gradient(135deg,#fff3e8ee,#eedab6eb);color:#957049}
+body.tt214 #frDockBadge{position:absolute;right:-3px;top:-5px;background:#d46484;color:white;padding:1px 5px;border-radius:9px;font-size:10px}
+@media(max-width:700px){body.tt214 #ttMainDock>button{width:38px}body.tt214 #ttMainDock #shopBtn{width:58px}}
+/* 手機直式仍使用原首頁導覽，但共用同一個真實頭像框與手帳入口。 */
+@media(max-width:680px){
+ body.tt214.mhome-on #hud2{display:grid!important;scale:.73;transform-origin:top left;left:12px;top:82px;z-index:94}
+ body.tt214.mhome-on #gearBtn{display:flex!important;z-index:96;right:11px;top:9px}
+ body.tt214 #mHome{background:linear-gradient(155deg,#f6ebde,#eee8f0 65%,#e1e9ec);color:#695364}
+ body.tt214 .mhSign{padding-right:57px;background:linear-gradient(115deg,#684c68ed,#a485a8df);min-height:67px;display:flex;flex-direction:column;justify-content:center;font-size:16px}
+ body.tt214 .mhHero{height:260px;min-height:260px;background-position:center center}
+ body.tt214 #mhDoll,body.tt214 #mhName{visibility:hidden}
+ body.tt214 .mhSubRow{flex-wrap:wrap;justify-content:center;overflow:visible;padding:14px 12px;gap:8px}
+ body.tt214 .mhSub{font-size:13px;border:1px solid #c2adbe7a;background:#fff9;color:#77607b;border-radius:9px;padding:9px 13px}
+ body.tt214 .mhSub[onclick*="buildBag"],body.tt214 .mhSub[onclick*="bookOpen"]{display:none}
+ body.tt214 #mhOrder{background:linear-gradient(125deg,#b76885,#8c5c79);color:#fff9ee;box-shadow:0 4px #7c4f6b50}
+ body.tt214 #mhDress{background:linear-gradient(125deg,#d7d3ee,#bdafd8);color:#5f527b}
+ body.tt214 #mhWard{background:linear-gradient(125deg,#fff6ec,#e9d6e0);color:#805b74}
+ body.tt214 #mhOrders{background:linear-gradient(125deg,#fff0dc,#edc8ae);color:#936444}
+}
+/* 新繪師已畫好布告欄：保留原互動熱區，不再疊一張舊木牌。 */
+body.tt214 .boardNPC .bimg{visibility:hidden}
+@media(max-width:680px){body.tt214 #mhDc{display:none}}
+body.liteFX .tt-live-ui *,body.liteFX .tt-live-ui *::before,body.liteFX .tt-live-ui *::after{animation:none!important}
+.tt-live-ui .purse-summary .frame-decoration,.tt-live-ui .mail-message .frame-decoration{bottom:-28px;opacity:.3}
+.tt-live-ui .panel[data-view=menu] .panel-content{padding:0 24px 24px}
+.tt-live-ui .panel[data-view=menu] .menu-ribbon{margin:0 -24px 20px;padding:12px 24px;min-height:40px;line-height:1.5}
+.tt-live-ui .panel[data-view=menu] .feature-tile>img{width:42px;height:42px}
+@media(max-width:700px){.tt-live-ui .panel[data-view=menu] .panel-content{padding:0 14px 17px}.tt-live-ui .panel[data-view=menu] .menu-ribbon{margin:0 -14px 17px;padding:12px 16px}}
+body.tt214 #hud2 .h2row{display:flex!important;gap:6px;flex-wrap:wrap;margin:2px 0}
+body.tt214 #hud2 .h2pill{font-size:10px;padding:2px 5px}
+body.tt214 #hud2 .h2vip{font-size:10px;padding:3px 6px;min-height:22px}
+body.tt214 #hud2 .h2vip img{width:14px;height:14px}
+@media(max-width:680px){body.tt214.mhome-on #hud2{position:absolute;top:18px;left:12px}}
+@media(max-width:680px){body.tt214 .mhSub[onclick*="buildVip2"]{display:none}}

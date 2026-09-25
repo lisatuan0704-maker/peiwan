@@ -272,7 +272,7 @@ body{font-family:'LINE Seed TW','Huninn','Noto Sans TC',sans-serif;color:var(--i
 .dsStage{flex:1;min-width:0;display:flex;flex-direction:column;padding:12px;gap:10px}
 .dsStageInner{flex:1;position:relative;overflow:hidden;border:3px solid #5A3D4E;min-height:230px;
   display:flex;align-items:flex-end;justify-content:center;
-  background:url('img/lobbybase.jpg') center 42%/cover #4a2f3d}
+  background:url('img/lobby-artist-v214.png') center 42%/cover #4a2f3d}
 .dsStageInner::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(46,30,40,.12),rgba(46,30,40,.42))}
 #tryCv{width:158px;height:158px;image-rendering:pixelated;position:relative;margin-bottom:16px;
   filter:drop-shadow(2px 7px 3px rgba(24,14,20,.5))}
@@ -337,7 +337,7 @@ body.mhome-on #emptyMsg{display:none!important}
   background:linear-gradient(180deg,#FF9EB5,#F07F9E);box-shadow:inset 0 -4px 0 #E07A97;text-shadow:1.5px 1.5px 0 rgba(90,61,78,.5)}
 .mhSign span{display:block;font-size:11px;font-weight:400;color:#FFE7EF;letter-spacing:1px;margin-top:5px}
 .mhHero{position:relative;height:37vh;min-height:224px;flex:none;overflow:hidden;border-bottom:4px solid #5A3D4E;
-  background:url('img/lobbybase.jpg') center 46%/cover #4a2f3d;display:flex;align-items:flex-end;justify-content:center}
+  background:url('img/lobby-artist-v214.png') center 46%/cover #4a2f3d;display:flex;align-items:flex-end;justify-content:center}
 .mhHero::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(46,30,40,.08) 40%,rgba(46,30,40,.55))}
 .mhSpark{position:absolute;font-size:15px;opacity:0;pointer-events:none;animation:twk 2.4s ease-in-out infinite}
 #mhDoll{width:150px;height:150px;image-rendering:pixelated;position:relative;margin-bottom:36px;
@@ -1426,6 +1426,7 @@ body.artBub.bub3s .npc .bub{
 .ttf .ttfAva{background:none!important}
 </style>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=213">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=214">
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
@@ -1658,7 +1659,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v213</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v214</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -2171,7 +2172,10 @@ if(TEST_MODE){
     /* 穿「整套」時只畫這套的部件 —— 後台合成預覽看到什麼,客人就看到什麼,不再拿舊部件補位 */
     let strict=false;
     try{ const sc=(window.__shopCfg||{})[d&&d.set]; strict=!!(sc&&sc.parts&&Object.keys(sc.parts).length); }catch(e){}
+    g.save();
+    if(pose==='idle'&&d._idleHair){const v=d._idleHair.back;g.transform(1,0,v,1,-v*18,0);}
     if(!csSlot(g,d,'back',hi,hx,hx2)&&!strict) tpDraw(g, tpPosed('後髮',(d.back||0),3,pose), hi, hx, hx2);
+    g.restore();
     csAccBy(d,'back').forEach(v=>csDrawV(g,v,hi,hx,hx2));
     if(!strict){ accLayer(g, ap.b, hi, hx); accLayer(g, ap.m, hi, hx); }
     if(!csSlot(g,d,'body',hi,hx,hx2)&&!strict){ const bi=tpBody(pose,d.skin||0); if(bi.complete)g.drawImage(bi,0,0,64,64); }
@@ -2184,7 +2188,10 @@ if(TEST_MODE){
     if(!eyeDone){ if(!csSlot(g,d,'eye',hi,hx,hx2)&&!strict) tpDraw(g, tpPosed('眼睛',(d.face||0),2,pose), hi, hx); }
     if(!csSlot(g,d,'brow',hi,hx,hx2)&&!strict){ if(TP.parts['眉毛']) tpDraw(g, TP.parts['眉毛'][(d.brow||0)%TP.parts['眉毛'].length], hi, hx); }
     csAccBy(d,'mid').forEach(v=>csDrawV(g,v,hi,hx,hx2));
+    g.save();
+    if(pose==='idle'&&d._idleHair){const v=d._idleHair.front;g.transform(1,0,v,1,-v*14,0);}
     if(!csSlot(g,d,'front',hi,hx,hx2)&&!strict) tpDraw(g, tpPosed('前髮',(d.front||0),3,pose), hi, hx, hx2);
+    g.restore();
     if(!strict){ accLayer(g, ap.f, hi, hx); accLayer(g, ap.t, hi, hx); }
     csAccBy(d,'front').forEach(v=>csDrawV(g,v,hi,hx,hx2));
     csAccBy(d,'top').forEach(v=>csDrawV(g,v,hi,hx,hx2));
@@ -2709,9 +2716,9 @@ const worldbg=document.getElementById('worldbg');
 // 虛擬世界尺寸(小人與座標都以此為基準;鏡頭在其中平移縮放)
 const WORLD={w:1600,h:900};
 const MAPS={
-  hall:{ bg:'img/lobbybase.jpg',
+  hall:{ bg:'img/lobby-artist-v214.png',
     floor:{y0:0.52,y1:0.97,farX0:0.16,farX1:0.84,nearX0:0.04,nearX1:0.96},
-    door:{x:0.945,y:0.66,emo:'✦',label:'往森林小徑',to:'forest',spawn:[0.18,0.78]} },
+    door:{x:0.957,y:0.66,emo:'✦',label:'往森林小徑',to:'forest',spawn:[0.18,0.78]} },
   forest:{ bg:'img/forestbase.jpg',
     floor:{y0:0.52,y1:0.95,farX0:0.05,farX1:0.98,nearX0:0.05,nearX1:0.95},
     door:{x:0.11,y:0.70,emo:'✦',label:'回酒館',to:'hall',spawn:[0.88,0.72]} },
@@ -3150,6 +3157,7 @@ function tick(now){
     const vis = (vm===curMap) && online;
     a.el.style.display = vis ? '' : 'none';
     if(!vis){ return; }
+    if(window.TTIdleMotion) window.TTIdleMotion.draw(a,now,walking);
     a.el.style.left=(a.x*WORLD.w-size/2+(a.lungeX||0))+'px';
     a.el.style.top=(a.y*WORLD.h-size+bob)+'px';
     a.el.style.zIndex=Math.round(a.y*1000);
@@ -5663,7 +5671,7 @@ const SFX=(function(){
     w.appendChild(d);
   }
   [[600,200],[700,196],[800,206],[900,196],[1000,200]].forEach(p=>hot(p[0],p[1],32,'bottle'));
-  [[150,180],[430,150],[1050,150],[1470,185]].forEach(p=>hot(p[0],p[1],40,'lantern'));
+  [[43,136],[149,70],[1250,54],[1520,140]].forEach(p=>hot(p[0],p[1],40,'lantern'));
 })();
 
 /* ================= 💬 NPC 個性台詞 ================= */
@@ -5688,7 +5696,7 @@ const SFX=(function(){
   const w=document.getElementById('world'); if(!w) return;
   let BOARD=null;
   if(typeof db!=='undefined' && db){ try{ db.ref(ROOT+'/board').on('value',s=>{ BOARD=s.val()||null; }); }catch(e){} }
-  const b=document.createElement('div'); b.className='boardNPC'; b.style.left='236px'; b.style.top='250px';
+  const b=document.createElement('div'); b.className='boardNPC'; b.style.left='213px'; b.style.top='524px';
   b.innerHTML='<div class="bimg"></div><div class="btag">掌櫃布告欄</div>';
   b.onclick=(e)=>{ e.stopPropagation(); openBoard(); }; w.appendChild(b);
   function acc(open, em, title, mini, html, build){
@@ -7475,5 +7483,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui-bridge.js?v=213"></script>
+<script src="lobby-ui/idle-motion.js?v=214"></script>
+<script src="lobby-ui/live.js?v=214"></script>
 </body>
 </html>
