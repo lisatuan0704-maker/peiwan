@@ -12,4 +12,12 @@ for(const b of spots){const a={x:.4,y:.82,tx:b[0]/1600,ty:b[1]/900};let arrived=
 let p=[800,480];for(let i=0;i<200;i++){p=s.slide(p,[p[0],p[1]-3]);assert(s.valid(p));}assert(p[1]>=430);
 p=[800,340];for(let i=0;i<200;i++){p=s.slide(p,[p[0],p[1]+3]);assert(s.valid(p));}assert(p[1]<=352);
 assert(s.size(334/900)<s.size(873/900));
+// 角色到達前緣，排序一定要超過物件，不能只讓腳或標籤露出。
+for(const y of Object.values(s.ground))assert(Math.round(y/900*1000)>s.layerDepth(y));
+assert(Math.round(650/900*1000)>s.layerDepth(s.ground.white));
+assert(Math.round(421/900*1000)<s.layerDepth(s.ground.stools));
+// L 型回角擋住桌體，但右側窄通道可連通前後地板。
+assert(!s.valid([1200,330]));assert(s.valid([1318,330]));assert(s.valid([1318,380]));
+const rightExit=s.route([1100,305],[1350,460]);assert(rightExit.some(p=>p[0]>1308));
+assert(rightExit.at(-1)[0]===1350&&rightExit.at(-1)[1]===460);
 console.log(JSON.stringify({inlineScripts: scripts,routePairs:paths,clearSegments:segments,arrivalTests:spots.length,keyboardCollision:'passed',perspective:'passed'}));

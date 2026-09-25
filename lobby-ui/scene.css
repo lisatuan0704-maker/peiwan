@@ -4,4 +4,4 @@ body.in-forest .tt-scene-layer{display:none}
 .npc.tt-scene-actor .shadow{top:calc(var(--tt-foot) - 4px);bottom:auto}
 .npc.tt-scene-actor .tag{position:absolute;left:50%;top:calc(var(--tt-foot) + 5px);transform:translateX(-50%);margin:0}
 body:not(.in-forest) .amCat{z-index:482}
-body:not(.in-forest) .boardNPC{z-index:716}
+body:not(.in-forest) .boardNPC{z-index:703}

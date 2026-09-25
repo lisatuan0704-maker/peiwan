@@ -58,6 +58,30 @@
 .tt-live-ui .tt-order-actions .order-reorder{display:inline-flex;align-items:center;gap:9px;min-height:32px;padding:5px 0;background:transparent;border:0;border-bottom:1px solid #b58c6b;border-radius:0;box-shadow:none;color:#95694e;font:inherit;font-size:12px;line-height:1.6;cursor:pointer;transform:none}
 .tt-live-ui .tt-order-actions .order-reorder:hover{background:transparent;color:#774a32;border-bottom-color:currentColor;box-shadow:none;transform:none}
 .tt-live-ui .tt-order-actions .order-reorder:focus-visible{outline:2px solid #95694e;outline-offset:4px}
+.tt-live-ui .panel[data-view=orders] .order{margin-bottom:12px;min-height:0}
+.tt-live-ui .panel[data-view=orders] .ticket-body{padding:15px 20px}
+.tt-live-ui .panel[data-view=orders] .ticket-date{padding:20px 10px}
+.tt-live-ui .panel[data-view=orders] .order h2{font-size:19px;line-height:1.4}
+.tt-live-ui .panel[data-view=orders] .order-top strong{font-size:22px}
+.tt-live-ui .panel[data-view=orders] .order-status{margin:8px 0 10px;font-size:13px}
+.tt-live-ui .panel[data-view=orders] .steps{margin:10px 0 12px}
+.tt-live-ui .panel[data-view=orders] .steps span{font-size:12px}
+.tt-live-ui .panel[data-view=orders] .ticket-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:10px}
+.tt-live-ui .panel[data-view=orders] .ticket-bottom .tt-order-actions{flex:1;min-width:0;gap:12px;align-items:center}
+.tt-live-ui .panel[data-view=orders] .ticket-bottom .ticket-footer{flex:0 0 138px;display:block;margin:0;padding:0;border:0}
+.tt-live-ui .panel[data-view=orders] .ticket-bottom .ticket-identity{width:138px;min-width:0;padding:0 0 0 12px}
+.tt-live-ui .panel[data-view=orders] .ticket-bottom .ticket-barcode{height:17px}
+.tt-live-ui .panel[data-view=orders] .ticket-bottom .ticket-help{padding:6px 9px}
+@media(max-width:560px){
+  .tt-live-ui .panel[data-view=orders] .ticket-date{padding:18px 6px}
+  .tt-live-ui .panel[data-view=orders] .ticket-date small{font-size:11px;letter-spacing:0;white-space:nowrap}
+  .tt-live-ui .panel[data-view=orders] .ticket-body{padding:12px}
+  .tt-live-ui .panel[data-view=orders] .order h2{font-size:16px}
+  .tt-live-ui .panel[data-view=orders] .order-top strong{font-size:20px}
+  .tt-live-ui .panel[data-view=orders] .ticket-bottom{flex-wrap:wrap;gap:8px}
+  .tt-live-ui .panel[data-view=orders] .ticket-bottom .tt-order-actions{flex-basis:100%;gap:10px}
+  .tt-live-ui .panel[data-view=orders] .ticket-bottom .ticket-footer{margin-left:auto}
+}
 .tt-live-ui .tt-order-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.tt-live-ui .tt-cancel{flex-basis:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px dashed #ba9a7f55;padding-top:12px}.tt-live-ui .tt-cancel span,.tt-live-ui .tt-order-note{font-size:12px}.tt-live-ui .tt-cancel button{background:#fff8;border:1px solid #bd927b;border-radius:6px;font-size:12px;padding:8px;color:#92644f}
 .tt-live-ui .tt-empty{text-align:center;padding:30px 15px}.tt-live-ui .tt-empty img{width:70px;height:70px;image-rendering:pixelated}.tt-live-ui .tt-empty p{font-size:14px;line-height:1.8}.tt-live-ui .tt-empty button{font:inherit;padding:12px 22px}
 .tt-live-ui .ordPg{display:flex;justify-content:center;gap:16px;align-items:center}.tt-live-ui .ordPg button{font-size:13px;padding:9px 14px;border:1px solid #cfb29c;background:#fff7;border-radius:6px}

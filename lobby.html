@@ -1426,9 +1426,9 @@ body.artBub.bub3s .npc .bub{
 .ttf .ttfAva{background:none!important}
 </style>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=215">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=218">
-<link rel="stylesheet" href="lobby-ui/scene.css?v=218">
-<script src="lobby-ui/scene.js?v=218"></script>
+<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=219">
+<link rel="stylesheet" href="lobby-ui/scene.css?v=219">
+<script src="lobby-ui/scene.js?v=219"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
 </head>
 <body>
@@ -1662,7 +1662,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v218</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v219</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -2782,15 +2782,15 @@ function syncBadge(){
     try{ if(matchMedia('(prefers-reduced-motion: reduce)').matches) return false; }catch(e){}
     return true;
   }
-  function redraw(a){
-    if(!a||!a.frames||!a.b||!a.b.doll) return;
-    const p=a.frame||'idle';
-    if(a.frames[p]){ try{ drawDollTo(a.frames[p],a.b.doll,p); }catch(e){} }
-  }
   function blink(a){
-    if(!a||!a.b||!a.b.doll||a.b.doll._blink) return;
-    a.b.doll._blink=1; redraw(a);
-    setTimeout(function(){ delete a.b.doll._blink; redraw(a); }, 120+Math.random()*70);
+    if(!a||!a.frames||!a.b||!a.b.doll||a.b.doll._blink||a.state!=='idle'||a.moving||a.chase) return;
+    // 眨眼只畫到顯示畫布；絕不把閉眼寫進輪播用的走路影格。
+    a.b.doll._blink=1;
+    drawDollTo(a.cv,a.b.doll,'idle');
+    setTimeout(function(){
+      delete a.b.doll._blink;
+      const p=a.frame||'idle';a.frame=null;setFrame(a,p);
+    }, 120+Math.random()*70);
   }
   setInterval(function(){
     if(!canBlink()) return;
@@ -2884,7 +2884,7 @@ function makeAgent(key,b){
   a.frames={};
   POSES.forEach(p=>{
     const f=document.createElement('canvas');f.width=64;f.height=64;
-    drawDollTo(f,b.doll,p);a.frames[p]=f;
+    drawDollTo(f,{...b.doll,_blink:false},p);a.frames[p]=f;
   });
   a.frame=null; setFrame(a,'idle');
   tag.textContent=(key===myKey?'★ ':'')+(b.name||'？');
@@ -3246,7 +3246,7 @@ function sync(){
   Object.entries(bosses).forEach(([k,b])=>{
     if(agents.has(k)){
       const a=agents.get(k); a.b=b;
-      POSES.forEach(p=>drawDollTo(a.frames[p],b.doll,p));
+      POSES.forEach(p=>drawDollTo(a.frames[p],{...b.doll,_blink:false},p));
       const cur=a.frame; a.frame=null; a._sceneBottom=null; setFrame(a,cur||'idle');
       a.tag.textContent=b.name||'？';
     }else agents.set(k,makeAgent(k,b));
@@ -7502,6 +7502,6 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui-bridge.js?v=218"></script>
-<script src="lobby-ui/live.js?v=218"></script>
+<script src="lobby-ui/live.js?v=219"></script>
 </body>
 </html>

@@ -4,7 +4,9 @@
   const W=1600,H=900, bounds=[32,300,1536,873];
   // 腳底碰撞區：吧台可從兩端繞入；棚頂不當成地面牆壁。
   const solids=[
-    [382,352,1308,430], [205,0,382,334], [0,0,205,397], [1260,0,1415,384],
+    // 長邊與右側短邊組成 L 型；右側 1308–1328 留作腳底可通行的縫。
+    [382,352,1308,430], [1140,310,1308,352],
+    [205,0,382,334], [0,0,205,397], [1328,0,1415,384],
     [0,536,170,775], [210,595,290,640],
     [682,423,738,456],[814,423,870,456],[946,423,1002,456],[1078,423,1134,456]
   ];
@@ -67,17 +69,20 @@
     a._sceneBottom=(bottom||64)/64;return a._sceneBottom;
   }
   function size(y){return 164+36*Math.max(0,Math.min(1,(y*H-300)/(873-300)));}
+  // 與角色腳底使用同一套排序；到達物件前緣就必須站在物件前面。
+  const ground={counter:430,stools:456,stall:619,board:633,wolf:633,white:634,flower:800};
+  const layerDepth=y=>Math.round(y/H*1000)-1;
   function mount(world){
     const asset='img/lobby-layers-v218/';
     const layers=[
-      ['counter','fixtures.png',479,'inset(0px 270px 440px 350px)'],
-      ['stall','fixtures.png',880,'polygon(0 0,330px 0,330px 480px,190px 480px,190px 650px,330px 650px,330px 900px,0 900px)'],
-      ['board','fixtures.png',715,'inset(480px 1270px 250px 190px)'],
+      ['counter','fixtures.png',layerDepth(ground.counter),'inset(0px 270px 440px 350px)'],
+      ['stall','fixtures.png',layerDepth(ground.stall),'polygon(0 0,330px 0,330px 480px,190px 480px,190px 650px,330px 650px,330px 900px,0 900px)'],
+      ['board','fixtures.png',layerDepth(ground.board),'inset(480px 1270px 250px 190px)'],
       ['flowers','fixtures.png',1001,'inset(0px 0px 0px 1450px)'],
       ['cushions','wolf-cushions.png',1,'inset(560px 0px 0px 0px)'],
-      ['wolf','wolf-cushions.png',715,'inset(0px 0px 340px 0px)'],
-      ['purple','purple.png',480],['white','white.png',881],['flower','flower.png',889],
-      ['stools','stools.png',507],['cat','cat.png',481],['food','food.png',481]
+      ['wolf','wolf-cushions.png',layerDepth(ground.wolf),'inset(0px 0px 340px 0px)'],
+      ['purple','purple.png',layerDepth(ground.counter)],['white','white.png',layerDepth(ground.white)],['flower','flower.png',layerDepth(ground.flower)],
+      ['stools','stools.png',layerDepth(ground.stools)],['cat','cat.png',layerDepth(ground.counter)],['food','food.png',layerDepth(ground.counter)]
     ];
     for(const [id,file,z,clip] of layers){
       const img=document.createElement('img');img.className='tt-scene-layer';img.dataset.layer=id;
@@ -85,5 +90,5 @@
       img.width=W;img.height=H;img.style.zIndex=z;if(clip)img.style.clipPath=clip;world.append(img);
     }
   }
-  root.TTScene={bounds,solids,valid,nearest,clear,route,slide,target,metrics,size,mount};
+  root.TTScene={bounds,solids,valid,nearest,clear,route,slide,target,metrics,size,ground,layerDepth,mount};
 })(typeof window!=='undefined'?window:globalThis);
