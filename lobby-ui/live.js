@@ -204,7 +204,7 @@
     if(!cancelled){if(issued)controls.push('<div class="ticket-help"><span class="help-state"><i aria-hidden="true"></i>掌櫃處理中</span><p>已收到你的問題，請等候回覆。</p></div>');else controls.push('<button class="text-btn order-assist" data-order-action="issue" data-order="'+attr(id)+'">需要協助？聯絡掌櫃 ↗</button>');}
     if(o.cancelPending)controls.push('<p class="tt-order-note">取消處理中，金幣會退回你的錢包。</p>');
     else if(!done&&!cancelled&&canSelfCancel(o))controls.push('<div class="tt-cancel"><span>尚未接單，可取消並退回金幣。</span><button data-order-action="cancel" data-order="'+attr(id)+'">取消並退回金幣</button></div>');
-    if(done&&(o.type==='play'||!o.type))controls.push('<button class="secondary" data-order-action="reorder">再點一次</button>');
+    if(done&&(o.type==='play'||!o.type))controls.push('<button class="text-btn order-reorder" data-order-action="reorder">再點一次 <span aria-hidden="true">↗</span></button>');
     return '<article class="order '+(done?'is-complete':issued?'needs-help':'is-upcoming')+'"><div class="ticket-date"><small>'+(o.reserveAt?'約定日期':'訂單日期')+'</small><b>'+date+'</b><span>'+time+'</span></div><div class="ticket-body"><div class="order-top"><div><h2>'+text(o.planName||'訂單')+'</h2>'+(o.staffName?'<small>與 '+text(o.staffName)+' 一起玩</small>':'')+'</div><strong>NT$ '+Number(o.amount||0).toLocaleString()+'</strong></div><p class="order-status">'+text(status)+'</p>'+(o.couponUsed&&o.couponDisc?'<p class="tt-order-note">已使用優惠券折抵 NT$ '+text(o.couponDisc)+'</p>':'')+(o.declineReason?'<p class="tt-order-note">陪玩無法接單：'+text(o.declineReason)+'</p>':'')+steps+'<div class="tt-order-actions">'+controls.join('')+'</div><div class="ticket-footer"><span></span>'+identity(backendNumber(o))+'</div></div></article>';
   }
   renderMyOrders=function(){
@@ -220,5 +220,5 @@
     $('ordList').querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>ordPage(Number(b.dataset.page)));
   };
   // 公開的唯讀呈現介面供隔離測試驗證，無新增寫入端點。
-  window.TTLivePresentation={version:217,backendNumber,orderCard,renderMyOrders};
+  window.TTLivePresentation={version:218,backendNumber,orderCard,renderMyOrders};
 })();

@@ -1,0 +1,16 @@
+/* Claude 原試做頁的 Lilita One；只替換數字，中文及單號仍用原閱讀字體。 */
+@font-face{font-family:'Tavern Numerals';src:url('../tavern-ui/assets/fonts/LilitaOne-Regular.ttf') format('truetype');font-style:normal;font-weight:100 900;font-display:swap;unicode-range:U+0030-0039}
+.tt-live-ui .order-top strong,
+.tt-live-ui .ticket-date b,
+.tt-live-ui .wallet-balance strong,
+.tt-live-ui .package strong,
+.tt-live-ui .package p,
+.tt-live-ui .collect-no,
+.tt-live-ui .coupon-id,
+#ttWalletCount,#coinBal,
+.planBtn .pp,
+body .item-caption small,
+body .bundle .ribbon{
+  font-family:'Tavern Numerals','LINE Seed TW',Seed,'Microsoft JhengHei',sans-serif!important;
+  font-synthesis:none;
+}

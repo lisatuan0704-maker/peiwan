@@ -1426,7 +1426,10 @@ body.artBub.bub3s .npc .bub{
 .ttf .ttfAva{background:none!important}
 </style>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=215">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=215">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=218">
+<link rel="stylesheet" href="lobby-ui/scene.css?v=218">
+<script src="lobby-ui/scene.js?v=218"></script>
+<link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
@@ -1659,7 +1662,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v217</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v218</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -2287,7 +2290,8 @@ function clampIn(fl,x,y){
 function clampFloor(x,y){
   const cy=Math.min(FLOOR.y1,Math.max(FLOOR.y0,y));
   const [lo,hi]=floorXrange(cy);
-  return [Math.min(hi,Math.max(lo,x)), cy];
+  const p=[Math.min(hi,Math.max(lo,x)), cy];
+  return curMap==='hall'?TTScene.nearest([p[0]*1600,p[1]*900]).map((v,i)=>v/(i?900:1600)):p;
 }
 let myKey=new URLSearchParams(location.search).get('me');
 if(!myKey){ try{ myKey=localStorage.getItem('tt_me')||null; }catch(e){} }
@@ -2710,8 +2714,8 @@ const worldbg=document.getElementById('worldbg');
 // 虛擬世界尺寸(小人與座標都以此為基準;鏡頭在其中平移縮放)
 const WORLD={w:1600,h:900};
 const MAPS={
-  hall:{ bg:'img/lobby-artist-v214.png',
-    floor:{y0:0.52,y1:0.97,farX0:0.16,farX1:0.84,nearX0:0.04,nearX1:0.96},
+  hall:{ bg:'img/lobby-layers-v218/base.png',
+    floor:{y0:300/900,y1:0.97,farX0:0.02,farX1:0.96,nearX0:0.02,nearX1:0.96},
     door:{x:0.957,y:0.66,emo:'✦',label:'往森林小徑',to:'forest',spawn:[0.18,0.78]} },
   forest:{ bg:'img/forestbase.jpg',
     floor:{y0:0.52,y1:0.95,farX0:0.05,farX1:0.98,nearX0:0.05,nearX1:0.95},
@@ -2725,13 +2729,17 @@ CARDBASE.onload=()=>{cardbaseReady=true; if(cardOpen&&popTarget) drawFullCard(po
 function ensureCardbase(){ if(!CARDBASE.src) CARDBASE.src="img/cardbase.png"; }
 worldbg.style.width=WORLD.w+'px';worldbg.style.height=WORLD.h+'px';
 world.style.width=WORLD.w+'px';world.style.height=WORLD.h+'px';
+TTScene.mount(world);
+function actorTarget(a){
+  const map=a.slime?'forest':(a.isMe?curMap:(a.mapLoc||'hall'));
+  return map==='hall'?TTScene.target(a):[a.tx,a.ty];
+}
 // 鏡頭
 const cam={x:WORLD.w/2, y:WORLD.h/2, zoom:Math.min(hall.clientWidth/WORLD.w,hall.clientHeight/WORLD.h), tzoom:1};
 // 互動點位(相對座標,配合底圖;之後可依實際底圖微調)
 const SPOTS=[
-  {x:0.315,y:0.57,emo:'✦'},{x:0.385,y:0.57,emo:'♥'},
-  {x:0.455,y:0.57,emo:'✦'},{x:0.545,y:0.57,emo:'♥'},
-  {x:0.615,y:0.57,emo:'✦'},{x:0.685,y:0.57,emo:'♥'}
+  {x:710/1600,y:462/900,emo:'✦'},{x:842/1600,y:462/900,emo:'♥'},
+  {x:974/1600,y:462/900,emo:'✦'},{x:1106/1600,y:462/900,emo:'♥'}
 ];
 const agents=new Map();
 /* v39:大家看到同一個大廳 —— 位置同步 + 掛機亂走設定(預設關) */
@@ -2825,7 +2833,7 @@ function switchMap(to){
     const a=me();
     if(a){ const sp=MAPS[to].spawn||MAPS[to].door.spawn;
       const c=clampFloor(sp[0],sp[1]); a.x=c[0];a.y=c[1];a.tx=c[0];a.ty=c[1];
-      a.state='idle';a.timer=2;a.player=true;a.idleFor=0;a.goDoor=false; }
+      a.state='idle';a.timer=2;a.player=true;a.idleFor=0;a.goDoor=false;a._sceneGoal=null; }
     // 顯示/隱藏:酒館住民只在 hall,史萊姆只在 forest
     spotEls.forEach(e=>e.style.display=(to==='hall')?'':'none');
     document.getElementById('sign').style.display=(to==='hall')?'':'none';
@@ -2948,7 +2956,9 @@ function tick(now){
       if(vx||vy){
         keyMoved=true;
         const sp=0.09*depthNow, L=Math.hypot(vx,vy);   // 每秒移動比例(慢速,配合大角色)
-        const c=clampFloor(a.x+vx/L*sp*dt, a.y+vy/L*sp*dt);
+        const raw=[a.x+vx/L*sp*dt,a.y+vy/L*sp*dt];
+        const c=curMap==='hall'?TTScene.slide([a.x*1600,a.y*900],[raw[0]*1600,raw[1]*900]).map((v,i)=>v/(i?900:1600)):clampFloor(...raw);
+        a._sceneGoal=null;
         a.x=c[0]; a.y=c[1];
         a.state='walkKey'; a.sitting=false; a.player=true; a.idleFor=0; a.tx=a.x; a.ty=a.y;
         if(vx){const nl=vx<0; if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
@@ -2974,7 +2984,8 @@ function tick(now){
       if(a.bopT>0) a.bopT=Math.max(0,a.bopT-dt*3);
     }
     else if(a.staff){
-      const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
+      const aim=actorTarget(a);
+      const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
       if(a.state==='post'){ /* 站崗 */ }
       else if(a.state==='serving'){
         let near=null, nd=1e9;
@@ -3037,9 +3048,10 @@ function tick(now){
         const f=a.follow;
         if(f.mapLoc!==a.mapLoc){ a.mapLoc=f.mapLoc; a.x=f.x+0.04; a.y=f.y+0.01; }
         a.tx=f.x+0.034*(f.faceLeft?1:-1); a.ty=f.y+0.012;
-        const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
+        const aim=actorTarget(a);
+        const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
         // 遲滯:拉開 22px 才起步、貼近 5px 才停,避免走停高頻切換的抽搐
-        if(!a.moving && dist>22 && !f.sitting) a.moving=true;
+        if(!a.moving && (dist>22 || (a.mapLoc==='hall' && a._scenePath?.length>1)) && !f.sitting) a.moving=true;
         if(a.moving && (dist<=5 || f.sitting)) a.moving=false;
         if(a.moving){
           const sp=Math.min(150, 90+dist*0.8)*depthNow;
@@ -3048,7 +3060,8 @@ function tick(now){
         }
         a.sitting=!!f.sitting;
       }else if(a.state==='leave'){
-        const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
+        const aim=actorTarget(a);
+        const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
         if(dist<6){ a.el.remove(); agents.delete(a.key); return; }
         const sp=140*depthNow;
         a.x+=dxp/dist*sp*dt/WORLD.w; a.y+=dyp/dist*sp*dt/WORLD.h;
@@ -3062,8 +3075,9 @@ function tick(now){
       const p=posMap[a.key];
       if(p.m && p.m!==a.mapLoc){ a.mapLoc=p.m; a.x=p.x; a.y=p.y; }
       a.tx=p.x; a.ty=p.y; a.sitting=!!p.s;
-      const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
-      if(dist>8){
+      const aim=actorTarget(a);
+      const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
+      if(dist>4){
         const sp=130*depthNow;
         const step=Math.min(sp*dt, dist);   // 不過衝:一步最多走到目標,避免在目標附近來回抖
         const c=clampIn(MAPS[a.mapLoc||'hall'].floor, a.x+dxp/dist*step/WORLD.w, a.y+dyp/dist*step/WORLD.h);
@@ -3085,7 +3099,8 @@ function tick(now){
         else a.timer=2+Math.random()*4;
       }
     }else if(!keyMoved && a.state==='walk'){
-      const dxp=(a.tx-a.x)*WORLD.w, dyp=(a.ty-a.y)*WORLD.h;
+      const aim=actorTarget(a);
+      const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h;
       const dist=Math.hypot(dxp,dyp);
       const sp=(a.isMe?165:120)*depthNow;
       if(dist<6){
@@ -3094,13 +3109,16 @@ function tick(now){
         if(a.isMe && a.goDoor){ a.goDoor=false; switchMap(MAPS[curMap].door.to); }
         if(a.isMe && a.bopTarget){ bopSlime(a.bopTarget); a.bopTarget=null; }
       }else{
-        const c=clampFloor(a.x+dxp/dist*sp*dt/WORLD.w, a.y+dyp/dist*sp*dt/WORLD.h);
+        const step=Math.min(sp*dt,dist);
+        const c=clampFloor(a.x+dxp/dist*step/WORLD.w, a.y+dyp/dist*step/WORLD.h);
         a.x=c[0]; a.y=c[1];
         if(Math.abs(dxp)>12){const nl=dxp<0; if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
       }
     }
     { const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : MAPS[a.mapLoc||'hall'].floor);
-      const c=clampIn(fl,a.x,a.y); a.x=c[0]; a.y=c[1]; }
+      let c=clampIn(fl,a.x,a.y);
+      if(fl===MAPS.hall.floor)c=TTScene.nearest([c[0]*1600,c[1]*900]).map((v,i)=>v/(i?900:1600));
+      a.x=c[0]; a.y=c[1]; }
     /* v39:回報自己的位置(節流 0.25s,只在有變化時寫) */
     if(a.isMe && typeof db!=='undefined' && db && myKey){
       a._pt=(a._pt||0)+dt;
@@ -3115,8 +3133,10 @@ function tick(now){
         }catch(e){}
       }
     }
-    const depth=0.9+(a.y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)*0.5;
-    const size=Math.round((a.slime?150:120)*depth);
+    const actorMap=a.slime?'forest':(a.isMe?curMap:(a.mapLoc||'hall'));
+    const depthFloor=MAPS[actorMap].floor;
+    const depth=0.9+(a.y-depthFloor.y0)/(depthFloor.y1-depthFloor.y0)*0.5;
+    const size=Math.round(actorMap==='hall'?TTScene.size(a.y):(a.slime?150:120)*depth);
     let walking=(a.state==='walk'||a.state==='walk2'||a.state==='walkKey'||(a.staff&&(a.state==='enter'||a.state==='toDoor'||a.state==='toServe'||a.state==='toDoorBack'||a.state==='back'||a.state==='exit'||a.chase))||(a.cloak&&a.moving));
     if(a.slime) walking=(a.state==='walk');
     const tt=now/1000;
@@ -3152,7 +3172,11 @@ function tick(now){
     a.el.style.display = vis ? '' : 'none';
     if(!vis){ return; }
     a.el.style.left=(a.x*WORLD.w-size/2+(a.lungeX||0))+'px';
-    a.el.style.top=(a.y*WORLD.h-size+bob)+'px';
+    const foot=vm==='hall'?TTScene.metrics(a):1;
+    a.el.classList.toggle('tt-scene-actor',vm==='hall');
+    a.el.style.setProperty('--tt-foot',(size*foot)+'px');
+    a.cv.style.transformOrigin='50% '+(foot*100)+'%';
+    a.el.style.top=(a.y*WORLD.h-size*foot+bob)+'px';
     a.el.style.zIndex=Math.round(a.y*1000);
     a.cv.style.width=size+'px';a.cv.style.height=size+'px';
     // 紙片翻轉:flipT 在 [-1,1] 之間,過 0 的瞬間就是紙片側面(看起來被翻過去)
@@ -3223,7 +3247,7 @@ function sync(){
     if(agents.has(k)){
       const a=agents.get(k); a.b=b;
       POSES.forEach(p=>drawDollTo(a.frames[p],b.doll,p));
-      const cur=a.frame; a.frame=null; setFrame(a,cur||'idle');
+      const cur=a.frame; a.frame=null; a._sceneBottom=null; setFrame(a,cur||'idle');
       a.tag.textContent=b.name||'？';
     }else agents.set(k,makeAgent(k,b));
   });
@@ -7477,7 +7501,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui-bridge.js?v=215"></script>
-<script src="lobby-ui/live.js?v=217"></script>
+<script src="tavern-ui-bridge.js?v=218"></script>
+<script src="lobby-ui/live.js?v=218"></script>
 </body>
 </html>
