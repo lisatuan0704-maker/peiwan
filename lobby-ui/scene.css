@@ -1,7 +1,16 @@
 /* 全部圖層共用世界座標，透明處不攔截走路點擊。 */
-/* 延伸背景沿用同一組原圖，只在舞台底下放大、模糊與壓暗。 */
-#hallBackdrop{position:absolute;inset:-48px;pointer-events:none;user-select:none;filter:blur(24px) brightness(.78);background-position:center;background-repeat:no-repeat;background-size:cover;background-image:url('../img/lobby-layers-v218/food.png'),url('../img/lobby-layers-v218/cat.png'),url('../img/lobby-layers-v218/stools.png'),url('../img/lobby-layers-v218/white.png'),url('../img/lobby-layers-v218/flower.png'),url('../img/lobby-layers-v218/purple.png'),url('../img/lobby-layers-v218/wolf-cushions.png'),url('../img/lobby-layers-v218/fixtures.png'),url('../img/lobby-layers-v218/base.png')}
-body.in-forest #hallBackdrop{background-image:url('../img/forestbase.jpg')}
+/* 原圖兩側以相同比例鏡射像素，再以暗角柔化外緣。 */
+#hall{--tt-scene-image:url('../img/lobby-layers-v218/food.png'),url('../img/lobby-layers-v218/cat.png'),url('../img/lobby-layers-v218/stools.png'),url('../img/lobby-layers-v218/white.png'),url('../img/lobby-layers-v218/flower.png'),url('../img/lobby-layers-v218/purple.png'),url('../img/lobby-layers-v218/wolf-cushions.png'),url('../img/lobby-layers-v218/fixtures.png'),url('../img/lobby-layers-v218/base.png');--tt-gap-left:0px;--tt-gap-right:0px;--tt-stage-width:1600px;--tt-stage-height:900px;--tt-stage-top:0px}
+body.in-forest #hall{--tt-scene-image:url('../img/forestbase.jpg')}
+#hallBackdrop{position:absolute;inset:0;isolation:isolate;pointer-events:none;user-select:none;background-image:var(--tt-scene-image);background-position:var(--tt-gap-left) var(--tt-stage-top);background-size:var(--tt-stage-width) var(--tt-stage-height);background-repeat:no-repeat;image-rendering:pixelated}
+/* 上下留白的底景仍填滿；左右由獨立鏡射片覆蓋。 */
+#hallBackdrop::before{content:"";position:absolute;inset:-48px;background-image:var(--tt-scene-image);background-position:center;background-size:cover;background-repeat:no-repeat;filter:blur(24px) brightness(.78);z-index:-1}
+#hall.tt-extended #hallBackdrop::before{display:none}
+.tt-mirror-side{position:absolute;top:0;bottom:0;background-image:var(--tt-scene-image);background-repeat:no-repeat;background-size:var(--tt-stage-width) var(--tt-stage-height);image-rendering:pixelated;transform:scaleX(-1)}
+.tt-mirror-left{left:0;width:var(--tt-gap-left);background-position:left var(--tt-stage-top)}
+.tt-mirror-right{right:0;width:var(--tt-gap-right);background-position:right var(--tt-stage-top)}
+#hallShade{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(to right,rgba(28,16,26,.68),transparent calc(var(--tt-gap-left) + 20px),transparent calc(100% - var(--tt-gap-right) - 20px),rgba(28,16,26,.68)),radial-gradient(ellipse at center,transparent 60%,rgba(28,16,26,.22) 100%)}
+#hall.tt-extended #hallShade{opacity:1}
 #world.tt-soft-sides{-webkit-mask-image:linear-gradient(to right,transparent,#000 var(--tt-edge-fade),#000 calc(100% - var(--tt-edge-fade)),transparent);mask-image:linear-gradient(to right,transparent,#000 var(--tt-edge-fade),#000 calc(100% - var(--tt-edge-fade)),transparent)}
 .tt-scene-layer{position:absolute;left:0;top:0;width:1600px;height:900px;max-width:none;pointer-events:none;user-select:none;image-rendering:pixelated}
 body.in-forest .tt-scene-layer{display:none}

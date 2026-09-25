@@ -1427,13 +1427,13 @@ body.artBub.bub3s .npc .bub{
 </style>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=215">
 <link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=219">
-<link rel="stylesheet" href="lobby-ui/scene.css?v=221">
+<link rel="stylesheet" href="lobby-ui/scene.css?v=222">
 <script src="lobby-ui/scene.js?v=220"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
-<div id="hall"><div id="hallBackdrop" aria-hidden="true"></div><div id="world"><div id="worldbg"></div></div></div>
+<div id="hall"><div id="hallBackdrop" aria-hidden="true"><div class="tt-mirror-side tt-mirror-left"></div><div class="tt-mirror-side tt-mirror-right"></div></div><div id="world"><div id="worldbg"></div></div><div id="hallShade" aria-hidden="true"></div></div>
 <div id="vig"></div>
 <button id="gearBtn" title="設定"><svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" stroke="#6E58A6" stroke-width="1.6"/><path d="M12 2.6l1.5 2.1 2.5-.5.6 2.5 2.3 1.1-.7 2.5 1.6 2-1.6 2 .7 2.5-2.3 1.1-.6 2.5-2.5-.5L12 21.4l-1.5-2.1-2.5.5-.6-2.5-2.3-1.1.7-2.5-1.6-2 1.6-2-.7-2.5 2.3-1.1.6-2.5 2.5.5z" stroke="#9E86D6" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
 <div id="musicbox" style="display:none"><button id="sndBtn">🔈</button><input type="range" id="volSl" min="0" max="100" value="50"><span id="volN">50</span></div>
@@ -1662,7 +1662,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v221</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v222</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3238,6 +3238,12 @@ function updateCamera(dt, now){
   world.style.transform='scale('+cam.zoom+') translate('+(-camView.x)+'px,'+(-camView.y)+'px)';
   // 只在左右有留白時柔化接縫；換算成世界單位，螢幕上維持 14px。
   const softSides=vw-WORLD.w*cam.zoom>1;
+  hall.classList.toggle('tt-extended',softSides);
+  hall.style.setProperty('--tt-gap-left',Math.max(0,-camView.x*cam.zoom)+'px');
+  hall.style.setProperty('--tt-gap-right',Math.max(0,vw-(WORLD.w-camView.x)*cam.zoom)+'px');
+  hall.style.setProperty('--tt-stage-width',WORLD.w*cam.zoom+'px');
+  hall.style.setProperty('--tt-stage-height',WORLD.h*cam.zoom+'px');
+  hall.style.setProperty('--tt-stage-top',-camView.y*cam.zoom+'px');
   world.classList.toggle('tt-soft-sides',softSides);
   if(softSides)world.style.setProperty('--tt-edge-fade',(14/cam.zoom)+'px');
 }
