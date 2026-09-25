@@ -1428,7 +1428,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="tavern-ui-shell.css?v=215">
 <link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=219">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=219">
-<script src="lobby-ui/scene.js?v=219"></script>
+<script src="lobby-ui/scene.js?v=220"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
 </head>
 <body>
@@ -1662,7 +1662,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v219</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v220</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -2732,7 +2732,8 @@ world.style.width=WORLD.w+'px';world.style.height=WORLD.h+'px';
 TTScene.mount(world);
 function actorTarget(a){
   const map=a.slime?'forest':(a.isMe?curMap:(a.mapLoc||'hall'));
-  return map==='hall'?TTScene.target(a):[a.tx,a.ty];
+  if(map==='hall')return TTScene.target(a);
+  a._sceneTransit=false;return [a.tx,a.ty];
 }
 // 鏡頭
 const cam={x:WORLD.w/2, y:WORLD.h/2, zoom:Math.min(hall.clientWidth/WORLD.w,hall.clientHeight/WORLD.h), tzoom:1};
@@ -3103,7 +3104,7 @@ function tick(now){
       const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h;
       const dist=Math.hypot(dxp,dyp);
       const sp=(a.isMe?165:120)*depthNow;
-      if(dist<6){
+      if(dist<6&&!a._sceneTransit){
         a.state='idle';a.timer=2+Math.random()*6;a.idleFor=0;
         if(a.goSit){ a.sitting=true; a.goSit=false; spawnHeart(a); }
         if(a.isMe && a.goDoor){ a.goDoor=false; switchMap(MAPS[curMap].door.to); }
