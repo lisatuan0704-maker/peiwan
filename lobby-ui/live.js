@@ -220,5 +220,5 @@
     $('ordList').querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>ordPage(Number(b.dataset.page)));
   };
   // 公開的唯讀呈現介面供隔離測試驗證，無新增寫入端點。
-  window.TTLivePresentation={version:215,backendNumber,orderCard,renderMyOrders};
+  window.TTLivePresentation={version:216,backendNumber,orderCard,renderMyOrders};
 })();
