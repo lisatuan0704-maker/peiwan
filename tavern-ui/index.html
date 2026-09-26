@@ -90,7 +90,10 @@
 <link rel="stylesheet" href="名簿複選.css?v=19">
 <link rel="stylesheet" href="遊戲字體.css">
 <link rel="stylesheet" href="live-site.css?v=215"><link rel="stylesheet" href="unified-window.css?v=215"><link rel="stylesheet" href="../lobby-ui/numerals.css?v=218">
-</head>
+<style>
+/* MOMO 維持特寫比例，向右移並顯示原本被 SVG 左右邊界遮住的傘。 */
+.roster-window .cast-row .eyes[data-momo-roster]{right:0;overflow:visible}
+</style></head>
 <body data-view="roster">
 <div class="scene" aria-hidden="true"></div><div class="shade" aria-hidden="true"></div>
 <div class="draft-label">Tiny Tavern</div>
@@ -133,7 +136,7 @@ const $=s=>document.querySelector(s);let active=CAST[0],mode='book',motion=!matc
 function artwork(c,eye=false){
   const box=eye?c.eye:c.view;
   // 繪師第一版透明原圖；立繪僅收整透明留白，名簿另外顯示臉部特寫。
-  return `<svg ${eye?'class="eyes"':''} viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.id}｜${c.name}的${eye?'雙眼與嘴巴特寫':'角色立繪'}"><image href="assets/${c.id}-artist-v1.png" width="2000" height="2000"/></svg>`;
+  return `<svg ${eye?'class="eyes"':''} ${eye&&c.id==='MOMO'?'data-momo-roster="true"':''} viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.id}｜${c.name}的${eye?'雙眼與嘴巴特寫':'角色立繪'}"><image href="assets/${c.id}-artist-v1.png" width="2000" height="2000"/></svg>`;
 }
 
 $('#roster').innerHTML=CAST.map((c,i)=>`<button class="cast-row" data-cast="${c.id}" style="--accent:${c.color};--pale:${c.pale}" aria-label="認識 ${c.id}｜${c.name}"><span class="cast-watermark" aria-hidden="true">${c.id}</span><div class="identity"><div class="cast-name"><b>${c.name}</b><span>${c.id}</span></div><span class="mood-line">便箋等待更新</span></div>${artwork(c,true)}<span class="row-number">店員 0${i+1}</span><span class="row-arrow" aria-hidden="true">↗</span></button>`).join('');
