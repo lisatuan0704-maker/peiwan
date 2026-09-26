@@ -1426,7 +1426,7 @@ body.artBub.bub3s .npc .bub{
 .ttf .ttfAva{background:none!important}
 </style>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=215">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=219">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=224">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=222">
 <script src="lobby-ui/scene.js?v=220"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
@@ -1662,7 +1662,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v223</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v224</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -6221,9 +6221,12 @@ if(typeof db!=='undefined'&&db){ try{ db.ref(ROOT+'/tables').on('value',s=>{ TT_
 function tbSellable(){ const now=Date.now();
   return Object.entries(TT_TABLES).filter(([id,t])=>t&&t.active&&(!t.time||t.time>now-2*3600000)); }
 function tbMenuRefresh(){ const b=document.getElementById('tbMenuBtn'); if(!b) return;
-  const list=tbSellable(); b.style.display=list.length?'':'none';
+  const list=tbSellable(),available=list.length>0;
+  b.style.display='';b.disabled=!available;b.setAttribute('aria-disabled',String(!available));
+  const cta=b.querySelector('.tile-cta');if(cta)cta.textContent=available?'看場次 →':'尚未開放';
   const sub=document.getElementById('tbMenuSub');
-  if(sub&&list.length){ const open=list.filter(([,t])=>(t.taken||0)<(t.seats||0)).length;
+  if(sub&&!available)sub.textContent='多人同桌・一人一席';
+  if(sub&&available){ const open=list.filter(([,t])=>(t.taken||0)<(t.seats||0)).length;
     sub.textContent= open? ('開桌中 '+open+' 場・一人一席・售完為止') : '本輪席位已滿・點進來看場次'; }
   const m=document.getElementById('shopMT'); if(m&&m.style.display==='flex') renderTbList(); }
 function openTables(){ shopClose(); renderTbList(); document.getElementById('shopMT').style.display='flex'; }
@@ -7515,7 +7518,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui-bridge.js?v=223"></script>
-<script src="lobby-ui/live.js?v=219"></script>
+<script src="tavern-ui-bridge.js?v=224"></script>
+<script src="lobby-ui/live.js?v=224"></script>
 </body>
 </html>

@@ -23,6 +23,7 @@
  function isTrying(p){
   if(p.parts)return p.parts.every(isTrying);
   const r=selection[key(p)];
+  if(r?.base===0&&p.source==='cloth0'&&['back','front','eye','cloth'].includes(p.slot)&&r.slot===p.slot)return true;
   return !!r&&r.slot===p.slot&&(p.base!==undefined?r.base===p.base:r.source===p.source);
  }
  function tell(s){$('#toast').textContent=s;$('#toast').hidden=false;clearTimeout(tell.timer);tell.timer=setTimeout(()=>$('#toast').hidden=true,3500);}
@@ -47,7 +48,11 @@
   }
   if(area==='bag')for(const [native,v] of Object.entries(data.baseParts)){
    const sl=({face:'eye'}[native]||native),cat=({front:'hair',back:'hair',cloth:'cloth',eye:'eye'}[sl]);if(cat!==category)continue;
-   for(const p of v.items||[])out.push({id:'base::'+sl+'::'+p.idx,slot:sl,base:p.idx,name:p.n,category:cat,product:{owned:true,name:'原有部件'}});
+   for(const p of v.items||[]){
+    // 露亞原有髮型、眼睛、衣服與露亞組合重複，保留組合中的命名；舊穿搭編號仍相容。
+    if(p.idx===0&&['back','front','eye','cloth'].includes(sl)&&out.some(q=>q.source==='cloth0'&&q.slot===sl))continue;
+    out.push({id:'base::'+sl+'::'+p.idx,slot:sl,base:p.idx,name:p.n,category:cat,product:{owned:true,name:'原有部件'}});
+   }
   }
   return out;
  }

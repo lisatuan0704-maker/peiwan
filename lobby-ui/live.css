@@ -198,3 +198,17 @@ body.tt214 .amCat{border:0;background:none;outline:0;animation:none}body.tt214 .
 .tt-live-ui .panel[data-view=friends]{--deep-a:#775263;--deep-b:#b3818e;--signal:#d5b298}.tt-live-ui .panel[data-view=board]{--deep-a:#806344;--deep-b:#af965d;--signal:#cec18a}.tt-live-ui .panel[data-view=friends] .title-chip,.tt-live-ui .panel[data-view=board] .title-chip{background:none}.tt-live-ui .panel[data-view=friends] .sig-mail{display:block;stroke:#af809c;fill:none;opacity:.5}.tt-live-ui .panel[data-view=board] .sig-wallet{display:block;stroke:#b3a173;fill:none;opacity:.45}body.tt214 #hint2{bottom:104px;font-size:11px;background:#5d485b80;pointer-events:none}
 
 @media(max-width:680px){body.tt214 .mhSign{background:linear-gradient(120deg,#fff2e7e8,#e4d8eee8);color:#73587d;border-bottom:1px solid #fff}body.tt214 .mhSign span{color:#8b6d88}}
+
+/* v224：併桌保留入口；唱片與唱臂共用尺寸，避免卡片變寬時分離。 */
+.tt-live-ui .panel[data-view=menu] .feature-tile:disabled{background:linear-gradient(145deg,#77717a,#5e5965);border-color:#68616e;color:#f0e9f1;box-shadow:0 4px #4d46513d;cursor:not-allowed;transform:none;opacity:1}
+.tt-live-ui .panel[data-view=menu] .feature-tile:disabled h2,.tt-live-ui .panel[data-view=menu] .feature-tile:disabled p,.tt-live-ui .panel[data-view=menu] .feature-tile:disabled .tile-number{color:#e5dce8}
+.tt-live-ui .panel[data-view=menu] .feature-tile:disabled>img{filter:grayscale(.85);opacity:.65}
+.tt-live-ui .panel[data-view=menu] .feature-tile:disabled .tile-cta{background:#ffffff15;color:#f1eaf2;border-color:#c7bdcb66}
+.tt-live-ui .panel[data-view=menu] .feature-tile:disabled .vertical-word{-webkit-text-stroke-color:#d9cedb55}
+.tt-live-ui .panel[data-view=menu] .feature-tile:disabled .motion-art{opacity:.25}
+.tt-live-ui .record-player{--disc-size:142px;width:calc(var(--disc-size) + 64px);max-width:100%;margin-left:auto;margin-right:auto}
+.tt-live-ui .record{left:8px;margin-left:0;width:var(--disc-size);height:var(--disc-size)}
+.tt-live-ui .tonearm{right:15px;width:calc(var(--disc-size) * .345);height:calc(var(--disc-size) * .655)}
+@media(max-height:780px) and (min-width:701px){.tt-live-ui .record-player{--disc-size:117px}}
+@media(max-width:700px){.tt-live-ui .record-player{--disc-size:115px}}
+.tt-live-ui .playing .tonearm{rotate:18deg}

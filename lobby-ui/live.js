@@ -126,7 +126,7 @@
   const grid=document.createElement('div');grid.className='feature-grid';
   const choices=[['PLAY','mug','找陪玩一起玩','特戰英豪、語音陪聊','看名簿'],['MEMBER','coupon','加入會員','月費會員、冠名支持','看方案'],['TABLE','receipt','酒館併桌','多人同桌・一人一席','看場次']];
   buttons.forEach((b,i)=>{const [word,ic,title,sub,cta]=choices[i];b.classList.add('feature-tile','framed-motion');b.innerHTML='<span class="tile-number">0'+(i+1)+'</span><span class="vertical-word" aria-hidden="true">'+word+'</span><img src="'+asset(ic)+'" alt=""><h2>'+title+'</h2><p>'+sub+'</p><span class="tile-cta">'+cta+' →</span>'+motion(i);if(i===2)b.querySelector('p').id='tbMenuSub';grid.append(b);});
-  menu.prepend(grid);const ribbon=document.createElement('div');ribbon.className='menu-ribbon';ribbon.innerHTML='<b>今日菜單</b><span>WHAT WOULD YOU LIKE</span>';menu.prepend(ribbon);
+  menu.prepend(grid);tbMenuRefresh();const ribbon=document.createElement('div');ribbon.className='menu-ribbon';ribbon.innerHTML='<b>今日菜單</b><span>WHAT WOULD YOU LIKE</span>';menu.prepend(ribbon);
   menu.querySelector(':scope > .btns')?.remove();
   shells.shopM4.content.querySelector(':scope > .btns')?.remove();
   const tabs=$('ordTabA').parentElement;tabs.className='tabs';tabs.removeAttribute('style');
