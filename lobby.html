@@ -1429,6 +1429,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=224">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=222">
 <script src="lobby-ui/scene.js?v=229"></script>
+<script src="lobby-ui/presence.js?v=231"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
 </head>
 <body>
@@ -1662,7 +1663,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v230</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v231</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3070,25 +3071,11 @@ function tick(now){
     }
     else if(a.merch){ /* 周邊專區固定站攤 */ }
     else if(!a.isMe && posMap[a.key]){
-      /* 別人的小人:跟著他本人回報的位置走(全場同步) */
-      const p=posMap[a.key];
-      const map=p.m==='forest'?'forest':'hall';
-      let remote=clampIn(MAPS[map].floor,Number.isFinite(p.x)?p.x:.87,Number.isFinite(p.y)?p.y:.76);
-      if(map==='hall')remote=TTScene.nearest([remote[0]*WORLD.w,remote[1]*WORLD.h]).map((v,i)=>v/(i?WORLD.h:WORLD.w));
-      if(map!==a.mapLoc){ a.mapLoc=map; a.x=remote[0]; a.y=remote[1]; }
-      a.tx=remote[0]; a.ty=remote[1]; a.sitting=!!p.s;
-      const aim=actorTarget(a);
-      const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
-      if(dist>4){
-        const sp=130*depthNow;
-        const step=Math.min(sp*dt, dist);   // 不過衝:一步最多走到目標,避免在目標附近來回抖
-        const c=clampIn(MAPS[a.mapLoc||'hall'].floor, a.x+dxp/dist*step/WORLD.w, a.y+dyp/dist*step/WORLD.h);
-        a.x=c[0]; a.y=c[1]; a.state='walk2';
-        if(Math.abs(dxp)>12){const nl=dxp<0;if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
-      }else{
-        if(a.state==='walk2'){ a.state='idle'; a.timer=3; }
-        const nf=p.f===1; if(nf!==a.faceLeft){ a.faceLeft=nf; a.flipping=true; }
-      }
+      TTPresence.receive(a,posMap[a.key],now,(point,map)=>{
+        let c=clampIn(MAPS[map].floor,...point);
+        if(map==='hall')c=TTScene.nearest([c[0]*WORLD.w,c[1]*WORLD.h]).map((v,i)=>v/(i?WORLD.h:WORLD.w));
+        return c;
+      });
     }
     else if(!keyMoved && a.state==='idle'){
       a.idleFor+=dt;
@@ -3117,22 +3104,26 @@ function tick(now){
         if(Math.abs(dxp)>12){const nl=dxp<0; if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
       }
     }
-    { const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : MAPS[a.mapLoc||'hall'].floor);
+    if(a.isMe||!posMap[a.key]||a.staff||a.slime||a.cloak||a.merch){ const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : MAPS[a.mapLoc||'hall'].floor);
       let c=clampIn(fl,a.x,a.y);
       if(fl===MAPS.hall.floor)c=TTScene.nearest([c[0]*1600,c[1]*900]).map((v,i)=>v/(i?900:1600));
       a.x=c[0]; a.y=c[1]; }
-    /* v39:回報自己的位置(節流 0.25s,只在有變化時寫) */
-    if(a.isMe && typeof db!=='undefined' && db && myKey){
-      a._pt=(a._pt||0)+dt;
-      const chg=Math.abs(a.x-(a._px??-1))>0.0015||Math.abs(a.y-(a._py??-1))>0.0015
-        ||(a.faceLeft?1:0)!==a._pf||(a.sitting?1:0)!==a._ps||curMap!==a._pm;
-      if((chg && a._pt>0.25) || a._pt>50){
-        a._pt=0; a._px=a.x; a._py=a.y; a._pf=a.faceLeft?1:0; a._ps=a.sitting?1:0; a._pm=curMap;
-        if(!a._odc){ a._odc=1; try{ db.ref(ROOT+'/pos/'+myKey).onDisconnect().remove(); }catch(e){} }
-        try{ db.ref(ROOT+'/pos/'+myKey).set({x:+a.x.toFixed(4),y:+a.y.toFixed(4),f:a._pf,s:a._ps,m:curMap,t:Date.now()})
-          .then(()=>{ if(!posWriteOK){posWriteOK=true; posErr=''; syncBadge();} })
-          .catch(e=>{ if(posErr!=='寫入被拒(需開放 pos 規則)'){ posErr='寫入被拒(需開放 pos 規則)'; posWriteOK=false; syncBadge(); console.warn('pos write',e); } });
-        }catch(e){}
+    /* 位置與停止狀態一起回報；只有成功送出才記住，失敗會重試。 */
+    if(a.isMe && a.key===myKey && typeof db!=='undefined' && db && myKey){
+      const packet=TTPresence.packet(a,curMap,Date.now());
+      const changed=TTPresence.changed(packet,a._sentPosition);
+      const stopped=a._sentPosition?.w===1&&packet.w===0;
+      if(!a._positionSending&&now>=(a._positionRetryAt||0)&&
+          ((!a._sentPosition)||(changed&&(stopped||now-(a._positionSentAt||0)>=150))||now-(a._positionSentAt||0)>=5000)){
+        const ownerKey=myKey;a._positionSending=true;
+        if(!a._odc){ a._odc=1; try{ db.ref(ROOT+'/pos/'+ownerKey).onDisconnect().remove(); }catch(e){} }
+        Promise.resolve().then(()=>db.ref(ROOT+'/pos/'+ownerKey).set(packet)).then(()=>{
+          a._sentPosition=packet;a._positionSentAt=now;a._positionRetryAt=0;
+          if(!posWriteOK||posErr){posWriteOK=true;posErr='';syncBadge();}
+        }).catch(e=>{
+          a._positionRetryAt=performance.now()+1000;posWriteOK=false;
+          posErr='位置暫未送出，正在重試';syncBadge();console.warn('pos write',e);
+        }).finally(()=>{a._positionSending=false;});
       }
     }
     const actorMap=a.slime?'forest':(a.isMe?curMap:(a.mapLoc||'hall'));
@@ -3280,6 +3271,12 @@ function updateCardpop(){ /* overlay 置中,不需跟隨 */ }
 function me(){ return [...agents.values()].find(a=>a.isMe); }
 function claimMe(key){
   myKey=key; try{localStorage.setItem('tt_me',key);}catch(e){}
+  // 切換角色後只留一位本人，避免舊角色繼續覆寫新角色的位置。
+  agents.forEach((actor,k)=>{
+    const wasMe=actor.isMe;actor.isMe=k===key;
+    if(wasMe!==actor.isMe){actor._sentPosition=null;actor._remotePosition=null;actor._positionRetryAt=0;}
+    if(wasMe&&!actor.isMe){actor.state='idle';actor.tag.textContent=actor.b.name||'？';actor.tag.style.background='';}
+  });
   const a=agents.get(key);
   if(a){ a.isMe=true; a.tag.textContent='★ '+(a.b.name||'？'); a.tag.style.background='var(--berry-dk)'; camFocus=null; }
 }
@@ -4957,9 +4954,13 @@ if(DEMO_MODE){
 if(db){
   db.ref(ROOT+'/lobby').limitToLast(120).on('value',s=>{bosses=s.val()||{};sync();});
   db.ref(ROOT+'/pos').on('value',
-    s=>{ posMap=s.val()||{}; if(!posReadOK){posReadOK=true; syncBadge();}
+    s=>{ posMap=s.val()||{}; agents.forEach(a=>{if(!a.isMe&&!posMap[a.key])a._remotePosition=null;}); if(!posReadOK){posReadOK=true; syncBadge();}
       if(typeof applyPresence==='function') applyPresence(); },
     e=>{ posErr='讀取被拒(需開放 pos 規則)'; syncBadge(); console.warn('pos read',e); });
+  db.ref('.info/connected').on('value',s=>{
+    if(s.val()){const a=me();if(a){a._sentPosition=null;a._odc=0;a._positionRetryAt=0;}}
+    else{posWriteOK=false;syncBadge();}
+  });
   setTimeout(syncBadge,1500);
 }else{
   cnt.textContent='0';emptyMsg.style.display='block';
