@@ -9,8 +9,8 @@
  function sync(){if(!ready)return;for(const key of ['x','y','scale']){const value=state[selected][key];$(key+'Number').value=round(value);$(key+'Range').value=value;}}
  function render(){
   if(!ready)return;
-  for(const id of ids){const s=state[id],im=images[id];im.style.left=s.x+'%';im.style.top=s.y+'%';im.style.height=(s.baseHeight*s.scale/100)+'%';}
-  const result={format:'tiny-tavern-roster-portraits',version:1,sourceVersion:226,units:'percent-of-row',previewWidth:Number($('previewWidth').value),characters:Object.fromEntries(ids.map(id=>[id,{asset:`assets/${id}-artist-v1.png`,centerXPercent:round(state[id].x),centerYPercent:round(state[id].y),heightPercent:round(state[id].baseHeight*state[id].scale/100)}]))};
+  for(const id of ids){const s=state[id],im=images[id];im.style.left=s.x+'%';im.style.top=s.y+'%';im.style.height=(s.baseHeight*s.scale/100)+'%';im.style.transform='translate(-50%,-50%) scaleX('+(id==='MOMO'?-1:1)+')';}
+  const result={format:'tiny-tavern-roster-portraits',version:1,sourceVersion:226,units:'percent-of-row',previewWidth:Number($('previewWidth').value),characters:Object.fromEntries(ids.map(id=>[id,{asset:`assets/${id}-artist-v1.png`,centerXPercent:round(state[id].x),centerYPercent:round(state[id].y),heightPercent:round(state[id].baseHeight*state[id].scale/100),mirrorX:id==='MOMO'}]))};
   $('output').value=JSON.stringify(result,null,2);
   try{localStorage.setItem(storageKey,JSON.stringify(state));$('saved').textContent='已暫存在這個瀏覽器；重開可繼續調整。';}catch{$('saved').textContent='瀏覽器無法暫存，請複製設定保存。';}
  }
