@@ -121,20 +121,19 @@
 </main>
 <nav class="review-dock" aria-label="草樣切換"><button id="showRoster" aria-pressed="true">選陪玩</button><button id="showShop" aria-pressed="false">時裝間</button><button id="toggleMotion" class="motion-button" aria-pressed="true"><span class="motion-dot"></span><span id="motionLabel">介面動態：開</span></button></nav>
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="角色外輪廓.js"></script>
+
 <script>
 'use strict';
 const CAST=[
- {id:'KABUKI',name:'蕪',color:'#88a2c7',pale:'#e8eef8',eye:[70,335,620,230],view:[35,24,677,903],clip:'M 0 0 H 705 V 960 H 0 Z'},
- {id:'MOMO',name:'桃',color:'#d98bad',pale:'#fae8f0',eye:[110,380,690,245],view:[22,15,810,914],clip:'M 0 0 H 794 V 590 L 833 738 V 960 H 0 Z'},
- {id:'RIRA',name:'縭',color:'#aa88c8',pale:'#f0e8f8',eye:[115,360,665,250],view:[18,20,841,914],clip:'M 0 0 H 804 V 464 L 853 642 V 960 H 0 Z'}
+ {id:'KABUKI',name:'蕪',color:'#88a2c7',pale:'#e8eef8',eye:[640,825,670,350],view:[277,42,1390,1900]},
+ {id:'MOMO',name:'桃',color:'#d98bad',pale:'#fae8f0',eye:[850,900,610,375],view:[40,22,1795,1902]},
+ {id:'RIRA',name:'縭',color:'#aa88c8',pale:'#f0e8f8',eye:[675,885,635,360],view:[52,0,1866,1901]}
 ];
 const $=s=>document.querySelector(s);let active=CAST[0],mode='book',motion=!matchMedia('(prefers-reduced-motion: reduce)').matches,toastTimer;
 function artwork(c,eye=false){
-  const box=eye?c.eye:c.view,tag=c.id+'-'+eye;
-  // 原圖保持不透明，僅沿角色外輪廓裁掉白底，讓人物完整遮住背景文字。
-  const silhouette=`<clipPath id="figure-${tag}"><path d="${PORTRAIT_SHAPES[c.id]}"/></clipPath>`;
-  return `<svg ${eye?'class="eyes"':''} viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.id}｜${c.name}的${eye?'雙眼與嘴巴特寫':'角色立繪'}"><defs><clipPath id="clip-${tag}"><path d="${c.clip}"/></clipPath>${silhouette}</defs><g clip-path="url(#clip-${tag})"><g clip-path="url(#figure-${tag})"><image href="assets/${c.id}-original.png" width="1706" height="960"/></g></g></svg>`;
+  const box=eye?c.eye:c.view;
+  // 繪師第一版透明原圖；立繪僅收整透明留白，名簿另外顯示臉部特寫。
+  return `<svg ${eye?'class="eyes"':''} viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.id}｜${c.name}的${eye?'雙眼與嘴巴特寫':'角色立繪'}"><image href="assets/${c.id}-artist-v1.png" width="2000" height="2000"/></svg>`;
 }
 
 $('#roster').innerHTML=CAST.map((c,i)=>`<button class="cast-row" data-cast="${c.id}" style="--accent:${c.color};--pale:${c.pale}" aria-label="認識 ${c.id}｜${c.name}"><span class="cast-watermark" aria-hidden="true">${c.id}</span><div class="identity"><div class="cast-name"><b>${c.name}</b><span>${c.id}</span></div><span class="mood-line">便箋等待更新</span></div>${artwork(c,true)}<span class="row-number">店員 0${i+1}</span><span class="row-arrow" aria-hidden="true">↗</span></button>`).join('');
