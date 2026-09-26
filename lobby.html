@@ -6877,7 +6877,7 @@ function buildBag(){
   /* 購買通過:偵測 owned 新增 → 慶祝(客人在被掌櫃確認收款那刻看到) */
   let _ownedKeys=null;
   const iv=setInterval(function(){
-    const cur=Object.keys(window.__owned||{});
+    const cur=Object.keys(window.__owned||{}).filter(k=>k!=='dyeTickets'&&k!=='dyedHairSets');
     if(_ownedKeys===null){ _ownedKeys=cur; return; }
     const fresh=cur.filter(k=>_ownedKeys.indexOf(k)<0);
     if(fresh.length){ const nm=(window.__owned[fresh[0]]&&window.__owned[fresh[0]].name)||'新時裝';
