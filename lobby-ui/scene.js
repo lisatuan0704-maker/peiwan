@@ -5,6 +5,9 @@
   // 腳底碰撞區：吧台可從兩端繞入；棚頂不當成地面牆壁。
   // 吧台右端沿透視斜邊收合，通道繞過櫃體前緣，不能借用櫃子內部。
   const counter=[[382,352],[1140,352],[1140,310],[1180,310],[1308,430],[382,430]];
+  // 右牆與門的底緣是斜線，門板上方不是可以站立的地面。
+  const rightWall=[[1358,0],[1600,0],[1600,632],[1500,538],[1434,474],[1358,398]];
+  const polygons=[counter,rightWall];
   const solids=[
     [205,0,382,334], [0,0,205,397], [1260,0,1415,378],
     [0,536,170,775], [210,595,290,640],
@@ -13,24 +16,27 @@
   const inside=(p,r)=>p[0]>r[0]&&p[0]<r[2]&&p[1]>r[1]&&p[1]<r[3];
   const cross=(a,b)=>a[0]*b[1]-a[1]*b[0];
   const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
-  const edges=counter.map((a,i)=>[a,counter[(i+1)%counter.length]]);
-  function inCounter(p){
+  const polygonEdges=poly=>poly.map((a,i)=>[a,poly[(i+1)%poly.length]]);
+  const edges=polygons.flatMap(polygonEdges);
+  function inPolygon(p,poly){
     let hit=false;
-    for(const [a,b] of edges){
+    for(const [a,b] of polygonEdges(poly)){
       const d=sub(b,a),q=sub(p,a);
       if(Math.abs(cross(d,q))<1e-7&&p[0]>=Math.min(a[0],b[0])&&p[0]<=Math.max(a[0],b[0])&&p[1]>=Math.min(a[1],b[1])&&p[1]<=Math.max(a[1],b[1]))return false;
       if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])hit=!hit;
     }
     return hit;
   }
-  const valid=p=>p[0]>=bounds[0]&&p[0]<=bounds[2]&&p[1]>=bounds[1]&&p[1]<=bounds[3]&&!inCounter(p)&&!solids.some(r=>inside(p,r));
+  const blocked=p=>polygons.some(poly=>inPolygon(p,poly));
+  const valid=p=>p[0]>=bounds[0]&&p[0]<=bounds[2]&&p[1]>=bounds[1]&&p[1]<=bounds[3]&&!blocked(p)&&!solids.some(r=>inside(p,r));
   const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
   function nearest(p){
+    if(!p.every(Number.isFinite))return [1392,680];
     const q=[Math.max(bounds[0],Math.min(bounds[2],p[0])),Math.max(bounds[1],Math.min(bounds[3],p[1]))];
     if(valid(q))return q;
     const candidates=[];
     for(const r of solids)if(inside(q,r))candidates.push([r[0]-2,q[1]],[r[2]+2,q[1]],[q[0],r[1]-2],[q[0],r[3]+2]);
-    if(inCounter(q))for(const [a,b] of edges){
+    for(const poly of polygons)if(inPolygon(q,poly))for(const [a,b] of polygonEdges(poly)){
       const d=sub(b,a),length=Math.hypot(...d),t=Math.max(0,Math.min(1,((q[0]-a[0])*d[0]+(q[1]-a[1])*d[1])/(length*length)));
       const x=a[0]+t*d[0],y=a[1]+t*d[1];
       candidates.push([x-2*d[1]/length,y+2*d[0]/length],[x+2*d[1]/length,y-2*d[0]/length]);
@@ -47,7 +53,7 @@
       if(t>0&&t<1&&s>=0&&s<=1)cuts.push(t);
     }
     cuts.sort((x,y)=>x-y);
-    for(let i=1;i<cuts.length;i++){const t=(cuts[i-1]+cuts[i])/2;if(inCounter([a[0]+d[0]*t,a[1]+d[1]*t]))return false;}
+    for(let i=1;i<cuts.length;i++){const t=(cuts[i-1]+cuts[i])/2;if(blocked([a[0]+d[0]*t,a[1]+d[1]*t]))return false;}
     for(const r of solids){
       let low=0,high=1;
       for(let axis=0;axis<2;axis++){
@@ -59,7 +65,9 @@
     }
     return true;
   }
-  const corners=[...solids.flatMap(r=>[[r[0]-2,r[1]-2],[r[2]+2,r[1]-2],[r[0]-2,r[3]+2],[r[2]+2,r[3]+2]]),...counter.flatMap(([x,y])=>[[-2,-2],[2,-2],[-2,2],[2,2]].map(([dx,dy])=>[x+dx,y+dy]))].filter(valid);
+  const corners=[...solids.flatMap(r=>[[r[0]-2,r[1]-2],[r[2]+2,r[1]-2],[r[0]-2,r[3]+2],[r[2]+2,r[3]+2]]),...polygons.flat().flatMap(([x,y])=>[[-2,-2],[2,-2],[-2,2],[2,2]].map(([dx,dy])=>[x+dx,y+dy]))].filter(valid);
+  // 新進酒館的玩家從門前地板進場，不再在整個場景隨機生成。
+  function spawn(seed=0){const h=seed>>>0;return nearest([1392+(h%5)*20,680+((h>>>3)%3)*18]);}
   function route(from,to){
     const start=nearest(from),end=nearest(to);
     if(clear(start,end))return [end];
@@ -118,5 +126,5 @@
       img.width=W;img.height=H;img.style.zIndex=z;if(clip)img.style.clipPath=clip;world.append(img);
     }
   }
-  root.TTScene={bounds,solids,counter,valid,nearest,clear,route,slide,target,metrics,size,ground,layerDepth,mount};
+  root.TTScene={bounds,solids,counter,rightWall,valid,nearest,spawn,clear,route,slide,target,metrics,size,ground,layerDepth,mount};
 })(typeof window!=='undefined'?window:globalThis);
