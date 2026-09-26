@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=228';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=230';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -89,7 +89,38 @@
     await db.ref(ROOT+'/lobby/'+myKey+'/doll').set(d);
     a.b.doll=d;if(a.frames)POSES.forEach(p=>{if(a.frames[p])drawDollTo(a.frames[p],d,p);});a.frame=null;setFrame(a,'idle');return true;
   }
-  window.TinyTavernUI={open,close,isActive:()=>active,staff,state,group,makeDoll,wear,
+  let dyeSaving=false;
+  async function saveDye(selection,draft,requestId){
+    if(dyeSaving)throw Error('染色正在保存，請稍候');
+    const a=typeof me==='function'?me():null,key=myKey;
+    if(!a||!db||!key)throw Error('先登入自己的闆卡，再保存染髮');
+    if(!/^dye_[a-zA-Z0-9_-]{8,80}$/.test(requestId||''))throw Error('請重新開啟染髮頁面');
+    if(!draft||!/^#[0-9a-f]{6}$/i.test(draft.main)||!/^#[0-9a-f]{6}$/i.test(draft.tail))throw Error('請選擇有效的主色與髮尾色');
+    if(!selection?.front||!selection?.back)throw Error('請先選好瀏海與後髮');
+    makeDoll(selection,{},true);
+    const record={name:String(draft.name||'專屬染髮').trim().slice(0,24)||'專屬染髮',front:clone(selection.front),back:clone(selection.back),main:draft.main.toLowerCase(),tail:draft.tail.toLowerCase()};
+    const same=s=>s&&['name','front','back','main','tail'].every(k=>JSON.stringify(s[k])===JSON.stringify(record[k]));
+    const ownedRef=db.ref(ROOT+'/owned/'+key);let reason='保存未完成，請再試一次';
+    dyeSaving=true;
+    try{
+      // 先讀取目前背包；扣券與新增組合放在同一筆交易，重試同一請求不重複扣券。
+      await ownedRef.once('value');
+      const result=await ownedRef.transaction(current=>{
+        if(myKey!==key){reason='帳號已切換，請重新開啟背包';return;}
+        const own=current||{},existing=own.dyedHairSets?.[requestId];
+        if(existing){if(same(existing))return own;reason='這次染色資料已變更，請重新開啟染髮';return;}
+        if([record.front,record.back].some(r=>r.source&&r.source!=='cloth0'&&!own[r.source])){reason='這個髮型尚未取得';return;}
+        if(!Number.isSafeInteger(own.dyeTickets)||own.dyeTickets<1){reason='染髮券不足，預覽不會扣券';return;}
+        return {...own,dyeTickets:own.dyeTickets-1,dyedHairSets:{...(own.dyedHairSets||{}),[requestId]:{...record,at:Date.now()}}};
+      },undefined,false);
+      if(!result.committed)throw Error(reason);
+      const saved=result.snapshot.val();
+      if(!same(saved?.dyedHairSets?.[requestId]))throw Error('尚未確認保存結果，請重試');
+      if(myKey===key)window.__owned=saved;
+      return {id:requestId,tickets:saved.dyeTickets};
+    }finally{dyeSaving=false;}
+  }
+  window.TinyTavernUI={open,close,isActive:()=>active,staff,state,group,makeDoll,wear,saveDye,
     collection:()=>ACH_DEF.filter(a=>TT_STATS.u.includes(a.id)||!!(a.k&&(TT_STATS[a.k]||0)>=a.need)).map(a=>({id:a.id,name:a.n,description:a.d,image:AICON[a.ic],source:'酒館成就',kind:'成就紀錄'})),
     calendar:cid=>calWeekHtml(cid),booked:cid=>new Promise(resolve=>staffBookedTimes(cid,resolve)),
     draw:(cv,d)=>drawDollTo(cv,d,'idle'),

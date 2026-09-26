@@ -1,0 +1,26 @@
+/* 染髮沿用背包配色；短螢幕仍可捲到保存按鈕。 */
+#dyeDialog{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:12px;background:#24384670;overflow:auto}
+#dyeDialog[hidden]{display:none!important}
+#dyeDialog .dye-card{display:block;width:min(540px,100%);max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box;text-align:left;padding:22px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(140deg,#f7faf9,#dce9ef);box-shadow:0 12px 45px #263b4b35;color:var(--ink)}
+#dyeDialog .dialog-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#dyeDialog .eyebrow{font:10px Arial;letter-spacing:2px;color:var(--muted)}
+#dyeDialog .dialog-head button{width:32px;height:32px;flex:none;border:1px solid var(--line);border-radius:5px;background:#fff7;color:var(--ink);font-size:22px}
+#dyeDialog h2{font-size:23px;margin:12px 0 8px;color:var(--ink)}
+#dyeDialog p{font-size:13px;line-height:1.7;margin:8px 0;color:var(--muted)}
+.dye-workspace{display:grid;grid-template-columns:180px minmax(0,1fr);gap:18px;margin:16px 0}
+.dye-avatar{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:190px;background:radial-gradient(ellipse,#fff,#d6e8ed);border:1px solid var(--line);border-radius:70px 70px 9px 9px}
+.dye-avatar canvas{width:174px;height:174px;max-width:100%;object-fit:contain;image-rendering:pixelated}
+.dye-avatar span{font-size:11px;color:var(--muted);margin:0 0 12px}
+.dye-controls{display:flex;flex-direction:column;gap:12px;justify-content:center;min-width:0}
+.dye-controls label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;color:var(--ink)}
+.dye-controls label:first-child{align-items:stretch;flex-direction:column;gap:6px}
+.dye-controls input[type=text],.dye-controls input:not([type]){width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--line);border-radius:5px;background:#fff9;font:inherit;color:var(--ink)}
+.dye-controls input[type=color]{width:68px;height:35px;padding:3px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+.dye-controls .dye-gradient{justify-content:flex-start;font-size:13px}.dye-gradient input{accent-color:var(--accent);width:16px;height:16px}
+#dyeTailLabel[hidden]{display:none}
+#dyeDialog .ticket-state{padding:10px 12px;margin:12px 0;border:1px solid var(--line);background:#ffffff70;font-size:13px;color:var(--ink);border-radius:5px}
+.dye-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}.dye-actions .ghost{padding:8px 18px;border:1px solid var(--line);border-radius:5px;color:var(--ink);background:#fff6;font-size:14px}
+#dyeDialog button:disabled{opacity:.5;cursor:default}#dyeDialog #dyeError{color:#a33c49;font-size:13px}#dyeDialog .dye-note{font-size:11px;margin-bottom:0}
+.dyed-preview{display:block;width:150px;height:150px;image-rendering:pixelated;margin:auto}
+body[data-area=bag] #dyeTicket{border-style:solid;background:linear-gradient(110deg,#fff9,#badde999)}
+@media(max-width:420px){#dyeDialog .dye-card{padding:15px}#dyeDialog h2{font-size:20px}.dye-workspace{grid-template-columns:115px minmax(0,1fr);gap:12px}.dye-avatar{min-height:150px}.dye-avatar canvas{width:115px;height:115px}.dye-controls label{font-size:12px}.dye-controls input[type=color]{width:52px}.dye-controls .dye-gradient{gap:4px;font-size:12px}.dye-actions{justify-content:stretch}.dye-actions .primary{flex:1}}
