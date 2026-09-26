@@ -10,14 +10,15 @@
  function render(){
   if(!ready)return;
   for(const id of ids){const s=state[id],im=images[id];im.style.left=s.x+'%';im.style.top=s.y+'%';im.style.height=(s.baseHeight*s.scale/100)+'%';im.style.transform='translate(-50%,-50%) scaleX('+(id==='MOMO'?-1:1)+')';}
-  const result={format:'tiny-tavern-roster-portraits',version:1,sourceVersion:226,units:'percent-of-row',previewWidth:Number($('previewWidth').value),characters:Object.fromEntries(ids.map(id=>[id,{asset:`assets/${id}-artist-v1.png`,centerXPercent:round(state[id].x),centerYPercent:round(state[id].y),heightPercent:round(state[id].baseHeight*state[id].scale/100),mirrorX:id==='MOMO'}]))};
+  const result={format:'tiny-tavern-roster-portraits',version:1,sourceVersion:228,units:'percent-of-row',previewWidth:Number($('previewWidth').value),characters:Object.fromEntries(ids.map(id=>[id,{asset:`assets/${id}-artist-v1.png`,centerXPercent:round(state[id].x),centerYPercent:round(state[id].y),heightPercent:round(state[id].baseHeight*state[id].scale/100),mirrorX:id==='MOMO'}]))};
   $('output').value=JSON.stringify(result,null,2);
   try{localStorage.setItem(storageKey,JSON.stringify(state));$('saved').textContent='已暫存在這個瀏覽器；重開可繼續調整。';}catch{$('saved').textContent='瀏覽器無法暫存，請複製設定保存。';}
  }
  function valid(s){return ids.every(id=>s?.[id]&&Number.isFinite(s[id].x)&&s[id].x>=-100&&s[id].x<=200&&Number.isFinite(s[id].y)&&s[id].y>=-500&&s[id].y<=500&&Number.isFinite(s[id].scale)&&s[id].scale>=10&&s[id].scale<=300&&Number.isFinite(s[id].baseHeight)&&s[id].baseHeight>0&&s[id].baseHeight<2000);}
- $('preview').addEventListener('load',async()=>{
+ async function initialize(){
   const doc=$('preview').contentDocument;
   if(!doc?.querySelector('#roster')){$('status').textContent='預覽載入失敗，請重新整理頁面。';return;}
+  if(doc.body.dataset.portraitAdjustReady)return;doc.body.dataset.portraitAdjustReady='true';
   doc.body.classList.add('live-site','motion-off');
   doc.querySelectorAll('.draft-label,.review-dock,.scene,.shade,#sceneOpen').forEach(el=>el.remove());
   doc.querySelector('.roster-tools .section-copy').textContent='點角色那一列，再拖曳調整位置';
@@ -32,9 +33,14 @@
   await doc.fonts.ready;
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   for(const id of ids){
-   const row=rows[id],svg=row.querySelector('.eyes'),vb=svg.viewBox.baseVal,rb=row.getBoundingClientRect(),sb=svg.getBoundingClientRect();
+   const row=rows[id],svg=row.querySelector('.eyes');
+   if(svg.tagName.toLowerCase()==='img'){
+    defaults[id]={x:parseFloat(svg.style.left),y:parseFloat(svg.style.top),baseHeight:parseFloat(svg.style.height),scale:100};
+   }else{
+   const vb=svg.viewBox.baseVal,rb=row.getBoundingClientRect(),sb=svg.getBoundingClientRect();
    const scale=Math.min(sb.width/vb.width,sb.height/vb.height),left=sb.left-rb.left+(sb.width-vb.width*scale)/2-vb.x*scale,top=sb.top-rb.top+(sb.height-vb.height*scale)/2-vb.y*scale;
    defaults[id]={x:round((left+1000*scale)/rb.width*100),y:round((top+1000*scale)/rb.height*100),baseHeight:round(2000*scale/rb.height*100),scale:100};
+   }
    const im=doc.createElement('img');im.className='adjust-image';im.src=`assets/${id}-artist-v1.png`;im.alt=id+' 調整預覽';im.draggable=false;svg.replaceWith(im);images[id]=im;
    row.addEventListener('pointerdown',e=>{if(e.button!==0)return;e.preventDefault();select(id);row.setPointerCapture(e.pointerId);const r=row.getBoundingClientRect(),start={px:e.clientX,py:e.clientY,x:state[id].x,y:state[id].y};
     const move=ev=>{state[id].x=Math.max(-100,Math.min(200,start.x+(ev.clientX-start.px)/r.width*100));state[id].y=Math.max(-500,Math.min(500,start.y+(ev.clientY-start.py)/r.height*100));sync();render();};
@@ -48,7 +54,9 @@
   state=structuredClone(defaults);
   try{const saved=JSON.parse(localStorage.getItem(storageKey));if(valid(saved))state=saved;}catch{}
   ready=true;$('fields').disabled=false;$('copy').disabled=false;$('download').disabled=false;select(selected);render();
- });
+ }
+ $('preview').addEventListener('load',initialize);
+ if($('preview').contentDocument?.readyState==='complete'&&$('preview').contentDocument.querySelector('#roster'))initialize();
  document.querySelectorAll('[data-cast]').forEach(b=>b.addEventListener('click',()=>select(b.dataset.cast)));
  for(const key of ['x','y','scale'])for(const suffix of ['Range','Number'])$(key+suffix).addEventListener('input',e=>{if(!ready||e.target.value==='')return;const n=Number(e.target.value);if(!Number.isFinite(n)||n<Number(e.target.min)||n>Number(e.target.max))return;state[selected][key]=n;sync();render();});
  $('resetOne').onclick=()=>{state[selected]=structuredClone(defaults[selected]);sync();render();$('status').textContent='已還原這位角色。';};

@@ -91,8 +91,8 @@
 <link rel="stylesheet" href="遊戲字體.css">
 <link rel="stylesheet" href="live-site.css?v=215"><link rel="stylesheet" href="unified-window.css?v=215"><link rel="stylesheet" href="../lobby-ui/numerals.css?v=218">
 <style>
-/* MOMO 維持特寫比例，向右移並顯示原本被 SVG 左右邊界遮住的傘。 */
-.roster-window .cast-row .eyes[data-momo-roster]{right:0;overflow:visible}
+/* 使用者在調整頁確認的構圖，以名簿列的百分比定位原圖。 */
+.roster-window .cast-row .roster-portrait{position:absolute;width:auto!important;max-width:none;max-height:none;right:auto;pointer-events:none;user-select:none;z-index:3}
 </style></head>
 <body data-view="roster">
 <div class="scene" aria-hidden="true"></div><div class="shade" aria-hidden="true"></div>
@@ -133,7 +133,13 @@ const CAST=[
  {id:'RIRA',name:'縭',color:'#aa88c8',pale:'#f0e8f8',eye:[675,885,635,360],view:[52,0,1866,1901]}
 ];
 const $=s=>document.querySelector(s);let active=CAST[0],mode='book',motion=!matchMedia('(prefers-reduced-motion: reduce)').matches,toastTimer;
+const ROSTER_PORTRAITS={
+ KABUKI:{x:69,y:78.8,height:603.251,mirrorX:false},
+ MOMO:{x:67.9,y:32.7,height:563.034,mirrorX:true},
+ RIRA:{x:65.459,y:36.5,height:565.167,mirrorX:false}
+};
 function artwork(c,eye=false){
+  if(eye){const p=ROSTER_PORTRAITS[c.id];return `<img class="eyes roster-portrait" src="assets/${c.id}-artist-v1.png" alt="${c.id}｜${c.name}的名簿立繪" draggable="false" style="left:${p.x}%;top:${p.y}%;height:${p.height}%;transform:translate(-50%,-50%) scaleX(${p.mirrorX?-1:1})">`;}
   const box=eye?c.eye:c.view;
   // 繪師第一版透明原圖；立繪僅收整透明留白，名簿另外顯示臉部特寫。
   return `<svg ${eye?'class="eyes"':''} ${eye&&c.id==='MOMO'?'data-momo-roster="true"':''} viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.id}｜${c.name}的${eye?'雙眼與嘴巴特寫':'角色立繪'}"><image href="assets/${c.id}-artist-v1.png" width="2000" height="2000"/></svg>`;
