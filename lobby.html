@@ -15,18 +15,18 @@
 <meta property="og:site_name" content="Tiny Tavern 小小酒館">
 <meta property="og:title" content="酒館大廳｜Tiny Tavern">
 <meta property="og:description" content="闆闆們都在這裡 ✦ 進來看看今天誰在酒館">
-<meta property="og:image" content="https://tinytavern.tw/og-cover.png">
+<meta property="og:image" content="https://tinytavern.tw/og-lobby.png">
 <meta property="og:url" content="https://tinytavern.tw/lobby.html">
 <meta property="og:type" content="website">
 <meta name="description" content="推開酒館的門,看看今天誰在裡面 ✦ 像素風虛擬角色陪玩小酒館">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="酒館大廳｜Tiny Tavern 小小酒館">
 <meta name="twitter:description" content="推開酒館的門,看看今天誰在裡面 ✦ 像素風虛擬角色陪玩小酒館">
-<meta name="twitter:image" content="https://tinytavern.tw/og-cover.png">
+<meta name="twitter:image" content="https://tinytavern.tw/og-lobby.png">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="fonts/lineseed.css" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Huninn&family=Press+Start+2P&family=Luckiest+Guy&display=swap" rel="stylesheet">
+<link href="tavern-ui/assets/fonts/lineseed.css" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Huninn&family=Press+Start+2P&family=Luckiest+Guy&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
@@ -1663,7 +1663,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v232</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v233</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -2347,6 +2347,8 @@ window.ttFrame=ttFrame;
 function publishProfile(){
   try{
     if(typeof db==='undefined'||!db||!myKey) return;
+    if(window.__hasCard===null){ setTimeout(publishProfile,2000); return; }
+    if(window.__hasCard!==true) return;   /* v233:沒有闆卡就不寫,避免幽靈角色 */
     const pub={};
     try{ const vi=window.__vipInfo&&window.__vipInfo(); if(vi&&vi.lv) pub.vip=vi.lv; }catch(e){}
     try{ if(typeof TT_STATS==='object'&&Array.isArray(TT_STATS.u)&&TT_STATS.u.length) pub.ach=TT_STATS.u.slice(0,20); }catch(e){}
@@ -2806,14 +2808,18 @@ function syncBadge(){
 const doorEl=document.createElement('div');doorEl.className='door';
 doorEl.innerHTML='<div id="doorEmo"></div><div class="dl" id="doorLbl"></div>';
 world.appendChild(doorEl);
+/* v233:開店前先關閉森林小徑(程式碼保留,改成 true 就會回來) */
+const FOREST_ON=false;
 function layoutDoor(){
   const d=MAPS[curMap].door;
+  doorEl.style.display=(FOREST_ON||curMap!=='hall')?'':'none';
   doorEl.style.left=(d.x*WORLD.w-24)+'px';
   doorEl.style.top=(d.y*WORLD.h-40)+'px';
   document.getElementById('doorEmo').textContent=d.emo;
   document.getElementById('doorLbl').textContent=d.label;
 }
 doorEl.onclick=(ev)=>{ev.stopPropagation();
+  if(!FOREST_ON&&curMap==='hall') return;
   const a=me(); if(!a) return;
   const d=MAPS[curMap].door;
   a.tx=Math.min(FLOOR.y1,d.x); // 走向門
@@ -2822,6 +2828,7 @@ doorEl.onclick=(ev)=>{ev.stopPropagation();
 };
 let switching=false;
 function switchMap(to){
+  if(to==='forest'&&!FOREST_ON) return;
   if(switching) return; switching=true;
   const fade=document.getElementById('fade');
   fade.classList.add('on');
@@ -2876,7 +2883,7 @@ function makeAgent(key,b){
   const a={key,b,el,cv,tag,
     x:0.5, y:FLOOR.y0+0.04+(((h>>5)%1000)/1000)*(FLOOR.y1-FLOOR.y0-0.06),
     tx:0,ty:0,state:'idle',timer:1.5+(h%50)/10,seed:h%10,
-    isMe:(key===myKey),idleFor:0,sitting:false,
+    myKey:key, isMe:(key===myKey),idleFor:0,sitting:false,
     sh:sh, faceLeft:((h>>3)%2===1), flipT:1};
   if(a.isMe){ el.style.filter='drop-shadow(0 0 0 #fff)'; }
   { const c=TTScene.spawn(h); a.x=c[0]/WORLD.w; a.y=c[1]/WORLD.h; a.mapLoc='hall'; }
@@ -6699,6 +6706,27 @@ document.addEventListener('keydown',e=>{
 (function(){
   const h=document.getElementById('hint2'); if(!h) return;
   if(!COARSE) h.textContent='WASD / 方向鍵移動 · 空白鍵與物件互動(門/店貓/布告欄)· 點小人看闆卡';
+})();
+
+/* ================= v233:幽靈角色防護 =================
+   本機記得的角色(tt_me)如果在資料庫已經不存在(被掌櫃刪除/開店清空),
+   就清掉本機記憶、回到訪客狀態,讓客人重新做闆卡;不再替不存在的角色寫資料。
+   剛做完闆卡(網址帶 ?me=)時多等幾秒再判斷,避免資料還沒寫進去就誤判。 */
+window.__hasCard=myKey?null:false;
+(function(){
+  if(!myKey||typeof db==='undefined'||!db) return;
+  const fromUrl=new URLSearchParams(location.search).get('me')===myKey;
+  let tries=0;
+  function chk(){
+    db.ref(ROOT+'/lobby/'+myKey+'/name').once('value').then(function(s){
+      if(s.val()!=null && s.val()!==''){ window.__hasCard=true; return; }
+      if(fromUrl && ++tries<4){ setTimeout(chk,2500); return; }
+      window.__hasCard=false;
+      try{ localStorage.removeItem('tt_me'); localStorage.removeItem('tt_orders'); }catch(e){}
+      location.replace(location.pathname);
+    }).catch(function(){});
+  }
+  chk();
 })();
 
 /* ================= v43.2:帳號回報(綁定的 DC + 角色連結 → 掌櫃後台可見) ================= */
