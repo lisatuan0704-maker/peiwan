@@ -42,7 +42,7 @@ function restoreAccount(dcid){
     _db.ref(ROOT+'/accounts/'+dcid).once('value').then(s=>{
       const a=s.val();
       if(a&&a.myKey){
-        _db.ref(ROOT+'/lobby/'+a.myKey).once('value').then(cs=>{
+        _db.ref(ROOT+'/lobby/'+a.myKey+'/name').once('value').then(cs=>{   /* v237:有名字才算真的闆卡 */
           if(cs.val()){ try{ localStorage.setItem('tt_me',a.myKey); }catch(e){} res(true); }
           else res(false);
         }).catch(()=>res(false));
