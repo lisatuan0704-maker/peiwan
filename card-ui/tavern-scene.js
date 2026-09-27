@@ -25,7 +25,11 @@
     cut(g,'stools',676,365,470,90,177,374,310,60);
     ['white','purple','flower'].forEach((key,i)=>{shadow(g,118+i*142,322,34,7);companion(g,key,118+i*142,320,130);});
     cut(g,'cat',1081,228,90,96,490,267,65,69);
-    if(doll){shadow(g,294,665,78,14);g.drawImage(doll,102,322,384,384);}
+    if(doll){
+      const px=doll.getContext('2d').getImageData(0,0,64,64).data;let foot=63;
+      while(foot>0&&!Array.from({length:64},(_,i)=>px[(foot*64+i)*4+3]).some(a=>a>80))foot--;
+      shadow(g,294,322+(foot+1)*6,78,10);g.drawImage(doll,102,322,384,384);
+    }
     cut(g,'fixtures',1510,695,90,205,520,584,80,182);
     g.restore();
   }
