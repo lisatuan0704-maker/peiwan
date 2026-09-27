@@ -10,7 +10,7 @@
  function render(){
   if(!ready)return;
   for(const id of ids){const s=state[id],im=images[id];im.style.left=s.x+'%';im.style.top=s.y+'%';im.style.height=(s.baseHeight*s.scale/100)+'%';im.style.transform='translate(-50%,-50%) scaleX('+(id==='MOMO'?-1:1)+')';}
-  const result={format:'tiny-tavern-roster-portraits',version:1,sourceVersion:228,units:'percent-of-row',previewWidth:Number($('previewWidth').value),characters:Object.fromEntries(ids.map(id=>[id,{asset:`assets/${id}-artist-v1.png`,centerXPercent:round(state[id].x),centerYPercent:round(state[id].y),heightPercent:round(state[id].baseHeight*state[id].scale/100),mirrorX:id==='MOMO'}]))};
+  const result={format:'tiny-tavern-roster-portraits',version:1,sourceVersion:232,units:'percent-of-row',previewWidth:Number($('previewWidth').value),characters:Object.fromEntries(ids.map(id=>[id,{asset:`assets/${id}-artist-v2.png`,centerXPercent:round(state[id].x),centerYPercent:round(state[id].y),heightPercent:round(state[id].baseHeight*state[id].scale/100),mirrorX:id==='MOMO'}]))};
   $('output').value=JSON.stringify(result,null,2);
   try{localStorage.setItem(storageKey,JSON.stringify(state));$('saved').textContent='已暫存在這個瀏覽器；重開可繼續調整。';}catch{$('saved').textContent='瀏覽器無法暫存，請複製設定保存。';}
  }
@@ -41,7 +41,7 @@
    const scale=Math.min(sb.width/vb.width,sb.height/vb.height),left=sb.left-rb.left+(sb.width-vb.width*scale)/2-vb.x*scale,top=sb.top-rb.top+(sb.height-vb.height*scale)/2-vb.y*scale;
    defaults[id]={x:round((left+1000*scale)/rb.width*100),y:round((top+1000*scale)/rb.height*100),baseHeight:round(2000*scale/rb.height*100),scale:100};
    }
-   const im=doc.createElement('img');im.className='adjust-image';im.src=`assets/${id}-artist-v1.png`;im.alt=id+' 調整預覽';im.draggable=false;svg.replaceWith(im);images[id]=im;
+   const im=doc.createElement('img');im.className='adjust-image';im.src=`assets/${id}-artist-v2.png`;im.alt=id+' 調整預覽';im.draggable=false;svg.replaceWith(im);images[id]=im;
    row.addEventListener('pointerdown',e=>{if(e.button!==0)return;e.preventDefault();select(id);row.setPointerCapture(e.pointerId);const r=row.getBoundingClientRect(),start={px:e.clientX,py:e.clientY,x:state[id].x,y:state[id].y};
     const move=ev=>{state[id].x=Math.max(-100,Math.min(200,start.x+(ev.clientX-start.px)/r.width*100));state[id].y=Math.max(-500,Math.min(500,start.y+(ev.clientY-start.py)/r.height*100));sync();render();};
     const end=()=>{row.removeEventListener('pointermove',move);row.removeEventListener('pointerup',end);row.removeEventListener('pointercancel',end);row.removeEventListener('lostpointercapture',end);};
