@@ -15,4 +15,4 @@
 @media(max-width:600px){#dcGate{padding:14px!important}#dcGate .dgCard{padding:0 23px 22px!important;max-height:calc(100dvh - 28px)}#dcGate .tavern-welcome-art{width:calc(100% + 46px);margin:0 -23px 22px}#dcGate h1{font-size:22px}#pgResult{padding:24px 12px}#pgResult .dlrow{gap:10px}#pgResult .dlrow .btn{font-size:13px}}
 @media(prefers-reduced-motion:reduce){#pgResult .cardFly.in{animation:none}}
 
-#pgResult .revealBox{max-width:980px}#pgResult #cardOut{width:100%;height:auto;aspect-ratio:4/3}
+#pgResult .revealBox{max-width:720px}#pgResult #cardOut{width:100%;height:auto;aspect-ratio:1280/1410}

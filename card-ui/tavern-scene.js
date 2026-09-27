@@ -17,7 +17,7 @@
     let left=64,top=64,right=-1,bottom=-1;
     for(let y=0;y<64;y++)for(let x=0;x<64;x++)if(px[(y*64+x)*4+3]>0){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}
     if(bottom<0)return;
-    const sw=right-left+1,sh=bottom-top+1,h=108,w=sw/sh*h,cx=800,foot=618;
+    const sw=right-left+1,sh=bottom-top+1,h=108,w=sw/sh*h,cx=1465,foot=601;
     g.fillStyle='#4d2c3338';g.beginPath();g.ellipse(cx,foot-2,w*.36,7,0,0,Math.PI*2);g.fill();
     g.drawImage(doll,left,top,sw,sh,cx-w/2,foot-h,w,h);
   }
@@ -41,8 +41,10 @@
     }if(line)g.fillText(line,x,y+row*(size+13));
   }
   function render(canvas,info,doll){
-    const g=canvas.getContext('2d');g.clearRect(0,0,1280,960);g.fillStyle='#60433b';g.fillRect(0,0,1280,960);
-    scene(g,16,16,1248,702,doll);
+    const g=canvas.getContext('2d');g.clearRect(0,0,1280,1410);g.fillStyle='#60433b';g.fillRect(0,0,1280,1410);
+    // 依指定截圖取景：右側門口與粉紅地毯，原圖等比例裁框。
+    scene(g,16,16,1248,1152,doll,[1340,396,260,240]);
+    g.save();g.translate(0,450);
     g.fillStyle='#fbf2e4';g.fillRect(16,718,1248,226);
     fit(g,'TINY TAVERN / 酒館闆卡',48,758,370,18,18,'#a18771');
     fit(g,info.name,48,813,370,44,28);
@@ -53,9 +55,10 @@
     g.fillStyle='#d8c4ac';g.fillRect(48,874,1184,1);
     fit(g,info.tags.map(t=>'#'+t).join('  '),48,914,460,22,17,'#8b7260');
     if(info.quote)fit(g,'「'+info.quote+'」',540,914,692,25,20,'#725b4b');
+    g.restore();
   }
   function welcome(canvas){canvas.width=1000;canvas.height=563;scene(canvas.getContext('2d'),0,0,1000,563,null);}
-  function avatar(canvas,doll){scene(canvas.getContext('2d'),0,0,512,512,doll,[650,418,300,300]);}
+  function avatar(canvas,doll){scene(canvas.getContext('2d'),0,0,512,512,doll,[1350,396,240,240]);}
   function mount(){document.querySelectorAll('canvas[data-tavern-welcome]').forEach(canvas=>{
     ready().then(()=>welcome(canvas)).catch(()=>{canvas.classList.add('scene-unavailable');});
   });}

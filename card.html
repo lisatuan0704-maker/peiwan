@@ -152,8 +152,8 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
 @media (pointer:coarse) and (orientation:landscape){ #rotHint{display:flex} }
 </style>
 <link rel="stylesheet" href="card-ui/workshop.css?v=238">
-<link rel="stylesheet" href="card-ui/tavern-scene.css?v=239">
-<script src="card-ui/tavern-scene.js?v=239" defer></script>
+<link rel="stylesheet" href="card-ui/tavern-scene.css?v=240">
+<script src="card-ui/tavern-scene.js?v=240" defer></script>
 </head>
 <body>
 <div id="notice" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
@@ -228,7 +228,7 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
     <div class="revealBox">
       <div class="result-title"><span class="eyebrow">03 / YOUR TAVERN CARD</span><h2>歡迎，酒館的新朋友。</h2><p>收好闆卡，我們大廳見。</p></div>
       <div class="cardFly" id="cardFly">
-        <canvas id="cardOut" width="1280" height="960"></canvas>
+        <canvas id="cardOut" width="1280" height="1410"></canvas>
         <div class="stamp" id="stampEl">歡迎加入<br>Tiny Tavern ✦</div>
       </div>
       <div class="dlrow" id="dlRow">
@@ -579,7 +579,7 @@ for(let d=1;d<=31;d++) fBd.innerHTML+=`<option value="${d}">${d} 日</option>`;
 
 /* ---- 生成闆卡 ---- */
 function roundRectPx(g,x,y,w,h,c){P(g,x+2,y,w-4,h,c);P(g,x,y+2,w,h-4,c);P(g,x+1,y+1,w-2,h-2,c);}
-const CW=1280, CH=960;
+const CW=1280, CH=1410;
 
 async function generate(){
   const dcid=fDcid.value.trim(), name=fName.value.trim();
@@ -707,7 +707,7 @@ document.addEventListener('pointerdown',function(e){
   const up=()=>{ t.style.transform=''; document.removeEventListener('pointerup',up); }; document.addEventListener('pointerup',up);
 },{passive:true});
 </script>
-<div style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:rgba(110,88,166,.45)">v239</div>
+<div style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:rgba(110,88,166,.45)">v240</div>
 <script src="card-ui/workshop.js?v=233"></script>
 </body>
 </html>
