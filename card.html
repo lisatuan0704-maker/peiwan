@@ -19,7 +19,7 @@
 <meta name="twitter:image" content="https://tinytavern.tw/og-cover.png">
 
 <title>闆卡工房｜Tiny Tavern 小小酒館</title>
-<link href="fonts/lineseed.css" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Huninn&family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="tavern-ui/assets/fonts/lineseed.css" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Huninn&family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
@@ -151,69 +151,80 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
 #rotHint small{font-size:12px;color:#8E7AB0}
 @media (pointer:coarse) and (orientation:landscape){ #rotHint{display:flex} }
 </style>
+<link rel="stylesheet" href="card-ui/workshop.css?v=233">
 </head>
 <body>
-<div id="rotHint"><div class="ph"></div><p>把手機轉直,再開始捏你的闆卡</p><small>闆卡工房用直式畫面體驗最佳</small></div>
-<!-- 進站公告 -->
-<div id="notice">
-  <div class="card">
-    <h2>歡迎光臨 Tiny Tavern——進門前，請聽掌櫃一言</h2>
-    <p>你即將製作的「闆卡」十分重要——<br>之後的活動及在此世界，將統一使用此形象活動。</p>
-    <p class="sub">本店保障各位老闆們及陪玩的隱私，<br>請放心，並享受在本店的時光。</p>
-    <button class="btn full" onclick="notice.style.display='none'">我明白了，開始捏角 ✦</button>
+<div id="notice" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="card welcome-card">
+    <span class="eyebrow">A LITTLE WELCOME / 入店邀請</span>
+    <div class="welcome-mark" aria-hidden="true">T<span>T</span></div>
+    <h2 id="welcomeTitle">在酒館，留一個位置給你。</h2>
+    <p>選個喜歡的模樣，留下想被叫的名字。<br>你的第一張闆卡，就從這裡開始。</p>
+    <p class="sub">闆卡會成為你在酒館活動時的形象。<br>完成後，也能到大廳的時裝間換裝。</p>
+    <button class="btn full" id="welcomeStart" onclick="notice.style.display='none';document.getElementById('studioTitle').focus()">開始製作 <span aria-hidden="true">→</span></button>
+    <span class="welcome-sign">掌櫃，留給初次來訪的你</span>
   </div>
 </div>
 
 <div class="wrap">
-  <header>
-    <h1>Tiny Tavern・闆卡工房</h1>
-    <p>TINY TAVERN · 捏出你在這個世界的樣子</p>
+  <header class="workshop-header">
+    <div class="topline"><a href="index.html" class="brand">TINY TAVERN <span>小小酒館</span></a><a class="back-link" href="lobby.html">返回酒館 <span aria-hidden="true">↗</span></a></div>
+    <span class="header-ghost" aria-hidden="true">ATELIER</span>
+    <div class="header-copy"><span class="eyebrow">YOUR FIRST TAVERN CARD / 初次見面</span><h1>闆卡工房</h1><p>把喜歡的樣子，帶進酒館裡。</p></div>
+    <div class="header-note">一個名字，一個模樣。<br>從今天起，這裡也有你的位置。</div>
   </header>
 
-  <!-- 第一步:捏角+填資料 -->
+  <nav class="workshop-steps" aria-label="製作流程">
+    <a href="#studioTitle"><b>01</b><span>挑選模樣<small>DRESS UP</small></span></a>
+    <a href="#detailsTitle"><b>02</b><span>留下名字<small>INTRODUCE YOURSELF</small></span></a>
+    <a href="#genBtn"><b>03</b><span>領取闆卡<small>COME ON IN</small></span></a>
+  </nav>
   <div id="pgMake">
     <div class="cols">
-      <div class="card">
-        <h2>① 捏你的角色</h2>
-        <canvas id="dollView" width="64" height="64" style="width:256px;height:256px"></canvas>
-        <div class="ptabs" id="ptabs"></div>
-        <div class="opts" id="opts"></div>
-        <div id="swArea"></div>
-        <button class="btn lav" style="padding:8px 14px;font-size:13px;letter-spacing:1px;margin-top:12px;display:block" onclick="randomDoll()">隨機混搭</button>
-        <p class="hint">部件為暫行版，正式繪師部件上線後可重捏。</p>
-      </div>
-
-      <div>
-        <div class="card">
-          <h2>② 你的資訊</h2>
-          <label>Discord ID（點單時用的那個，對帳身分用）</label>
-          <input id="fDcid" placeholder="例：boss#1234 或 @boss123">
-          <label>顯示名字（想被怎麼稱呼）</label>
-          <input id="fName" maxlength="10" placeholder="例：阿明">
-          <p class="hint" style="margin:6px 0 0;font-size:12px;color:#A5798D">此暱稱是你在店裡活動的形象,也是冒險者(陪玩)稱呼你的名字。</p>
-          <p class="hint" style="margin:3px 0 2px;font-size:11.5px;color:#C2537D">暱稱請保持乾淨:不可使用色情、擦邊或其他不雅字詞,違規暱稱掌櫃會要求更改。</p>
-          <p class="hint" style="margin:10px 0 2px;font-size:12px;color:#A5798D">生日只填月/日,會印在你的闆卡上讓大家幫你慶生;不需要年份。</p>
-          <div class="grid2">
-            <div><label>生日・月</label>
-              <select id="fBm"></select></div>
-            <div><label>生日・日</label>
-              <select id="fBd"></select></div>
-          </div>
-          <label>喜歡玩的遊戲</label>
-          <input id="fGames" maxlength="24" placeholder="例：VALORANT / LOL / STEAM小遊戲">
-          <label>你的標籤（最多選 5 個）</label>
-          <div class="tags" id="tagBox"></div>
-          <label>一段話（給大家的自介，20 字內）</label>
-          <input id="fQuote" maxlength="20" placeholder="例：請多多指教~ ٩(ˊᗜˋ*)و">
+      <section class="card studio">
+        <div class="section-heading"><div><span class="eyebrow">01 / FITTING ROOM</span><h2 id="studioTitle" tabindex="-1">今天的你</h2></div><button class="shuffle" onclick="randomDoll()">隨機混搭 <span aria-hidden="true">↻</span></button></div>
+        <div class="fitting-stage">
+          <span class="stage-label">MY TAVERN LOOK</span><span class="stage-letter" aria-hidden="true">T</span>
+          <div class="stage-arch"></div><div class="stage-floor"></div>
+          <canvas id="dollView" width="64" height="64" aria-label="目前角色造型預覽"></canvas>
+          <div class="stage-caption"><strong id="previewName">初次見面的你</strong><span>即時試穿 · 選一個喜歡的模樣</span></div>
         </div>
-        <button class="btn full" id="genBtn" onclick="generate()">生成我的闆卡 ✦</button>
-      </div>
+        <div class="customize-heading"><span>搭配細節</span><span id="partName">選擇部件</span></div>
+        <div class="ptabs" id="ptabs" aria-label="造型部位"></div>
+        <div class="opts" id="opts" aria-label="可選造型"></div>
+        <div id="swArea"></div>
+        <p class="hint studio-footnote">完成闆卡後，還能到酒館的時裝間換搭配。</p>
+      </section>
+
+      <section class="card registration">
+        <div class="section-heading"><div><span class="eyebrow">02 / GUEST REGISTER</span><h2 id="detailsTitle" tabindex="-1">怎麼稱呼你？</h2></div><span class="register-seal" aria-hidden="true">TAVERN<br>GUEST</span></div>
+        <p class="section-intro">留個名字，讓每次相遇都有熟悉的開場。</p>
+        <div class="identity-fields">
+          <label for="fName">酒館裡的名字 <small>必填 · 10 字內</small></label>
+          <input id="fName" maxlength="10" placeholder="想讓大家怎麼叫你？" autocomplete="nickname" aria-describedby="nameHint">
+          <p class="hint" id="nameHint">這也是陪玩稱呼你的名字，請避免不雅或色情字詞。</p>
+          <label for="fDcid">Discord ID <small>必填</small></label>
+          <input id="fDcid" placeholder="例：@boss123" autocomplete="off" spellcheck="false" aria-describedby="discordHint">
+          <p class="hint" id="discordHint">填寫點單時使用的 Discord ID，方便掌櫃核對身分。</p>
+        </div>
+        <div class="form-divider"><span>再多認識你一點</span><small>A LITTLE ABOUT YOU</small></div>
+        <div class="birthday-row"><div><label for="fBm">生日</label><p class="hint">只記月日，不問年份。</p></div><div class="grid2"><select id="fBm" aria-label="生日月份"></select><select id="fBd" aria-label="生日日期"></select></div></div>
+        <label for="fGames">喜歡玩的遊戲</label>
+        <input id="fGames" maxlength="24" placeholder="例：VALORANT、LOL、Steam 小遊戲">
+        <div class="label-row"><label id="tagLabel">用幾個標籤介紹自己</label><span id="tagCount" aria-live="polite">0 / 5</span></div>
+        <div class="tags" id="tagBox" role="group" aria-labelledby="tagLabel"></div>
+        <label for="fQuote">留一句話 <small>20 字內</small></label>
+        <input id="fQuote" maxlength="20" placeholder="例：慢熟，但揪遊戲一定到。">
+        <div class="finish-area"><div class="finish-copy"><b>03</b><span>準備好認識大家了嗎？<small>完成後可保存闆卡、下載大頭貼。</small></span></div><button class="btn full" id="genBtn" onclick="generate()">完成我的闆卡 <span aria-hidden="true">→</span></button></div>
+      </section>
     </div>
   </div>
+  <footer class="workshop-footer"><span>TINY TAVERN · 每個模樣，都有自己的故事。</span><span>EST. WITH A LITTLE MAGIC</span></footer>
 
   <!-- 第二步:闆卡亮相舞台 -->
   <div id="pgResult">
     <div class="revealBox">
+      <div class="result-title"><span class="eyebrow">03 / YOUR TAVERN CARD</span><h2>歡迎，酒館的新朋友。</h2><p>收好闆卡，我們大廳見。</p></div>
       <div class="cardFly" id="cardFly">
         <canvas id="cardOut" width="1280" height="800"></canvas>
         <div class="stamp" id="stampEl">歡迎加入<br>Tiny Tavern ✦</div>
@@ -463,14 +474,15 @@ let curCat=0;
 const view=document.getElementById('dollView').getContext('2d');
 
 function renderTabs(){
-  ptabs.innerHTML = CATS.map((c,i)=>`<button class="${i===curCat?'on':''}" onclick="setCat(${i})">${c.name}</button>`).join('');
+  ptabs.innerHTML = CATS.map((c,i)=>`<button type="button" aria-pressed="${i===curCat}" class="${i===curCat?'on':''}" onclick="setCat(${i})">${c.name}</button>`).join('');
 }
 function setCat(i){curCat=i;renderTabs();renderOpts();}
 function renderOpts(){
   const cat=CATS[curCat];
   opts.innerHTML='';
   cat.list.forEach((o,i)=>{
-    const d=document.createElement('div');
+    const d=document.createElement('button');
+    d.type='button';d.setAttribute('aria-label',o.n||cat.name+' '+(i+1));d.setAttribute('aria-pressed',String(sel[cat.key]===i));d.title=o.n||cat.name+' '+(i+1);
     d.className='opt'+(sel[cat.key]===i?' on':'');
     const cv=document.createElement('canvas');cv.width=64;cv.height=64;cv.style.width='44px';cv.style.height='44px';
     const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
@@ -515,13 +527,13 @@ function renderSwatches(){
       +'<span id="hairCur" style="width:22px;height:22px;border-radius:6px;border:2px solid #B99BC9;display:inline-block;background:'+(curHex||'#fff')+'"></span>'
     +'</div>'
     +'<div class="swatches">'+
-    HAIRS.map((h,i)=>`<div class="sw ${(hairTgt==='main'&&!sel.hairHex&&sel.hair===i)?'on':''}" style="background:${h[0]}" onclick="hairSwatch(${i})"></div>`).join('')+
+    HAIRS.map((h,i)=>`<button type="button" aria-label="髮色 ${i+1}" class="sw ${(hairTgt==='main'&&!sel.hairHex&&sel.hair===i)?'on':''}" style="background:${h[0]}" onclick="hairSwatch(${i})"></button>`).join('')+
     '</div>'
     +'<div class="swlabel" style="margin-top:8px">自由調色(左右拖拉,'+(hairTgt==='tail'?'調髮尾':'調主色')+')</div>'
-    +'<input id="hueSl" type="range" min="0" max="359" value="'+_hue+'" oninput="hairSlide()" onchange="hairSlide(1)" style="display:block;width:100%;height:14px;border-radius:8px;-webkit-appearance:none;appearance:none;outline:none;background:linear-gradient(90deg,#f55,#ff5,#5f5,#5ff,#55f,#f5f,#f55)">'
-    +'<input id="litSl" type="range" min="14" max="86" value="'+_lit+'" oninput="hairSlide()" onchange="hairSlide(1)" style="display:block;width:100%;height:14px;border-radius:8px;margin-top:6px;-webkit-appearance:none;appearance:none;outline:none;background:linear-gradient(90deg,#111,#9c8ba0,#fff)">'
+    +'<input id="hueSl" aria-label="髮色色相" type="range" min="0" max="359" value="'+_hue+'" oninput="hairSlide()" onchange="hairSlide(1)" style="display:block;width:100%;height:14px;border-radius:8px;-webkit-appearance:none;appearance:none;outline:none;background:linear-gradient(90deg,#f55,#ff5,#5f5,#5ff,#55f,#f5f,#f55)">'
+    +'<input id="litSl" aria-label="髮色明暗" type="range" min="14" max="86" value="'+_lit+'" oninput="hairSlide()" onchange="hairSlide(1)" style="display:block;width:100%;height:14px;border-radius:8px;margin-top:6px;-webkit-appearance:none;appearance:none;outline:none;background:linear-gradient(90deg,#111,#9c8ba0,#fff)">'
     +'<div class="swlabel">膚色</div><div class="swatches">'+
-    SKINS.map((s,i)=>`<div class="sw ${sel.skin===i?'on':''}" style="background:${s}" onclick="sel.skin=${i};renderSwatches();renderOpts();refresh()"></div>`).join('')+
+    SKINS.map((s,i)=>`<button type="button" aria-label="膚色 ${i+1}" class="sw ${sel.skin===i?'on':''}" style="background:${s}" onclick="sel.skin=${i};renderSwatches();renderOpts();refresh()"></button>`).join('')+
     '</div>';
 }
 function dollOut(){ const o=Object.assign({},sel); if(!o.hairHex) delete o.hairHex; if(!o.hairHex2) delete o.hairHex2; return o; }
@@ -531,7 +543,7 @@ function refresh(){drawDoll(view);}
 const TAGS=['貓控','狗控','愛看電影','宅宅','喜歡運動','夜貓子','社恐','話癆','音樂控','收藏癖','吃貨','手遊仔'];
 let pickedTags=[];
 function renderTagBox(){
-  tagBox.innerHTML=TAGS.map(t=>`<div class="tag ${pickedTags.includes(t)?'on':''}" onclick="toggleTag('${t}')">${t}</div>`).join('');
+  tagBox.innerHTML=TAGS.map(t=>`<button type="button" aria-pressed="${pickedTags.includes(t)}" class="tag ${pickedTags.includes(t)?'on':''}" onclick="toggleTag('${t}')">${t}</button>`).join('');
 }
 function toggleTag(t){
   if(pickedTags.includes(t)) pickedTags=pickedTags.filter(x=>x!==t);
@@ -748,6 +760,7 @@ renderTabs();renderOpts();renderTagBox();refresh();
   db.ref(ROOT+'/lobby/'+k).once('value',s=>{
     if(!s.val()) return;   /* 舊鑰匙但角色已被刪 → 放行重做 */
     const d=document.createElement('div');
+    d.className='returning-guest';
     d.style.cssText='position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,#BFCCF4 0%,#D3C6F0 45%,#E9D5EC 100%)';
     d.innerHTML='<div style="max-width:330px;width:100%;text-align:center;background:#F7F3FC;border-radius:18px;padding:28px 24px;box-shadow:0 0 0 4px #fff,0 0 0 8px #C4ADEC,0 20px 44px rgba(70,50,100,.35)">'
       +'<h2 style="color:#5A4880;font-size:18px;margin:0 0 10px;letter-spacing:1px">你已經有闆卡囉</h2>'
@@ -770,6 +783,7 @@ document.addEventListener('pointerdown',function(e){
   const up=()=>{ t.style.transform=''; document.removeEventListener('pointerup',up); }; document.addEventListener('pointerup',up);
 },{passive:true});
 </script>
-<div style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:rgba(110,88,166,.45)">v14</div>
+<div style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:rgba(110,88,166,.45)">v233</div>
+<script src="card-ui/workshop.js?v=233"></script>
 </body>
 </html>
