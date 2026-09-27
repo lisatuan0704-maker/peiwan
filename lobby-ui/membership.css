@@ -1,39 +1,113 @@
-/* 儲值付款與會員視窗：共用店內紙卡；只調整版面與原生控制項。 */
-#topupPayM.tt-live-ui,#vipM.tt-live-ui{padding:20px!important;background:#34272c80!important;backdrop-filter:blur(6px);font-family:'LINE Seed TW',sans-serif;color:#755e46}
-#topupPayM .panel,#vipM .panel{width:min(690px,100%);max-width:690px!important;border:1px solid #c9b49b!important;border-radius:18px!important;background:linear-gradient(125deg,#fffaf0,#f1e5d0)!important;box-shadow:0 0 0 4px #fff7ed99,0 20px 65px #3e282847!important;outline:0!important}
-#topupPayM .panel-head,#vipM .panel-head{padding:25px 28px 22px;border-bottom:1px solid #d9c6ad;background:#fcf4e654}
-#topupPayM .panel-head .eyebrow,#vipM .panel-head .eyebrow{color:#a48c6e;letter-spacing:2px;font-size:10px}
-#topupPayM .title-chip,#vipM .title-chip{background:linear-gradient(100deg,#8c7050,#b3936c);color:#fff9ed;padding:7px 23px 10px 14px}
-#topupPayM .panel-head h1,#vipM .panel-head h1{font-size:28px;color:#fff9ef;font-weight:700}
-#topupPayM .panel-head p,#vipM .panel-head p{font-size:13px;color:#947b60;margin-top:12px}
-#topupPayM .outline-word,#vipM .outline-word{font-size:63px!important;color:transparent!important;-webkit-text-stroke:1px #bea27855;letter-spacing:3px}
-#topupPayM .close,#vipM .close{border:1px solid #c6b094;background:#fffaf0bb;color:#896b4a;border-radius:5px;box-shadow:none;font-family:inherit}
-#topupPayM .geometry,#vipM .geometry{opacity:.35}#topupPayM .panel-content,#vipM .panel-content{padding:22px 28px;scrollbar-color:#c7b292 transparent}
-#topupPayM .panel-footer{display:none}#vipM .panel-footer{border-top:1px solid #d9c6ad;color:#927556;background:#fffbf24d}
-#topupPayM #tuPayInfo{padding:0;background:none;border:0;border-radius:0;color:#866f57;font-size:13px;line-height:1.8}
-#topupPayM .tu-receipt{display:grid;grid-template-columns:1fr 1fr;border:1px solid #cebaa0;border-radius:8px;background:#fffaf0a6;margin-bottom:23px;padding:20px 22px;gap:24px}
-#topupPayM .tu-receipt>div+div{border-left:1px solid #d6c4a9;padding-left:24px}#topupPayM .tu-receipt span{display:block;font-size:11px;color:#a48b6c}#topupPayM .tu-receipt b{display:block;font-size:32px;line-height:1.5;font-weight:700;color:#80613e;white-space:nowrap}#topupPayM .tu-receipt b small{font-size:13px}#topupPayM .tu-bonus{font-size:11px;color:#7f8b62}
-#topupPayM .tu-section-heading>span{display:block;font-size:9px;letter-spacing:1.4px;color:#ab9271}#topupPayM .tu-section-heading h4{font-size:17px;color:#795b3d;margin:6px 0}#topupPayM .tu-section-heading p{font-size:12px;line-height:1.7;margin:0;color:#9c8469}
-#topupPayM #tuOnlineBtn{background:linear-gradient(100deg,#967447,#b49362)!important;color:#fffaf2!important;border:1px solid #987647!important;border-radius:6px!important;box-shadow:none!important;padding:14px!important;font-family:inherit!important;margin:13px 0 0!important;font-size:13px!important}
-#topupPayM .tu-bank-divider{display:flex;align-items:center;gap:12px;margin:23px 0 14px;font-size:11px;color:#b09a80}#topupPayM .tu-bank-divider::before,#topupPayM .tu-bank-divider::after{content:'';height:1px;flex:1;background:#d8c7ae}
-#topupPayM .tu-bank-account{padding:13px 15px;background:#e9ddc680;border:1px solid #d4c0a5;border-radius:6px;font-size:12px}#topupPayM .tu-bank-account b{font-size:16px!important;color:#785a3d!important;letter-spacing:.5px}#topupPayM .tu-bank-account button{border:1px solid #cbb69a!important;border-radius:4px!important;background:#fff9e9!important;color:#876c4b!important;margin-left:auto;min-height:32px}#topupPayM .paybox>div:last-child:not(.tu-bank-account){color:#a18a70!important;font-size:11px!important}
-#topupPayM .tu-transfer-fields{margin-top:23px}#topupPayM label{display:block;margin:15px 0 7px;color:#8c7358;font-size:12px!important}#topupPayM input{width:100%;box-sizing:border-box;background:#fffbf2;border:1px solid #cdb79b;border-radius:5px;padding:11px 12px;color:#71583f;font:14px 'LINE Seed TW',sans-serif;box-shadow:none}#topupPayM input:focus{outline:2px solid #b79b73;outline-offset:2px}#topupPayM input::placeholder{color:#b6a58d}#topupPayM input[type=file]{font-size:12px;padding:8px;background:#fffaf066;border-style:dashed}#topupPayM input::file-selector-button{background:#e9dcc7;border:1px solid #c9b395;border-radius:4px;padding:7px 10px;color:#806549;font:inherit;margin-right:10px}#topupPayM #tuProofPrev{border:1px solid #cbb496!important;border-radius:5px;object-fit:contain}#topupPayM .warn{color:#a18a70;font-size:11px;line-height:1.8;margin:10px 0 0}
-#topupPayM .btns{position:sticky;bottom:-22px;margin:22px -28px -22px;padding:17px 28px;display:flex;gap:12px;border-top:1px solid #d3bea1;background:#f8efdfef;backdrop-filter:blur(10px)}#topupPayM .btns button{min-height:43px;font-family:inherit;font-size:13px;border-radius:5px;box-shadow:none;border:1px solid #bca482;padding:11px 16px}#topupPayM .sc-back{background:#fff9ed;color:#8b7150;flex:0 1 130px}#topupPayM .sc-go{background:#a58556;color:#fff9ed;flex:1}#topupPayM button:disabled{opacity:.5;cursor:not-allowed}
-#vipM .ghint{font-size:12px;color:#9a8269;line-height:1.85;margin:0 0 20px;padding-bottom:17px;border-bottom:1px solid #dac8b0}
-#vipM .vip-progress-summary{background:#e9dec999!important;border:1px solid #ccb899;border-radius:8px!important;padding:17px!important;margin-bottom:18px!important}#vipM .vip-progress-summary>div:first-child{gap:17px!important}#vipM .vip-progress-summary>div:first-child>div:last-child>div:first-child{color:#7b6041!important;font-size:16px!important}#vipM .vip-progress-summary>div:first-child>div:last-child>div+div{color:#9e8668!important;line-height:1.6;margin-top:5px!important}
-#vipM .vlv2{background:#a88b61!important;box-shadow:none!important;border:1px solid #b29670;border-radius:5px;padding:10px 5px;color:#fff9ee}#vipM .vlv2 .b{font-size:28px;line-height:1.1;margin:2px 0}#vipM .vlv2 .a{font-size:8px}#vipM .vlv2 .c{font-size:10px}#vipM .jbar{height:7px!important;box-shadow:none!important;border:1px solid #d3bfa0;background:#fff9eb!important;margin-top:17px!important;border-radius:3px!important}#vipM .jbar i{background:#bba177!important;border-radius:2px!important}#vipM .jbar i::after{display:none}
-#vipM .vipCard{display:grid;grid-template-columns:80px minmax(0,1fr);gap:13px 16px;padding:19px;border:1px solid #cdb79a;border-radius:8px;background:#fffcf3a6;box-shadow:none!important}#vipM .vipHalo{width:80px;height:83px;margin:0;grid-row:1;grid-column:1}#vipM .vipHalo::before{display:none}#vipM .vipHalo .vlv2{width:66px!important;background:#e8dbc2!important;color:#947445}#vipM .vipCard>.vipHalo+div{grid-column:2;grid-row:1;justify-content:flex-start!important;align-content:center;flex-wrap:wrap;text-align:left!important;gap:8px!important;margin:0!important}#vipM .vipCard>.vipHalo+div b{color:#775b3b!important;font-size:18px!important;width:100%}#vipM .st2{border:1px solid #ccb493;background:#e9dcc4!important;color:#977950!important;border-radius:3px;box-shadow:none}#vipM .st2.ok{background:#e2e7d5!important;color:#77865b!important}
-#vipM .vipRws{grid-column:1/-1;gap:0;margin:3px 0 0;border-top:1px solid #e0cfb6}#vipM .vipRw{padding:13px 3px;background:none;border-radius:0;color:#82694e;font-size:13px;font-weight:500;box-shadow:none;border-bottom:1px solid #e0cfb6;gap:15px;min-height:47px}#vipM .vipRw img{width:30px;height:30px;object-fit:contain;flex-shrink:0}#vipM .vipCard>.vipRws+div{grid-column:1/-1;color:#a08c72!important;font-size:11px!important;line-height:1.7;text-align:left!important;margin:0!important}
-#vipM .vipNav{margin-top:18px}#vipM .vipPgB{color:#927653;background:#fff9ed;border:1px solid #ceb99a;border-radius:5px;min-height:39px;padding:8px 16px}#vipM .vipPgB:disabled{opacity:.4}#vipM .vipDots{gap:6px}#vipM .vipDots i{width:7px;height:7px;background:#dbccb4}#vipM .vipDots i.on{background:#a98956;box-shadow:none;transform:none}
-@media(max-width:600px){#topupPayM.tt-live-ui,#vipM.tt-live-ui{padding:12px!important}#topupPayM .panel,#vipM .panel{max-height:calc(100dvh - 24px);border-radius:14px!important}#topupPayM .panel-head,#vipM .panel-head{padding:22px 19px 18px}#topupPayM .panel-head h1,#vipM .panel-head h1{font-size:24px}#topupPayM .panel-head p,#vipM .panel-head p{font-size:11px}#topupPayM .outline-word,#vipM .outline-word{font-size:47px!important;right:14px!important;top:40px!important}#topupPayM .panel-content,#vipM .panel-content{padding:18px}#topupPayM .tu-receipt{padding:16px;gap:15px}#topupPayM .tu-receipt>div+div{padding-left:15px}#topupPayM .tu-receipt b{font-size:26px}#topupPayM .btns{bottom:-18px;margin:20px -18px -18px;padding:14px 18px;gap:8px}#topupPayM input:not([type=file]){font-size:16px}#topupPayM .tu-bank-account{padding:11px;gap:6px!important}#topupPayM .tu-bank-account b{font-size:14px!important}#vipM .vipCard{padding:15px;column-gap:11px}#vipM .vipPgB{padding:8px 12px;font-size:12px}#vipM .panel-footer{padding:11px 18px}}
+/* 店內的儲值與會員介面：用色區分資訊、選擇與下一步。 */
+#topupPayM.tt-live-ui,#vipM.tt-live-ui{padding:20px!important;background:#28263991!important;backdrop-filter:blur(6px);font-family:'LINE Seed TW',sans-serif;color:#414a61}
+#topupPayM .panel,#vipM .panel{width:min(690px,100%);max-width:690px!important;border:1px solid #c7c8d9!important;border-radius:18px!important;background:#f6f5f9!important;box-shadow:0 0 0 4px #ffffff75,0 24px 75px #17162655!important;outline:0!important;--deep-a:#405c72;--deep-b:#6d8ba0;--signal:#e5adc2}
+#vipM .panel{--deep-a:#5e456c;--deep-b:#967298;--signal:#afd3c9;background:#f8f4f8!important}
+#topupPayM .panel-head,#vipM .panel-head{padding:24px 28px 20px;border-bottom:1px solid #c9d4df;background:linear-gradient(115deg,#edf4f7,#e7eaf5)}
+#vipM .panel-head{background:linear-gradient(115deg,#f2e9f2,#ebe8f6);border-color:#d7c6df}
+#topupPayM .eyebrow,#vipM .eyebrow{color:#637a90;font-size:10px;letter-spacing:2px}#vipM .eyebrow{color:#846b91}
+#topupPayM .title-chip,#vipM .title-chip{background:none;padding:7px 23px 10px 14px}
+#topupPayM .panel-head h1,#vipM .panel-head h1{font-size:28px;color:#fff;font-weight:700}
+#topupPayM .panel-head p,#vipM .panel-head p{font-size:13px;color:#617386;margin:12px 0 0}#vipM .panel-head p{color:#796482}
+#topupPayM .outline-word,#vipM .outline-word{font-size:62px!important;color:transparent!important;-webkit-text-stroke:1px #8aa1b34d;letter-spacing:3px}#vipM .outline-word{-webkit-text-stroke-color:#a48bb74d}
+#topupPayM .close,#vipM .close{background:#ffffffc9;border:1px solid #b7c6d4;border-radius:6px;color:#516a81;box-shadow:none}
+#vipM .close{border-color:#cbb7d4;color:#755682}
+#topupPayM .geometry,#vipM .geometry{opacity:.25}
+#topupPayM .panel-content,#vipM .panel-content{padding:22px 28px;scrollbar-color:#b4bed2 transparent}
+#topupPayM .panel-footer{display:none}#vipM .panel-footer{background:#f2eef6;border-top:1px solid #d7c9df;color:#725c81}
+#topupPayM button,#vipM button{font-family:inherit;cursor:pointer;transition:background .18s,border-color .18s,box-shadow .18s,transform .18s}
+#topupPayM button:focus-visible,#vipM button:focus-visible{outline:3px solid #567f9e;outline-offset:3px}
+#topupPayM button:disabled,#vipM button:disabled{cursor:not-allowed;opacity:.45}
+#topupPayM [hidden]{display:none!important}
+#topupPayM #tuPayInfo{padding:0;background:none;border:0;border-radius:0;color:#53667b;font-size:13px;line-height:1.7}
+#topupPayM .tu-receipt{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:18px 21px;margin:0 0 24px;border:1px solid #cbd8e2;background:#fff;border-radius:10px;position:relative;overflow:hidden}
+#topupPayM .tu-receipt:before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:#759caf}
+#topupPayM .tu-receipt>div+div{border-left:1px solid #d8e4e9;padding-left:23px}
+#topupPayM .tu-receipt span{display:block;font-size:11px;color:#63798d}
+#topupPayM .tu-receipt b{display:block;font-size:32px;color:#354e68;line-height:1.5;white-space:nowrap}
+#topupPayM .tu-receipt>div+div b{color:#397567}#topupPayM .tu-receipt b small{font-size:13px}#topupPayM .tu-bonus{display:inline-block;font-size:11px;color:#386d60;background:#e6f2ec;padding:2px 8px;border-radius:4px}
+#topupPayM .tu-choice-label{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:11px}#topupPayM .tu-choice-label b{font-size:15px;color:#42556e}#topupPayM .tu-choice-label>span{font-size:11px;color:#718297}
+#topupPayM .tu-method-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#topupPayM .tu-method-grid button{display:flex;align-items:center;text-align:left;gap:10px;padding:16px 13px;border:1px solid #cdd2df;border-radius:9px;background:#fff;color:#57647c;min-width:0;position:relative}
+#topupPayM .tu-method-grid button b{display:block;font-size:15px}#topupPayM .tu-method-grid button small{display:block;font-size:10px;line-height:1.6;margin-top:3px;color:#6b7d8e}
+#topupPayM .tu-method-icon{font-size:23px;color:#7797ad}#topupPayM .tu-method-grid i{font-style:normal;position:absolute;right:9px;top:6px;font-size:11px;opacity:0}
+#topupPayM .tu-method-grid button[aria-pressed=true]{border-color:#537b98;background:#eaf2f8;box-shadow:inset 0 0 0 1px #537b98,0 4px 12px #516e9212;color:#304f6b}
+#topupPayM .tu-method-grid button[data-method=bank][aria-pressed=true]{border-color:#88749d;box-shadow:inset 0 0 0 1px #88749d;background:#f1ecf6;color:#67517f}
+#topupPayM .tu-method-grid button[aria-pressed=true] i{opacity:1}
+#topupPayM .tu-method-grid button:hover{transform:translateY(-2px);border-color:#8495ae}
+#topupPayM .tu-method-body{margin-top:20px;padding:19px 20px;border:1px solid #d5dfeb;background:#fff;border-radius:10px;animation:memberReveal .28s ease both}
+#topupPayM .tu-bank-view{background:#fff;border-color:#d8cbe2}
+#topupPayM .tu-section-heading>span{display:block;font-size:9px;letter-spacing:1.4px;color:#6f879e}#topupPayM .tu-section-heading h4{font-size:17px;color:#3f5572;margin:6px 0}#topupPayM .tu-section-heading p{font-size:12px;margin:0;color:#718197;line-height:1.7}
+#topupPayM #tuOnlineBtn{position:relative;overflow:hidden;background:#a84970!important;color:#fff!important;border:1px solid #963d63!important;border-radius:7px!important;box-shadow:0 4px 0 #85345333!important;font-family:inherit!important;margin:16px 0 3px!important;padding:15px 25px 15px 14px!important;font-size:13px!important}
+#topupPayM #tuOnlineBtn:after{content:'→';position:absolute;right:13px;animation:memberArrow 1s ease .5s 2}
+#topupPayM #tuOnlineBtn:hover{background:#94345d!important;transform:translateY(-2px);box-shadow:0 6px 15px #a849702e!important}
+#topupPayM #tuOnlineBtn:disabled{transform:none;opacity:.65}#topupPayM #tuOnlineBtn:disabled:after{content:'…';animation:none}
+#topupPayM .tu-next-hint{font-size:11px;line-height:1.7;color:#637b8d;margin:14px 0 0;padding-left:13px;border-left:3px solid #87b7ad}
+#topupPayM .tu-bank-account{padding:13px;background:#eee9f5;border:1px solid #d4c7e1;border-radius:7px;font-size:12px;color:#796686}
+#topupPayM .tu-bank-account b{font-size:16px!important;color:#664e7a!important;letter-spacing:.5px}#topupPayM .tu-bank-account button{background:#fff!important;border:1px solid #b6a2c8!important;color:#73578b!important;border-radius:5px!important;margin-left:auto;min-height:34px}
+#topupPayM .tu-bank-view>div:not(.tu-bank-account){color:#7e6d90!important;font-size:11px!important;line-height:1.7}
+#topupPayM .tu-transfer-fields{margin-top:20px}#topupPayM label{display:block;margin:15px 0 7px;font-size:12px!important;color:#615574}
+#topupPayM input{width:100%;box-sizing:border-box;border:1px solid #c9c6d5;background:#fafafd;border-radius:6px;padding:11px 12px;color:#464d65;font:14px 'LINE Seed TW',sans-serif;box-shadow:none;transition:border-color .18s,background .18s,box-shadow .18s}
+#topupPayM input:focus{outline:none;border-color:#8c73a9;box-shadow:0 0 0 3px #a087bd24;background:#fff}
+#topupPayM input::placeholder{color:#8b8fa1}#topupPayM input[type=file]{font-size:12px;padding:8px;background:#f4f0f8;border-style:dashed}
+#topupPayM input::file-selector-button{background:#e5ddef;border:1px solid #bda7d0;border-radius:4px;padding:7px 10px;color:#684a80;font:inherit;margin-right:10px}
+#topupPayM #tuProofPrev{border:1px solid #baa7cd!important;border-radius:5px;object-fit:contain}
+#topupPayM .warn{color:#776786;font-size:11px;line-height:1.8;margin:10px 0 0}
+#topupPayM .btns{position:sticky;bottom:-22px;margin:22px -28px -22px;padding:16px 28px;display:flex;gap:12px;border-top:1px solid #d1d7e1;background:#f6f6fbee;backdrop-filter:blur(10px)}
+#topupPayM .btns button{min-height:44px;font-size:13px;border-radius:6px;box-shadow:none;padding:11px 16px}
+#topupPayM .sc-back{background:#fff;color:#5d6e86;border:1px solid #c3cbd9;flex:0 1 130px}
+#topupPayM .sc-go{background:#765787;color:#fff;border:1px solid #694a7c;flex:1}#topupPayM .sc-go:hover{background:#614071;transform:translateY(-1px)}
+#topupPayM[data-method=online] .btns{border-top:0;background:none;margin-top:5px;padding-top:10px}
+#vipM .ghint{font-size:11px;line-height:1.8;color:#81748a;margin:0 0 18px;padding:0;border:0}
+#vipM .vip-progress-summary{background:#e7eef4!important;border:1px solid #bdcede;border-radius:10px!important;padding:18px!important;margin-bottom:24px!important}
+#vipM .vip-summary-label{display:block;font-size:9px;letter-spacing:1.5px;color:#597790;margin-bottom:13px}
+#vipM .vip-progress-summary>div{gap:16px!important}#vipM .vip-progress-summary>div>div:last-child>div:first-child{color:#35516c!important;font-size:17px!important}#vipM .vip-progress-summary>div>div:last-child>div+div{color:#61788b!important;line-height:1.6;margin-top:5px!important}
+#vipM .vlv2{background:#526f88!important;border:1px solid #46677d;border-radius:6px;padding:10px 5px;color:#fff;box-shadow:none!important}
+#vipM .vlv2 .b{font-size:29px;line-height:1.1;margin:3px 0}#vipM .vlv2 .a{font-size:8px}#vipM .vlv2 .c{font-size:10px}
+#vipM .jbar{height:8px!important;border:0;border-radius:6px!important;background:#d1dce5!important;margin-top:18px!important;box-shadow:none!important}
+#vipM .jbar i{background:linear-gradient(90deg,#608ba3,#91bcaf)!important;border-radius:6px!important;transform-origin:left;animation:memberProgress .7s ease both}#vipM .jbar i::after{display:none}
+#vipM .vip-browse-label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}#vipM .vip-browse-label span{font-size:9px;letter-spacing:1.3px;color:#8b7799}#vipM .vip-browse-label b{font-size:12px;color:#75617f}
+#vipM .vipCard{--tier:#527d9b;--tier-soft:#e9f2f8;display:grid;grid-template-columns:80px minmax(0,1fr);gap:15px 17px;position:relative;overflow:hidden;padding:20px;border:1px solid color-mix(in srgb,var(--tier) 42%,white);border-top:4px solid var(--tier);border-radius:10px;background:linear-gradient(125deg,var(--tier-soft),#fff 66%);box-shadow:0 8px 20px #5445630a!important;animation:memberReveal .32s ease both}
+#vipM .vipCard.vx2{--tier:#4d826f;--tier-soft:#eaf4ee}#vipM .vipCard.vx3{--tier:#ac5b7e;--tier-soft:#faeaf1}#vipM .vipCard.vx4{--tier:#7c60a3;--tier-soft:#f0eafa}#vipM .vipCard.vx5{--tier:#a76c48;--tier-soft:#faefe5}
+#vipM .vipHalo{width:80px;height:86px;margin:0;grid-row:1;grid-column:1;position:relative}#vipM .vipHalo::before{display:none}
+#vipM .vipHalo .vlv2{width:66px!important;background:var(--tier)!important;border-color:var(--tier);color:#fff;position:relative;overflow:hidden}
+#vipM .vipHalo .vlv2:after{content:'';position:absolute;inset:-20px;width:25px;background:#fff3;transform:translateX(-55px) rotate(25deg);animation:memberGlint .8s ease .15s 1 both}
+#vipM .vipCard>.vipHalo+div{grid-column:2;grid-row:1;justify-content:flex-start!important;align-content:center;flex-wrap:wrap;text-align:left!important;gap:8px!important;margin:0!important}
+#vipM .vipCard>.vipHalo+div b{color:var(--tier)!important;font-size:20px!important;width:100%}
+#vipM .st2{background:#fff!important;border:1px solid color-mix(in srgb,var(--tier) 35%,white);color:var(--tier)!important;border-radius:4px;box-shadow:none;font-size:11px}#vipM .st2.ok{background:#e5f2ea!important;border-color:#a9cbb8;color:#42785d!important}
+#vipM .vipRws{grid-column:1/-1;display:grid;gap:9px;margin:2px 0 0;border:0}
+#vipM .vipRw{padding:13px 14px;background:#fff;border:1px solid #e4e0e9;border-radius:7px;color:#565568;font-size:13px;font-weight:500;box-shadow:none;gap:16px;min-height:52px;animation:memberReveal .3s ease both;animation-delay:.08s}
+#vipM .vipRw:nth-child(2){animation-delay:.14s}#vipM .vipRw:nth-child(3){animation-delay:.2s}#vipM .vipRw img{width:30px;height:30px;object-fit:contain;flex-shrink:0}
+#vipM .vipCard>.vipRws+div{grid-column:1/-1;color:#83768c!important;font-size:11px!important;line-height:1.7;text-align:left!important;margin:0!important}
+#vipM .vipNav{position:sticky;bottom:-22px;margin-top:18px;padding:13px 0;display:flex;gap:10px;background:#f8f4f8ed;backdrop-filter:blur(10px);border-top:1px solid #dbcfdf;z-index:1}
+#vipM .vipPgB{color:#725383;background:#fff;border:1px solid #c2acd0;border-radius:6px;min-height:40px;padding:8px 15px;white-space:nowrap}
+#vipM .vipPgB:last-child{color:#fff;background:#765887;border-color:#765887}#vipM .vipPgB:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 4px 10px #76588720}
+#vipM .vipDots{display:flex;gap:5px}#vipM .vipDots button{width:28px;height:28px;border-radius:50%;border:1px solid transparent;background:#e8e1ed;color:#8a7698;font-size:11px;padding:0}
+#vipM .vipDots button.on{background:#765887;color:#fff;box-shadow:0 0 0 3px #7658871f}#vipM .vipDots button:hover{border-color:#8b71a0}
+@keyframes memberReveal{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@keyframes memberArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+@keyframes memberProgress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes memberGlint{to{transform:translateX(120px) rotate(25deg)}}
+@media(max-width:600px){
+#topupPayM.tt-live-ui,#vipM.tt-live-ui{padding:12px!important}#topupPayM .panel,#vipM .panel{max-height:calc(100dvh - 24px);border-radius:14px!important}
+#topupPayM .panel-head,#vipM .panel-head{padding:22px 19px 18px}#topupPayM .panel-head h1,#vipM .panel-head h1{font-size:24px}#topupPayM .panel-head p,#vipM .panel-head p{font-size:11px}
+#topupPayM .outline-word,#vipM .outline-word{font-size:47px!important;right:14px!important;top:40px!important}
+#topupPayM .panel-content,#vipM .panel-content{padding:18px}#topupPayM .tu-receipt{padding:15px;gap:15px;margin-bottom:19px}#topupPayM .tu-receipt>div+div{padding-left:15px}#topupPayM .tu-receipt b{font-size:26px}
+#topupPayM .tu-choice-label>span{font-size:10px}#topupPayM .tu-method-grid{gap:8px}#topupPayM .tu-method-grid button{padding:14px 10px;gap:7px;align-items:flex-start}#topupPayM .tu-method-grid button b{font-size:13px}#topupPayM .tu-method-grid button small{font-size:10px}#topupPayM .tu-method-icon{display:none}
+#topupPayM .tu-method-body{padding:15px}#topupPayM .tu-bank-account{padding:10px;gap:6px!important}#topupPayM .tu-bank-account b{font-size:14px!important}#topupPayM input:not([type=file]){font-size:16px}#topupPayM .btns{bottom:-18px;margin:20px -18px -18px;padding:14px 18px;gap:8px}#topupPayM #tuOnlineBtn{font-size:12px!important}
+#vipM .vipCard{padding:15px;column-gap:11px}#vipM .vip-progress-summary{padding:14px!important}#vipM .vip-progress-summary>div>div:last-child>div:first-child{font-size:15px!important}
+#vipM .vipNav{bottom:-18px;gap:7px;padding:12px 0}#vipM .vipPgB{font-size:11px;padding:8px 9px}#vipM .vipDots{gap:4px}#vipM .vipDots button{width:25px;height:25px;font-size:10px}#vipM .panel-footer{padding:10px 18px}
+}
+@media(max-width:370px){#vipM .vipPgB{padding:8px 6px;font-size:10px}#vipM .vipDots{gap:2px}#vipM .vipDots button{width:22px;height:22px}#vipM .vipNav{gap:4px}}
+@media(prefers-reduced-motion:reduce){#topupPayM *,#topupPayM *:before,#topupPayM *:after,#vipM *,#vipM *:before,#vipM *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
-#topupPayM .panel,#vipM .panel{--deep-a:#8c7050;--deep-b:#b3936c;--signal:#d7c096}
-#topupPayM .title-chip,#vipM .title-chip{background:none}
-#topupPayM .panel-head{padding-top:21px;padding-bottom:18px}
-#topupPayM .tu-receipt{padding:14px 20px;margin-bottom:18px}
-#topupPayM .tu-bank-divider{margin:18px 0 12px}
-#topupPayM .tu-transfer-fields{margin-top:18px}
-#topupPayM .tu-section-heading>p{font-size:11px}
-
-#vipM .vipNav{position:sticky;bottom:-22px;background:#f7efdfed;backdrop-filter:blur(10px);padding:12px 0;border-top:1px solid #d7c5aa;z-index:1}
-@media(max-width:600px){#vipM .vipNav{bottom:-18px;padding:10px 0}#vipM .panel-footer{padding-top:7px;padding-bottom:7px}}
+/* 較矮視窗仍優先露出付款按鈕；銀行轉帳才使用固定送出列。 */
+#topupPayM[data-method=online] .btns{position:static;backdrop-filter:none}
+#topupPayM .panel-head{padding-top:18px;padding-bottom:16px}
+#topupPayM .tu-receipt{padding:12px 18px;margin-bottom:17px}
+#topupPayM .tu-receipt b{font-size:30px;line-height:1.3}
+#topupPayM .tu-method-grid button{padding-top:12px;padding-bottom:12px}
+#topupPayM .tu-method-body{margin-top:14px;padding:15px 18px}
+#topupPayM #tuOnlineBtn{margin-top:11px!important;padding-top:12px!important;padding-bottom:12px!important}
+#vipM .vip-progress-summary .vlv2{padding:7px 5px}#vipM .vip-progress-summary{padding:14px 17px!important;margin-bottom:18px!important}
+#vipM .vip-progress-summary .b{font-size:25px}#vipM .vip-summary-label{margin-bottom:9px}#vipM .jbar{margin-top:12px!important}
+@media(max-width:600px){#topupPayM .tu-receipt b{font-size:26px}#topupPayM .tu-method-body{padding:14px}#topupPayM[data-method=online] .btns{margin-top:0}}
