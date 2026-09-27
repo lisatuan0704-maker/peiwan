@@ -1432,6 +1432,8 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/presence.js?v=231"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=234">
+<link rel="stylesheet" href="card-ui/tavern-scene.css?v=238">
+<script src="card-ui/tavern-scene.js?v=238" defer></script>
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
@@ -1664,7 +1666,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v237</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v238</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -1689,7 +1691,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="dcGate">
   <div class="dgCard">
-    <img id="dgIcon" alt="" style="width:64px;height:64px;margin:0 auto 6px;display:block">
+    <img id="dgIcon" alt="" hidden><canvas class="tavern-welcome-art" data-tavern-welcome role="img" aria-label="三位陪玩在酒館等你"></canvas>
     <h1>歡迎來到小小酒館</h1>
     <p>綁定 Discord 帳號即可走進大廳 ——<br>你的闆卡、成就與購買紀錄都會跟著帳號保存,換裝置也不會不見。</p>
     <button class="dgBtn" onclick="dcAuth()">綁定 Discord・進入酒館</button>
@@ -6087,7 +6089,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
     function showCardGate(){
       const cardEl=g.querySelector('.dgCard');
       cardEl.querySelector('h1').textContent='歡迎來到小小酒館';
-      cardEl.querySelector('p').innerHTML='第一步,先捏一張專屬你的「闆卡」——<br>它就是你在這個世界的樣子,之後的活動都用這個形象。';
+      cardEl.querySelector('p').innerHTML='選個喜歡的模樣，留下一個名字。<br>做一張闆卡，認識酒館裡的新朋友。';
       const b=cardEl.querySelector('.dgBtn');
       b.textContent='開始製作闆卡';
       b.style.background='linear-gradient(180deg,#FBB6D0,#F28FB2)';

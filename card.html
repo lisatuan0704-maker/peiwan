@@ -151,13 +151,15 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
 #rotHint small{font-size:12px;color:#8E7AB0}
 @media (pointer:coarse) and (orientation:landscape){ #rotHint{display:flex} }
 </style>
-<link rel="stylesheet" href="card-ui/workshop.css?v=233">
+<link rel="stylesheet" href="card-ui/workshop.css?v=238">
+<link rel="stylesheet" href="card-ui/tavern-scene.css?v=238">
+<script src="card-ui/tavern-scene.js?v=238" defer></script>
 </head>
 <body>
 <div id="notice" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
   <div class="card welcome-card">
     <span class="eyebrow">A LITTLE WELCOME / 入店邀請</span>
-    <div class="welcome-mark" aria-hidden="true">T<span>T</span></div>
+    <canvas class="tavern-welcome-art" data-tavern-welcome role="img" aria-label="三位陪玩在酒館等你"></canvas>
     <h2 id="welcomeTitle">在酒館，留一個位置給你。</h2>
     <p>選個喜歡的模樣，留下想被叫的名字。<br>你的第一張闆卡，就從這裡開始。</p>
     <p class="sub">闆卡會成為你在酒館活動時的形象。<br>完成後，也能到大廳的時裝間換裝。</p>
@@ -577,14 +579,6 @@ for(let d=1;d<=31;d++) fBd.innerHTML+=`<option value="${d}">${d} 日</option>`;
 
 /* ---- 生成闆卡 ---- */
 function roundRectPx(g,x,y,w,h,c){P(g,x+2,y,w-4,h,c);P(g,x,y+2,w,h-4,c);P(g,x+1,y+1,w-2,h-2,c);}
-/* ===== 底圖合成模式:繪師/AI 底圖打底,程式疊娃娃與文字 ===== */
-const BASE=new Image(); let baseReady=false;
-BASE.onload=()=>{baseReady=true;};
-BASE.onerror=()=>{console.warn("底圖 img/cardbase.png 載入失敗,改用素色底");};
-BASE.src="img/cardbase.png";
-const AVBASE=new Image(); let avReady=false;
-AVBASE.onload=()=>{avReady=true;};
-AVBASE.src="img/avatarbase.png";
 const CW=1280, CH=800;
 
 async function generate(){
@@ -596,76 +590,11 @@ async function generate(){
     document.fonts.load('76px Huninn','測試'),
     document.fonts.load('26px "Press Start 2P"','TINY')
   ]); }catch(e){}
-  if(!baseReady && BASE.complete===false){ await new Promise(r=>{BASE.onload=()=>{baseReady=true;r();};BASE.onerror=r;}); }
-  const g=cardOut.getContext('2d');
-  g.imageSmoothingEnabled=false;
-  g.textAlign='left';
-
-  /* 底圖 */
-  if(baseReady) g.drawImage(BASE,0,0,CW,CH);
-  else{ g.fillStyle='#FFF7F0';g.fillRect(0,0,CW,CH);
-        g.fillStyle='#5A3D4E';g.fillRect(0,0,CW,14);g.fillRect(0,CH-14,CW,14);g.fillRect(0,0,14,CH);g.fillRect(CW-14,0,14,CH); }
-
-  /* 娃娃放進左側拱門 */
+  try{ await TTTavernCard.ready(); }catch(e){ alert('酒館場景還沒載入完成，請稍後再試一次。');return; }
   const tmp=document.createElement('canvas');tmp.width=64;tmp.height=64;
   drawDoll(tmp.getContext('2d'));
-  const dSize=296;
-  g.drawImage(tmp,0,0,64,64, 132, 209, dSize, dSize);
-
-  /* 右上大格:稱號+名字+ID */
-  g.fillStyle='#D96A8B'; g.font='26px Huninn';
-  g.fillText('◆ 老闆資訊卡 ◆', 600, 130);
-  g.fillStyle='#5A3D4E'; g.font='74px Huninn';
-  g.fillText(name, 600, 204);
-  g.fillStyle='#A5798D'; g.font='22px Huninn'; g.textAlign='right';
-  g.fillText(dcid, 1150, 226); g.textAlign='left';
-
-  /* 中排左格:生日 */
-  g.fillStyle='#D96A8B'; g.font='30px Huninn';
-  g.fillText('◆ 生日', 600, 294);
-  g.fillStyle='#5A3D4E'; g.font='44px Huninn';
-  g.fillText(fBm.value+' 月 '+fBd.value+' 日', 600, 348);
-
-  /* 中排右格:常玩 */
-  const games=fGames.value.trim()||'—';
-  g.fillStyle='#D96A8B'; g.font='30px Huninn';
-  g.fillText('◆ 常玩', 920, 294);
-  g.fillStyle='#5A3D4E';
-  let gf=44; g.font=gf+'px Huninn';
-  let gshow=games;
-  while(g.measureText(gshow).width>250 && gf>28){gf-=2;g.font=gf+'px Huninn';}
-  while(g.measureText(gshow).width>250 && gshow.length>2){gshow=gshow.slice(0,-2)+'…';}
-  g.fillText(gshow, 920, 348);
-
-  /* 下方大格:標籤 chips + 一段話 */
-  let cx=600, cy=484;
-  g.font='30px Huninn';
-  pickedTags.forEach(t=>{
-    const w=g.measureText(t).width+38;
-    if(cx+w>1170){cx=600;cy+=60;}
-    g.fillStyle='#F0E6FB';
-    g.fillRect(cx,cy-36,w,52);
-    g.fillStyle='#8E68C8';
-    g.fillRect(cx,cy-36,w,4);g.fillRect(cx,cy+12,w,4);g.fillRect(cx,cy-36,4,52);g.fillRect(cx+w-4,cy-36,4,52);
-    g.fillStyle='#6D4FA8';g.fillText(t,cx+19,cy+2);
-    cx+=w+18;
-  });
-  const quote=fQuote.value.trim();
-  if(quote){
-    const qy=Math.min(pickedTags.length? cy+78 : 520, 626);
-    g.fillStyle='#5A3D4E'; g.font='38px Huninn';
-    g.fillText('「'+quote+'」', 600, qy);
-  }
-
-  /* 底部緞帶:品牌字 */
-  g.textAlign='center';
-  g.fillStyle='#4C3A50'; g.font='26px "Press Start 2P"';
-  g.fillText('TINY TAVERN', CW/2+2, 720);
-  g.fillStyle='#FDF6EC';
-  g.fillText('TINY TAVERN', CW/2, 718);
-  g.fillStyle='#4C3A50'; g.font='20px Huninn';
-  g.fillText('✦ BOSS CARD '+new Date().getFullYear()+' ✦', CW/2, 750);
-  g.textAlign='left';
+  const games=fGames.value.trim()||'—',quote=fQuote.value.trim();
+  TTTavernCard.render(cardOut,{name,dcid,birthday:fBm.value+' 月 '+fBd.value+' 日',games,tags:pickedTags,quote},tmp);
 
   /* 存進資料庫 */
   const key=btoa(encodeURIComponent(dcid)).replace(/[=+/]/g,'');
@@ -690,7 +619,7 @@ async function generate(){
   dlRow.style.opacity=0;dlHint.style.opacity=0;
   void cardFly.offsetWidth;
   cardFly.classList.add('in');
-  setTimeout(()=>{stampEl.classList.add('slam'); ttConfetti(); try{cardSFX.success();}catch(e){}},2050);
+  setTimeout(()=>{ try{cardSFX.success();}catch(e){}},2050);
   setTimeout(()=>{dlRow.style.opacity=1;dlHint.style.opacity=1;},2700);
 }
 /* 彩帶 + 全站點擊火花(與大廳同一套手感) */
@@ -719,44 +648,17 @@ function goLobby(){
 }
 function backEdit(){pgResult.style.display='none';pgMake.style.display='block';}
 function dlCard(){
-  const out=document.createElement('canvas');out.width=CW;out.height=CH;
-  const g=out.getContext('2d');g.imageSmoothingEnabled=false;
-  g.drawImage(cardOut,0,0);
-  g.save();
-  g.translate(1035,565); g.rotate(-8*Math.PI/180);
-  g.globalAlpha=.92;
-  g.strokeStyle='#E14E6B'; g.lineWidth=7; g.strokeRect(-158,-62,316,124);
-  g.globalAlpha=.5; g.lineWidth=3; g.strokeRect(-146,-50,292,100);
-  g.globalCompositeOperation='destination-out';
-  for(let i=0;i<40;i++){
-    g.globalAlpha=.5+Math.random()*.4;
-    g.fillRect(-158+Math.random()*316, -62+Math.random()*124, 3+Math.random()*5, 2+Math.random()*3);
-  }
-  g.globalCompositeOperation='source-over';
-  g.globalAlpha=.92;
-  g.fillStyle='#E14E6B'; g.font='26px Huninn'; g.textAlign='center';
-  g.fillText('✦ 歡迎加入 ✦',0,-14);
-  g.font='30px Huninn';
-  g.fillText('Tiny Tavern',0,30);
-  g.restore();
   const a=document.createElement('a');
   a.download='闆卡_'+(fName.value.trim()||'boss')+'.png';
-  a.href=out.toDataURL('image/png');a.click();
+  a.href=cardOut.toDataURL('image/png');a.click();
 }
-function dlAvatar(){
-  // 大頭貼:娃娃站在小房間場景裡
+async function dlAvatar(){
+  try{await TTTavernCard.ready();}catch(e){alert('場景載入失敗，請稍後再試。');return;}
   const tmp=document.createElement('canvas');tmp.width=64;tmp.height=64;
   drawDoll(tmp.getContext('2d'));
   const av=document.createElement('canvas');av.width=512;av.height=512;
-  const g=av.getContext('2d');g.imageSmoothingEnabled=false;
-  if(avReady) g.drawImage(AVBASE,0,0,512,512);
-  else{ g.fillStyle='#FBE3EC';g.fillRect(0,0,512,512); }
-  // 娃娃置中站在地毯上
-  const ds=384;
-  g.drawImage(tmp,0,0,64,64,(512-ds)/2, 462-ds, ds, ds);
-  const a=document.createElement('a');
-  a.download='頭貼_'+(fName.value.trim()||'boss')+'.png';
-  a.href=av.toDataURL('image/png');a.click();
+  TTTavernCard.avatar(av,tmp);
+  const a=document.createElement('a');a.download='頭貼_'+(fName.value.trim()||'boss')+'.png';a.href=av.toDataURL('image/png');a.click();
 }
 
 function randomDoll(){
@@ -805,7 +707,7 @@ document.addEventListener('pointerdown',function(e){
   const up=()=>{ t.style.transform=''; document.removeEventListener('pointerup',up); }; document.addEventListener('pointerup',up);
 },{passive:true});
 </script>
-<div style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:rgba(110,88,166,.45)">v233</div>
+<div style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:rgba(110,88,166,.45)">v238</div>
 <script src="card-ui/workshop.js?v=233"></script>
 </body>
 </html>
