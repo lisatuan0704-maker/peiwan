@@ -1557,6 +1557,7 @@ function renderClientOrders(){
       +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+((o.coinAmount||o.amount||0))+' 金幣'+(o.credited?'・已入帳':'')+'</span>':'')
       +(o.paidBy==='wallet'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">金幣支付</span>':'')
       +(o.staffName?'　<span style="background:#EFE4FB;color:#8E68C8;font-size:12px;font-weight:700;padding:2px 8px">指定:'+esc(o.staffName)+'</span>':'')
+      +(o.groupId?'<div style="font-size:12px;color:#856c94;margin-top:7px">同組 '+Number(o.groupSize)+' 位：'+esc((o.groupStaffNames||[]).join('、'))+'｜整組實付 NT$'+Number(o.groupAmount)+'，本筆分攤 NT$'+Number(o.amount)+'｜組別 '+esc(o.groupId)+'</div>':'')
       +(o.booking&&o.reserveAt?'　<span style="background:#FFF0DA;color:#C97B2B;font-size:12px;font-weight:700;padding:2px 8px">預約:'+(function(t){const d=new Date(t);const W=["日","一","二","三","四","五","六"];return (d.getMonth()+1)+"/"+d.getDate()+"(週"+W[d.getDay()]+") "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");})(o.reserveAt)+'</span>':(o.booking?'　<span style="background:#FFF0DA;color:#C97B2B;font-size:12px;padding:2px 8px">預約·時段待定</span>':''))
       +(overdue?'　<span style="color:#C0392B;font-size:12px;font-weight:700">⚠ 逾時未確認</span>':'')
       +'<div style="font-size:12px;color:var(--ink-soft);margin-top:2px">'

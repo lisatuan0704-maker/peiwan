@@ -20,9 +20,8 @@
  document.querySelector('#pickCast').onclick=()=>{if(current)toggle(current.cid);};
  document.querySelector('#liveNext').onclick=()=>{
    const chosen=people.filter(p=>selected.has(p.cid));
-   if(chosen.length===1){attempt(()=>api.choose(chosen[0].cid,rosterMode));return;}
-   const panel=document.createElement('div');panel.className='live-choose-backdrop';panel.innerHTML='<section class="live-choose-card"><h2>想一起玩的陪玩</h2><p>每位陪玩分別選方案與時段。</p>'+chosen.map(p=>'<button class="primary" data-order="'+esc(p.cid)+'">'+esc(p.name)+'・選方案 →</button>').join('')+'<button class="back" data-dismiss>← 返回名簿</button></section>';
-   panel.querySelector('[data-dismiss]').onclick=()=>panel.remove();panel.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>attempt(()=>{api.choose(b.dataset.order,rosterMode);panel.remove();}));document.body.append(panel);
+   if(!chosen.length)return;
+   attempt(()=>api.choose(chosen.map(p=>p.cid),rosterMode));
  };
  function attempt(fn){try{fn();}catch(e){toast(e.message);}}
  function available(p){return rosterMode==='now'?p.on&&!p.busy:!p.card.noBooking;}

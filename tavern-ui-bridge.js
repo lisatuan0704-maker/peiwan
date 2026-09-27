@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=232';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=234';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -128,7 +128,12 @@
       if(ref.base!==undefined){const key={front:'前髮',back:'後髮',cloth:'衣服',eye:'眼睛',brow:'眉毛'}[ref.slot];const p=TP.parts[key]?.[ref.base];if(p)tpDraw(g,p,color?.hair||0);}
       else{const p=window.__shopCfg?.[ref.source]?.parts?.[ref.slot];if(p)csDrawV(g,p,color?.hair||0,color?.hairHex,color?.hairHex2);}
     },
-    choose(cid,mode){const s=STAFF_ALL[cid],c=STAFF_CARDS[cid]||{};if(cid&&(!s||(mode==='now'&&(!s.on||s.busy))||(mode==='book'&&c.noBooking)))throw Error('店員狀態已更新，請重新選擇');pkMode=mode;selStaff=cid?{cid,name:s.name||'店員'}:null;close();shopOpen(2,'play');},
+    choose(ids,mode){
+      const keys=[...new Set((Array.isArray(ids)?ids:[ids]).filter(Boolean))];
+      const members=keys.map(cid=>{const s=STAFF_ALL[cid],c=STAFF_CARDS[cid]||{};if(!s||(mode==='now'&&(!s.on||s.busy))||(mode==='book'&&c.noBooking))throw Error('店員狀態已更新，請重新選擇');return {cid,name:s.name||'店員'};});
+      pkMode=mode;selStaff=members.length?{cid:members.length===1?members[0].cid:null,name:members.map(p=>p.name).join('、'),members}:null;
+      close();shopOpen(2,'play');
+    },
     originalInfo(cid){const s=staff().find(s=>s.cid===cid);if(s){close();oldInfo(cid,{name:s.name,st:s.on?(s.busy?'busy':'free'):'off'},0);}},
     buy(source){const o=catalog().find(x=>x.id===source);if(!o||!o.sale)throw Error('商品目前未開放選購');if(o.owned)throw Error('這件商品已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:o.id,n:'時裝・'+o.name,p:o.price,itemId:o.id,itemName:o.name};shopClose();shopOpen(3);},
     originalWard(){close();oldWard?.();},
