@@ -1432,8 +1432,9 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/presence.js?v=231"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=234">
-<link rel="stylesheet" href="card-ui/tavern-scene.css?v=238">
-<script src="card-ui/tavern-scene.js?v=238" defer></script>
+<link rel="stylesheet" href="card-ui/tavern-scene.css?v=239">
+<script src="card-ui/tavern-scene.js?v=239" defer></script>
+<link rel="stylesheet" href="lobby-ui/membership.css?v=239">
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
@@ -1598,14 +1599,16 @@ body.artBub.bub3s .npc .bub{
 <div class="shopModal" id="topupPayM"><div class="shopCard">
   <h3>儲值付款</h3>
   <div class="paybox" id="tuPayInfo"></div>
-  <label>稱呼 / Discord 名</label>
+  <section class="tu-transfer-fields"><div class="tu-section-heading"><span>02 / BANK TRANSFER</span><h4>銀行轉帳資料</h4><p>使用銀行轉帳付款後，填寫以下資料供掌櫃核帳。</p></div>
+  <label for="tuName">稱呼 / Discord 名</label>
   <input type="text" id="tuName" maxlength="30" placeholder="例:阿明 / @boss123">
-  <label>轉帳帳號末五碼(對帳用)</label>
+  <label for="tuLast5">轉帳帳號末五碼（對帳用）</label>
   <input type="text" id="tuLast5" maxlength="5" inputmode="numeric" placeholder="例:12345">
-  <label>轉帳截圖(付款證明)</label>
+  <label for="tuProof">轉帳截圖（付款證明）</label>
   <input type="file" id="tuProof" accept="image/*">
   <img id="tuProofPrev" style="max-width:100%;max-height:150px;display:none;margin-top:8px;border:2px solid #E8C7D4">
   <p class="warn">※ 儲值送出後,掌櫃核帳確認即入帳金幣,可在錢包查看紀錄。</p>
+  </section>
   <div class="btns"><button class="sc-back" onclick="openTopup()">‹ 上一步</button><button class="sc-go" id="tuSubmitBtn" onclick="submitTopup()">送出儲值</button></div>
 </div></div>
 <div class="shopModal" id="resM"><div class="shopCard">
@@ -1666,7 +1669,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v238</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v239</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -4257,13 +4260,14 @@ function pickTier(i){
   if(window.gClose) gClose('topupM');
   const get=curTier.amt+(curTier.bonus||0);
   document.getElementById('tuPayInfo').innerHTML=
-    '儲值金額:<b>NT$'+curTier.amt+'</b>'+(curTier.bonus>0?' <span style="color:#3E9E6B">(送 '+curTier.bonus+')</span>':'')+'<br>'+
-    '入帳金幣:<b style="color:#B8860B">'+get+' 金幣</b><br>'+
+    '<div class="tu-receipt"><div><span>儲值金額</span><b>NT$'+curTier.amt+'</b></div>'+
+    '<div><span>入帳金幣</span><b>'+get+' <small>金幣</small></b>'+(curTier.bonus>0?'<small class="tu-bonus">內含贈送 '+curTier.bonus+' 金幣</small>':'')+'</div></div>'+
+    '<div class="tu-section-heading"><span>01 / ONLINE PAYMENT</span><h4>線上付款</h4><p>信用卡或超商付款，完成後自動入帳。</p></div>'+
     '<button type="button" id="tuOnlineBtn" onclick="tuPayOnline()" style="display:block;width:100%;margin:10px 0 4px;border:none;cursor:pointer;'+
       'background:linear-gradient(180deg,#F19FBE,#D96A8B);color:#fff;font-family:inherit;font-size:14.5px;font-weight:800;padding:12px;border-radius:12px;box-shadow:0 4px 12px rgba(200,90,130,.3)">'+
       '線上付款(信用卡/超商)・自動入帳</button>'+
-    '<div style="text-align:center;font-size:11.5px;color:#B7A6C9;margin:2px 0 8px">── 或用銀行轉帳(需等掌櫃核帳)──</div>'+
-    '<div style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b style="color:#5A4880">'+esc(PAY_ACCOUNT)+'</b>'+
+    '<div class="tu-bank-divider">或使用銀行轉帳</div>'+
+    '<div class="tu-bank-account" style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b style="color:#5A4880">'+esc(PAY_ACCOUNT)+'</b>'+
     '<button type="button" onclick="(function(b){try{navigator.clipboard.writeText(PAY_ACCOUNT)}catch(e){}b.textContent=\'已複製 ✓\';setTimeout(()=>b.textContent=\'複製\',1500)})(this)" style="border:none;background:#F0E7FA;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;cursor:pointer">複製</button></div>'+
     (PAY_NOTE?'<div style="font-size:12px;color:#8E7AB0">'+esc(PAY_NOTE)+'</div>':'');
   document.getElementById('tuProofPrev').style.display='none';
@@ -6019,7 +6023,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
       return '<div class="vipRw"><img src="'+(AICON[r[0]]||'')+'" alt=""><span>'+r[1]+'</span></div>';
     }).join('');
     box.innerHTML=
-      '<div style="background:linear-gradient(135deg,#FCE9F2,#EDE3FB);border-radius:14px;padding:13px;margin-bottom:12px">'
+      '<div class="vip-progress-summary" style="background:linear-gradient(135deg,#FCE9F2,#EDE3FB);border-radius:14px;padding:13px;margin-bottom:12px">'
       +'<div style="display:flex;align-items:center;gap:11px">'
       +'<div class="vlv2 '+(info.lv?info.cur.cls:'vc1')+'" style="width:54px"><div class="a">VIP</div><div class="b">'+info.lv+'</div><div class="c">'+(info.cur?info.cur.nm:'—')+'</div></div>'
       +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:#5A4880">已累積支持 NT$'+info.spent+'</div>'
@@ -7573,7 +7577,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui-bridge.js?v=234"></script>
-<script src="lobby-ui/live.js?v=234"></script>
+<script src="lobby-ui/live.js?v=239"></script>
 <script src="lobby-ui/order-flow.js?v=234"></script>
 </body>
 </html>

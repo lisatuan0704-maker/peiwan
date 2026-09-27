@@ -1,7 +1,7 @@
 /* 直接組合酒館原始圖層；不重畫、不修改繪師原稿。 */
 (function(){
   'use strict';
-  const paths={base:'img/lobby-layers-v218/base.png',fixtures:'img/lobby-layers-v218/fixtures.png',cat:'img/lobby-layers-v218/cat.png',stools:'img/lobby-layers-v218/stools.png',food:'img/lobby-layers-v218/food.png',flower:'img/lobby-layers-v218/flower.png',white:'img/lobby-layers-v218/white.png',purple:'img/lobby-layers-v218/purple.png'};
+  const paths={base:'img/lobby-layers-v218/base.png',fixtures:'img/lobby-layers-v218/fixtures.png',cat:'img/lobby-layers-v218/cat.png',stools:'img/lobby-layers-v218/stools.png',food:'img/lobby-layers-v218/food.png',flower:'img/lobby-layers-v218/flower.png',white:'img/lobby-layers-v218/white.png',purple:'img/lobby-layers-v218/purple.png',wolf:'img/lobby-layers-v218/wolf-cushions.png'};
   const images={}; let pending;
   function ready(){
     if(!pending) pending=Promise.all(Object.entries(paths).map(([key,url])=>new Promise((resolve,reject)=>{
@@ -9,29 +9,22 @@
     }))).catch(e=>{pending=null;throw e;});
     return pending;
   }
-  const bounds={white:[153,520,81,99],purple:[441,222,120,87],flower:[84,697,105,102]};
-  function companion(g,key,cx,bottom,height){
-    const b=bounds[key],w=b[2]/b[3]*height;
-    g.save();g.imageSmoothingEnabled=false;
-    g.drawImage(images[key],...b,cx-w/2,bottom-height,w,height);g.restore();
+  // 所有大廳圖層共用原始 1600 × 900 座標，只整體等比縮放。
+  const sceneLayers=['base','fixtures','stools','food','cat','wolf','purple','white','flower'];
+  function guest(g,doll){
+    if(!doll)return;
+    const px=doll.getContext('2d').getImageData(0,0,64,64).data;
+    let left=64,top=64,right=-1,bottom=-1;
+    for(let y=0;y<64;y++)for(let x=0;x<64;x++)if(px[(y*64+x)*4+3]>0){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}
+    if(bottom<0)return;
+    const sw=right-left+1,sh=bottom-top+1,h=108,w=sw/sh*h,cx=800,foot=618;
+    g.fillStyle='#4d2c3338';g.beginPath();g.ellipse(cx,foot-2,w*.36,7,0,0,Math.PI*2);g.fill();
+    g.drawImage(doll,left,top,sw,sh,cx-w/2,foot-h,w,h);
   }
-  function cut(g,key,sx,sy,sw,sh,x,y,w,h){g.drawImage(images[key],sx,sy,sw,sh,x,y,w,h);}
-  function shadow(g,x,y,rx,ry){g.fillStyle='#4d2c3338';g.beginPath();g.ellipse(x,y,rx,ry,0,0,Math.PI*2);g.fill();}
-  // 600 × 760 的吧檯一角，保留原圖比例和像素邊緣。
-  function corner(g,x,y,w,h,doll){
-    g.save();g.beginPath();g.rect(x,y,w,h);g.clip();g.translate(x,y);g.scale(w/600,h/760);g.imageSmoothingEnabled=false;
-    cut(g,'base',260,0,711,900,0,0,600,760);
-    cut(g,'fixtures',382,220,925,207,18,280,570,128);
-    cut(g,'stools',676,365,470,90,177,374,310,60);
-    ['white','purple','flower'].forEach((key,i)=>{shadow(g,118+i*142,322,34,7);companion(g,key,118+i*142,320,130);});
-    cut(g,'cat',1081,228,90,96,490,267,65,69);
-    if(doll){
-      const px=doll.getContext('2d').getImageData(0,0,64,64).data;let foot=63;
-      while(foot>0&&!Array.from({length:64},(_,i)=>px[(foot*64+i)*4+3]).some(a=>a>80))foot--;
-      shadow(g,294,322+(foot+1)*6,78,10);g.drawImage(doll,102,322,384,384);
-    }
-    cut(g,'fixtures',1510,695,90,205,520,584,80,182);
-    g.restore();
+  function scene(g,x,y,w,h,doll,crop=[0,0,1600,900]){
+    g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
+    const scale=w/crop[2];g.translate(x,y);g.scale(scale,scale);g.translate(-crop[0],-crop[1]);g.imageSmoothingEnabled=false;
+    sceneLayers.forEach(key=>g.drawImage(images[key],0,0,1600,900));guest(g,doll);g.restore();
   }
   function fit(g,text,x,y,maxWidth,size,min=22,color='#513e39'){
     let value=String(text);g.fillStyle=color;g.font=size+'px "LINE Seed TW", Huninn, sans-serif';
@@ -48,33 +41,21 @@
     }if(line)g.fillText(line,x,y+row*(size+13));
   }
   function render(canvas,info,doll){
-    const g=canvas.getContext('2d');g.clearRect(0,0,1280,800);g.fillStyle='#49322e';g.fillRect(0,0,1280,800);
-    corner(g,16,16,600,768,doll);
-    g.fillStyle='#f8eedc';g.fillRect(616,16,648,768);g.fillStyle='#d7b99b';g.fillRect(634,38,2,724);
-    const x=674,right=1208,width=right-x;
-    fit(g,'小小酒館  /  來客名片',x,83,width,24,24,'#977762');
-    fit(g,info.name,x,156,width,58,36);
-    fit(g,info.dcid,x,195,width,23,20,'#947c6d');
-    g.fillStyle='#cbb69a';g.fillRect(x,223,width,2);
-    fit(g,'生日',x,269,width,22,22,'#947c6d');
-    fit(g,info.birthday,x,315,width,35,30);
-    fit(g,'常玩遊戲',x,369,width,22,22,'#947c6d');
-    g.fillStyle='#513e39';lines(g,info.games,x,412,width,30,2);
-    let tx=x,ty=505;g.font='24px "LINE Seed TW", Huninn, sans-serif';
-    info.tags.forEach(tag=>{const tw=g.measureText(tag).width+28;if(tx+tw>right){tx=x;ty+=48;}g.fillStyle='#e7d8c3';g.fillRect(tx,ty-27,tw,38);g.fillStyle='#725b4b';g.fillText(tag,tx+14,ty);tx+=tw+10;});
-    if(info.quote){g.fillStyle='#725b4b';lines(g,'「'+info.quote+'」',x,596,width,27,2);}
-    g.fillStyle='#cbb69a';g.fillRect(x,686,width,2);
-    fit(g,'TINY TAVERN',x,731,width,29,29,'#765344');
-    fit(g,'留個位置，下次一起玩。',x,761,width,18,18,'#947c6d');
-    g.fillStyle='#f8eedc';g.fillRect(42,698,544,62);fit(g,'今天，也在酒館。',68,738,490,26,26,'#725443');
+    const g=canvas.getContext('2d');g.clearRect(0,0,1280,960);g.fillStyle='#60433b';g.fillRect(0,0,1280,960);
+    scene(g,16,16,1248,702,doll);
+    g.fillStyle='#fbf2e4';g.fillRect(16,718,1248,226);
+    fit(g,'TINY TAVERN / 酒館闆卡',48,758,370,18,18,'#a18771');
+    fit(g,info.name,48,813,370,44,28);
+    fit(g,info.dcid,48,850,370,22,18,'#947c6d');
+    g.fillStyle='#d8c4ac';g.fillRect(444,754,1,112);
+    fit(g,'生日',477,764,155,20,20,'#947c6d');fit(g,info.birthday,477,807,155,27,24);
+    fit(g,'常玩遊戲',683,764,545,20,20,'#947c6d');g.fillStyle='#513e39';lines(g,info.games,683,805,545,27,2);
+    g.fillStyle='#d8c4ac';g.fillRect(48,874,1184,1);
+    fit(g,info.tags.map(t=>'#'+t).join('  '),48,914,460,22,17,'#8b7260');
+    if(info.quote)fit(g,'「'+info.quote+'」',540,914,692,25,20,'#725b4b');
   }
-  function welcome(canvas){
-    const g=canvas.getContext('2d');canvas.width=1000;canvas.height=430;g.imageSmoothingEnabled=false;
-    const layer=key=>cut(g,key,0,100,1600,688,0,0,1000,430);
-    layer('base');layer('fixtures');layer('stools');layer('cat');layer('food');
-    ['white','purple','flower'].forEach((key,i)=>{const cx=332+i*166;shadow(g,cx,370,47,9);companion(g,key,cx,366,178);});
-  }
-  function avatar(canvas,doll){const g=canvas.getContext('2d');g.save();g.scale(512/600,512/600);corner(g,0,-100,600,760,doll);g.restore();}
+  function welcome(canvas){canvas.width=1000;canvas.height=563;scene(canvas.getContext('2d'),0,0,1000,563,null);}
+  function avatar(canvas,doll){scene(canvas.getContext('2d'),0,0,512,512,doll,[650,418,300,300]);}
   function mount(){document.querySelectorAll('canvas[data-tavern-welcome]').forEach(canvas=>{
     ready().then(()=>welcome(canvas)).catch(()=>{canvas.classList.add('scene-unavailable');});
   });}
