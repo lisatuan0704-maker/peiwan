@@ -23,3 +23,6 @@
 @media(prefers-reduced-motion:reduce){.tt-order-flow *{transition:none!important}}
 .tt-order-flow #payMethodRow>div{background:#ded7e588!important;color:#8c7597!important;border:1px solid #c9bbd0;font-size:11px!important;border-radius:6px!important}.of-payment-line{display:flex;align-items:center;justify-content:space-between;gap:15px}.of-payment-line strong{font:26px 'Tavern Numerals','LINE Seed TW',sans-serif;color:#93729f}.of-payment-line strong small{font:11px 'LINE Seed TW',sans-serif}.of-wallet-line{font-size:11px;color:#a28baa;border-bottom:1px solid #cdbbd155;padding-bottom:10px;margin-top:5px}
 .of-close{position:absolute;right:13px;top:12px;width:32px;height:32px;border:1px solid #bda8c4;border-radius:5px;background:#fffaf8aa;color:#8e769a;font:22px 'LINE Seed TW',sans-serif;cursor:pointer}.of-heading small{padding-right:27px}
+
+/* v238:一起玩的冒險者改成圓形頭像 */
+.of-members .of-av{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #e6d3e3;box-shadow:0 2px 8px #8e6bb026;background:#fff}

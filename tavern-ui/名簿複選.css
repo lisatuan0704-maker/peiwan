@@ -110,3 +110,8 @@ body .roster-window .cast-watermark{position:absolute;left:22%;top:auto;bottom:-
 .roster-window .cast-row::before{content:'';position:absolute;inset:0 auto 0 0;width:22%;background:var(--pale);clip-path:polygon(0 0,100% 0,84% 100%,0 100%);z-index:0;pointer-events:none}
 body .roster-window .cast-watermark{z-index:1}
 @media(max-width:600px){.roster-window .cast-row::before{width:27%;clip-path:polygon(0 0,100% 0,80% 100%,0 100%)}}
+
+/* v238:已選冒險者改成圓形頭像 */
+.multi-selection-summary>span.live-avatars{display:flex;gap:6px;overflow:visible}
+.live-av{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--accent,#b9a3c9);box-shadow:0 2px 6px #8e6bb033;background:#fff;flex:none}
+.live-av-txt{display:grid;place-items:center;font-size:13px;color:#8f638f}

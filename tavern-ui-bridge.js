@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=234';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=238';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -22,7 +22,7 @@
     document.getElementById('dressM').style.display='none';overlay.hidden=false;
     frame.contentWindow.ttLiveOpen?.(pending);frame.focus();
   }
-  function staff(){return Object.entries(STAFF_ALL).filter(([,s])=>s).map(([cid,s])=>({cid,theme:THEMES[cid]||null,name:s.name||'店員',on:!!s.on,busy:!!s.busy,card:clone(STAFF_CARDS[cid]||{})}));}
+  function staff(){return Object.entries(STAFF_ALL).filter(([,s])=>s).map(([cid,s])=>({cid,theme:THEMES[cid]||null,name:s.name||'冒險者',on:!!s.on,busy:!!s.busy,card:clone(STAFF_CARDS[cid]||{})}));}
   function group(part,source,key){
     const known={'cloth0:acc1':'hand','cloth0:acc2':'head','cloth0:acc3':'head','cloth3:acc1':'hand','cloth3:acc2':'ear','cloth3:acc3':'head','cloth2:acc2':'face','cloth2:acc3':'hand'};
     if(known[source+':'+key])return known[source+':'+key];
@@ -130,7 +130,7 @@
     },
     choose(ids,mode){
       const keys=[...new Set((Array.isArray(ids)?ids:[ids]).filter(Boolean))];
-      const members=keys.map(cid=>{const s=STAFF_ALL[cid],c=STAFF_CARDS[cid]||{};if(!s||(mode==='now'&&(!s.on||s.busy))||(mode==='book'&&c.noBooking))throw Error('店員狀態已更新，請重新選擇');return {cid,name:s.name||'店員'};});
+      const members=keys.map(cid=>{const s=STAFF_ALL[cid],c=STAFF_CARDS[cid]||{};if(!s||(mode==='now'&&(!s.on||s.busy))||(mode==='book'&&c.noBooking))throw Error('冒險者狀態已更新，請重新選擇');return {cid,name:s.name||'冒險者',theme:THEMES[cid]||null};});
       pkMode=mode;selStaff=members.length?{cid:members.length===1?members[0].cid:null,name:members.map(p=>p.name).join('、'),members}:null;
       close();shopOpen(2,'play');
     },

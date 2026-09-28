@@ -1,4 +1,4 @@
-/* v234：同組陪玩共用方案與時段；每位保留既有接單資料格式。 */
+/* v234：同組冒險者共用方案與時段；每位保留既有接單資料格式。 */
 (() => {
  'use strict';
  const $=id=>document.getElementById(id), money=n=>Number(n).toLocaleString('zh-TW');
@@ -14,7 +14,7 @@
    const base=Math.floor(off/quantity),extra=off%quantity;
    return {unit:cents/scale,total:total/scale,discount:off/scale,amount:(total-off)/scale,shares:Array.from({length:quantity},(_,i)=>({amount:(cents-base-(i<extra?1:0))/scale,discount:(base+(i<extra?1:0))/scale}))};
  }
- function chips(){const list=members();return '<div class="of-members">'+(list.length?list.map(p=>'<span>'+esc(p.name)+'</span>').join(''):'<span>不指定陪玩 · 1 位</span>')+'</div>';}
+ const AVN={KABUKI:'蕪',MOMO:'桃',RIRA:'縭'};function chips(){const list=members();return '<div class="of-members">'+(list.length?list.map(p=>{const th=p.theme,nm=(th&&AVN[th])||p.name;return th?'<img class="of-av" src="tavern-ui/assets/avatar-'+esc(th)+'.png" alt="'+esc(nm)+'" title="'+esc(nm)+'">':'<span>'+esc(nm)+'</span>';}).join(''):'<span>不指定冒險者 · 1 位</span>')+'</div>';}
  function heading(id,kicker,title,step){
    const box=$(id),card=box.querySelector('.shopCard');box.classList.add('tt-order-flow');box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label',title);
    let head=card.querySelector('.of-heading');if(!head){head=document.createElement('div');head.className='of-heading';card.prepend(head);}
@@ -22,13 +22,13 @@
    head.querySelector('.of-close').onclick=()=>{if(submitting){toast('正在送出這組點單，請稍候');return;}reserveToken++;shopClose();};
    const old=card.querySelector(':scope > h3');if(old)old.hidden=true;
    let track=card.querySelector('.of-track');if(!track){track=document.createElement('div');track.className='of-track';head.after(track);}
-   track.innerHTML=['選陪玩','選方案',pkMode==='book'?'約時間':'即時出發','確認付款'].map((t,i)=>'<span class="'+(i===step?'active':'')+'"><b>0'+(i+1)+'</b> '+t+'</span>').join('');
+   track.innerHTML=['選冒險者','選方案',pkMode==='book'?'約時間':'即時出發','確認付款'].map((t,i)=>'<span class="'+(i===step?'active':'')+'"><b>0'+(i+1)+'</b> '+t+'</span>').join('');
  }
- function context(id){const card=$(id).querySelector('.shopCard');let el=card.querySelector('.of-context');if(!el){el=document.createElement('div');el.className='of-context';card.querySelector('.of-track').after(el);}el.innerHTML='<div class="of-context-line"><strong>這次一起玩的 '+count()+' 位陪玩</strong><span>'+(pkMode==='book'?'預約一起玩':'即時一起玩')+'</span></div>'+chips();}
+ function context(id){const card=$(id).querySelector('.shopCard');let el=card.querySelector('.of-context');if(!el){el=document.createElement('div');el.className='of-context';card.querySelector('.of-track').after(el);}el.innerHTML='<div class="of-context-line"><strong>這次一起玩的 '+count()+' 位冒險者</strong><span>'+(pkMode==='book'?'預約一起玩':'即時一起玩')+'</span></div>'+chips();}
  function summary(){
    if(curKind!=='play'||!curPlan)return '';
    const unit=curPlan.unitPrice??curPlan.p,qty=curPlan.quantity||1;
-   return '<div class="of-receipt"><div><span>方案</span><b>'+esc(curPlan.n)+'</b></div><div><span>每位陪玩</span><b>NT$ '+money(unit)+'</b></div><div><span>陪玩人數</span><b>'+qty+' 位</b></div>'+(curBooking&&curReserveAt?'<div><span>預約時間</span><b>'+esc(fmtRes(curReserveAt))+'</b></div>':'')+'<div class="of-total"><span>方案合計</span><strong>'+money(unit)+' <i>× '+qty+' ＝</i> '+money(curPlan.p)+'</strong></div><small>優惠券如有使用，會從整筆合計折抵一次。</small></div>';
+   return '<div class="of-receipt"><div><span>方案</span><b>'+esc(curPlan.n)+'</b></div><div><span>每位冒險者</span><b>NT$ '+money(unit)+'</b></div><div><span>冒險者人數</span><b>'+qty+' 位</b></div>'+(curBooking&&curReserveAt?'<div><span>預約時間</span><b>'+esc(fmtRes(curReserveAt))+'</b></div>':'')+'<div class="of-total"><span>方案合計</span><strong>'+money(unit)+' <i>× '+qty+' ＝</i> '+money(curPlan.p)+'</strong></div><small>優惠券如有使用，會從整筆合計折抵一次。</small></div>';
  }
  function checkout(){if(curKind!=='play')return;heading('shopM3','CHECK YOUR ORDER / 點單確認','這次，就一起玩吧。',3);context('shopM3');const card=$('shopM3').querySelector('.shopCard');let receipt=card.querySelector('.of-checkout-summary');if(!receipt){receipt=document.createElement('div');receipt.className='of-checkout-summary';card.querySelector('.of-context').after(receipt);}receipt.innerHTML=summary();}
  function validate(list=members(),booking=pkMode==='book'){
@@ -40,9 +40,9 @@
    const result=previous.open(step,kind);
    if(step===2&&curKind==='play'){
      heading('shopM2','CHOOSE YOUR PLAN / 今天想怎麼玩','選一個，一起玩。',1);context('shopM2');
-     $('m2list').innerHTML=playItems().map((p,i)=>'<button type="button" class="planBtn" data-of-plan="'+esc(p.id)+'"><span class="of-plan-number">'+String(i+1).padStart(2,'0')+'</span><span class="of-plan-name"><b>'+esc(p.n)+'</b><small>這個方案會套用到所選的 '+count()+' 位陪玩</small></span><span class="pp">NT$ '+money(p.p)+'<small>／每位陪玩</small></span><span class="of-plan-arrow" aria-hidden="true">→</span></button>').join('');
+     $('m2list').innerHTML=playItems().map((p,i)=>'<button type="button" class="planBtn" data-of-plan="'+esc(p.id)+'"><span class="of-plan-number">'+String(i+1).padStart(2,'0')+'</span><span class="of-plan-name"><b>'+esc(p.n)+'</b><small>這個方案會套用到所選的 '+count()+' 位冒險者</small></span><span class="pp">NT$ '+money(p.p)+'<small>／每位冒險者</small></span><span class="of-plan-arrow" aria-hidden="true">→</span></button>').join('');
      $('m2list').querySelectorAll('[data-of-plan]').forEach(b=>b.onclick=()=>pickPlan(b.dataset.ofPlan));
-     $('shopM2').querySelector('.sc-back').textContent='← 調整陪玩名單';
+     $('shopM2').querySelector('.sc-back').textContent='← 調整冒險者名單';
    } else if(step===3&&curKind==='play')checkout();
    else if(step===2||step===3){const modal=$('shopM'+step);modal.classList.remove('tt-order-flow');modal.querySelectorAll('.of-heading,.of-track,.of-context,.of-checkout-summary').forEach(e=>e.remove());modal.querySelector('.shopCard > h3').hidden=false;}
    return result;
@@ -65,7 +65,7 @@
    if(curKind!=='play')return previous.reserve(next);
    const token=++reserveToken,list=members().map(p=>({...p}));let date=null,hour=null,minute=null,ranges=[],loading=true,loadError=false;
    curReserveAt=null;shopClose();heading('resM','FIND A TIME / 共用時段','約個大家都有空的時間。',2);context('resM');$('resM').style.display='flex';
-   const oldIntro=$('resM').querySelector('.shopCard > h3 + div');if(oldIntro)oldIntro.textContent='選一次時間，所選陪玩會一起收到同一時段的預約。';
+   const oldIntro=$('resM').querySelector('.shopCard > h3 + div');if(oldIntro)oldIntro.textContent='選一次時間，所選冒險者會一起收到同一時段的預約。';
    $('resM').querySelector('.sc-back').textContent='← 返回方案';$('resM').querySelector('.sc-back').onclick=()=>{reserveToken++;shopOpen(2,'play');};
    $('resGo').textContent='確認時段，前往結帳 →';$('resGo').disabled=true;
    const today=new Date();today.setHours(0,0,0,0);$('resDates').innerHTML='';
@@ -76,8 +76,8 @@
      $('resHours').innerHTML='';$('resMins').innerHTML='';
      for(let h=0;h<24;h++){const b=document.createElement('button');b.type='button';b.textContent=String(h).padStart(2,'0');b.setAttribute('aria-label',h+'時');b.disabled=!date||loading||loadError||Array.from({length:6},(_,i)=>time(h,i*10)).every(blocked);b.className=(b.disabled?'busy ':'')+(hour===h?'on':'');b.onclick=()=>{hour=h;minute=null;curReserveAt=null;draw();};$('resHours').append(b);}
      for(let m=0;m<60;m+=10){const b=document.createElement('button');b.type='button';b.textContent=':'+String(m).padStart(2,'0');b.setAttribute('aria-label',m+'分');b.disabled=hour===null||loading||loadError||blocked(time(hour,m));b.className=(b.disabled?'busy ':'')+(minute===m?'on':'');b.onclick=()=>{minute=m;curReserveAt=time(hour,m);draw();};$('resMins').append(b);}
-     $('resPick').textContent=loading?'正在確認所有陪玩的行事曆…':loadError?'時段資料讀取失敗，請返回方案再試。':curReserveAt?'已選 '+fmtRes(curReserveAt):!date?'先選日期，再挑選時間。':hour===null?'接著選擇小時。':'最後選擇分鐘。';
-     $('resBooked').textContent=loading||loadError?'':'灰色時段表示至少一位陪玩已有安排，或距現在不足 15 分鐘。';$('resGo').disabled=loading||loadError||!curReserveAt;
+     $('resPick').textContent=loading?'正在確認所有冒險者的行事曆…':loadError?'時段資料讀取失敗，請返回方案再試。':curReserveAt?'已選 '+fmtRes(curReserveAt):!date?'先選日期，再挑選時間。':hour===null?'接著選擇小時。':'最後選擇分鐘。';
+     $('resBooked').textContent=loading||loadError?'':'灰色時段表示至少一位冒險者已有安排，或距現在不足 15 分鐘。';$('resGo').disabled=loading||loadError||!curReserveAt;
    }
    $('resGo').onclick=()=>{try{validate(list,true);validPlan();if(!curReserveAt||blocked(curReserveAt))throw Error('這個時段已無法預約，請重新選擇');shopClose();next();}catch(e){toast(e.message);}};
    draw();try{ranges=await bookings(list);}catch(e){loadError=true;}if(token!==reserveToken)return;loading=false;draw();
@@ -103,12 +103,12 @@
    submitting=_submitting=true;const btn=$('paySubmitBtn');btn.disabled=true;btn.textContent='正在確認與送出…';
    let charged=false,committed=false,balAfter=0,records=[],groupId;
    try{
-     if(snap.booking){const ranges=await bookings(snap.list);validate(snap.list,true);if(!snap.reserveAt||snap.reserveAt<Date.now()+15*60000||conflict(snap.list,ranges,snap.reserveAt,duration(snap.plan)))throw Error('至少一位陪玩的時段已有安排，請返回重新選擇');}
+     if(snap.booking){const ranges=await bookings(snap.list);validate(snap.list,true);if(!snap.reserveAt||snap.reserveAt<Date.now()+15*60000||conflict(snap.list,ranges,snap.reserveAt,duration(snap.plan)))throw Error('至少一位冒險者的時段已有安排，請返回重新選擇');}
      const refs=snap.list.map(()=>db.ref(ROOT+'/clientOrders').push());groupId=refs[0].key;records=makeRecords(snap,refs.map(r=>r.key),groupId);
      if(method==='coin'){balAfter=await deduct(snap.key,snap.price.amount);charged=true;}
      const updates={};records.forEach(({id,order})=>{updates['clientOrders/'+id]=order;if(method!=='coin')updates['clientOrderProofs/'+id]=snap.proof;});
-     if(method==='coin'){const tx=db.ref(ROOT+'/walletTx/'+snap.key).push();updates['walletTx/'+snap.key+'/'+tx.key]={type:'spend',amount:-snap.price.amount,balAfter,ref:groupId,groupId,orderIds:records.map(r=>r.id),note:snap.plan.n+'・'+snap.list.length+' 位陪玩',ts:snap.createdAt};}
-     // 多位陪玩一次原子寫入，避免只成立部分訂單。
+     if(method==='coin'){const tx=db.ref(ROOT+'/walletTx/'+snap.key).push();updates['walletTx/'+snap.key+'/'+tx.key]={type:'spend',amount:-snap.price.amount,balAfter,ref:groupId,groupId,orderIds:records.map(r=>r.id),note:snap.plan.n+'・'+snap.list.length+' 位冒險者',ts:snap.createdAt};}
+     // 多位冒險者一次原子寫入，避免只成立部分訂單。
      await db.ref(ROOT).update(updates);committed=true;
      try{const ids=[...new Set([...myOrderIds(),...records.map(r=>r.id)])];localStorage.setItem('tt_orders',JSON.stringify(ids));}catch(_){}
      proofData=null;shopClose();
