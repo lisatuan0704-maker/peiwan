@@ -1434,7 +1434,7 @@ body.artBub.bub3s .npc .bub{
 .ttf .ttfAva{background:none!important}
 </style>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=215">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=224">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=250">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=222">
 <script src="lobby-ui/scene.js?v=229"></script>
 <script src="lobby-ui/presence.js?v=231"></script>
@@ -1683,7 +1683,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v249</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v250</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -6773,10 +6773,23 @@ document.addEventListener('keydown',e=>{
   if(best && bd<140){ best.click(); }
   else if(typeof toast==='function') toast('走近一點再按空白鍵,才搆得到唷');
 });
-/* 操作提示文字依裝置切換 */
+/* 操作提示：大廳載入後在畫面底部顯示一次，五秒後收起。 */
 (function(){
   const h=document.getElementById('hint2'); if(!h) return;
   if(!COARSE) h.textContent='WASD / 方向鍵移動 · 空白鍵與物件互動(門/店貓/布告欄)· 點小人看闆卡';
+  let shown=false,observer=null;
+  function showOnce(){
+    if(shown)return; shown=true;
+    if(observer)observer.disconnect();
+    h.classList.add('is-visible');
+    setTimeout(()=>{h.classList.remove('is-visible');setTimeout(()=>{h.hidden=true;},250);},5000);
+  }
+  const loading=document.getElementById('loadscr');
+  if(!loading||loading.classList.contains('hide'))showOnce();
+  else{
+    observer=new MutationObserver(()=>{if(loading.classList.contains('hide'))showOnce();});
+    observer.observe(loading,{attributes:true,attributeFilter:['class']});
+  }
 })();
 
 /* ================= v233:幽靈角色防護 =================
