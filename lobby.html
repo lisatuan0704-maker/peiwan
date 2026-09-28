@@ -1435,6 +1435,8 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=240">
 <script src="card-ui/tavern-scene.js?v=240" defer></script>
 <link rel="stylesheet" href="lobby-ui/membership.css?v=241">
+<link rel="stylesheet" href="lobby-ui/bubble-calibration.css?v=244">
+<script src="lobby-ui/bubble-calibration.js?v=244"></script>
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
@@ -1491,7 +1493,7 @@ body.artBub.bub3s .npc .bub{
 <div id="chatbox">
   <div id="chatlog"></div>
   <div id="chatrow">
-    <input id="chatin" maxlength="60" placeholder="說點什麼…（Enter 送出）">
+    <input id="chatin" placeholder="說點什麼…（最多 18 字）" aria-label="大廳訊息，最多 18 字">
     <button id="chatsend">送出</button>
   </div>
 </div>
@@ -1669,7 +1671,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v241</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v244</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3439,9 +3441,7 @@ if(db) db.ref(ROOT+'/staffStatus').on('value',snap=>{
 });
 
 /* ====== 聊天泡泡 + 紀錄 ====== */
-function showBubble(a, text){
-  if(!a || !a.el) return;
-  if(a.bubEl) a.bubEl.remove();
+function buildLegacyBubble(a, text){
   const b=document.createElement('div'); b.className='bub';
   { const _t=document.createElement('i'); _t.className='bubT'; _t.textContent=text; b.appendChild(_t); }
   /* v182:10 號新框文字區較小(寬68%、高19%),依字數挑一個裝得下的寬度,長訊息才不會被裁 */
@@ -3565,6 +3565,19 @@ function showBubble(a, text){
       }
     }catch(e){}
   }
+  return b;
+}
+function showBubble(a,text){
+  if(!a||!a.el)return;
+  const calibration=window.TTBubbleCalibration;
+  text=calibration?calibration.clip(text):String(text||'').slice(0,18);
+  const key=bubKeyFor(a);
+  let b;
+  if(key==='10'&&calibration&&document.body.classList.contains('bub3s')){
+    try{b=calibration.render(buildLegacyBubble(a,'安安'),text,TTBUB[key].g9,bubImg(key));}catch(e){console.warn('花框校正套用失敗',e);}
+  }
+  if(!b)b=buildLegacyBubble(a,text);
+  if(a.bubEl)a.bubEl.remove();
   a.el.appendChild(b); a.bubEl=b;
   clearTimeout(a.bubT);
   a.bubT=setTimeout(()=>{ if(a.bubEl===b){b.remove();a.bubEl=null;} }, 6000);
@@ -3647,7 +3660,7 @@ document.getElementById('repSend').onclick=()=>{
 function esc(t){return String(t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
 function sendChat(){
   const el=document.getElementById('chatin');
-  const t=el.value.trim();
+  const t=window.TTBubbleCalibration.clip(el.value.trim());
   if(!t) return;
   const a=me();
   if(!a){ pushLog('系統','先認領或製作你的闆卡才能說話唷',false); el.value=''; return; }
@@ -3657,7 +3670,7 @@ function sendChat(){
     pushLog('系統','你已被掌櫃禁言'+when+'。如有疑問請到 Discord 聯絡掌櫃',false); el.value=''; return;
   }
   el.value='';
-  const msg={key:myKey, name:(a.b&&a.b.name)||'？', text:t.slice(0,60), map:curMap, t:Date.now()};
+  const msg={key:myKey, name:(a.b&&a.b.name)||'？', text:t, map:curMap, t:Date.now()};
   showBubble(a, msg.text);
   try{ statInc('chat'); }catch(err){}
   if(db){
@@ -3666,10 +3679,11 @@ function sendChat(){
     pushLog(msg.name, msg.text, true, {id:ref.key, t:msg.t, key:myKey});
   }else pushLog(msg.name, msg.text, true, {t:msg.t, key:myKey});
 }
+window.TTBubbleCalibration.bindInput(document.getElementById('chatin'));
 document.getElementById('chatsend').onclick=sendChat;
 document.getElementById('chatin').addEventListener('keydown',e=>{
   e.stopPropagation();
-  if(e.key==='Enter') sendChat();
+  if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229) sendChat();
 });
 document.getElementById('chatin').addEventListener('keyup',e=>e.stopPropagation());
 if(db){
@@ -7577,7 +7591,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui-bridge.js?v=234"></script>
-<script src="lobby-ui/live.js?v=239"></script>
+<script src="lobby-ui/live.js?v=244"></script>
 <script src="lobby-ui/membership.js?v=241"></script>
 <script src="lobby-ui/order-flow.js?v=234"></script>
 </body>

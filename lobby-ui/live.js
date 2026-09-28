@@ -69,7 +69,7 @@
     document.body.append(art);
   }
   const chatHeading=document.createElement('div');chatHeading.className='tt-chat-heading';chatHeading.innerHTML='<b>酒館閒聊</b><span>TAVERN CHAT</span>'; $('chatbox').prepend(chatHeading);
-  $('chatin').placeholder='說點什麼…';$('chatin').setAttribute('aria-label','大廳聊天訊息');
+  $('chatin').placeholder='說點什麼…（最多 18 字）';$('chatin').setAttribute('aria-label','大廳聊天訊息，最多 18 字');
   $('gearBtn').innerHTML='<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 8h18M5 14h18M5 20h18M10 5v6M19 11v6M12 17v6"/></svg>';
   const cat=document.querySelector('.amCat');
   if(cat){cat.querySelector('canvas')?.remove();cat.querySelector('.amTag')?.remove();cat.style.left='1080px';cat.style.top='218px';cat.style.width='82px';cat.style.height='90px';cat.setAttribute('role','button');cat.tabIndex=0;cat.setAttribute('aria-label','摸摸吧台上的店貓');cat.title='摸摸店貓';cat.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();cat.click();}});}
