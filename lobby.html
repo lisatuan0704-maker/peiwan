@@ -1359,11 +1359,7 @@ body.artBub.bub3s .npc .bub{
 @media(max-width:680px){body.artBub .npc .bub{min-width:var(--bubMinWm,74px);max-width:var(--bubMaxWm,150px)}
   body.artBub .npc .bub .bubT{font-size:var(--bubFsM,10px)}}
 
-/* v238:對話泡泡的說話者名牌 + 指向說話者的尖角 */
-.npc .bub .bubWho{position:absolute;left:10px;top:-11px;z-index:5;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font:700 10px/1 'LINE Seed TW','Noto Sans TC',sans-serif;letter-spacing:.3px;color:#fff;background:#6b4a67;padding:3px 8px;border-radius:9px;
-  box-shadow:0 0 0 1.5px #fff,0 2px 5px rgba(70,40,80,.28);font-style:normal;text-shadow:none}
-.npc .bub .bubWho.me{background:#d0588a}
+/* 對話泡泡指向人物的小尖角 */
 .npc .bubPtr{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;z-index:4;pointer-events:none;
   border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #6b4a67;filter:drop-shadow(0 1px 0 #fff)}
 .npc .bubPtr.me{border-top-color:#d0588a}
@@ -1683,7 +1679,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v250</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v251</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3599,9 +3595,7 @@ function showBubble(a,text){
   if(!b)b=buildLegacyBubble(a,text);
   if(a.bubEl)a.bubEl.remove();
   if(a.bubPtr){a.bubPtr.remove();a.bubPtr=null;}
-  /* v249:文字泡泡保留說話者名牌；貼圖只顯示已確認的白色氣泡。 */
-  try{ const who=((a.b&&a.b.name)||(a.tag&&a.tag.textContent)||'').replace(/^★\s*/,'').trim();
-    if(who&&!sticker){ const w=document.createElement('b'); w.className='bubWho'+(a.isMe?' me':''); w.textContent=who; b.appendChild(w); } }catch(e){}
+  /* 人物下方已有名牌，文字與貼圖氣泡都不再重複顯示姓名。 */
   a.el.appendChild(b); a.bubEl=b;
   /* v248:一般框貼在頭頂正上方(扣掉小人圖上方的透明留白)+指向說話者的小尖角;
      花框(tt-calibrated-bubble)與貼圖(tt-chat-sticker)用使用者校正的位置,不動它 */
