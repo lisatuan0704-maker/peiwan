@@ -1,9 +1,10 @@
 /* 獨立貼圖校正頁：只使用原始素材與本機暫存，不連接正式聊天或帳號。 */
 (() => {
 'use strict';
-const $=id=>document.getElementById(id),catalog=window.TTStickerCatalog,storageKey='tt-sticker-calibration-v1';
+const $=id=>document.getElementById(id),catalog=window.TTStickerCatalog,storageKey='tt-sticker-calibration-v247';
 const spec={offsetX:['左右位置',-240,240,.5,'0 對齊小人中心；負數往左，正數往右。'],offsetY:['上下位置',-240,180,.5,'貼圖底部相對小人畫布頂部；負數往上，正數往下。'],width:['貼圖大小',24,280,1,'等比例縮放，寬度與高度相同，原圖不裁切。'],durationSeconds:['停留秒數',1,15,.5,'按「試播一次」查看這張貼圖的顯示時間。']};
-const defaults=()=>Object.fromEntries(catalog.map(c=>[c.id,{offsetX:0,offsetY:-8,width:96,durationSeconds:6}]));
+const approved=window.TTStickerApproved;
+const defaults=()=>Object.fromEntries(catalog.map(c=>[c.id,{offsetX:approved.offsetX,offsetY:approved.offsetY,width:approved.width,durationSeconds:approved.durationSeconds}]));
 let surface='white-bubble',settings=defaults(),selected=catalog[0].id,drag=null,playFrame=0,playStart=0,saveTimer;
 const round=n=>Math.round(n*100)/100;
 const clamp=(key,n)=>round(Math.max(spec[key][1],Math.min(spec[key][2],n)));
@@ -65,6 +66,7 @@ for(const type of ['pointerup','pointercancel','lostpointercapture'])$('sticker'
 $('sticker').addEventListener('keydown',event=>{if(event.target!==$('sticker'))return;const step=event.shiftKey?5:1,map={ArrowLeft:['offsetX',-step],ArrowRight:['offsetX',step],ArrowUp:['offsetY',-step],ArrowDown:['offsetY',step]};if(map[event.key]){event.preventDefault();stop();const [key,delta]=map[event.key];settings[selected][key]=clamp(key,settings[selected][key]+delta);sync();draw();save();}});
 $('play').onclick=play;$('stop').onclick=stop;
 $('applyAll').onclick=()=>{const s=settings[selected];for(const item of catalog)Object.assign(settings[item.id],{offsetX:s.offsetX,offsetY:s.offsetY,width:s.width});draw();save();$('status').textContent='已將這張的位置與大小套用全部；各張停留秒數保留。';};
+$('approved').onclick=()=>{stop();settings=defaults();surface=approved.surface;sync();draw();save();$('status').textContent='10 張已統一：左右 0、上下 16、大小 53、停留 5 秒、白色氣泡。';};
 $('reset').onclick=()=>{stop();settings[selected]=defaults()[selected];sync();draw();save();$('status').textContent='已還原這張貼圖。';};
 $('surface').onchange=()=>{stop();surface=$('surface').value;draw();pop();save();};
 $('zoom').onchange=()=>{layout();draw();save();};$('guides').onchange=()=>$('scene').classList.toggle('no-guides',!$('guides').checked);

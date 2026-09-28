@@ -1437,6 +1437,10 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/membership.css?v=241">
 <link rel="stylesheet" href="lobby-ui/bubble-calibration.css?v=244">
 <script src="lobby-ui/bubble-calibration.js?v=244"></script>
+<link rel="stylesheet" href="lobby-ui/stickers.css?v=247">
+<script src="tavern-ui/sticker-catalog.js?v=245"></script>
+<script src="tavern-ui/sticker-approved.js?v=247"></script>
+<script src="lobby-ui/stickers.js?v=247"></script>
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
@@ -1671,7 +1675,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v244</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v247</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3572,15 +3576,16 @@ function showBubble(a,text){
   const calibration=window.TTBubbleCalibration;
   text=calibration?calibration.clip(text):String(text||'').slice(0,18);
   const key=bubKeyFor(a);
-  let b;
-  if(key==='10'&&calibration&&document.body.classList.contains('bub3s')){
+  const sticker=window.TTChatStickers?.decode(text);
+  let b=sticker?window.TTChatStickers.render(sticker):null;
+  if(!b&&key==='10'&&calibration&&document.body.classList.contains('bub3s')){
     try{b=calibration.render(buildLegacyBubble(a,'安安'),text,TTBUB[key].g9,bubImg(key));}catch(e){console.warn('花框校正套用失敗',e);}
   }
   if(!b)b=buildLegacyBubble(a,text);
   if(a.bubEl)a.bubEl.remove();
   a.el.appendChild(b); a.bubEl=b;
   clearTimeout(a.bubT);
-  a.bubT=setTimeout(()=>{ if(a.bubEl===b){b.remove();a.bubEl=null;} }, 6000);
+  a.bubT=setTimeout(()=>{ if(a.bubEl===b){b.remove();a.bubEl=null;} }, sticker?window.TTChatStickers.durationMs:6000);
 }
 const CHATBUF=[];   // 本地脈絡緩衝(供檢舉時附帶前後文)
 function pushLog(name, text, mine, meta){
@@ -3589,7 +3594,9 @@ function pushLog(name, text, mine, meta){
   const log=document.getElementById('chatlog');
   const d=document.createElement('div');
   d.className='logline';
-  d.innerHTML='<span class="who">'+(mine?'★ ':'')+esc(name)+'</span>：'+esc(text);
+  const sticker=window.TTChatStickers?.decode(text);
+  d.innerHTML='<span class="who">'+(mine?'★ ':'')+esc(name)+'</span>：'+(sticker?'':esc(text));
+  if(sticker)d.append(window.TTChatStickers.logImage(sticker));
   if(meta){ d.dataset.mid=meta.id||''; d.dataset.name=name; d.dataset.text=text; d.dataset.key=meta.key||''; d.title='右鍵:看闆卡 / 檢舉'; }
   log.appendChild(d);
   CHATBUF.push({name, text, t:(meta&&meta.t)||Date.now(), id:(meta&&meta.id)||''});
@@ -3658,18 +3665,19 @@ document.getElementById('repSend').onclick=()=>{
   }
 };
 function esc(t){return String(t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
-function sendChat(){
+function sendChat(stickerCode){
   const el=document.getElementById('chatin');
-  const t=window.TTBubbleCalibration.clip(el.value.trim());
-  if(!t) return;
+  const sticker=typeof stickerCode==='string'&&window.TTChatStickers?.decode(stickerCode);
+  const t=sticker?stickerCode:window.TTBubbleCalibration.clip(el.value.trim());
+  if(!t) return false;
   const a=me();
-  if(!a){ pushLog('系統','先認領或製作你的闆卡才能說話唷',false); el.value=''; return; }
+  if(!a){ pushLog('系統','先認領或製作你的闆卡才能說話唷',false); if(!sticker)el.value=''; return false; }
   const mu=window.__mute;
   if(mu&&(mu.until===-1||mu.until>Date.now())){
     const when=mu.until===-1?'':(','+new Date(mu.until).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' 解除');
-    pushLog('系統','你已被掌櫃禁言'+when+'。如有疑問請到 Discord 聯絡掌櫃',false); el.value=''; return;
+    pushLog('系統','你已被掌櫃禁言'+when+'。如有疑問請到 Discord 聯絡掌櫃',false); if(!sticker)el.value=''; return false;
   }
-  el.value='';
+  if(!sticker)el.value='';
   const msg={key:myKey, name:(a.b&&a.b.name)||'？', text:t, map:curMap, t:Date.now()};
   showBubble(a, msg.text);
   try{ statInc('chat'); }catch(err){}
@@ -3678,9 +3686,11 @@ function sendChat(){
     ref.set(msg).catch(e=>console.warn('chat',e));
     pushLog(msg.name, msg.text, true, {id:ref.key, t:msg.t, key:myKey});
   }else pushLog(msg.name, msg.text, true, {t:msg.t, key:myKey});
+  return true;
 }
 window.TTBubbleCalibration.bindInput(document.getElementById('chatin'));
 document.getElementById('chatsend').onclick=sendChat;
+window.TTChatStickers.mount(sendChat);
 document.getElementById('chatin').addEventListener('keydown',e=>{
   e.stopPropagation();
   if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229) sendChat();
