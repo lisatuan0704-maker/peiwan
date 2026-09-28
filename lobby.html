@@ -1445,10 +1445,10 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/membership.css?v=241">
 <link rel="stylesheet" href="lobby-ui/bubble-calibration.css?v=244">
 <script src="lobby-ui/bubble-calibration.js?v=244"></script>
-<link rel="stylesheet" href="lobby-ui/stickers.css?v=247">
-<script src="tavern-ui/sticker-catalog.js?v=245"></script>
+<link rel="stylesheet" href="lobby-ui/stickers.css?v=249">
+<script src="tavern-ui/sticker-catalog.js?v=249"></script>
 <script src="tavern-ui/sticker-approved.js?v=247"></script>
-<script src="lobby-ui/stickers.js?v=247"></script>
+<script src="lobby-ui/stickers.js?v=249"></script>
 </head>
 <body>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
@@ -1683,7 +1683,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v248</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v249</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3599,9 +3599,9 @@ function showBubble(a,text){
   if(!b)b=buildLegacyBubble(a,text);
   if(a.bubEl)a.bubEl.remove();
   if(a.bubPtr){a.bubPtr.remove();a.bubPtr=null;}
-  /* v248:泡泡左上角掛說話者名牌,一眼看出是誰說的(花框校正版也掛) */
+  /* v249:文字泡泡保留說話者名牌；貼圖只顯示已確認的白色氣泡。 */
   try{ const who=((a.b&&a.b.name)||(a.tag&&a.tag.textContent)||'').replace(/^★\s*/,'').trim();
-    if(who){ const w=document.createElement('b'); w.className='bubWho'+(a.isMe?' me':''); w.textContent=who; b.appendChild(w); } }catch(e){}
+    if(who&&!sticker){ const w=document.createElement('b'); w.className='bubWho'+(a.isMe?' me':''); w.textContent=who; b.appendChild(w); } }catch(e){}
   a.el.appendChild(b); a.bubEl=b;
   /* v248:一般框貼在頭頂正上方(扣掉小人圖上方的透明留白)+指向說話者的小尖角;
      花框(tt-calibrated-bubble)與貼圖(tt-chat-sticker)用使用者校正的位置,不動它 */

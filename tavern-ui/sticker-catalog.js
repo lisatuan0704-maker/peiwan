@@ -1,4 +1,4 @@
-/* 使用者提供的十張原始 PNG，未裁切或重新繪製。 */
+/* 使用者提供的貼圖目錄；計算中依要求使用黑色公式編輯版，原圖另行保留。 */
 window.TTStickerCatalog=[
   {
     "id": "sticker-01",
@@ -34,7 +34,7 @@ window.TTStickerCatalog=[
   },
   {
     "id": "sticker-05",
-    "name": "期待",
+    "name": "傻眼",
     "sourceFile": "0817a5 (1).png",
     "asset": "sticker-assets/sticker-05.png",
     "nativeWidth": 500,
@@ -68,9 +68,9 @@ window.TTStickerCatalog=[
     "id": "sticker-09",
     "name": "計算中",
     "sourceFile": "0817a5.png",
-    "asset": "sticker-assets/sticker-09.png",
-    "nativeWidth": 500,
-    "nativeHeight": 500
+    "asset": "sticker-assets/sticker-09-black-v249.png",
+    "nativeWidth": 1254,
+    "nativeHeight": 1254
   },
   {
     "id": "sticker-10",

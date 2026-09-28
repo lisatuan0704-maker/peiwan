@@ -17,7 +17,7 @@ function render(item){
 function logImage(item){return picture(item,'tt-sticker-log');}
 function mount(send){
  const row=document.getElementById('chatrow');if(!row||document.getElementById('ttStickerButton'))return;
- const trigger=document.createElement('button');trigger.id='ttStickerButton';trigger.type='button';trigger.textContent='貼圖';trigger.setAttribute('aria-label','發送聊天貼圖');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','ttStickerPicker');
+ const trigger=document.createElement('button');trigger.id='ttStickerButton';trigger.type='button';trigger.title='聊天貼圖';trigger.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 21H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8l-7 7Z"/><path d="M14 21v-4a3 3 0 0 1 3-3h4M8 9h.01M15 9h.01M8 13q3 4 6 0"/></svg>';trigger.setAttribute('aria-label','發送聊天貼圖');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','ttStickerPicker');
  const panel=document.createElement('section');panel.id='ttStickerPicker';panel.hidden=true;panel.setAttribute('aria-label','聊天貼圖選單');
  const header=document.createElement('div');header.className='tt-sticker-heading';const title=document.createElement('b');title.textContent='聊天貼圖';const hint=document.createElement('span');hint.textContent='點一下發送';const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label','關閉貼圖選單');header.append(title,hint,close);
  const grid=document.createElement('div');grid.className='tt-sticker-grid';
