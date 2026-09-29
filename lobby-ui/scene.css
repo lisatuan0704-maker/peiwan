@@ -18,3 +18,9 @@ body.in-forest .tt-scene-layer{display:none}
 .npc.tt-scene-actor .tag{position:absolute;left:50%;top:calc(var(--tt-foot) + 5px);transform:translateX(-50%);margin:0}
 body:not(.in-forest) .amCat{z-index:482}
 body:not(.in-forest) .boardNPC{z-index:703}
+/* v253：繪師新版寬幅大廳(1920 × 900,中間 1600 與原圖層逐點對齊,左右各多 160px)。
+   可走範圍與圖層不變;寬螢幕左右留白改顯示真正的延伸畫面,取代鏡射。更寬的螢幕超出部分用深色收邊。 */
+body:not(.in-forest) .tt-mirror-side{transform:none;background-color:#2e1c28;background-image:url('../img/lobby-wide-v253.png');background-size:calc(var(--tt-stage-width) * 1.2) var(--tt-stage-height)}
+body:not(.in-forest) .tt-mirror-left{background-position:calc(var(--tt-gap-left) - var(--tt-stage-width) * .1) var(--tt-stage-top)}
+body:not(.in-forest) .tt-mirror-right{background-position:calc(var(--tt-stage-width) * -1.1) var(--tt-stage-top)}
+body:not(.in-forest) #hall.tt-extended #hallShade{background:linear-gradient(to right,rgba(28,16,26,.6),transparent calc(var(--tt-gap-left) - var(--tt-stage-width) * .1 + 60px),transparent calc(100% - var(--tt-gap-right) + var(--tt-stage-width) * .1 - 60px),rgba(28,16,26,.6))}

@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="tavern-ui/assets/fonts/lineseed.css" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Huninn&family=Press+Start+2P&family=Luckiest+Guy&display=swap" rel="stylesheet">
+<link href="tavern-ui/assets/fonts/lineseed.css?v=252" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Huninn&family=Press+Start+2P&family=Luckiest+Guy&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
@@ -36,7 +36,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:'LINE Seed TW','Huninn','Noto Sans TC',sans-serif;color:var(--ink);overflow:hidden;
+body{font-family:'TT Latin','TT Huninn','LINE Seed TW','Huninn','Noto Sans TC',sans-serif;color:var(--ink);overflow:hidden;
   background:#3A2312}
 /* 大廳舞台 */
 #hall{position:fixed;inset:0;overflow:hidden;background:#2A1C24}
@@ -953,7 +953,7 @@ body.liteFX #bookM.on,body.liteFX #bookM.on .bkOuter{animation:none!important}
 body.liteFX .gcard{animation:none!important}
 @keyframes bkFade{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){#bookM.on,#bookM.on .bkOuter{animation:none}}
-.bkOuter{position:relative;width:min(96vw,134vh,1480px);max-height:96vh;font-family:'Luckiest Guy','Huninn','Noto Sans TC',sans-serif}
+.bkOuter{position:relative;width:min(96vw,134vh,1480px);max-height:96vh;font-family:'TT Latin','Luckiest Guy','TT Huninn','Huninn','Noto Sans TC',sans-serif}
 .bkBan{position:absolute;left:50%;top:12.5%;transform:translate(-50%,-74%);z-index:0;background:url("data:image/png;base64,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");background-size:100% 100%;color:#FFF3EC;
   font-size:17px;letter-spacing:4px;padding:14px 52px 15px;white-space:nowrap;font-weight:700;text-shadow:0 2px 0 rgba(120,60,80,.45)}
 .bkStageWrap{position:relative;margin-top:34px}
@@ -1045,7 +1045,7 @@ body.liteFX .gcard{animation:none!important}
 .bkSlots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .bkSlot{aspect-ratio:1;border:10px solid transparent;border-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAA0CAYAAADFeBvrAAAA8klEQVR42u3aQQrDIBAF0Dh3yjFyi0Ihyx4ky0Cht8gxcii7EqyZ6JRQ9Ns/27jwkfm6cJz3frDUPI22hT+qddudZZ0rgWpDvoWdgjTI8npWQTxudzNMBcWYWggLTkMJEibdk9ZFgoSxoAQNU0JJK8G/ivoABSESJkUFgwydlbR2cV6peRq9IGYnl6X+Wo4ggggiiCCCCCKIIIIIIogggggiiCCCCCKIIIJQQdrTOUrFexfrhAZCrdvu+my58JcQ2y7sORgk149I2TkcCnGWEFBnIzKShgoBlZv3Ee2kaBlVGl76j/GyEqz2XZP77nob0XwDm36GTQ0n/nkAAAAASUVORK5CYII=") 16 fill stretch;display:grid;place-items:center;position:relative;cursor:pointer;overflow:hidden;font-family:inherit;padding:0;background:none}
 .bkSlot img{width:86%;height:76%;object-fit:contain;image-rendering:auto!important;margin-bottom:6%}
-.bkSlot span{position:absolute;left:0;right:0;bottom:-1px;font-size:.74em;color:#7E5E6E;background:rgba(255,250,240,.92);padding:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'LINE Seed TW','Huninn',sans-serif}
+.bkSlot span{position:absolute;left:0;right:0;bottom:-1px;font-size:.74em;color:#7E5E6E;background:rgba(255,250,240,.92);padding:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'TT Latin','TT Huninn','LINE Seed TW','Huninn',sans-serif}
 .bkSlot.lk{filter:saturate(.25) brightness(1.02)}
 .bkSlot.lk img{filter:grayscale(1);opacity:.4}
 .bkTl{position:relative;padding-left:18px}
@@ -1244,7 +1244,7 @@ body.liteFX .ttf .ttfStar{opacity:1}
 #cardBox .pcard{width:min(94vw,900px);max-height:92vh;overflow:auto;overscroll-behavior:contain;
   display:grid;grid-template-columns:270px 1fr;gap:0;
   background:linear-gradient(160deg,#FBF3FF 0%,#FFF6FA 52%,#F7EFFF 100%);
-  border-radius:26px;box-shadow:0 18px 50px rgba(70,40,90,.34);font-family:'LINE Seed TW','Huninn','Noto Sans TC',sans-serif}
+  border-radius:26px;box-shadow:0 18px 50px rgba(70,40,90,.34);font-family:'TT Latin','TT Huninn','LINE Seed TW','Huninn','Noto Sans TC',sans-serif}
 #cardBox .pcL{padding:22px 16px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
   background:linear-gradient(180deg,#F3E4FB,#FBE9F3);border-radius:26px 0 0 26px}
 #cardBox .pcStage{width:190px;height:190px;border-radius:22px;display:grid;place-items:center;
@@ -1332,7 +1332,7 @@ body.artBub .npc .bub .bubT{
   position:absolute; left:var(--bubL,5%); right:var(--bubR,13%); top:var(--bubT,6%); height:var(--bubH,76%);
   display:flex; align-items:center; justify-content:center;
   color:var(--bubFg); text-shadow:var(--bubSh);
-  font-family:'LINE Seed TW','Huninn','Noto Sans TC',sans-serif; font-style:normal;
+  font-family:'TT Latin','TT Huninn','LINE Seed TW','Huninn','Noto Sans TC',sans-serif; font-style:normal;
   font-size:var(--bubFs,11px); line-height:1.3; text-align:center;
   white-space:pre-wrap; word-break:break-word; overflow:hidden;
 }
@@ -1344,7 +1344,7 @@ body.artBub .npc .bub:not(:has(.bubT)){
   display:flex!important; align-items:center; justify-content:center;
   padding:var(--bubPT,5%) var(--bubPR,13%) var(--bubPB,14%) var(--bubPL,5%)!important; box-sizing:border-box;
   color:var(--bubFg)!important; text-shadow:var(--bubSh);
-  font-family:'LINE Seed TW','Huninn','Noto Sans TC',sans-serif; font-size:var(--bubFs,11px); line-height:1.3;
+  font-family:'TT Latin','TT Huninn','LINE Seed TW','Huninn','Noto Sans TC',sans-serif; font-size:var(--bubFs,11px); line-height:1.3;
   text-align:center; white-space:pre-wrap; word-break:break-word; overflow:hidden;
 }
 /* v186:10 號框「九宮格 canvas 合成」—— 鏡頭 cam.zoom 是連續動畫的小數縮放,
@@ -1430,18 +1430,18 @@ body.artBub.bub3s .npc .bub{
 .ttf .ttfAva{background:none!important}
 </style>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=215">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=214"><link rel="stylesheet" href="lobby-ui/live.css?v=250">
-<link rel="stylesheet" href="lobby-ui/scene.css?v=222">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=252"><link rel="stylesheet" href="lobby-ui/live.css?v=252">
+<link rel="stylesheet" href="lobby-ui/scene.css?v=253">
 <script src="lobby-ui/scene.js?v=229"></script>
 <script src="lobby-ui/presence.js?v=231"></script>
-<link rel="stylesheet" href="lobby-ui/numerals.css?v=218">
-<link rel="stylesheet" href="lobby-ui/order-flow.css?v=246">
-<link rel="stylesheet" href="card-ui/tavern-scene.css?v=240">
-<script src="card-ui/tavern-scene.js?v=240" defer></script>
-<link rel="stylesheet" href="lobby-ui/membership.css?v=241">
-<link rel="stylesheet" href="lobby-ui/bubble-calibration.css?v=244">
+<link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
+<link rel="stylesheet" href="lobby-ui/order-flow.css?v=252">
+<link rel="stylesheet" href="card-ui/tavern-scene.css?v=252">
+<script src="card-ui/tavern-scene.js?v=252" defer></script>
+<link rel="stylesheet" href="lobby-ui/membership.css?v=252">
+<link rel="stylesheet" href="lobby-ui/bubble-calibration.css?v=252">
 <script src="lobby-ui/bubble-calibration.js?v=244"></script>
-<link rel="stylesheet" href="lobby-ui/stickers.css?v=249">
+<link rel="stylesheet" href="lobby-ui/stickers.css?v=252">
 <script src="tavern-ui/sticker-catalog.js?v=249"></script>
 <script src="tavern-ui/sticker-approved.js?v=247"></script>
 <script src="lobby-ui/stickers.js?v=249"></script>
@@ -1679,7 +1679,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v251</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v253</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -4010,7 +4010,7 @@ function snapPhoto(dollOverride){
   g.textAlign='center';
   g.fillStyle='#5A4880'; g.font='700 26px Huninn, "Noto Sans TC", sans-serif';
   g.fillText(((a.b&&a.b.name)||'訪客'),180,364);
-  g.fillStyle='#A98CB8'; g.font='700 15px "Luckiest Guy", Huninn, sans-serif';
+  g.fillStyle='#A98CB8'; g.font='700 15px "TT Title", "Luckiest Guy", "TT Huninn", Huninn, sans-serif';
   g.fillText('Tiny Tavern・小小酒館',180,396);
   try{ window.__lastPhoto=c.toDataURL('image/png'); }catch(e){}
   c.toBlob(function(b2){
@@ -7635,7 +7635,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui-bridge.js?v=246"></script>
+<script src="tavern-ui-bridge.js?v=252"></script>
 <script src="lobby-ui/live.js?v=244"></script>
 <script src="lobby-ui/membership.js?v=241"></script>
 <script src="lobby-ui/order-flow.js?v=246"></script>

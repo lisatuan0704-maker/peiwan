@@ -1,5 +1,5 @@
 /* 正式大廳 v214：共用排版覆寫，保留原生控制節點與頭像框。 */
-.tt-live-ui{font-family:Seed,'Microsoft JhengHei',sans-serif;font-size:16px;color:#5e477a;padding:20px;background:rgba(40,25,39,.32);backdrop-filter:blur(3px)}
+.tt-live-ui{font-family:'TT Latin','TT Huninn',Seed,'Microsoft JhengHei',sans-serif;font-size:16px;color:#5e477a;padding:20px;background:rgba(40,25,39,.32);backdrop-filter:blur(3px)}
 .tt-live-ui .panel{position:relative;inset:auto;transform:none;margin:auto;display:flex;flex-direction:column;width:min(790px,100%);max-width:790px;max-height:calc(100dvh - 40px);padding:0;overflow:hidden;isolation:isolate;animation:ttPanelIn .3s ease both}
 .tt-live-ui .panel-head{flex:none;position:relative;padding:24px 30px 20px;z-index:2}
 .tt-live-ui .panel-head .eyebrow{margin-left:0;font-size:11px}

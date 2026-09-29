@@ -34,7 +34,7 @@
   background-size:240% 100%;background-clip:text;-webkit-background-clip:text;
   animation:brand-colour-flow 9s ease-in-out infinite;
 }
-.profile-window .heading small{font-family:'Lilita One','LINE Seed TW',sans-serif;font-size:12px;letter-spacing:1px;font-weight:400}
+.profile-window .heading small{font-family:'TT Title','Lilita One','TT Latin','TT Huninn','LINE Seed TW',sans-serif;font-size:12px;letter-spacing:1px;font-weight:400}
 .profile-window .profile-name h2,.profile-window .intro-lead{color:var(--theme-ink)}
 .profile-window .tabs{border-bottom-color:var(--theme-line)}
 .profile-window .tab[aria-selected=true]{background:var(--theme-light)}

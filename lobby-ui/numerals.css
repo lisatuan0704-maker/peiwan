@@ -11,6 +11,6 @@
 .planBtn .pp,
 body .item-caption small,
 body .bundle .ribbon{
-  font-family:'Tavern Numerals','LINE Seed TW',Seed,'Microsoft JhengHei',sans-serif!important;
-  font-synthesis:none;
+  font-family:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',Seed,'Microsoft JhengHei',sans-serif!important;
+  font-synthesis:weight;
 }
