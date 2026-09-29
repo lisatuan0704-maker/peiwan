@@ -27,13 +27,13 @@
     sceneLayers.forEach(key=>g.drawImage(images[key],0,0,1600,900));guest(g,doll);g.restore();
   }
   function fit(g,text,x,y,maxWidth,size,min=22,color='#513e39'){
-    let value=String(text);g.fillStyle=color;g.font=size+'px "TT Latin","TT Huninn","LINE Seed TW", Huninn, sans-serif';
-    while(g.measureText(value).width>maxWidth&&size>min){size--;g.font=size+'px "TT Latin","TT Huninn","LINE Seed TW", Huninn, sans-serif';}
+    let value=String(text);g.fillStyle=color;g.font=size+'px "Tavern Numerals","TT Latin","TT Huninn","LINE Seed TW", Huninn, sans-serif';
+    while(g.measureText(value).width>maxWidth&&size>min){size--;g.font=size+'px "Tavern Numerals","TT Latin","TT Huninn","LINE Seed TW", Huninn, sans-serif';}
     if(g.measureText(value).width>maxWidth){while(value.length&&g.measureText(value+'…').width>maxWidth)value=value.slice(0,-1);value+='…';}
     g.fillText(value,x,y);
   }
   function lines(g,text,x,y,width,size,limit=2){
-    g.font=size+'px "TT Latin","TT Huninn","LINE Seed TW", Huninn, sans-serif';let line='',row=0;
+    g.font=size+'px "Tavern Numerals","TT Latin","TT Huninn","LINE Seed TW", Huninn, sans-serif';let line='',row=0;
     const chars=Array.from(String(text));
     for(let i=0;i<chars.length;i++){const ch=chars[i];
       if(g.measureText(line+ch).width>width){g.fillText(line,x,y+row*(size+13));line='';row++;if(row===limit-1){const rest=chars.slice(i).join('');fit(g,rest,x,y+row*(size+13),width,size,size);return;}}

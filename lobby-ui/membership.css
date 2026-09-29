@@ -1,5 +1,5 @@
 /* 店內的儲值與會員介面：用色區分資訊、選擇與下一步。 */
-#topupPayM.tt-live-ui,#vipM.tt-live-ui{padding:20px!important;background:#28263991!important;backdrop-filter:blur(6px);font-family:'TT Latin','TT Huninn','LINE Seed TW',sans-serif;color:#414a61}
+#topupPayM.tt-live-ui,#vipM.tt-live-ui{padding:20px!important;background:#28263991!important;backdrop-filter:blur(6px);font-family:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',sans-serif;color:#414a61}
 #topupPayM .panel,#vipM .panel{width:min(690px,100%);max-width:690px!important;border:1px solid #c7c8d9!important;border-radius:18px!important;background:#f6f5f9!important;box-shadow:0 0 0 4px #ffffff75,0 24px 75px #17162655!important;outline:0!important;--deep-a:#405c72;--deep-b:#6d8ba0;--signal:#e5adc2}
 #vipM .panel{--deep-a:#5e456c;--deep-b:#967298;--signal:#afd3c9;background:#f8f4f8!important}
 #topupPayM .panel-head,#vipM .panel-head{padding:24px 28px 20px;border-bottom:1px solid #c9d4df;background:linear-gradient(115deg,#edf4f7,#e7eaf5)}
@@ -46,7 +46,7 @@
 #topupPayM .tu-bank-account b{font-size:16px!important;color:#664e7a!important;letter-spacing:.5px}#topupPayM .tu-bank-account button{background:#fff!important;border:1px solid #b6a2c8!important;color:#73578b!important;border-radius:5px!important;margin-left:auto;min-height:34px}
 #topupPayM .tu-bank-view>div:not(.tu-bank-account){color:#7e6d90!important;font-size:11px!important;line-height:1.7}
 #topupPayM .tu-transfer-fields{margin-top:20px}#topupPayM label{display:block;margin:15px 0 7px;font-size:12px!important;color:#615574}
-#topupPayM input{width:100%;box-sizing:border-box;border:1px solid #c9c6d5;background:#fafafd;border-radius:6px;padding:11px 12px;color:#464d65;font:14px 'TT Latin','TT Huninn','LINE Seed TW',sans-serif;box-shadow:none;transition:border-color .18s,background .18s,box-shadow .18s}
+#topupPayM input{width:100%;box-sizing:border-box;border:1px solid #c9c6d5;background:#fafafd;border-radius:6px;padding:11px 12px;color:#464d65;font:14px 'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',sans-serif;box-shadow:none;transition:border-color .18s,background .18s,box-shadow .18s}
 #topupPayM input:focus{outline:none;border-color:#8c73a9;box-shadow:0 0 0 3px #a087bd24;background:#fff}
 #topupPayM input::placeholder{color:#8b8fa1}#topupPayM input[type=file]{font-size:12px;padding:8px;background:#f4f0f8;border-style:dashed}
 #topupPayM input::file-selector-button{background:#e5ddef;border:1px solid #bda7d0;border-radius:4px;padding:7px 10px;color:#684a80;font:inherit;margin-right:10px}

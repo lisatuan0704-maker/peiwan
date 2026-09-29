@@ -2,7 +2,7 @@
 body.artBub.bub3s .npc .bub.tt-calibrated-bubble{left:calc(50% + var(--tt-bubble-x))!important;top:var(--tt-bubble-top)!important;bottom:auto!important;transform:translateX(-50%)!important;min-width:0!important;max-width:none!important;aspect-ratio:auto!important;letter-spacing:normal;animation:ttBubbleAppear .18s ease-out}
 body.artBub.bub3s .npc .tt-calibrated-bubble .tt-bubble-frame{position:absolute;inset:0;width:100%;height:100%;margin:0;image-rendering:auto;pointer-events:none;filter:none}
 body.artBub.bub3s .npc .tt-calibrated-bubble .bubT{position:absolute;right:auto;bottom:auto;display:flex;align-items:center;justify-content:center;padding:0;margin:0;overflow:visible;color:#3a2c3a;text-shadow:0 1px 0 #ffffff8c}
-body.artBub.bub3s .npc .tt-calibrated-bubble .bubT>span,.tt-bubble-measure{display:block;box-sizing:border-box;padding:2px 0;font-family:'TT Latin','TT Huninn','LINE Seed TW',system-ui,sans-serif;font-weight:400;font-style:normal;letter-spacing:normal;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
+body.artBub.bub3s .npc .tt-calibrated-bubble .bubT>span,.tt-bubble-measure{display:block;box-sizing:border-box;padding:2px 0;font-family:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',system-ui,sans-serif;font-weight:400;font-style:normal;letter-spacing:normal;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
 body.artBub.bub3s .npc .tt-calibrated-bubble .bubT>span{flex-shrink:0;width:100%;max-height:none;text-align:center;-webkit-line-clamp:unset;overflow:hidden}
 .tt-bubble-measure{position:absolute;left:-10000px;top:0;visibility:hidden}
 @keyframes ttBubbleAppear{from{opacity:0}to{opacity:1}}

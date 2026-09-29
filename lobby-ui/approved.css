@@ -1,7 +1,7 @@
 @font-face{font-family:Seed;src:url(../ls-rg-core.woff2)}
 @font-face{font-family:Seed;src:url(../ls-bd-core.woff2);font-weight:700}
 .tt-live-ui *{box-sizing:border-box}
-.tt-live-ui body{margin:0;color:#5e477a;background:#342438;font-family:'TT Latin','TT Huninn',Seed,'Microsoft JhengHei',sans-serif;font-size:13px}
+.tt-live-ui body{margin:0;color:#5e477a;background:#342438;font-family:'Tavern Numerals','TT Latin','TT Huninn',Seed,'Microsoft JhengHei',sans-serif;font-size:13px}
 .tt-live-ui button,.tt-live-ui input,.tt-live-ui select{font:inherit}
 .tt-live-ui button{cursor:pointer;color:inherit}
 .tt-live-ui button:focus-visible,.tt-live-ui input:focus-visible,.tt-live-ui select:focus-visible{outline:3px solid #7896cb;outline-offset:3px}

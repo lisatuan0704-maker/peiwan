@@ -1,7 +1,7 @@
-@import url('assets/fonts/lineseed.css?v=252');
+@import url('assets/fonts/lineseed.css?v=256');
 @font-face{font-family:'Tavern Display';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/LilitaOne-Regular.ttf') format('truetype')}
 /* 共用字體系統：中文圓體、英文字標、標題描邊與清楚的閱讀層級。 */
-:root{--tt-ui:'TT Latin','TT Huninn','LINE Seed TW','Microsoft JhengHei',sans-serif;--tt-display:'TT Title','Tavern Display','TT Latin','TT Huninn','LINE Seed TW',sans-serif}
+:root{--tt-ui:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW','Microsoft JhengHei',sans-serif;--tt-display:'TT Title','Tavern Display','Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',sans-serif}
 body,body *{font-family:var(--tt-ui)!important;font-synthesis:weight}
 button,input,select{font-family:var(--tt-ui)!important}
 button{font-weight:700;letter-spacing:.35px}
