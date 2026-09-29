@@ -108,7 +108,7 @@
   const ground={counter:430,stools:456,stall:619,board:633,wolf:633,white:634,flower:800};
   const layerDepth=y=>Math.round(y/H*1000)-1;
   function mount(world){
-    const asset='img/lobby-layers-v218/';
+    const asset='img/lobby-layers-v254/';
     const layers=[
       ['counter','fixtures.png',layerDepth(ground.counter),'inset(0px 270px 440px 350px)'],
       ['stall','fixtures.png',layerDepth(ground.stall),'polygon(0 0,330px 0,330px 480px,190px 480px,190px 650px,330px 650px,330px 900px,0 900px)'],

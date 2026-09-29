@@ -1,7 +1,7 @@
 /* 直接組合酒館原始圖層；不重畫、不修改繪師原稿。 */
 (function(){
   'use strict';
-  const paths={base:'img/lobby-layers-v218/base.png',fixtures:'img/lobby-layers-v218/fixtures.png',cat:'img/lobby-layers-v218/cat.png',stools:'img/lobby-layers-v218/stools.png',food:'img/lobby-layers-v218/food.png',flower:'img/lobby-layers-v218/flower.png',white:'img/lobby-layers-v218/white.png',purple:'img/lobby-layers-v218/purple.png',wolf:'img/lobby-layers-v218/wolf-cushions.png'};
+  const paths={base:'img/lobby-layers-v254/base.png',fixtures:'img/lobby-layers-v254/fixtures.png',cat:'img/lobby-layers-v254/cat.png',stools:'img/lobby-layers-v254/stools.png',food:'img/lobby-layers-v254/food.png',flower:'img/lobby-layers-v254/flower.png',white:'img/lobby-layers-v254/white.png',purple:'img/lobby-layers-v254/purple.png',wolf:'img/lobby-layers-v254/wolf-cushions.png'};
   const images={}; let pending;
   function ready(){
     if(!pending) pending=Promise.all(Object.entries(paths).map(([key,url])=>new Promise((resolve,reject)=>{

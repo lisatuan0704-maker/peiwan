@@ -1,6 +1,6 @@
 /* 全部圖層共用世界座標，透明處不攔截走路點擊。 */
 /* 原圖兩側以相同比例鏡射像素，再以暗角柔化外緣。 */
-#hall{--tt-scene-image:url('../img/lobby-layers-v218/food.png'),url('../img/lobby-layers-v218/cat.png'),url('../img/lobby-layers-v218/stools.png'),url('../img/lobby-layers-v218/white.png'),url('../img/lobby-layers-v218/flower.png'),url('../img/lobby-layers-v218/purple.png'),url('../img/lobby-layers-v218/wolf-cushions.png'),url('../img/lobby-layers-v218/fixtures.png'),url('../img/lobby-layers-v218/base.png');--tt-gap-left:0px;--tt-gap-right:0px;--tt-stage-width:1600px;--tt-stage-height:900px;--tt-stage-top:0px}
+#hall{--tt-scene-image:url('../img/lobby-layers-v254/food.png'),url('../img/lobby-layers-v254/cat.png'),url('../img/lobby-layers-v254/stools.png'),url('../img/lobby-layers-v254/white.png'),url('../img/lobby-layers-v254/flower.png'),url('../img/lobby-layers-v254/purple.png'),url('../img/lobby-layers-v254/wolf-cushions.png'),url('../img/lobby-layers-v254/fixtures.png'),url('../img/lobby-layers-v254/base.png');--tt-gap-left:0px;--tt-gap-right:0px;--tt-stage-width:1600px;--tt-stage-height:900px;--tt-stage-top:0px}
 body.in-forest #hall{--tt-scene-image:url('../img/forestbase.jpg')}
 #hallBackdrop{position:absolute;inset:0;isolation:isolate;pointer-events:none;user-select:none;background-image:var(--tt-scene-image);background-position:var(--tt-gap-left) var(--tt-stage-top);background-size:var(--tt-stage-width) var(--tt-stage-height);background-repeat:no-repeat;image-rendering:pixelated}
 /* 上下留白的底景仍填滿；左右由獨立鏡射片覆蓋。 */
