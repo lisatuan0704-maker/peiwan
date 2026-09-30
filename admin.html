@@ -594,7 +594,9 @@ function coSet(id,st){
   /* 時裝訂單確認收款 → 自動把商品發到客人背包(開通使用權) */
   const o=clientOrders[id];
   if(o && o.type==='shop' && o.itemId && o.myKey && (st==='confirmed'||st==='done')){
-    db.ref(ROOT+"/owned/"+o.myKey+"/"+o.itemId).set({name:o.itemName||o.itemId, at:Date.now()});
+    /* 染髮券是張數:只在「第一次」從待付款變成確認/完成時 +1,之後再按完成不會重複加 */
+    if(o.itemId==='dyeTicket'){ if(!(o0&&(o0.status==='confirmed'||o0.status==='done'))) db.ref(ROOT+"/owned/"+o.myKey+"/dyeTickets").transaction(function(c){ return (Number.isSafeInteger(c)?c:0)+1; }); }
+    else db.ref(ROOT+"/owned/"+o.myKey+"/"+o.itemId).set({name:o.itemName||o.itemId, at:Date.now()});
   }
   /* 儲值訂單確認收款 → 金幣入帳。
      用 transaction 搶 credited 旗標,連點兩下 / 兩台裝置同時按都只會入帳一次 */
@@ -633,7 +635,8 @@ function coCancelRefund(id){
   if(!needCoin){
     db.ref(ROOT+'/clientOrders/'+id).update({status:'cancelled', cancelledAt:Date.now()});
     coMailCancel(o,false,back);
-    if(o.type==='shop'&&o.itemId&&o.myKey){ db.ref(ROOT+'/owned/'+o.myKey+'/'+o.itemId).remove(); }
+    if(o.type==='shop'&&o.itemId==='dyeTicket'&&o.myKey){ if(o.status==='confirmed'||o.status==='done') db.ref(ROOT+'/owned/'+o.myKey+'/dyeTickets').transaction(function(c){ return Math.max(0,(Number.isSafeInteger(c)?c:0)-1); }); }
+      else if(o.type==='shop'&&o.itemId&&o.myKey){ db.ref(ROOT+'/owned/'+o.myKey+'/'+o.itemId).remove(); }
     if(o.type==='table'&&o.itemId&&o.seated){ db.ref(ROOT+'/tables/'+o.itemId+'/taken').transaction(c=>Math.max(0,(c||0)-1)); db.ref(ROOT+'/clientOrders/'+id+'/seated').set(null); }
     return;
   }
@@ -648,7 +651,8 @@ function coCancelRefund(id){
           db.ref(ROOT+'/walletTx/'+o.myKey).push({type:isTopup?'adjust':'refund',amount:delta,balAfter,ref:id,note:(isTopup?'儲值取消扣回':'訂單取消退款')+'・'+(o.planName||''),ts:Date.now()}); }
       });
       coMailCancel(o,!isTopup,back);
-      if(o.type==='shop'&&o.itemId&&o.myKey){ db.ref(ROOT+'/owned/'+o.myKey+'/'+o.itemId).remove(); }
+      if(o.type==='shop'&&o.itemId==='dyeTicket'&&o.myKey){ if(o.status==='confirmed'||o.status==='done') db.ref(ROOT+'/owned/'+o.myKey+'/dyeTickets').transaction(function(c){ return Math.max(0,(Number.isSafeInteger(c)?c:0)-1); }); }
+      else if(o.type==='shop'&&o.itemId&&o.myKey){ db.ref(ROOT+'/owned/'+o.myKey+'/'+o.itemId).remove(); }
     if(o.type==='table'&&o.itemId&&o.seated){ db.ref(ROOT+'/tables/'+o.itemId+'/taken').transaction(c=>Math.max(0,(c||0)-1)); db.ref(ROOT+'/clientOrders/'+id+'/seated').set(null); }
     });
 }

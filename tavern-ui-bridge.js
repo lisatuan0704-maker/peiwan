@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=256';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=258';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -136,6 +136,9 @@
     },
     originalInfo(cid){const s=staff().find(s=>s.cid===cid);if(s){close();oldInfo(cid,{name:s.name,st:s.on?(s.busy?'busy':'free'):'off'},0);}},
     buy(source){const o=catalog().find(x=>x.id===source);if(!o||!o.sale)throw Error('商品目前未開放選購');if(o.owned)throw Error('這件商品已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:o.id,n:'時裝・'+o.name,p:o.price,itemId:o.id,itemName:o.name};shopClose();shopOpen(3);},
+    /* v258:染髮券商品(一張全包主色+漸層;價格可由掌櫃在商城新增 id 為 dyeTicket 的商品覆蓋,預設 299) */
+    dyePrice(){return Number(window.__shopCfg?.dyeTicket?.price)||299;},
+    buyDye(){if(typeof me!=='function'||!me())throw Error('先做一張闆卡，再購買染髮券');close();curKind='shop';curBooking=false;curReserveAt=null;const p=this.dyePrice();curPlan={id:'dyeTicket',n:'染髮券 1 張',p,itemId:'dyeTicket',itemName:'染髮券 1 張'};shopClose();shopOpen(3);},
     originalWard(){close();oldWard?.();},
     originalDress(){close();oldDress?.();}
   };

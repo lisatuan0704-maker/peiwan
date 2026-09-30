@@ -1,4 +1,4 @@
-@import url('assets/fonts/lineseed.css?v=256');
+@import url('assets/fonts/lineseed.css?v=257');
 @font-face{font-family:'Tavern Display';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/LilitaOne-Regular.ttf') format('truetype')}
 /* 共用字體系統：中文圓體、英文字標、標題描邊與清楚的閱讀層級。 */
 :root{--tt-ui:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW','Microsoft JhengHei',sans-serif;--tt-display:'TT Title','Tavern Display','Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',sans-serif}

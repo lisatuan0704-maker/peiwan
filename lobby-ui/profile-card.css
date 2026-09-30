@@ -1,0 +1,34 @@
+/* v258：闆卡改成和店內視窗（錢包／VIP／時裝間）同一套版式：眉標英文小標、斜切標題帶、描邊浮水印、編號段落。 */
+#cardOverlay{background:rgba(40,25,39,.36)!important;backdrop-filter:blur(3px);z-index:150!important}
+#cardBox .pcard{display:flex!important;flex-direction:column;width:min(94vw,940px);max-height:92vh;overflow:hidden;padding:0;
+  background:linear-gradient(155deg,#fffcff 15%,#f9f5ff 64%,#f4eafb)!important;border:1px solid #c5aedf;border-radius:13px 13px 13px 3px!important;
+  box-shadow:0 4px 0 #b1a1c6,0 0 0 3px #fff9ffbe,0 15px 35px #241b3440!important;isolation:isolate;
+  font-family:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',sans-serif}
+#cardBox .pcHd{position:relative;flex:none;padding:19px 27px 15px;background:linear-gradient(115deg,#f2e9f2,#ebe8f6);border-bottom:1px solid #d7c6df;overflow:hidden;z-index:2}
+#cardBox .pcHd .eyebrow{display:block;font-size:10px;letter-spacing:2px;color:#846b91;margin-bottom:7px}
+#cardBox .pcHd .outline-word{position:absolute;right:56px;top:14px;font:700 58px/1 'TT Title','Lilita One',Arial,sans-serif;letter-spacing:3px;color:transparent;-webkit-text-stroke:1px #a48bb74d;pointer-events:none;z-index:-1}
+#cardBox .pcHd .title-chip{display:inline-block;font-size:24px;line-height:1.3;font-weight:700;color:#fff;background:linear-gradient(105deg,#5e456c,#967298);padding:5px 26px 7px 15px;clip-path:polygon(7% 0,100% 0,94% 100%,0 100%,0 28%);text-shadow:none}
+#cardBox .pcHd .prism{position:absolute;right:38px;top:-22px;width:120px;height:120px;border:1px solid #a48bb7;box-shadow:24px 24px 0 -1px #ffffff40,24px 24px 0 #a48bb7;transform:rotate(35deg);opacity:.22;z-index:-1;pointer-events:none}
+#cardBox .pcGrid{display:grid;grid-template-columns:396px 1fr;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#cfbde3 transparent}
+#cardBox .pcL{background:linear-gradient(180deg,#f5ecf9,#fbe9f3)!important;border-radius:0!important;border-right:1px solid #e6d6ec}
+#cardBox .pcR{padding:20px 27px 22px!important}
+#cardBox .pcName{font-size:28px!important;color:#5e456c!important}
+#cardBox .pcDc{color:#8f6f9d!important}
+#cardBox .pcSec{display:block!important;margin:16px 0 8px!important;color:#5e456c!important;font-size:14px!important;font-weight:700;border-bottom:1px solid #dcc9dd;padding-bottom:6px}
+#cardBox .pcSec::after{display:none}
+#cardBox .pcSec small{display:block;font-size:9px;letter-spacing:2px;color:#a187b2;font-weight:700;margin-bottom:2px}
+#cardBox .pcBox,#cardBox .pcQuote{position:relative;background:#fff!important;border:1px solid #d9c9e2;border-radius:8px!important;box-shadow:none!important;overflow:hidden}
+#cardBox .pcBox::before,#cardBox .pcQuote::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#967298}
+#cardBox .pcQuote::before{background:#c2537d}
+#cardBox .pcBk{color:#8f6f9d!important;letter-spacing:.5px}
+#cardBox .pcBv{color:#4f3f5c!important}
+#cardBox .pcAb{border:1px solid #d9c9e2;border-radius:8px!important;box-shadow:none!important}
+#cardBox .pcVip{border-radius:6px!important;letter-spacing:1px}
+#cardBox .pcTag{border-radius:4px!important;background:#fff!important;border:1px solid #d9c9e2;color:#6d4fa8}
+#cardBox .pcBrand{font-family:'TT Title','Lilita One',sans-serif!important;letter-spacing:3px;color:#b8a4c8!important;font-size:11px!important}
+#cardBox #pcSocial{justify-content:flex-start}
+#cardBox #pcSocial .pcGo,#cardBox #pcSocial button{flex:0 0 auto!important;width:auto!important;background:#5e456c!important;color:#fff!important;border-radius:6px!important;padding:8px 16px!important;font-size:13px!important;font-family:inherit;font-size:13px;font-weight:700;padding:8px 16px;border-radius:6px;border:1.5px solid #5e456c;background:#5e456c;color:#fff;cursor:pointer;box-shadow:0 3px 0 #3d2a4a}
+#cardBox #pcSocial .pcGo.warn,#cardBox #pcSocial button.warn{background:#fff!important;color:#a04a6b!important;background:#fff;color:#a04a6b;border-color:#c2537d;box-shadow:0 3px 0 #d9b3c2}
+#cardClose{top:14px!important;right:14px!important;width:33px!important;height:33px!important;border:1.5px solid #987293!important;background:#fffaf0!important;box-shadow:0 3px #ceadb9!important;color:#795277!important;border-radius:6px!important;font-size:18px!important;z-index:9}
+@media(max-width:760px){#cardBox .pcGrid{grid-template-columns:1fr}#cardBox .pcL{border-right:0;border-bottom:1px solid #e6d6ec}
+  #cardBox .pcHd{padding:15px 18px 12px}#cardBox .pcHd .outline-word{font-size:36px;right:52px;top:18px}#cardBox .pcHd .title-chip{font-size:20px}}

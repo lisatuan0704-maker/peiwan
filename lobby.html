@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="tavern-ui/assets/fonts/lineseed.css?v=256" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Huninn&family=Press+Start+2P&family=Luckiest+Guy&display=swap" rel="stylesheet">
+<link href="tavern-ui/assets/fonts/lineseed.css?v=257" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Huninn&family=Press+Start+2P&family=Luckiest+Guy&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
@@ -513,11 +513,8 @@ img.h2ic,.mhic,#shopBtn img,#ordBtn img,#dressBtn img,#wardBtn img,#joinBtn img,
 .h2ava{position:relative;width:64px;height:64px;flex:none;cursor:pointer}
 .h2ava canvas{width:60px;height:60px;image-rendering:pixelated;position:absolute;left:2px;top:2px;
   background:radial-gradient(circle at 50% 42%,#FFF3D6,#F6E4EF 72%);border-radius:10px}
-.frm2{position:absolute;inset:0;border-radius:11px;z-index:2;pointer-events:none}
-.frm2.wood{border:4px solid #B79A78;box-shadow:inset 0 0 0 2px #8A6E52}
-.frm2.star{border:4px solid var(--p-lav);box-shadow:0 0 10px var(--p-lav),inset 0 0 0 2px #fff}
-.frm2.heart{border:4px dashed var(--p-pink)}
-.frm2.gold{border:4px solid var(--p-gold);box-shadow:0 0 10px var(--p-gold),inset 0 0 0 2px #fff}
+/* v257:舊的 CSS 頭像框(星光/木質/愛心/金框)退役,頭像框全部改用繪師圖(花圈框 + VIP1~5 框) */
+.ttf .ttfArt{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;image-rendering:auto}
 .h2who{min-width:0}
 .h2nm{font-size:15px;font-weight:700;color:var(--p-ink);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .h2row{display:flex;gap:5px;align-items:center;margin-top:4px}
@@ -1410,6 +1407,8 @@ body.artBub.bub3s .npc .bub{
 /* v162:頭像一律方形圓角,不再有圓形遮罩 */
 .ttf .ttfAva,.ttf .ttfAva img,.ttf .ttfAva canvas{border-radius:8%!important}
 #cardBox .pcStage.plain,#cardBox .pcStage.plain canvas,#cardBox .pcStage.plain img{border-radius:14px!important}
+/* v258:繪師 VIP 框(單張圖)——頭像方塊裡的小人/照片要填滿方塊,不能用花圈框那組固定 170px 的尺寸 */
+#cardBox .pcStage.ttfA .ttfAva canvas,#cardBox .pcStage.ttfA .ttfAva img,.bkAva .ttfA .ttfAva canvas{width:100%!important;height:100%!important}
 .h2ava.wr .ttfAva{border-radius:8%!important}
 #avM #avStage{border-radius:12px!important}
 /* v163:頭像框延伸到卡片外面,粉色底只包住右邊的文字區 */
@@ -1442,6 +1441,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/bubble-calibration.css?v=256">
 <script src="lobby-ui/bubble-calibration.js?v=244"></script>
 <link rel="stylesheet" href="lobby-ui/stickers.css?v=256">
+<link rel="stylesheet" href="lobby-ui/profile-card.css?v=258">
 <script src="tavern-ui/sticker-catalog.js?v=249"></script>
 <script src="tavern-ui/sticker-approved.js?v=247"></script>
 <script src="lobby-ui/stickers.js?v=249"></script>
@@ -1679,7 +1679,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v256</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v258</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -1714,7 +1714,7 @@ body.artBub.bub3s .npc .bub{
 </div>
 
 <div id="hud2">
-  <div class="h2ava" id="h2ava" title="點我換頭像框"><div class="frm2" id="h2frm"></div><canvas id="h2cv" width="64" height="64"></canvas></div>
+  <div class="h2ava" id="h2ava" title="點我換頭像框"><canvas id="h2cv" width="64" height="64"></canvas></div>
   <div class="h2who">
     <div class="h2nm" id="h2nm">訪客</div>
     <div class="h2row">
@@ -1742,7 +1742,7 @@ body.artBub.bub3s .npc .bub{
 <div class="gwin" id="frameM"><div class="gcard">
   <div class="gtop"><span class="gt">選擇頭像框</span><button class="gx" onclick="gClose('frameM')">✕</button></div>
   <div class="gin">
-    <div class="ghint">點一下已擁有的框即可套用。更多華麗的框即將登場,先以示意圖佔位。</div>
+    <div class="ghint">點一下已擁有的框即可套用。VIP 每升一級,就多解鎖一款繪師手繪的頭像框。</div>
     <div class="fgrid" id="fgrid"></div>
   </div>
 </div></div>
@@ -2345,17 +2345,35 @@ window.__avaBox=function(x,y,d){
 };
 try{ localStorage.removeItem('tt_avabox'); }catch(e){}   /* 已定案,不再自動套用到全部介面 */
 
-/* host 內建出框層;inner 是要放娃娃的圓形容器,回傳給呼叫端自己畫 */
+/* v257:繪師 VIP 頭像框(PSD 2000×2000 合成後縮成 640 webp;box=PSD 裡「形状1」頭像佔位方塊的位置)
+   隨 VIP 等級解鎖:vip1 迎賓~vip5 貴賓。pic 給照片用;小人像素圖四邊有留白,用 doll(放大一點、往下一點) */
+const TTF_ART={
+  vip1:{nm:'藍調樂手框',src:'img/frames/vip1.webp',pic:{x:50.2,y:51.3,d:79.9}},
+  vip2:{nm:'酒館饗宴框',src:'img/frames/vip2.webp',pic:{x:50.2,y:51.3,d:79.9}},
+  vip3:{nm:'薔薇緞帶框',src:'img/frames/vip3.webp',pic:{x:50.15,y:56.45,d:74.3}},
+  vip4:{nm:'星夜魔法框',src:'img/frames/vip4.webp',pic:{x:50.15,y:53.4,d:74.3}},
+  vip5:{nm:'甜心派對框',src:'img/frames/vip5.webp',pic:{x:50.2,y:51.3,d:79.9}}
+};
+Object.values(TTF_ART).forEach(function(f){ f.doll={x:f.pic.x,y:f.pic.y+f.pic.d*0.06,d:f.pic.d*1.12}; });
+window.TTF_ART=TTF_ART;
+/* 舊 CSS 框 id(star/wood/heart/gold)或未知 id 一律視為花圈框 */
+function ttFrameId(id){ return (id&&TTF_ART[id])?id:'wr1'; }
+window.ttFrameId=ttFrameId;
+/* host 內建出框層;inner 是要放娃娃的圓形容器,回傳給呼叫端自己畫
+   opts.art='vip1'… 時改放單張繪師框圖(不動),box 預設用該框的 pic/doll */
 function ttFrame(host,opts){
   opts=opts||{};
   host.classList.add('ttf');
-  host.classList.toggle('on', !!opts.anim);
+  const art=opts.art&&TTF_ART[opts.art];
+  host.classList.toggle('on', !!opts.anim&&!art);
   host.innerHTML='';
-  const C=opts.box||TTF_CIR;
+  const C=opts.box||(art?(opts.photo?art.pic:art.doll):TTF_CIR);
   const ava=document.createElement('div'); ava.className='ttfAva';
   ava.style.width=C.d+'%'; ava.style.height=C.d+'%';
   ava.style.left=(C.x-C.d/2)+'%'; ava.style.top=(C.y-C.d/2)+'%';
   host.appendChild(ava);
+  host.classList.toggle('ttfA',!!art);
+  if(art){ const i=document.createElement('img'); i.className='ttfArt'; i.src=art.src; i.alt=''; i.draggable=false; host.appendChild(i); return ava; }
   const add=(cls,src)=>{ const i=document.createElement('img'); i.className='ttfL '+cls; i.src=src; i.alt=''; host.appendChild(i); return i; };
   add('ttfEarL',TTF.earL); add('ttfEarR',TTF.earR);
   add('',TTF.rest);
@@ -2697,7 +2715,10 @@ function drawFullCard(b){
     ? '<div class="pcDc">'+(dcAv?'<img src="'+dcAv+'" alt="">':'')+'@'+esc(pub.dc)+'</div>'
     : '<div class="pcDc" style="color:#BCA8CF">尚未綁定 Discord</div>';
   host.innerHTML =
-    '<div class="pcL">'
+    '<header class="pcHd"><span class="eyebrow">TINY TAVERN · GUEST CARD</span><span class="outline-word" aria-hidden="true">PROFILE</span><i class="prism" aria-hidden="true"></i>'
+      +'<span class="title-chip">闆卡</span></header>'
+    +'<div class="pcGrid">'
+    +'<div class="pcL">'
       +'<div class="pcTop"><div class="pcStage" id="pcStage">'
         +'<div class="pcBeside"><canvas id="pcSide" width="64" height="64"></canvas></div></div></div>'
       +vipHtml
@@ -2706,30 +2727,28 @@ function drawFullCard(b){
     +'<div class="pcR">'
       +'<div class="pcHead"><div style="min-width:0">'
         +'<div class="pcName">'+esc(b.name||'？')+'</div>'+dcHtml+'</div></div>'
-      +'<div class="pcSec">成就</div><div class="pcAch">'+achHtml+'</div>'
-      +'<div class="pcSec">關於我</div>'
+      +'<div class="pcSec"><small>01 / ACHIEVEMENTS</small>成就</div><div class="pcAch">'+achHtml+'</div>'
+      +'<div class="pcSec"><small>02 / ABOUT</small>關於我</div>'
       +'<div class="pcMeta">'
         +'<div class="pcBox"><div class="pcBk">生日</div><div class="pcBv">'
           +esc((b.bm||'?')+' 月 '+(b.bd||'?')+' 日')+'</div></div>'
         +'<div class="pcBox"><div class="pcBk">常玩</div><div class="pcBv">'+esc(b.games||'—')+'</div></div>'
       +'</div>'
-      +'<div class="pcSec">一段話</div>'
+      +'<div class="pcSec"><small>03 / A FEW WORDS</small>一段話</div>'
       +'<div class="pcQuote">'+(b.quote?esc(b.quote):'<span style="color:#C3AED4">還沒有寫下什麼</span>')+'</div>'
       +'<div class="pcBrand">TINY TAVERN</div>'
     +'<div id="pcSocial" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"></div>'
-    +'</div>';
+    +'</div></div>';
   /* 框裡放頭貼,小人站在框右下角的卷軸上 */
   try{
     const stage=document.getElementById('pcStage');
     const side=stage.querySelector('.pcBeside');
     const isMe=!!(myKey&&popTarget&&popTarget.myKey===myKey);
     const photo=ttPhotoOf(b);
-    const useWr=((pub.frm||'wr1')==='wr1');
-    if(useWr){ const inner=ttFrame(stage,{anim:isMe,box:(photo?TTF_CARDPIC:TTF_CARD)}); ttFill(inner,b.doll,photo);
-      stage.appendChild(side); }
-    else{ stage.className='pcStage plain'; ttFill(stage,b.doll,photo);
-      const f=document.createElement('div'); f.className='frm2 '+pub.frm; stage.appendChild(f);
-      stage.appendChild(side); }
+    const fid=ttFrameId(pub.frm);
+    if(fid==='wr1'){ const inner=ttFrame(stage,{anim:isMe,box:(photo?TTF_CARDPIC:TTF_CARD)}); ttFill(inner,b.doll,photo); }
+    else{ const inner=ttFrame(stage,{art:fid,photo:!!photo}); ttFill(inner,b.doll,photo); }
+    stage.appendChild(side);
     try{ drawDollTo(document.getElementById('pcSide'), b.doll, 'idle'); }catch(e){}
   }catch(e){}
   try{ if(window.pcSocialRender) pcSocialRender(); }catch(e){}
@@ -4233,7 +4252,9 @@ function payWithCoins(){
         toast('下單失敗,金幣已退回,請再試一次');
       });
       db.ref(ROOT+'/walletTx/'+myKey).push({type:'spend',amount:-amt,balAfter,ref:ref.key,note:curPlan.n,ts:Date.now()});
-      if(curKind==='shop'&&curPlan.itemId){ db.ref(ROOT+'/owned/'+myKey+'/'+curPlan.itemId).set({name:curPlan.itemName||curPlan.n,ts:Date.now()}); }
+      /* v258:染髮券是「張數」不是「擁有」,買一次 +1 張 */
+      if(curKind==='shop'&&curPlan.itemId==='dyeTicket'){ db.ref(ROOT+'/owned/'+myKey+'/dyeTickets').transaction(c=>(Number.isSafeInteger(c)?c:0)+1); }
+      else if(curKind==='shop'&&curPlan.itemId){ db.ref(ROOT+'/owned/'+myKey+'/'+curPlan.itemId).set({name:curPlan.itemName||curPlan.n,ts:Date.now()}); }
       const ids=myOrderIds(); ids.push(ref.key); try{ localStorage.setItem('tt_orders',JSON.stringify(ids)); }catch(e){}
       shopClose();
       if(curKind==='shop'){ if(window.celebrate) celebrate('購買成功!','「'+(curPlan.itemName||curPlan.n)+'」已收進背包'); else toast('購買成功!'); }
@@ -5925,24 +5946,28 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   hudDraw(); let hudTry=0;
   const hudIv=setInterval(()=>{ hudDraw(); if(++hudTry>12) clearInterval(hudIv); },1000);
   /* --- 頭像框 --- */
+  /* v257:頭像框全部改為繪師圖。花圈框人人可用;VIP1~5 各解鎖一款(繪師交件),舊 CSS 框退役 */
   const FRAMES2=[
     {n:'花圈框',cls:'wr1',own:true},
-    {n:'星光框',cls:'star',own:true},{n:'木質框',cls:'wood',own:true},{n:'愛心框',cls:'heart',own:true},
-    {n:'冠名金框',cls:'gold',req:'VIP5'},{n:'限定星塵',cls:'star',req:'活動'},
-    {n:'櫻花框',cls:'heart',req:'NT$399'},{n:'月光框',cls:'wood',req:'VIP7'},{n:'皇冠框',cls:'gold',req:'冠名'}
+    {n:TTF_ART.vip1.nm,cls:'vip1',vip:1},{n:TTF_ART.vip2.nm,cls:'vip2',vip:2},{n:TTF_ART.vip3.nm,cls:'vip3',vip:3},
+    {n:TTF_ART.vip4.nm,cls:'vip4',vip:4},{n:TTF_ART.vip5.nm,cls:'vip5',vip:5}
   ];
+  function frameOwned(f){ if(f.own) return true; if(f.vip){ try{ return (vipInfo().lv|0)>=f.vip; }catch(e){ return false; } } return false; }
   let curFrame='wr1', _fgLast='fgrid';
   try{ const sv=localStorage.getItem('tt_frame');
-    /* v144:新增花圈框。舊使用者的 localStorage 會停在舊的 CSS 框,幫他們升級一次 */
-    if(!localStorage.getItem('tt_frame_v144')){ curFrame='wr1'; localStorage.setItem('tt_frame','wr1'); localStorage.setItem('tt_frame_v144','1'); }
-    else if(sv) curFrame=sv;
+    if(sv) curFrame=ttFrameId(sv);
+    if(curFrame!==sv) localStorage.setItem('tt_frame',curFrame);
   }catch(e){}
+  /* 解鎖條件沒達到(例如換裝置後 VIP 資料還沒載到)時先顯示花圈框,之後資料到了再套回 */
+  function frameUsable(){ const f=FRAMES2.find(x=>x.cls===curFrame); return !!f&&frameOwned(f); }
+  window.__frameUsable=frameUsable; window.__curFrame=function(){ return curFrame; };
   function applyFrame(){
     const host=document.getElementById('h2ava'); if(!host) return;
-    if(curFrame==='wr1'){
-      /* 花圈框:整個 HUD 頭像換成分層動態框(只有自己的會動)*/
+    {
+      /* 花圈框:整個 HUD 頭像換成分層動態框(只有自己的會動);VIP 框:單張繪師圖 */
       host.classList.add('wr');
-      const inner=ttFrame(host,{anim:true});
+      const _art=(curFrame!=='wr1'&&frameUsable())?curFrame:null;
+      const inner=ttFrame(host,_art?{art:_art,photo:!!ttMyPhoto()}:{anim:true});
       const _d=(function(){try{return agents.get(myKey).b.doll;}catch(e){return null;}})();
       const _cv=document.createElement('canvas'); _cv.id='h2cv'; _cv.width=64;_cv.height=64; inner.appendChild(_cv);
       const _ph=ttMyPhoto();
@@ -5950,18 +5975,12 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
         im.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;image-rendering:auto;transform:none';
         im.onerror=function(){ im.remove(); }; inner.appendChild(im); }
       try{ hudDraw(); }catch(e){}
-    }else{
-      host.classList.remove('wr','ttf','on');
-      host.innerHTML='<div class="frm2 '+curFrame+'" id="h2frm"></div><canvas id="h2cv" width="64" height="64"></canvas>';
-      const ph2=ttMyPhoto();
-      if(ph2){ const im=document.createElement('img'); im.src=ph2; im.alt='';
-        im.style.cssText='position:absolute;left:2px;top:2px;width:calc(100% - 4px);height:calc(100% - 4px);object-fit:cover;border-radius:9px;z-index:1';
-        im.onerror=function(){ im.remove(); }; host.appendChild(im); }
-      try{ hudDraw(); }catch(e){}
     }
     try{ publishProfile(); }catch(e){}
   }
   applyFrame();
+  /* VIP 資料晚到時補套一次 */
+  setTimeout(function(){ try{ if(curFrame!=='wr1') applyFrame(); }catch(e){} },5000);
   function sparkBurst(el,color){
     const r=el.getBoundingClientRect();
     for(let k=0;k<10;k++){ const s=document.createElement('div'); s.className='spk3';
@@ -5975,23 +5994,19 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
     gid=gid||_fgLast||'fgrid'; _fgLast=gid;
     const g=document.getElementById(gid); if(!g) return; g.innerHTML='';
     FRAMES2.forEach(f=>{
+      f.own=frameOwned(f);
       const cell=document.createElement('div'); cell.className='fcell2'+(f.own?'':' lk')+(f.own&&f.cls===curFrame?' sel':'');
       const fav=document.createElement('div'); fav.className='fav2';
       const cv=document.createElement('canvas'); cv.width=64; cv.height=64;
       let doll=DEF_DOLL; try{ if(myKey&&agents.has(myKey)&&agents.get(myKey).b.doll) doll=agents.get(myKey).b.doll; }catch(e){}
       try{ drawDollTo(cv,doll,'idle'); }catch(e){}
-      if(f.cls==='wr1'){
-        const w=document.createElement('div'); w.style.cssText='position:absolute;inset:0';
-        fav.appendChild(w); const inn=ttFrame(w,{anim:false});
-        cv.style.cssText='width:100%;height:100%'; inn.appendChild(cv);
-      }else{
-        const frm=document.createElement('div'); frm.className='frm2 '+f.cls;
-        fav.appendChild(cv); fav.appendChild(frm);
-      }
+      { const w=document.createElement('div'); w.style.cssText='position:absolute;inset:0';
+        fav.appendChild(w); const inn=ttFrame(w,f.cls==='wr1'?{anim:false}:{art:f.cls});
+        cv.style.cssText='width:100%;height:100%'; inn.appendChild(cv); }
       if(!f.own){ const lw=document.createElement('div'); lw.className='lkw';
         const li=document.createElement('img'); li.src=AICON.lock; lw.appendChild(li); fav.appendChild(lw); }
       cell.appendChild(fav);
-      cell.insertAdjacentHTML('beforeend','<div class="fn2">'+f.n+'</div><div class="fs2 '+(f.own?'own':'lk')+'">'+(f.own?'已擁有':f.req)+'</div>');
+      cell.insertAdjacentHTML('beforeend','<div class="fn2">'+f.n+'</div><div class="fs2 '+(f.own?'own':'lk')+'">'+(f.own?'已擁有':(f.vip?('VIP '+f.vip+' 解鎖'):(f.req||'')))+'</div>');
       cell.addEventListener('click',()=>{
         if(!f.own){ cell.classList.remove('shake'); void cell.offsetWidth; cell.classList.add('shake'); return; }
         curFrame=f.cls; try{localStorage.setItem('tt_frame',curFrame);}catch(e){}
@@ -6007,11 +6022,11 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   document.getElementById('h2ava').addEventListener('click',()=>{ if(window.bookOpen) bookOpen(); else window.__openFrames(); });
   /* --- VIP 系統(暫訂數字,之後改 VIP_CFG 的 need 即可) --- */
   const VIP_CFG=[
-    {lv:1,cls:'vc1',hex:'#7E9FDC',nm:'迎賓',need:500,  cp:1,disc:30, rw:[['coupon','優惠券 1 張・折 $30'],['chat','迎賓對話框']]},
-    {lv:2,cls:'vc2',hex:'#61B98A',nm:'熟客',need:1500, cp:2,disc:50, rw:[['coupon','優惠券 2 張・折 $50'],['chair','限定坐墊椅']]},
-    {lv:3,cls:'vc3',hex:'#E67FA6',nm:'常客',need:3000, cp:3,disc:80, rw:[['coupon','優惠券 3 張・折 $80'],['dress','VIP 專屬時裝'],['chat','常客對話框']]},
-    {lv:4,cls:'vc4',hex:'#A183DE',nm:'摯友',need:6000, cp:5,disc:120,rw:[['coupon','優惠券 5 張・折 $120'],['cat','VIP 限定寵物'],['chat','摯友對話框']]},
-    {lv:5,cls:'vc5',hex:'#E9B028',nm:'貴賓',need:12000,cp:8,disc:200,rw:[['coupon','優惠券 8 張・折 $200'],['dress','貴賓時裝＋坐椅'],['chat','貴賓對話框'],['gift','實體周邊禮物']]}
+    {lv:1,cls:'vc1',hex:'#7E9FDC',nm:'迎賓',need:500,  cp:1,disc:30, rw:[['coupon','優惠券 1 張・折 $30'],['chat','迎賓對話框'],['frame','頭像框・藍調樂手']]},
+    {lv:2,cls:'vc2',hex:'#61B98A',nm:'熟客',need:1500, cp:2,disc:50, rw:[['coupon','優惠券 2 張・折 $50'],['chair','限定坐墊椅'],['frame','頭像框・酒館饗宴']]},
+    {lv:3,cls:'vc3',hex:'#E67FA6',nm:'常客',need:3000, cp:3,disc:80, rw:[['coupon','優惠券 3 張・折 $80'],['dress','VIP 專屬時裝'],['chat','常客對話框'],['frame','頭像框・薔薇緞帶']]},
+    {lv:4,cls:'vc4',hex:'#A183DE',nm:'摯友',need:6000, cp:5,disc:120,rw:[['coupon','優惠券 5 張・折 $120'],['cat','VIP 限定寵物'],['chat','摯友對話框'],['frame','頭像框・星夜魔法']]},
+    {lv:5,cls:'vc5',hex:'#E9B028',nm:'貴賓',need:12000,cp:8,disc:200,rw:[['coupon','優惠券 8 張・折 $200'],['dress','貴賓時裝＋坐椅'],['chat','貴賓對話框'],['frame','頭像框・甜心派對'],['gift','實體周邊禮物']]}
   ];
   window.__vipCfg=VIP_CFG;
   function vipSpent(){
@@ -6066,6 +6081,9 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
       if(r[0]==='chat'&&pk&&typeof TTBUB!=='undefined'&&TTBUB[pk]){
         return '<div class="vipRw"><img src="'+TTBUB[pk].d+'" alt="" style="width:78px;height:auto;border-radius:6px"><span>'+r[1]+'</span></div>';
       }
+      if(r[0]==='frame'&&TTF_ART['vip'+t.lv]){
+        return '<div class="vipRw"><img src="'+TTF_ART['vip'+t.lv].src+'" alt="" style="width:78px;height:78px;border-radius:6px"><span>'+r[1]+'</span></div>';
+      }
       return '<div class="vipRw"><img src="'+(AICON[r[0]]||'')+'" alt=""><span>'+r[1]+'</span></div>';
     }).join('');
     box.innerHTML=
@@ -6080,7 +6098,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
       +'<div class="vipHalo"><div class="vlv2 '+t.cls+'" style="width:64px"><div class="a">VIP</div><div class="b">'+t.lv+'</div><div class="c">'+t.nm+'</div></div></div>'
       +'<div style="text-align:center;margin:9px 0 4px;display:flex;justify-content:center;gap:8px;align-items:center"><b style="font-size:15.5px;color:#5A4880">'+t.nm+'獎勵</b>'+tag+'</div>'
       +'<div class="vipRws">'+chips+'</div>'
-      +(t.rw.some(r=>r[0]==='chat')?'<div style="text-align:center;font-size:11px;color:#8E7AB0;margin-top:7px">解鎖的氣泡框可到「闆卡手帳 → 聊天氣泡」隨時換上</div>':'')
+      +(t.rw.some(r=>r[0]==='chat')?'<div style="text-align:center;font-size:11px;color:#8E7AB0;margin-top:7px">解鎖的氣泡框可到「闆卡手帳 → 聊天氣泡」、頭像框點左上角頭像隨時換上</div>':'')
       +'</div>'
       +'<div class="vipNav">'
       +'<button class="vipPgB" '+(_vipPg<=0?'disabled':'')+' onclick="vipPg(-1)">‹ 上一級</button>'
@@ -6374,7 +6392,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     const b=document.getElementById('frDockBadge');
     if(b){ b.style.display=n?'':'none'; b.textContent=n>9?'9+':n; }
   }
-  function rowBtn(lb,fn,warn){ return '<button style="border:none;background:'+(warn?'#F4E3E9':'#F0E7FA')+';color:'+(warn?'#B0567A':'#6E58A6')
+  function rowBtn(lb,fn,warn){ return '<button class="pcGo'+(warn?' warn':'')+'" style="border:none;background:'+(warn?'#F4E3E9':'#F0E7FA')+';color:'+(warn?'#B0567A':'#6E58A6')
     +';font-family:inherit;font-size:12px;font-weight:700;padding:5px 10px;border-radius:9px;cursor:pointer" onclick="'+fn+'">'+lb+'</button>'; }
   window.frPaint=function(){
     const el=document.getElementById('frBody'); if(!el) return;
@@ -6871,8 +6889,9 @@ window.__hasCard=myKey?null:false;
 /* ================= v44:背包(時裝/頭像框/優惠券) ================= */
 function buildBag(){
   const el=document.getElementById('bagBody'); if(!el) return;
-  let owned='star'; try{ owned=localStorage.getItem('tt_frame')||'star'; }catch(e){}
-  const FR={star:'星光框',wood:'木質框',heart:'愛心框',gold:'冠名金框'};
+  let owned='wr1'; try{ owned=ttFrameId(localStorage.getItem('tt_frame')); }catch(e){}
+  const FR={wr1:'花圈框'}; Object.keys(TTF_ART).forEach(function(k){ FR[k]=TTF_ART[k].nm; });
+  let frOwnN=1, frOwnNames=['花圈框']; try{ const lv=(window.__vipInfo&&window.__vipInfo().lv)|0; for(let i=1;i<=5;i++){ if(lv>=i){ frOwnN++; frOwnNames.push(TTF_ART['vip'+i].nm); } } }catch(e){}
   /* 時裝:實際列出已擁有的款式(讀 window.__owned + __OUTFITS),含小人預覽與「穿上身」 */
   const OUT=(window.__outfitList?window.__outfitList():(window.__OUTFITS||[]).map((o,i)=>Object.assign({id:'cloth'+i},o)));
   const own=window.__owned||{};
@@ -6905,7 +6924,7 @@ function buildBag(){
     +'<div class="ghint" style="margin:4px 0 12px">想要新造型?到<b>時裝間</b>逛逛,購買後會永久收進背包。 <a href="#" id="bagToDress" style="color:#E27FA6;text-decoration:underline">去時裝間 →</a> <a href="#" id="bagToWard" style="color:#8E68C8;text-decoration:underline">自由搭配 →</a></div>'
 
     +'<div class="vnm2" style="font-size:13px;margin-bottom:6px">頭像框</div>'
-    +'<div class="ach2"><img src="'+AICON.star+'" alt=""><div style="flex:1"><div class="an2">星光框・木質框・愛心框</div><div class="ad2">目前使用:'+(FR[owned]||owned)+'(點左上角頭像更換)</div></div><span class="st2 ok">3 款</span></div>'
+    +'<div class="ach2"><img src="'+AICON.star+'" alt=""><div style="flex:1"><div class="an2">'+frOwnNames.join('・')+'</div><div class="ad2">目前使用:'+(FR[owned]||owned)+'(點左上角頭像更換;VIP 升級會解鎖更多)</div></div><span class="st2 ok">'+frOwnN+' 款</span></div>'
     +'<div class="vnm2" style="font-size:13px;margin:12px 0 6px">優惠券</div>'
     +(function(){
        let info=null; try{ info=window.__vipInfo&&window.__vipInfo(); }catch(e){}
@@ -7467,13 +7486,12 @@ function bkPaint(){
   if(host){ try{
     const a=(typeof me==='function')?me():null;
     const doll=(a&&a.b&&a.b.doll)?a.b.doll:{back:0,front:0,cloth:0,face:0,brow:0,acc:0,hair:0};
-    const wr=(typeof curFrame==='undefined')||curFrame==='wr1';
-    host.innerHTML=''; host.classList.toggle('wr',wr);
-    /* 有花圈框時整張卡改成置中直式,頭像才放得下 */
-    try{ const who=host.closest('.bkWho'); if(who) who.classList.toggle('wrBig',wr); }catch(e){}
-    let target=host;
-    if(wr) target=ttFrame(host,{anim:true});
-    else host.innerHTML='<div class="frm2 '+curFrame+'"></div>';
+    const _cf=window.__curFrame?window.__curFrame():'wr1';
+    const art=(_cf!=='wr1'&&TTF_ART[_cf]&&window.__frameUsable&&window.__frameUsable())?_cf:null;
+    host.innerHTML=''; host.classList.add('wr');
+    /* 繪師框時整張卡改成置中直式,頭像才放得下 */
+    try{ const who=host.closest('.bkWho'); if(who) who.classList.add('wrBig'); }catch(e){}
+    const target=art?ttFrame(host,{art:art,photo:!!ttMyPhoto()}):ttFrame(host,{anim:true});
     ttFill(target,doll,ttMyPhoto(),'bkDoll');
     /* 小人站在框右下角的卷軸上 */
     const sd=document.createElement('div'); sd.className='pcBeside';
@@ -7635,7 +7653,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui-bridge.js?v=256"></script>
+<script src="tavern-ui-bridge.js?v=258"></script>
 <script src="lobby-ui/live.js?v=244"></script>
 <script src="lobby-ui/membership.js?v=241"></script>
 <script src="lobby-ui/order-flow.js?v=246"></script>

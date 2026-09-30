@@ -74,6 +74,7 @@
   $$('[data-dyed-preview]').forEach(cv=>{const s=data.dyed[cv.dataset.dyedPreview];if(s)api.draw(cv,api.makeDoll({...selection,front:s.front,back:s.back},{savedId:cv.dataset.dyedPreview}));});
  }
  function setArea(next){area=next==='bag'?'bag':'store';bagSection='wear';category='hair';page=0;selected=null;filter='all';mode='singles';render();}
+ window.ttDyeShop=()=>{if(area!=='store'){init();setArea('store');syncOuter('store');}category='dye';render();};
  function swatches(){
   const preset=[0,2,3,4,5,6,7,1,9].filter(i=>data.colors[i]);
   $('#dyePanel').innerHTML='<div class="dye-head"><strong>主色</strong><span>'+(color.savedId?'已保存髮色':'即時試色')+'</span></div><div class="swatches">'+preset.map(i=>'<button data-color="'+i+'" aria-label="試穿髮色 '+(i+1)+'" style="--swatch:'+data.colors[i]+'" aria-pressed="'+(color.hair===i)+'" '+(color.savedId?'disabled':'')+'></button>').join('')+'</div>';
@@ -88,16 +89,19 @@
   document.querySelector('.collection-mark strong').textContent=area==='bag'?'OWNED & LOVED':'TRY SOMETHING NEW';
   document.querySelector('.paneltitle strong').textContent=area==='bag'?'今天的我':'試穿看看';
   document.querySelector('.stage-label').textContent=area==='bag'?'MY OUTFIT':'FITTING ROOM';
-  $('#showWear').hidden=area!=='bag';$('#dyeTicket').hidden=area!=='bag';
-  $('#dyeTicket strong').textContent='染髮 · 剩餘 '+data.tickets+' 張';
+  $('#showWear').hidden=area!=='bag';$('#dyeTicket').hidden=false;
   if(collecting){renderCollection();return;}
   // 商城與背包由各自的大廳入口開啟，不交叉切換。
   $('#catalog .catalog-head h2').textContent=area==='store'?'本日選物':'我的衣櫥';
-  $('#singlesMode').textContent='單品';$('#bundlesMode').textContent=area==='bag'?'染色組合':'當季組合';
-  $('#singlesMode').setAttribute('aria-pressed',String(mode==='singles'));$('#bundlesMode').setAttribute('aria-pressed',String(mode==='bundles'));
-  $('#singles').hidden=mode!=='singles';$('#bundles').hidden=mode!=='bundles';
-  $('#categories').innerHTML=categories.map(([id,name])=>'<button data-category="'+id+'" aria-pressed="'+(id===category)+'"><span>'+name+'</span></button>').join('');
+  $('#catalog .catalog-head small').textContent=area==='store'?'02 / SHOP COLLECTION':'02 / MY WARDROBE';
+  areaNav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.area===area)));
+  mode=category==='bundles'?'bundles':'singles';
+  const dyeShop=area==='store'&&category==='dye';
+  $('#singles').hidden=mode!=='singles'||dyeShop;$('#bundles').hidden=mode!=='bundles';$('#dyeShop').hidden=!dyeShop;$('#detail').hidden=dyeShop;
+  const cats=[['bundles',area==='bag'?'染色組合':'整套組合'],...categories,...(area==='store'?[['dye','染髮券']]:[])];
+  $('#categories').innerHTML=cats.map(([id,name])=>'<button data-category="'+id+'" aria-pressed="'+(id===category)+'"'+(id==='dye'?' class="cat-dye"':'')+'><span>'+name+'</span></button>').join('');
   $$('[data-category]').forEach(b=>b.onclick=()=>{category=b.dataset.category;page=0;selected=null;render();});
+  if(dyeShop){renderDyeShop();dyeCta();swatches();paint();return;}
   $('#singles').classList.toggle('has-accessory-filter',category==='acc');
   $('#subtabs').innerHTML=category==='acc'?'<nav class="accessory-filter" aria-label="配件部位">'+[['all','全部'],...Object.entries(groupNames)].map(([id,n])=>'<button data-group="'+id+'" aria-pressed="'+(id===filter)+'">'+n+'</button>').join('')+'</nav>':category==='hair'?(area==='bag'?'瀏海與後髮可分別搭配':'完整髮型 · 整組試穿'):'點圖片，即時試穿';
   $$('[data-group]').forEach(b=>b.onclick=()=>{filter=b.dataset.group;page=0;selected=null;render();});
@@ -111,8 +115,28 @@
   $('#detail').innerHTML=p?'<div><small class="overline">'+(p.category==='acc'?'ACCESSORY / '+groupNames[p.group]:'YOUR STYLE')+'</small><h2>'+esc(p.name)+'</h2><p>'+esc(p.product.owned?'已取得，可自由搭配。':'包含於「'+p.product.name+'」，購買整組後可拆件搭配。')+'</p></div><div class="actions">'+(p.category==='acc'?'<button class="ghost" id="removePart">卸下</button>':'')+'<button class="primary" id="itemAction">'+(area==='bag'?'穿上目前搭配 →':p.product.owned?'已擁有':'選購整組 →')+'</button></div>':'<p>挑選另一個分類，繼續找喜歡的造型。</p>';
   if(p){$('#itemAction').disabled=area==='store'&&p.product.owned;$('#itemAction').onclick=()=>area==='bag'?wear():!p.product.owned&&buy(p.product.id);if($('#removePart'))$('#removePart').onclick=()=>{selection[key(p)]=null;render();};}
   if(mode==='bundles')renderBundles();
-  swatches();paint();clearTimeout(render.imageTimer);render.imageTimer=setTimeout(paint,450);
+  dyeCta();swatches();paint();clearTimeout(render.imageTimer);render.imageTimer=setTimeout(paint,450);
  }
+ /* v258:試衣間旁的染髮入口改成會動的邀請卡:先免費試色,喜歡再買券 */
+ function dyeCta(){
+  const t=data.tickets|0,price=api.dyePrice?.()||299;
+  $('#dyeTicket').className='dye-ticket dye-cta'+(t?' has':'');
+  $('#dyeTicket').innerHTML='<span class="dye-cta-art" aria-hidden="true"><i></i><i></i><i></i></span><span class="dye-cta-text"><strong>'+(t?('染髮券 · 剩餘 '+t+' 張'):'漸層染髮 · 先免費試色')+'</strong><small>'+(t?'保存專屬漸層只扣 1 張':'喜歡再買券，一張 NT$'+price)+'</small></span><b>↗</b>';
+ }
+ function renderDyeShop(){
+  const t=data.tickets|0,price=api.dyePrice?.()||299;
+  const demos=[['#f5a3c7','#b7a6f2','蜜桃薰衣草'],['#8fd6c8','#7fb4ef','薄荷晴空'],['#f6cf6b','#f28d8d','蜂蜜夕陽']];
+  $('#dyeShop').innerHTML='<div class="dye-shop-head"><small>HAIR COLOR TICKET</small><h2>染一款，只屬於你的髮色。</h2><p>先用你現在試穿的髮型免費試色，滿意再用一張券把整組保存起來。</p></div>'
+   +'<div class="dye-demos">'+demos.map((d,i)=>'<button class="dye-demo" data-demo="'+i+'" style="--a:'+d[0]+';--b:'+d[1]+'"><canvas width="64" height="64" data-dye-demo="'+i+'"></canvas><span>'+d[2]+'</span></button>').join('')+'</div>'
+   +'<div class="dye-offer"><div class="dye-price"><small>ONE TICKET</small><b>NT$'+price+'</b><span>'+(t?('你有 '+t+' 張'):'目前 0 張')+'</span></div><ul><li>主色＋髮尾漸層一張全包</li><li>保存的組合可重複穿戴，不再扣券</li><li>預覽永遠免費</li></ul><div class="dye-offer-btns"><button class="ghost" id="dyeTryFree">免費試色 →</button><button class="primary" id="dyeBuyBtn">買一張染髮券</button></div></div>';
+  $$('[data-dye-demo]').forEach(cv=>{const d=demos[cv.dataset.dyeDemo];try{const doll=api.makeDoll(selection,{hair:data.doll.hair||0});doll.hairHex=d[0];doll.hairHex2=d[1];api.draw(cv,doll);}catch(e){}});
+  $$('[data-demo]').forEach(b=>b.onclick=()=>{const d=demos[b.dataset.demo];openDye({main:d[0],tail:d[1]});});
+  $('#dyeTryFree').onclick=()=>openDye();
+  $('#dyeBuyBtn').onclick=()=>{try{api.buyDye();}catch(e){tell(e.message);}};
+ }
+ const dyeShopEl=document.createElement('section');dyeShopEl.id='dyeShop';dyeShopEl.className='dye-shop';dyeShopEl.hidden=true;$('#bundles').after(dyeShopEl);
+ /* 分類列搬到「本日選物」標題下面,切到整套組合或染髮券時分類列還在 */
+ $('#catalog .catalog-head').after($('#categories'));
  function renderBundles(){
   $('#bundlePager').innerHTML='';
   if(area==='bag'){
@@ -122,7 +146,7 @@
    $$('[data-saved]').forEach(b=>b.onclick=()=>{const s=data.dyed[b.dataset.saved];selection.front=s.front;selection.back=s.back;color={savedId:b.dataset.saved};swatches();paint();$('#detail').innerHTML='<p>已試穿完整染色組合。</p><button class="primary" id="wearSaved">穿上這組</button>';$('#wearSaved').onclick=wear;});
    $('#detail').innerHTML='<p>染色組合保存後可重複整組穿戴。</p>';
   }else{
-   $('#bundlegrid').innerHTML=products().map(o=>'<article class="bundle"><div class="hero"><span class="ribbon">'+(o.owned?'已擁有':'整組 NT$'+o.price)+'</span><h2>'+esc(o.name)+'</h2><canvas width="64" height="64" data-outfit-preview="'+esc(o.id)+'"></canvas></div><div class="bundlebody"><p>'+o.parts.length+' 件可搭配部件</p><div class="bundlebtns"><button class="primary" data-try-outfit="'+esc(o.id)+'">試穿這組</button><button class="ghost" data-buy-outfit="'+esc(o.id)+'">'+(o.owned?'已擁有':'選購整組')+'</button></div></div></article>').join('')||'<p class="live-empty">目前沒有上架組合。</p>';
+   $('#bundlegrid').innerHTML=products().filter(o=>o.parts.length).map(o=>'<article class="bundle"><div class="hero"><span class="ribbon">'+(o.owned?'已擁有':'整組 NT$'+o.price)+'</span><h2>'+esc(o.name)+'</h2><canvas width="64" height="64" data-outfit-preview="'+esc(o.id)+'"></canvas></div><div class="bundlebody"><p>'+o.parts.length+' 件可搭配部件</p><div class="bundlebtns"><button class="primary" data-try-outfit="'+esc(o.id)+'">試穿這組</button><button class="ghost" data-buy-outfit="'+esc(o.id)+'">'+(o.owned?'已擁有':'選購整組')+'</button></div></div></article>').join('')||'<p class="live-empty">目前沒有上架組合。</p>';
    $$('[data-try-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.tryOutfit);selection={};o.parts.forEach(p=>selection[key(p)]=ref(p));color={hair:data.doll.hair||0};paint();tell('已試穿「'+o.name+'」');});
    $$('[data-buy-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.buyOutfit);if(!o.owned)buy(o.id);});
    $('#detail').innerHTML='<p>整組購買後，部件會收進個人背包。</p>';
@@ -130,18 +154,22 @@
  }
  function buy(id){try{api.buy(id);}catch(e){tell(e.message);}}
  async function wear(){if(saving)return;saving=true;try{await api.wear(selection,color);data=api.state();tell('穿搭已保存，回到大廳也會穿著這一套。');}catch(e){tell(e.message);}finally{saving=false;}}
- document.querySelector('.mode').remove();
+ /* v258:商城／背包做成同一個視窗裡的大分頁,不用關窗再開 */
+ const areaNav=document.querySelector('.mode');areaNav.className='area-tabs';areaNav.setAttribute('aria-label','商城與背包');
+ areaNav.innerHTML='<button data-area="store" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span><b>商城</b><small>SHOP</small></span></button><button data-area="bag" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9Z"/><path d="M8 9V7a4 4 0 0 1 8 0v2M9 13h6"/></svg><span><b>我的背包</b><small>BAG</small></span></button>';
+ function syncOuter(a){try{const doc=parent.document;const w=doc.querySelector('#shopWindow');if(w)w.dataset.area=a;const t=doc.querySelector('#shopTitle');if(t){t.textContent=a==='bag'?'我的背包':'時裝間';t.dataset.text=t.textContent;}const sm=doc.querySelector('#shopWindow .window-head small');if(sm)sm.textContent=a==='bag'?'MY LITTLE ARCHIVE / 把喜歡的收藏好':'TAVERN BOUTIQUE / 選一份新的心情';const f=doc.querySelector('#shopFrame');if(f)f.dataset.liveArea=a;}catch(e){}}
+ areaNav.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.dataset.area===area)return;init();setArea(b.dataset.area);syncOuter(b.dataset.area);});
+ document.querySelector('.catalog-mode').hidden=true;
  $('#singlesMode').onclick=()=>{mode='singles';render();};$('#bundlesMode').onclick=()=>{mode='bundles';render();};
  $('#reset').onclick=()=>{init();render();tell('已還原目前穿搭');};
  $('#showWear').textContent='穿上搭配';$('#showWear').onclick=wear;
- $('#dyeTicket strong').textContent='混搭後染髮';$('#dyeTicket small').textContent='先選瀏海與後髮，再調整髮色';
- $('#dyeTicket svg').innerHTML='<path d="M12 3C9 7 5 11 5 15a7 7 0 0 0 14 0c0-4-4-8-7-12Z"/><path d="M9 16a3 3 0 0 0 3 3"/>';
- $('#dyeTicket small').textContent='調整主色與漸層，保存才扣 1 張';
- $('#dyeDialog .dialog-card').innerHTML='<div class="dialog-head"><span class="eyebrow">YOUR HAIR COLOR</span><button id="closeDye" aria-label="關閉染髮">×</button></div><h2 id="dyeTitle">染一款，只屬於你的髮色。</h2><p>使用目前試穿的瀏海與後髮。預覽免費，保存組合才扣 1 張券。</p><div class="dye-workspace"><div class="dye-avatar"><canvas id="dyePreview" width="64" height="64" aria-label="染髮即時預覽"></canvas><span>即時預覽</span></div><div class="dye-controls"><label>組合名稱<input id="dyeName" maxlength="24" placeholder="專屬染髮"></label><label>主色<input id="dyeMain" type="color" aria-label="染髮主色"></label><label class="dye-gradient"><input id="dyeGradient" type="checkbox">加入髮尾漸層</label><label id="dyeTailLabel">髮尾色<input id="dyeTail" type="color" aria-label="染髮髮尾色"></label></div></div><div class="ticket-state" role="status"></div><p id="dyeError" role="alert" hidden></p><div class="dye-actions"><button id="cancelDye" class="ghost">取消</button><button id="saveDye" class="primary">使用 1 張並保存</button></div><p class="dye-note">保存後可在「染色組合」重複穿戴，不再扣券。</p>';
+
+ $('#dyeDialog .dialog-card').innerHTML='<div class="dialog-head"><span class="eyebrow">YOUR HAIR COLOR</span><button id="closeDye" aria-label="關閉染髮">×</button></div><h2 id="dyeTitle">染一款，只屬於你的髮色。</h2><p>使用目前試穿的瀏海與後髮。預覽免費，保存組合才扣 1 張券。</p><div class="dye-workspace"><div class="dye-avatar"><canvas id="dyePreview" width="64" height="64" aria-label="染髮即時預覽"></canvas><span>即時預覽</span></div><div class="dye-controls"><label>組合名稱<input id="dyeName" maxlength="24" placeholder="專屬染髮"></label><label>主色<input id="dyeMain" type="color" aria-label="染髮主色"></label><label class="dye-gradient"><input id="dyeGradient" type="checkbox">加入髮尾漸層</label><label id="dyeTailLabel">髮尾色<input id="dyeTail" type="color" aria-label="染髮髮尾色"></label></div></div><div class="ticket-state" role="status"></div><p id="dyeError" role="alert" hidden></p><div class="dye-actions"><button id="cancelDye" class="ghost">取消</button><button id="buyDyeInDialog" class="primary buy" hidden>買一張染髮券</button><button id="saveDye" class="primary">使用 1 張並保存</button></div><p class="dye-note">保存後可在「染色組合」重複穿戴，不再扣券。</p>';
  function closeDye(){if(dyeSaving)return;$('#dyeDialog').hidden=true;document.querySelector('.shop').inert=false;dyeDraft=null;paint();$('#dyeTicket').focus();}
  function dyeStatus(){
   $('#dyeDialog .ticket-state').textContent='持有 '+data.tickets+' 張染髮券'+(data.tickets<1?' · 券不足，仍可免費預覽':' · 保存使用 1 張');
   $('#saveDye').disabled=dyeSaving||data.tickets<1;$('#saveDye').textContent=dyeSaving?'保存中…':'使用 1 張並保存';
+  $('#saveDye').hidden=data.tickets<1;$('#buyDyeInDialog').hidden=data.tickets>=1;$('#buyDyeInDialog').textContent='買一張染髮券 NT$'+(api.dyePrice?.()||299)+' →';
   $$('#dyeDialog input, #closeDye, #cancelDye').forEach(el=>el.disabled=dyeSaving);
   $('#dyeTail').disabled=dyeSaving||!$('#dyeGradient').checked;
  }
@@ -149,12 +177,12 @@
   dyeDraft={name:$('#dyeName').value,main:$('#dyeMain').value,tail:$('#dyeGradient').checked?$('#dyeTail').value:$('#dyeMain').value};
   $('#dyeTailLabel').hidden=!$('#dyeGradient').checked;dyeStatus();paint();
  }
- function openDye(){
+ function openDye(preset){
   try{
    data=api.state();if(!data.loggedIn)throw Error('先登入自己的闆卡，再使用染髮');
    const d=api.makeDoll(selection,color,true);
-   $('#dyeName').value='';$('#dyeMain').value=d.hairHex||data.colors[d.hair||0];$('#dyeTail').value=d.hairHex2||'#f3b8d8';
-   $('#dyeGradient').checked=!!d.hairHex2&&d.hairHex2!==d.hairHex;$('#dyeError').hidden=true;
+   $('#dyeName').value='';$('#dyeMain').value=(preset&&preset.main)||d.hairHex||data.colors[d.hair||0];$('#dyeTail').value=(preset&&preset.tail)||d.hairHex2||'#f3b8d8';
+   $('#dyeGradient').checked=preset?true:(!!d.hairHex2&&d.hairHex2!==d.hairHex);$('#dyeError').hidden=true;
    $('#dyeDialog').hidden=false;document.querySelector('.shop').inert=true;dyeRequest=null;updateDye();$('#closeDye').focus();
   }catch(e){tell(e.message);}
  }
@@ -171,7 +199,8 @@
   finally{dyeSaving=false;dyeStatus();}
  }
  $('#closeDye').onclick=closeDye;$('#cancelDye').onclick=closeDye;$('#saveDye').onclick=saveDye;
- $$('#dyeDialog input').forEach(el=>el.oninput=updateDye);$('#dyeTicket').onclick=openDye;
+ $('#buyDyeInDialog').onclick=()=>{try{api.buyDye();}catch(e){tell(e.message);}};
+ $$('#dyeDialog input').forEach(el=>el.oninput=updateDye);$('#dyeTicket').onclick=()=>openDye();
  document.querySelector('.paneltitle strong').textContent='我的試衣舞臺';document.querySelector('.collection-mark span').textContent='星光換裝間';document.querySelector('.collection-mark strong').textContent='DRESS UP & PLAY';
  window.ttDressArea=next=>{init();setArea(next);};
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();if(!$('#dyeDialog').hidden)closeDye();else api.close();}});
