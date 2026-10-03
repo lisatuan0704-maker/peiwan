@@ -139,10 +139,10 @@ const ROSTER_PORTRAITS={
  RIRA:{x:65.459,y:36.5,height:565.167,mirrorX:false}
 };
 function artwork(c,eye=false){
-  if(eye){const p=ROSTER_PORTRAITS[c.id];return `<img class="eyes roster-portrait" src="assets/${c.id}-artist-v2.png" alt="${c.id}｜${c.name}的名簿立繪" draggable="false" style="left:${p.x}%;top:${p.y}%;height:${p.height}%;transform:translate(-50%,-50%) scaleX(${p.mirrorX?-1:1})">`;}
+  if(eye){const p=ROSTER_PORTRAITS[c.id];return `<img class="eyes roster-portrait" src="assets/${c.id}-artist-v2.png?v=260" alt="${c.id}｜${c.name}的名簿立繪" draggable="false" style="left:${p.x}%;top:${p.y}%;height:${p.height}%;transform:translate(-50%,-50%) scaleX(${p.mirrorX?-1:1})">`;}
   const box=eye?c.eye:c.view;
   // 繪師第一版透明原圖；立繪僅收整透明留白，名簿另外顯示臉部特寫。
-  return `<svg ${eye?'class="eyes"':''} ${eye&&c.id==='MOMO'?'data-momo-roster="true"':''} viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.id}｜${c.name}的${eye?'雙眼與嘴巴特寫':'角色立繪'}"><image href="assets/${c.id}-artist-v2.png" width="2000" height="2000"/></svg>`;
+  return `<svg ${eye?'class="eyes"':''} ${eye&&c.id==='MOMO'?'data-momo-roster="true"':''} viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${c.id}｜${c.name}的${eye?'雙眼與嘴巴特寫':'角色立繪'}"><image href="assets/${c.id}-artist-v2.png?v=260" width="2000" height="2000"/></svg>`;
 }
 
 $('#roster').innerHTML=CAST.map((c,i)=>`<button class="cast-row" data-cast="${c.id}" style="--accent:${c.color};--pale:${c.pale}" aria-label="認識 ${c.id}｜${c.name}"><span class="cast-watermark" aria-hidden="true">${c.id}</span><div class="identity"><div class="cast-name"><b>${c.name}</b><span>${c.id}</span></div><span class="mood-line">便箋等待更新</span></div>${artwork(c,true)}<span class="row-number">店員 0${i+1}</span><span class="row-arrow" aria-hidden="true">↗</span></button>`).join('');
@@ -163,5 +163,5 @@ const params=new URLSearchParams(location.search);if(params.get('view')==='profi
 <script src="角色演出.js?v=30"></script>
 <script src="縭分層動態.js?v=34"></script>
 
-<script src="live-roster.js?v=238"></script></body>
+<script src="live-roster.js?v=260"></script></body>
 </html>

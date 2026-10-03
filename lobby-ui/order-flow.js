@@ -14,7 +14,7 @@
    const base=Math.floor(off/quantity),extra=off%quantity;
    return {unit:cents/scale,total:total/scale,discount:off/scale,amount:(total-off)/scale,shares:Array.from({length:quantity},(_,i)=>({amount:(cents-base-(i<extra?1:0))/scale,discount:(base+(i<extra?1:0))/scale}))};
  }
- const AVN={KABUKI:'蕪',MOMO:'桃',RIRA:'縭'};function chips(){const list=members();return '<div class="of-members">'+(list.length?list.map(p=>{const th=p.theme,nm=(th&&AVN[th])||p.name;return th?'<img class="of-av" src="tavern-ui/assets/avatar-'+esc(th)+'.png" alt="'+esc(nm)+'" title="'+esc(nm)+'">':'<span>'+esc(nm)+'</span>';}).join(''):'<span>不指定冒險者 · 1 位</span>')+'</div>';}
+ const AVN={KABUKI:'蕪',MOMO:'桃',RIRA:'縭'};function chips(){const list=members();return '<div class="of-members">'+(list.length?list.map(p=>{const th=p.theme,nm=(th&&AVN[th])||p.name;return th?'<img class="of-av" src="tavern-ui/assets/avatar-'+esc(th)+'.png?v=260" alt="'+esc(nm)+'" title="'+esc(nm)+'">':'<span>'+esc(nm)+'</span>';}).join(''):'<span>不指定冒險者 · 1 位</span>')+'</div>';}
  function heading(id,kicker,title,step){
    const box=$(id),card=box.querySelector('.shopCard');box.classList.add('tt-order-flow');box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label',title);
    let head=card.querySelector('.of-heading');if(!head){head=document.createElement('div');head.className='of-heading';card.prepend(head);}
