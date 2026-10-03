@@ -1679,7 +1679,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v265</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v266</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -2227,7 +2227,7 @@ function tpReady(){
   if(typeof agents==='undefined')return;
   agents.forEach(a=>{
     if(a.frames && a.b){
-      POSES.forEach(p=>{ if(a.frames[p]) drawDollTo(a.frames[p], a.b.doll, p); });
+      POSES.forEach(p=>{ if(a.frames[p]) drawDollTo(a.frames[p], {...a.b.doll,_blink:false}, p); });
       const c=a.frame; a.frame=null; setFrame(a,c||'idle');
     }
   });
@@ -2825,31 +2825,31 @@ function syncBadge(){
   }
   el.textContent=s;
 }
-/* ===== 眨眼:每隔幾秒隨機閉一下眼(輕量模式與減少動態時自動關閉) ===== */
+/* ===== 眨眼:移動與待機共用8～16秒間隔，只短暫閉眼140ms ===== */
 (function(){
   function canBlink(){
-    if(document.body.classList.contains('liteFX')) return false;
-    try{ if(matchMedia('(prefers-reduced-motion: reduce)').matches) return false; }catch(e){}
+    if(document.body.classList.contains('liteFX'))return false;
+    try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return false;}catch(e){}
     return true;
   }
-  function blink(a){
-    if(!a||!a.frames||!a.b||!a.b.doll||a.b.doll._blink||a.state!=='idle'||a.moving||a.chase) return;
-    // 眨眼只畫到顯示畫布；絕不把閉眼寫進輪播用的走路影格。
-    a.b.doll._blink=1;
-    drawDollTo(a.cv,a.b.doll,'idle');
-    setTimeout(function(){
-      delete a.b.doll._blink;
-      const p=a.frame||'idle';a.frame=null;setFrame(a,p);
-    }, 120+Math.random()*70);
-  }
+  const nextTime=()=>Date.now()+8000+Math.random()*8000;
   setInterval(function(){
-    if(!canBlink()) return;
-    if(typeof agents==='undefined'||!agents.forEach) return;
+    if(typeof agents==='undefined'||!agents.forEach)return;
+    const now=Date.now();
     agents.forEach(function(a){
-      if(!a||!a.frames||!a.el||a.el.style.display==='none'||a.slime) return;
-      if(Math.random()<0.28) blink(a);
+      if(!a||!a.frames||!a.b?.doll||!a.el||a.slime)return;
+      if(!a._nextBlink){a._nextBlink=nextTime();return;}
+      if(now<a._nextBlink||a._blinkUntil)return;
+      a._nextBlink=nextTime();
+      if(!canBlink()||a.el.style.display==='none')return;
+      a._blinkUntil=now+140;
+      const pose=a.frame||'idle';a.frame=null;setFrame(a,pose);
+      setTimeout(function(){
+        a._blinkUntil=0;
+        const current=a.frame||'idle';a.frame=null;setFrame(a,current);
+      },140);
     });
-  }, 2400);
+  },250);
 })();
 /* 傳送門 */
 const doorEl=document.createElement('div');doorEl.className='door';
@@ -2949,6 +2949,7 @@ function setFrame(a,p){
   if(!a.frames) return;
   if(a.frame===p) return;
   a.frame=p;
+  if(a._blinkUntil>Date.now()){drawDollTo(a.cv,{...a.b.doll,_blink:true},p);return;}
   const g=a.cv.getContext('2d');
   g.imageSmoothingEnabled=false;
   g.clearRect(0,0,64,64);
