@@ -1435,6 +1435,7 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/hair-motion.js?v=272"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
 <script src="lobby-ui/presence.js?v=231"></script>
+<script src="lobby-ui/payment-safety.js?v=273"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=256">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
@@ -1681,7 +1682,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v272</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v273</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -4173,7 +4174,7 @@ function submitOrder(){
   };
   const ref=db.ref(ROOT+'/clientOrders').push();
   /* 轉帳截圖存到獨立節點,訂單本體保持輕量(後台載入才不會被幾百張圖拖垮) */
-  saveProof(ref.key, proofData).then(()=>ref.set(o)).then(()=>{
+  db.ref(ROOT).update({['clientOrders/'+ref.key]:o,['clientOrderProofs/'+ref.key]:proofData}).then(()=>{
     const ids=myOrderIds(); ids.push(ref.key);
     try{localStorage.setItem('tt_orders',JSON.stringify(ids));}catch(e){}
     proofData=null;
@@ -4182,7 +4183,7 @@ function submitOrder(){
     else alert('訂單成立!狀態:待付款確認。');
     try{ statInc('orders'); }catch(err){}
     try{ notifyOrder(o); }catch(err){}
-    watchMyOrders();
+    try{watchMyOrders();}catch(_){}
     _fuse(); _submitting=false; if(_sb) _sb.disabled=false;
   }).catch(e=>{ _fuse(); toast('送出失敗,請稍後再試'); _submitting=false; if(_sb) _sb.disabled=false; });
 }
@@ -4254,56 +4255,55 @@ function renderCoinInfo(){
       +'<div style="font-size:11.5px;color:#A5798D;margin-top:4px">儲值後金幣一入帳,這頁的付款鈕會自動解鎖,不用重來一次</div>');
   const ck=document.getElementById('useCouponCoin'); if(ck) ck.onchange=function(){ _coinCoupon=this.checked; renderCoinInfo(); };
   const btn=document.getElementById('paySubmitBtn');
-  if(btn){ btn.disabled=!enough; btn.style.opacity=enough?'1':'.5'; }
+  if(btn){btn.disabled=_submitting||!enough;btn.style.opacity=enough?'1':'.5';}
 }
 function paySubmit(){ if(payMethod==='coin') payWithCoins(); else submitOrder(); }
-function payWithCoins(){
-  const name=(document.getElementById('payNameCoin').value||'').trim();
-  if(!name){ toast('請填稱呼或 Discord 名'); shake('payNameCoin'); return; }
-  const amt=payFinalAmount(), bal=window.__wallet||0;
-  if(bal<amt){ toast('餘額不足'); return; }
-  const couponUsed=_coinCoupon&&couponsLeft()>0; let couponDisc=0;
-  if(couponUsed){ try{ const vi=window.__vipInfo&&window.__vipInfo(); if(vi&&vi.lv) couponDisc=vi.cur.disc; }catch(e){} }
-  if(_submitting){ return; } _submitting=true;
-  const btn=document.getElementById('paySubmitBtn'); if(btn) btn.disabled=true;
-  const _fuse2=submitGuard('paySubmitBtn','送出訂單');
-  const ss=_selStaff();
-  /* 先把真實餘額讀進本機再扣款。直接跑 transaction 的話,第一輪可能拿到還沒同步的 null,
-     被誤判成餘額不足而中止(中止後不會再跟伺服器確認)。 */
-  deductWallet(myKey, amt,
-    (err,committed,snap)=>{
-      _fuse2();
-      if(err||!committed){ toast('餘額不足或扣款失敗'); _submitting=false; if(btn) btn.disabled=false; return; }
-      const balAfter=(snap&&snap.val())||0;
-      const o={ plan:curPlan.id, planName:curPlan.n, amount:amt, origAmount:curPlan.p, couponUsed, couponDisc,
-        type:(curKind==='shop')?'shop':(curKind==='table'?'table':'play'), itemId:curPlan.itemId||null, itemName:curPlan.itemName||null,
-        name, last5:null, proof:null, paidBy:'wallet',
-        staffName:(curKind==='play')?(ss?ss.name:'不指定'):null, staffCid:ss?ss.cid:null,
-        booking:curBooking, reserveAt:(curBooking?curReserveAt:null),
-        status:(curKind==='shop'?'done':'confirmed'), createdAt:Date.now(), myKey:myKey||null };
-      const ref=db.ref(ROOT+'/clientOrders').push();
-      /* 訂單寫入失敗 → 把剛扣的金幣退回去,不能扣了錢卻沒有單 */
-      ref.set(o).catch(()=>{
-        db.ref(ROOT+'/wallet/'+myKey+'/balance').transaction(c2=>((c2||0)+amt),(e3,ok3,sn3)=>{
-          if(!e3&&ok3) db.ref(ROOT+'/walletTx/'+myKey).push({type:'refund',amount:amt,balAfter:(sn3&&sn3.val())||0,note:'下單失敗自動退回・'+curPlan.n,ts:Date.now()});
-        });
-        toast('下單失敗,金幣已退回,請再試一次');
-      });
-      db.ref(ROOT+'/walletTx/'+myKey).push({type:'spend',amount:-amt,balAfter,ref:ref.key,note:curPlan.n,ts:Date.now()});
-      /* v258:染髮券是「張數」不是「擁有」,買一次 +1 張 */
-      if(curKind==='shop'&&curPlan.itemId==='dyeTicket'){ db.ref(ROOT+'/owned/'+myKey+'/dyeTickets').transaction(c=>(Number.isSafeInteger(c)?c:0)+1); }
-      else if(curKind==='shop'&&curPlan.itemId){ db.ref(ROOT+'/owned/'+myKey+'/'+curPlan.itemId).set({name:curPlan.itemName||curPlan.n,ts:Date.now()}); }
-      const ids=myOrderIds(); ids.push(ref.key); try{ localStorage.setItem('tt_orders',JSON.stringify(ids)); }catch(e){}
-      shopClose();
-      if(curKind==='shop'){ if(window.celebrate) celebrate('購買成功!','「'+(curPlan.itemName||curPlan.n)+'」已收進背包'); else toast('購買成功!'); }
-      else if(window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'已用金幣付款!',sub:'「'+curPlan.n+'」開始服務囉,好好享受 ✦',onclick:()=>shopOpen(4),hold:7000});
-      else toast('付款成功!');
-      try{ statInc('orders'); }catch(e){}
-      try{ notifyOrder(o); }catch(e){}
-      watchMyOrders();
-      /* 交易與訂單都落地後才解鎖,避免網路慢時連點造成重複扣款 */
-      setTimeout(()=>{ _submitting=false; if(btn) btn.disabled=false; }, 1200);
-    });
+function walletSafety(){return TTPaymentSafety.create({storage:localStorage,locks:navigator.locks});}
+async function walletLookup(ids){
+ if(!Array.isArray(ids)||ids.length>20||ids.some(id=>typeof id!=='string'||!/^[-A-Za-z0-9_]+$/.test(id)))throw Error('交易編號有誤');
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+ try{return await Promise.all(ids.map(async id=>{
+  // 復原時必須向伺服器重新確認，不採用離線或尚未送達的本機快取。
+  const r=await fetch(firebaseConfig.databaseURL+'/'+ROOT+'/clientOrders/'+encodeURIComponent(id)+'.json',{cache:'no-store',signal:controller.signal});
+  if(!r.ok)throw Error('無法確認訂單');return r.json();
+ }));}finally{clearTimeout(timer);}
+}
+function rememberPaymentIds(ids){try{localStorage.setItem('tt_orders',JSON.stringify([...new Set([...myOrderIds(),...ids])]));}catch(_){} }
+async function payWithCoins(){
+ if(_submitting)return;
+ const name=(document.getElementById('payNameCoin').value||'').trim();
+ if(!name){toast('請填稱呼或 Discord 名');shake('payNameCoin');return;}
+ if(!myKey||!curPlan){toast('請先使用闆卡並重新選擇方案');return;}
+ const key=myKey,kind=curKind,plan={...curPlan},amt=payFinalAmount(),ss=_selStaff();
+ if(!Number.isSafeInteger(amt)||amt<0){toast('金額有誤，請重新選擇');return;}
+ if((window.__wallet||0)<amt){toast('餘額不足');return;}
+ const couponUsed=!!(_coinCoupon&&couponsLeft()>0);let couponDisc=0;
+ if(couponUsed){const vi=window.__vipInfo?.();if(vi?.lv)couponDisc=vi.cur.disc;}
+ const ref=db.ref(ROOT+'/clientOrders').push();
+ const o={plan:plan.id,planName:plan.n,amount:amt,origAmount:plan.p,couponUsed,couponDisc,
+  type:kind==='shop'?'shop':kind==='table'?'table':'play',itemId:plan.itemId||null,itemName:plan.itemName||null,
+  name,last5:null,proof:null,paidBy:'wallet',staffName:kind==='play'?(ss?.name||'不指定'):null,staffCid:ss?.cid||null,
+  booking:curBooking,reserveAt:curBooking?curReserveAt:null,status:kind==='shop'?'done':'confirmed',createdAt:Date.now(),myKey:key};
+ _submitting=true;const btn=document.getElementById('paySubmitBtn');if(btn)btn.disabled=true;
+ const done=submitGuard('paySubmitBtn','送出訂單');
+ try{
+  await walletSafety().execute({key,amount:amt,ids:[ref.key],lookup:walletLookup,commit:async()=>{
+    const changes={};changes['clientOrders/'+ref.key]=o;
+    changes['wallet/'+key+'/balance']=firebase.database.ServerValue.increment(-amt);
+    changes['walletTx/'+key+'/'+ref.key]={type:'spend',amount:-amt,ref:ref.key,note:plan.n,ts:o.createdAt};
+    if(kind==='shop'&&plan.itemId==='dyeTicket')changes['owned/'+key+'/dyeTickets']=firebase.database.ServerValue.increment(1);
+    else if(kind==='shop'&&plan.itemId)changes['owned/'+key+'/'+plan.itemId]={name:plan.itemName||plan.n,ts:o.createdAt};
+    // 訂單、扣款明細、商品一起成立，拒絕時全部不寫入。
+    await db.ref(ROOT).update(changes);
+   }});
+ }catch(e){if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'交易結果尚未確認，請聯絡掌櫃');return;}
+ finally{done();_submitting=false;if(btn)btn.disabled=false;}
+ try{localStorage.setItem('tt_orders',JSON.stringify([...new Set([...myOrderIds(),ref.key])]));}catch(_){}
+ try{shopClose();}catch(_){}
+ if(kind==='shop'){if(window.celebrate)celebrate('購買成功!','「'+(plan.itemName||plan.n)+'」已收進背包');else toast('購買成功!');}
+ else if(window.lobbyNotify)lobbyNotify({ok:true,icon:'coin',title:'已用金幣付款!',sub:'「'+plan.n+'」訂單已成立',onclick:()=>shopOpen(4),hold:7000});
+ else toast('付款成功!');
+ try{statInc('orders');notifyOrder(o);watchMyOrders();}catch(_){}
 }
 /* 錢包顯示 + 儲值 */
 function updateCoinChip(){ const el=document.getElementById('coinBal'); if(el) el.textContent=(window.__wallet||0);
@@ -4367,10 +4367,10 @@ function pickTier(i){
   document.getElementById('tuPayInfo').innerHTML=
     '<div class="tu-receipt"><div><span>儲值金額</span><b>NT$'+curTier.amt+'</b></div>'+
     '<div><span>入帳金幣</span><b>'+get+' <small>金幣</small></b>'+(curTier.bonus>0?'<small class="tu-bonus">內含贈送 '+curTier.bonus+' 金幣</small>':'')+'</div></div>'+
-    '<div class="tu-section-heading"><span>01 / ONLINE PAYMENT</span><h4>線上付款</h4><p>信用卡或超商付款，完成後自動入帳。</p></div>'+
-    '<button type="button" id="tuOnlineBtn" onclick="tuPayOnline()" style="display:block;width:100%;margin:10px 0 4px;border:none;cursor:pointer;'+
+    '<div class="tu-section-heading"><span>01 / ONLINE PAYMENT</span><h4>線上付款</h4><p>信用卡與超商代碼付款申請中，尚未開放。</p></div>'+
+    '<button type="button" id="tuOnlineBtn" disabled aria-disabled="true" onclick="tuPayOnline()" style="display:block;width:100%;margin:10px 0 4px;border:none;cursor:pointer;'+
       'background:linear-gradient(180deg,#F19FBE,#D96A8B);color:#fff;font-family:inherit;font-size:14.5px;font-weight:800;padding:12px;border-radius:12px;box-shadow:0 4px 12px rgba(200,90,130,.3)">'+
-      '線上付款(信用卡/超商)・自動入帳</button>'+
+      '信用卡／超商代碼付款・申請中</button>'+
     '<div class="tu-bank-divider">或使用銀行轉帳</div>'+
     '<div class="tu-bank-account" style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b style="color:#5A4880">'+esc(PAY_ACCOUNT)+'</b>'+
     '<button type="button" onclick="(function(b){try{navigator.clipboard.writeText(PAY_ACCOUNT)}catch(e){}b.textContent=\'已複製 ✓\';setTimeout(()=>b.textContent=\'複製\',1500)})(this)" style="border:none;background:#F0E7FA;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;cursor:pointer">複製</button></div>'+
@@ -4384,7 +4384,10 @@ function pickTier(i){
 }
 /* ===== v196:線上儲值(應援金流)——按下直接跳付款頁,付完 webhook 自動入帳 ===== */
 const PAY_API='https://pay.tinytavern.tw';
+// 金流仍在審核，且付款網址 TLS 憑證查驗失敗；完成後端與正式交易驗收才開啟。
+const ONLINE_PAYMENT_READY=false;
 window.tuPayOnline=async function(){
+  if(!ONLINE_PAYMENT_READY){toast('信用卡與超商代碼付款申請中，開通後才提供線上付款');return;}
   if(!curTier){ toast('請先選擇儲值方案'); return; }
   if(needCard('先做一張闆卡,儲值的金幣才會記在你身上 ✦')) return;
   const btn=document.getElementById('tuOnlineBtn');
@@ -4407,13 +4410,13 @@ window.tuPayOnline=async function(){
   try{
     const q=new URLSearchParams(location.search);
     if(q.get('pay')==='ok'){
-      setTimeout(()=>{ if(window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'付款完成!',sub:'金幣入帳中,幾秒內會跳通知(超商繳費則於繳費後入帳)',hold:9000});
-        else toast('付款完成,金幣入帳中'); },1200);
+      setTimeout(()=>{ if(window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'已返回酒館',sub:'付款結果確認中；超商代碼請完成繳費，實際入帳以錢包與訂單紀錄為準',hold:9000});
+        else toast('付款結果確認中，請查看錢包與訂單；取得超商代碼不代表已付款'); },1200);
     }else if(q.get('pay')==='fail'){
-      setTimeout(()=>{ if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'付款沒有完成',sub:'沒有扣款,可以回錢包再試一次,或改用轉帳',hold:9000});
-        else toast('付款沒有完成,可再試一次'); },1200);
+      setTimeout(()=>{ if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'付款沒有完成',sub:'尚未確認付款結果，請先查看訂單及銀行紀錄，避免重複付款',hold:9000});
+        else toast('尚未確認付款結果，請先查看訂單及銀行紀錄'); },1200);
     }
-    if(q.get('pay')){ history.replaceState(null,'',location.pathname); }
+    if(q.get('pay')){q.delete('pay');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);}
   }catch(e){}
 })();
 let tuProofData=null;
@@ -4441,34 +4444,41 @@ function submitTopup(){
     name, last5, hasProof:true, status:'pending', createdAt:Date.now(),
     payDue:Date.now()+PAY_MINS*60000, myKey:myKey||null };
   const ref=db.ref(ROOT+'/clientOrders').push();
-  saveProof(ref.key, tuProofData).then(()=>ref.set(o)).then(()=>{
+  db.ref(ROOT).update({['clientOrders/'+ref.key]:o,['clientOrderProofs/'+ref.key]:tuProofData}).then(()=>{
     const ids=myOrderIds(); ids.push(ref.key); try{ localStorage.setItem('tt_orders',JSON.stringify(ids)); }catch(e){}
     tuProofData=null; shopClose();
     if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'儲值已送出!',sub:'掌櫃核帳確認後,'+get+' 金幣會入帳',onclick:()=>shopOpen(4),hold:8000});
     else toast('儲值已送出,待掌櫃確認');
     try{ notifyOrder(o); }catch(e){}
-    watchMyOrders();
+    try{watchMyOrders();}catch(_){}
     _fuse3(); _submitting=false; if(_tb) _tb.disabled=false;
   }).catch(()=>{ _fuse3(); toast('送出失敗,請稍後再試'); _submitting=false; if(_tb) _tb.disabled=false; });
 }
 (function(){
   if(typeof db==='undefined'||!db) return;
   window.__wallet=0; window.__topupCfg={tiers:[]};
-  function watchWallet(){ if(!myKey) return;
-    try{ db.ref(ROOT+'/wallet/'+myKey+'/balance').on('value',s=>{ window.__wallet=s.val()||0; updateCoinChip();
+  let walletSub=null,muteSub=null;
+  function watchWallet(){
+    if(walletSub?.key===myKey)return;
+    if(walletSub)walletSub.ref.off('value',walletSub.handler);walletSub=null;window.__wallet=0;updateCoinChip();
+    if(!myKey)return;const key=myKey,ref=db.ref(ROOT+'/wallet/'+key+'/balance');
+    try{ const handler=s=>{if(myKey!==key)return;window.__wallet=s.val()||0; updateCoinChip();
       /* 客人正停在金幣結帳頁等入帳:餘額一到,畫面即時更新、付款鈕自動解鎖(保留已勾的優惠券) */
       try{ const m3=document.getElementById('shopM3');
         if(m3&&m3.style.display==='flex'&&payMethod==='coin'){
           renderCoinInfo();
           const bn=document.querySelector('#payMethodRow .pmBal'); if(bn) bn.textContent=window.__wallet||0;
         } }catch(e){}
-      if(document.getElementById('topupM')&&document.getElementById('topupM').classList.contains('on')) renderTopup(); }); }catch(e){} }
+      if(document.getElementById('topupM')&&document.getElementById('topupM').classList.contains('on')) renderTopup(); };walletSub={key,ref,handler};ref.on('value',handler); }catch(e){} }
   try{ db.ref(ROOT+'/config/topup').on('value',s=>{ window.__topupCfg=s.val()||{tiers:[]}; }); }catch(e){}
   watchWallet();
   /* 禁言狀態監看 */
   window.__mute=null;
-  function watchMute(){ if(!myKey) return;
-    try{ db.ref(ROOT+'/mutes/'+myKey).on('value',s=>{ window.__mute=s.val()||null; }); }catch(e){} }
+  function watchMute(){
+    if(muteSub?.key===myKey)return;if(muteSub)muteSub.ref.off('value',muteSub.handler);muteSub=null;window.__mute=null;
+    if(!myKey)return;const key=myKey,ref=db.ref(ROOT+'/mutes/'+key),handler=s=>{if(myKey===key)window.__mute=s.val()||null;};
+    muteSub={key,ref,handler};ref.on('value',handler);
+  }
   watchMute();
   if(typeof claimMe==='function'){ const _c=claimMe; claimMe=function(k){ _c(k); setTimeout(watchWallet,300); setTimeout(watchMute,300); }; }
   const cb=document.getElementById('h2coin'); if(cb) cb.addEventListener('click',openTopup);
@@ -4663,27 +4673,22 @@ function submitGuard(btnId,label){
   let done=false;
   const t=setTimeout(()=>{
     if(done) return;
-    _submitting=false; if(btn){ btn.disabled=false; btn.textContent=label||btn.textContent; }
-    toast('網路好像不太穩,還沒送出成功,請再試一次');
+    if(btn){btn.disabled=true;btn.textContent='等待確認中…';}
+    toast('網路較慢，交易仍在確認中，請勿重新送出或關閉頁面');
   },15000);
   return ()=>{ done=true; clearTimeout(t); };
 }
 /* 安全扣款:先 once() 讀真實餘額,再跑 transaction(避免本機快取還沒同步就誤判餘額不足) */
 function deductWallet(key,price,cb){
-  const ref=db.ref(ROOT+'/wallet/'+key+'/balance');
-  let fired=false;
-  /* 用持續監聽把餘額留在本機快取,再跑 transaction。
-     once() 讀完就丟,transaction 第一輪仍會拿到 null 而誤判餘額不足。 */
-  const h=ref.on('value', s=>{
-    if(fired) return; fired=true;
-    const bal=+s.val()||0;
-    if(bal<price){ ref.off('value',h); cb(null,false,null); return; }
-    ref.transaction(cur=>{
-      const v=(cur===null||cur===undefined)?bal:(+cur||0);
-      if(v<price) return;
-      return v-price;
-    }, (e,ok,sn)=>{ ref.off('value',h); cb(e,ok,sn); });
-  }, err=>{ if(fired) return; fired=true; cb(err,false,null); });
+ if(!key||!Number.isSafeInteger(price)||price<0){cb(Object.assign(Error('金額或帳號有誤'),{code:'PERMISSION_DENIED'}),false,null);return;}
+ const ref=db.ref(ROOT+'/wallet/'+key+'/balance');let fired=false,finished=false;
+ const finish=(e,ok,sn)=>{if(finished)return;finished=true;ref.off('value',handler);cb(e,ok,sn);};
+ function handler(s){
+  if(fired)return;fired=true;
+  const bal=s.val();if(!Number.isSafeInteger(bal)||bal<price){finish(null,false,null);return;}
+  ref.transaction(cur=>{if(!Number.isSafeInteger(cur)||cur<price)return;return cur-price;},finish,false);
+ }
+ ref.on('value',handler,e=>finish(e,false,null));
 }
 /* ===================== 🔁 一鍵續單 ===================== */
 const RENEW_BUFFER=10*60000;             // 續單結束跟陪玩下一個安排至少隔 10 分鐘
@@ -7693,7 +7698,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 </script>
 <script src="tavern-ui-bridge.js?v=271"></script>
 <script src="lobby-ui/live.js?v=244"></script>
-<script src="lobby-ui/membership.js?v=241"></script>
-<script src="lobby-ui/order-flow.js?v=260"></script>
+<script src="lobby-ui/membership.js?v=273"></script>
+<script src="lobby-ui/order-flow.js?v=273"></script>
 </body>
 </html>

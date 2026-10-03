@@ -87,8 +87,6 @@
    const {list,plan,price,name,last5,booking,reserveAt,key,method,createdAt}=snapshot;
    return list.map((p,i)=>({id:ids[i],order:{plan:plan.id,planName:plan.n,amount:price.shares[i].amount,origAmount:price.unit,couponUsed:price.discount>0,couponDisc:price.shares[i].discount,type:'play',itemId:null,itemName:null,name,last5:method==='coin'?null:last5,hasProof:method!=='coin',...(method==='coin'?{paidBy:'wallet'}:{}),staffName:p.name,staffCid:p.cid,booking,reserveAt:booking?reserveAt:null,status:method==='coin'?'confirmed':'pending',createdAt,payDue:createdAt+PAY_MINS*60000,myKey:key,groupId,groupSize:list.length,groupStaffNames:list.map(x=>x.name),groupTotal:price.total,groupAmount:price.amount,groupCouponDisc:price.discount,unitPrice:price.unit}}));
  }
- function deduct(key,amount){return new Promise((resolve,reject)=>deductWallet(key,amount,(err,ok,snap)=>err||!ok?reject(Error('餘額不足或扣款失敗，尚未成立訂單')):resolve(snap?.val()||0)));}
- function refund(key,amount){return new Promise((resolve,reject)=>db.ref(ROOT+'/wallet/'+key+'/balance').transaction(v=>(Number(v)||0)+amount,(e,ok,s)=>e||!ok?reject(Error('退款尚未完成')):resolve(s?.val()||0)));}
  async function submitGroup(method){
    if(submitting||_submitting)return;
    let snap;
@@ -101,15 +99,19 @@
      snap={list,plan:{...curPlan},price,name,last5,booking:curBooking,reserveAt:curReserveAt,key:myKey,method,createdAt:Date.now(),proof:proofData};
    }catch(e){toast(e.message);return;}
    submitting=_submitting=true;const btn=$('paySubmitBtn');btn.disabled=true;btn.textContent='正在確認與送出…';
-   let charged=false,committed=false,balAfter=0,records=[],groupId;
+   const stopWait=submitGuard('paySubmitBtn','送出訂單');
+   let records=[],groupId;
    try{
      if(snap.booking){const ranges=await bookings(snap.list);validate(snap.list,true);if(!snap.reserveAt||snap.reserveAt<Date.now()+15*60000||conflict(snap.list,ranges,snap.reserveAt,duration(snap.plan)))throw Error('至少一位冒險者的時段已有安排，請返回重新選擇');}
      const refs=snap.list.map(()=>db.ref(ROOT+'/clientOrders').push());groupId=refs[0].key;records=makeRecords(snap,refs.map(r=>r.key),groupId);
-     if(method==='coin'){balAfter=await deduct(snap.key,snap.price.amount);charged=true;}
      const updates={};records.forEach(({id,order})=>{updates['clientOrders/'+id]=order;if(method!=='coin')updates['clientOrderProofs/'+id]=snap.proof;});
-     if(method==='coin'){const tx=db.ref(ROOT+'/walletTx/'+snap.key).push();updates['walletTx/'+snap.key+'/'+tx.key]={type:'spend',amount:-snap.price.amount,balAfter,ref:groupId,groupId,orderIds:records.map(r=>r.id),note:snap.plan.n+'・'+snap.list.length+' 位冒險者',ts:snap.createdAt};}
-     // 多位冒險者一次原子寫入，避免只成立部分訂單。
-     await db.ref(ROOT).update(updates);committed=true;
+     if(method==='coin'){
+      await walletSafety().execute({key:snap.key,amount:snap.price.amount,ids:records.map(r=>r.id),lookup:walletLookup,commit:async()=>{
+        updates['wallet/'+snap.key+'/balance']=firebase.database.ServerValue.increment(-snap.price.amount);
+        updates['walletTx/'+snap.key+'/'+groupId]={type:'spend',amount:-snap.price.amount,ref:groupId,groupId,orderIds:records.map(r=>r.id),note:snap.plan.n+'・'+snap.list.length+' 位冒險者',ts:snap.createdAt};
+        await db.ref(ROOT).update(updates);
+       }});
+     }else await db.ref(ROOT).update(updates);
      try{const ids=[...new Set([...myOrderIds(),...records.map(r=>r.id)])];localStorage.setItem('tt_orders',JSON.stringify(ids));}catch(_){}
      proofData=null;shopClose();
      try{statInc('orders');watchMyOrders();}catch(_){}
@@ -117,9 +119,8 @@
      const title=method==='coin'?'已完成這組付款':'這組預約已送出';
      if(window.lobbyNotify)lobbyNotify({ok:true,icon:'receipt',title,sub:snap.list.map(p=>p.name).join('、')+' · '+snap.plan.n+' · 合計 '+money(snap.price.amount),onclick:()=>shopOpen(4),hold:8000});else toast(title);
    }catch(e){
-     if(charged&&!committed){try{const balance=await refund(snap.key,snap.price.amount);try{const txRef=db.ref(ROOT+'/walletTx/'+snap.key),audit={};audit[txRef.push().key]={type:'spend',amount:-snap.price.amount,balAfter,groupId,note:'多人點單未成立之原扣款',ts:Date.now()};audit[txRef.push().key]={type:'refund',amount:snap.price.amount,balAfter:balance,groupId,note:'多人點單未成立，已退回金幣',ts:Date.now()};await txRef.update(audit);}catch(_){}toast('這組點單未成立，金幣已全數退回，請重試');}catch(_){toast('這組點單未成立，退款尚未確認，請聯絡掌櫃協助');}}
-     else toast(e.message||'這組點單未成立，請重試');
-   }finally{submitting=_submitting=false;btn.disabled=false;btn.textContent=method==='coin'?'用金幣支付':'送出訂單';}
+     if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'這組點單未成立，請重試');
+   }finally{stopWait();submitting=_submitting=false;btn.disabled=false;btn.textContent=method==='coin'?'用金幣支付':'送出訂單';}
  }
  submitOrder=function(){if(curKind==='play'&&members().length>1)return submitGroup('transfer');return previous.transfer();};
  payWithCoins=function(){if(curKind==='play'&&members().length>1)return submitGroup('coin');return previous.coin();};

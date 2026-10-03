@@ -1,0 +1,188 @@
+{
+  "rules": {
+    "peiwan": {
+      "wallet": {
+        ".read": true,
+        "$k": {
+          "balance": {
+            ".write": "auth != null || (data.exists() && newData.isNumber() && newData.val() >= 0 && newData.val() <= data.val())",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+          }
+        }
+      },
+      "walletTx": {
+        ".read": true,
+        ".write": true
+      },
+      "config": {
+        ".read": true,
+        ".write": "auth != null && auth.uid == data.child('adminUid').val()",
+        "adminUid": {
+          ".validate": "newData.isString() && newData.val() == data.val()"
+        }
+      },
+      "shopConfig": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "tables": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "staffCards": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "board": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "mutes": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "characters": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "staff": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "invites": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "links": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "orders": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": [
+          "cid",
+          "month"
+        ]
+      },
+      "clientOrders": {
+        ".read": true,
+        ".indexOn": [
+          "myKey",
+          "staffCid",
+          "staffName"
+        ],
+        "$id": {
+          ".write": "!data.exists() || auth != null"
+        }
+      },
+      "clientOrderProofs": {
+        ".read": "auth != null",
+        "$id": {
+          ".write": "!data.exists() || auth != null"
+        }
+      },
+      "renewReq": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": [
+          "myKey",
+          "staffCid"
+        ]
+      },
+      "cancelReq": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": [
+          "myKey",
+          "staffCid"
+        ]
+      },
+      "reports": {
+        ".read": "auth != null",
+        "$id": {
+          ".write": "!data.exists() || auth != null"
+        }
+      },
+      "orderIssues": {
+        ".read": "auth != null",
+        "$id": {
+          ".write": "!data.exists() || auth != null"
+        }
+      },
+      "lobby": {
+        ".read": true,
+        ".write": true
+      },
+      "pos": {
+        ".read": true,
+        ".write": true
+      },
+      "owned": {
+        ".read": true,
+        ".write": true
+      },
+      "staffStatus": {
+        ".read": true,
+        ".write": true
+      },
+      "chat": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": [
+          "t"
+        ]
+      },
+      "cards": {
+        ".read": "auth != null",
+        ".write": true
+      },
+      "accounts": {
+        ".read": "auth != null",
+        ".write": true,
+        "$id": {
+          ".read": true
+        }
+      },
+      "mail": {
+        ".read": true,
+        ".write": "auth != null",
+        "$k": {
+          "$id": {
+            "read": {
+              ".write": true
+            },
+            "hid": {
+              ".write": true
+            }
+          }
+        }
+      },
+      "friends": {
+        ".read": true,
+        ".write": true
+      },
+      "friendReq": {
+        ".read": true,
+        ".write": true
+      },
+      "blocks": {
+        ".read": "auth != null",
+        ".write": true,
+        "$k": {
+          "$o": {
+            ".read": true
+          }
+        }
+      },
+      "dm": {
+        ".read": true,
+        ".write": true
+      },
+      "dmMeta": {
+        ".read": true,
+        ".write": true
+      }
+    }
+  }
+}
