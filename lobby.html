@@ -1432,7 +1432,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=256">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=255">
 <script src="lobby-ui/scene.js?v=265"></script>
-<script src="lobby-ui/hair-motion.js?v=270"></script>
+<script src="lobby-ui/hair-motion.js?v=272"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
 <script src="lobby-ui/presence.js?v=231"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
@@ -1681,7 +1681,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v271</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v272</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -1905,6 +1905,7 @@ function drawDollTo(cv, doll, pose){
 }
 
 /* ====== 測試模式:?test=1 載入繪師測試造型(僅內部試跑,公開訪客不載入) ====== */
+const _hairMotionPreference=matchMedia('(prefers-reduced-motion: reduce)');
 const TEST_MODE = new URLSearchParams(location.search).get('test')!=='0';   // 預設繪師測試部件;?test=0 占位版
 const DEMO_MODE = new URLSearchParams(location.search).get('demo')==='1';    // 正式站預設關閉示範店員(只顯示真正上班的陪玩);要預覽示範店員加 ?demo=1
 let realStaffOn=false, demoTimer=null;
@@ -1918,7 +1919,7 @@ if(window.TTWalkParts){
 }
 const TPimgs={};
 function tpImg(d){ if(!TPimgs[d]){const i=new Image();i.src='data:image/png;base64,'+d;
-  i.onload=()=>{ if(typeof tpReady==='function') tpReady(); };
+  i.onload=()=>{ scheduleTpReady(); };
   TPimgs[d]=i;} return TPimgs[d]; }
 /* 掌櫃在後台上傳的整套部件(shopConfig/<id>/parts):優先於內建部件 */
 const CSimgs={};
@@ -1952,7 +1953,7 @@ function saveDoll(doll){
 window.saveDoll=saveDoll;
 function csImg(dataUrl){
   if(!CSimgs[dataUrl]){ const i=new Image(); i.src=dataUrl;
-    i.onload=()=>{ if(typeof tpReady==='function') tpReady();
+    i.onload=()=>{ scheduleTpReady();
       try{ if(window.__wardRender) __wardRender(); }catch(e){} };
     CSimgs[dataUrl]=i; }
   return CSimgs[dataUrl];
@@ -2200,19 +2201,25 @@ if(TEST_MODE){
     return tpImg(TP.body);
   }
   drawDollTo = function(cv,doll,pose,motion){
-    const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
+    const g=cv.getContext('2d',{willReadFrequently:true});g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
     const d=doll||{},hi=(d.hair||0)%HAIRS.length;
     const hx=d.hairHex&&/^#[0-9a-fA-F]{6}$/.test(d.hairHex)?d.hairHex:null;
     const hx2=d.hairHex2&&/^#[0-9a-fA-F]{6}$/.test(d.hairHex2)?d.hairHex2:null;
     const ap=TACCP[(d.acc||0)%TACCP.length];
     let strict=false;try{const sc=(window.__shopCfg||{})[d.set];strict=!!(sc&&sc.parts&&Object.keys(sc.parts).length);}catch(e){}
+    const c=document.createElement('canvas');c.width=c.height=64;const fg=c.getContext('2d',{willReadFrequently:true});fg.imageSmoothingEnabled=false;
+    let hairBase=null;
     const layer=(kind,draw,edge)=>{
-      const c=document.createElement('canvas');c.width=c.height=64;const fg=c.getContext('2d');fg.imageSmoothingEnabled=false;
-      const native=draw(fg);TTHairMotion.paint(g,c,motion,kind);if(edge&&native)hairEdge(g,fg);
+      fg.clearRect(0,0,64,64);const native=draw(fg);
+      if(motion&&kind==='hair'){
+        if(!hairBase){hairBase=document.createElement('canvas');hairBase.width=hairBase.height=64;}
+        const [x,y]=TTHairMotion.headOffset(motion);hairBase.getContext('2d',{willReadFrequently:true}).drawImage(c,x,y);
+      }
+      TTHairMotion.paint(g,c,motion,kind);if(edge&&native)hairEdge(g,fg);
     };
     const slot=(name,cat,idx,kind,edge)=>layer(kind,fg=>{const custom=csSlot(fg,d,name,hi,hx,hx2);if(!custom&&!strict)tpDraw(fg,tpPosed(cat,idx,pose),hi,hx,hx2);return !custom&&!strict;},edge);
     const customAcc=z=>csAccBy(d,z).forEach(v=>layer(/尾巴/.test(v.n||'')?'tail':'rigid',fg=>csDrawV(fg,v,hi,hx,hx2)));
-    const nativeAcc=(list,kind)=>{if(!strict)layer(kind,fg=>accLayer(fg,list,hi,hx));};
+    const nativeAcc=(list,kind)=>{if(!strict&&list?.length)layer(kind,fg=>accLayer(fg,list,hi,hx));};
     slot('back','後髮',d.back||0,'hair',false);customAcc('back');nativeAcc(ap.b,'tail');nativeAcc(ap.m,'rigid');
     layer('body',fg=>{if(!csSlot(fg,d,'body',hi,hx,hx2)&&!strict){const im=tpBody(pose,d.skin||0);if(im.complete)fg.drawImage(im,0,0,64,64);}});
     slot('cloth','衣服',d.cloth||0,'cloth',false);
@@ -2221,10 +2228,12 @@ if(TEST_MODE){
       if(!done&&!csSlot(fg,d,'eye',hi,hx,hx2)&&!strict)tpDraw(fg,tpPosed('眼睛',d.face||0,pose),hi,hx);
       if(!csSlot(fg,d,'brow',hi,hx,hx2)&&!strict&&TP.parts['眉毛'])tpDraw(fg,TP.parts['眉毛'][(d.brow||0)%TP.parts['眉毛'].length],hi,hx);
     });
-    customAcc('mid');slot('front','前髮',d.front||0,'hair',true);nativeAcc(ap.f,'rigid');nativeAcc(ap.t,'rigid');customAcc('front');customAcc('top');
+    customAcc('mid');slot('front','前髮',d.front||0,'hair',true);if(hairBase)TTHairMotion.seal(g,hairBase);nativeAcc(ap.f,'rigid');nativeAcc(ap.t,'rigid');customAcc('front');customAcc('top');
   };
   window.__hasWalkFrames=function(){ return !!(TP.parts['衣服_a']||(TP.bodyPose&&TP.bodyPose.a)); };
 }
+let _tpReadyQueued=false;
+function scheduleTpReady(){if(_tpReadyQueued)return;_tpReadyQueued=true;requestAnimationFrame(()=>{_tpReadyQueued=false;tpReady();});}
 function tpReady(){
   if(typeof agents==='undefined')return;
   agents.forEach(a=>{
@@ -2949,26 +2958,29 @@ function makeAgent(key,b){
   return a;
 }
 function setFrame(a,p){
-  if(!a.frames) return;
+  if(!a.frames)return;
+  if(a._renderVisible===false){a._hairCache=null;a._hairFrames=null;return;}
   const motion=a._hairMotion,blink=a._blinkUntil>Date.now();
-  if(a.cv.dataset)a.cv.dataset.hairFrame=motion?motion.mode+':'+motion.phase:'off';
   const key=p+'|'+(motion?motion.mode+motion.phase:'still')+'|'+blink;
-  if(a.frame===p&&a._hairKey===key) return;
+  if(a.frame===p&&a._hairKey===key)return;
+  let f;
+  if(motion){
+    const dollKey=JSON.stringify(a.b.doll);
+    if(a._hairFrames!==a.frames||a._hairDoll!==dollKey){a._hairFrames=a.frames;a._hairDoll=dollKey;a._hairCache=new Map();}
+    f=a._hairCache.get(key);
+    if(!f){
+      // 本輪已用完預算就保留上張畫面，下輪重試；不丟失待產生的影格。
+      if(typeof _spriteFrameBudget==='number'&&performance.now()>_spriteFrameBudget)return;
+      f=document.createElement('canvas');f.width=f.height=64;
+      drawDollTo(f,{...a.b.doll,_blink:blink},p,motion);
+      if(a._hairCache.size>=48)a._hairCache.delete(a._hairCache.keys().next().value);
+      a._hairCache.set(key,f);
+    }
+  }else if(blink){drawDollTo(a.cv,{...a.b.doll,_blink:true},p);}
+  else f=a.frames[p];
   a.frame=p;a._hairKey=key;
-  if(!motion){
-    if(blink){drawDollTo(a.cv,{...a.b.doll,_blink:true},p);return;}
-    const g=a.cv.getContext('2d');g.imageSmoothingEnabled=false;g.clearRect(0,0,64,64);g.drawImage(a.frames[p],0,0);return;
-  }
-  const dollKey=JSON.stringify(a.b.doll);
-  if(a._hairFrames!==a.frames||a._hairDoll!==dollKey){a._hairFrames=a.frames;a._hairDoll=dollKey;a._hairCache=new Map();}
-  let f=a._hairCache.get(key);
-  if(!f){
-    f=document.createElement('canvas');f.width=f.height=64;
-    drawDollTo(f,{...a.b.doll,_blink:blink},p,motion);
-    if(a._hairCache.size>=48)a._hairCache.delete(a._hairCache.keys().next().value);
-    a._hairCache.set(key,f);
-  }
-  const g=a.cv.getContext('2d');g.imageSmoothingEnabled=false;g.clearRect(0,0,64,64);g.drawImage(f,0,0);
+  if(a.cv.dataset)a.cv.dataset.hairFrame=motion?motion.mode+':'+motion.phase:'off';
+  if(f){const g=a.cv.getContext('2d');g.imageSmoothingEnabled=false;g.clearRect(0,0,64,64);g.drawImage(f,0,0);}
 }
 function pickTarget(a){
   const far=Math.random()<.25;
@@ -2994,6 +3006,7 @@ function spawnHeart(a){
   f.animate([{opacity:0,transform:'translate(-50%,0) scale(.6)'},{opacity:1,offset:.3},{opacity:0,transform:'translate(-50%,-46px) scale(1.2)'}],{duration:1100,easing:'ease-out'});
   setTimeout(()=>f.remove(),1100);
 }
+let _spriteFrameBudget=Infinity;
 let last=performance.now();
 let _fsCheck=0,_fsOpen=false;
 function fsOverlayOpen(){
@@ -3013,6 +3026,7 @@ function tick(now){
   }
   const dt=Math.min(.05,(now-last)/1000); last=now;
   const W=window.innerWidth,H=window.innerHeight;
+  _spriteFrameBudget=performance.now()+6;
   agents.forEach(a=>{
     const depthNow=0.82+(a.y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)*0.33;
     // 我的小人:方向鍵控制(有按鍵就直接移動並跳過 AI 邏輯)
@@ -3202,8 +3216,9 @@ function tick(now){
     const size=Math.round(actorMap==='hall'?TTScene.size(a.y):(a.slime?150:120)*depth);
     let walking=(a.state==='walk'||a.state==='walk2'||a.state==='walkKey'||(a.staff&&(a.state==='enter'||a.state==='toDoor'||a.state==='toServe'||a.state==='toDoorBack'||a.state==='back'||a.state==='exit'||a.chase))||(a.cloak&&a.moving));
     if(a.slime) walking=(a.state==='walk');
+    a._renderVisible=actorMap===curMap&&(a.staff||a.merch||a.slime||a.cloak||a.isMe||!!posMap[a.key]);
     const tt=now/1000;
-    const hairOn=TEST_MODE&&!a.slime&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const hairOn=TEST_MODE&&!a.slime&&a._renderVisible&&!_hairMotionPreference.matches;
     a._hairMotion=hairOn?{mode:walking?'walk':'idle',phase:Math.floor(now/(walking?140:230)+a.seed)%(walking?8:4)}:null;
     let bob=0, hopRot=0, sqx=1, sqy=1;
     if(walking){
@@ -3268,6 +3283,7 @@ function tick(now){
     a.sh.style.width=shW+'px';
     a.sh.style.height=(shW*0.28)+'px';
   });
+  _spriteFrameBudget=Infinity;
   updateCamera(dt, now);
   updateCardpop();
   requestAnimationFrame(tick);
@@ -3322,9 +3338,11 @@ function sync(){
   agents.forEach((a,k)=>{ if(!a.staff && !a.cloak && !a.merch && !a.slime && !bosses[k]){a.el.remove();agents.delete(k);} });
   Object.entries(bosses).forEach(([k,b])=>{
     if(agents.has(k)){
-      const a=agents.get(k); a.b=b;
-      POSES.forEach(p=>drawDollTo(a.frames[p],{...b.doll,_blink:false},p));
-      const cur=a.frame; a.frame=null; a._sceneBottom=null; setFrame(a,cur||'idle');
+      const a=agents.get(k),changed=JSON.stringify(a.b.doll)!==JSON.stringify(b.doll);a.b=b;
+      if(changed){
+        POSES.forEach(p=>drawDollTo(a.frames[p],{...b.doll,_blink:false},p));
+        const cur=a.frame;a.frame=null;a._sceneBottom=null;setFrame(a,cur||'idle');
+      }
       a.tag.textContent=b.name||'？';
     }else agents.set(k,makeAgent(k,b));
   });

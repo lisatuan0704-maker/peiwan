@@ -1,12 +1,14 @@
 /* v270：完整沿用試做頁的逐格形變與大幅度 1.5 倍，補色只取相連髮絲。 */
 (function(root){
 'use strict';
-function warp(src,vy,dx,mirror){
+function warp(src,vy,dx,mirror,rowOnly){
   const out={data:new Uint8ClampedArray(64*64*4),width:64,height:64}, s=src.data, o=out.data, SX=new Int16Array(4096).fill(-1), SY=new Int16Array(4096);
+  const shifts=Int16Array.from({length:64},(_,y)=>dx?dx(y):0);
+  const rows=rowOnly?Int16Array.from({length:64},(_,y)=>vy(y,0)):null;
   for(let y=0;y<64;y++){
     for(let x=0;x<64;x++){
-      const sy=y-vy(y,x); if(sy<0||sy>63)continue;
-      const d=dx?dx(sy):0;
+      const sy=y-(rows?rows[y]:vy(y,x)); if(sy<0||sy>63)continue;
+      const d=shifts[sy];
       let sx = mirror ? (x<32? x+d : x-d) : x-d;
       if(sx<0||sx>63)continue;
       const si=(sy*64+sx)*4, di=(y*64+x)*4;
@@ -33,9 +35,10 @@ function warp(src,vy,dx,mirror){
 }
 
 const MODES={idle:{b:[0,-1,-1,0],spread:[1.5,.5,0,.5]},walk:{b:[0,-1,0,-1,0,-1,0,-1],lean:[1,0,-1,0,1,0,-1,0],arm:[1,0,-1,0,1,0,-1,0]}};
+const WEIGHTS={};for(const k of ['hair','tail'])WEIGHTS[k]=Float64Array.from({length:64},(_,y)=>{const t=(y-(k==='tail'?40:22))/(k==='tail'?16:34);return t<=0?0:t>=1?1:Math.pow(t,1.15)});
 function deform(src,mode,phase,kind='hair'){
  const M=MODES[mode],n=M.b.length,i=((phase%n)+n)%n,prev=(i+n-1)%n,b=M.b[i],bp=M.b[prev],L=M.lean?M.lean[i]:0,Lp=M.lean?M.lean[prev]:0,arm=M.arm?M.arm[i]:0;
- const weight=y=>{const t=(y-(kind==='tail'?40:22))/(kind==='tail'?16:34);return t<=0?0:t>=1?1:Math.pow(t,1.15)};
+ const weights=WEIGHTS[kind==='tail'?'tail':'hair'],weight=y=>weights[y];
  const arms=(y,x)=>arm&&x>=40&&y>=38&&y<=47?arm:arm&&x<=27&&y>=42&&y<=50?-arm:0;
  let vy,dx,mirror=false;
  if(kind==='hair'||kind==='tail'){
@@ -44,24 +47,42 @@ function deform(src,mode,phase,kind='hair'){
  }else if(kind==='body'||kind==='cloth'){
   vy=(y,x)=>(y<=46?b:0)+arms(y,x);dx=y=>y<=46?L:(kind==='cloth'&&y<=49?Lp:0);
  }else{vy=()=>b;dx=()=>L;}
- const out=warp(src,vy,dx,mirror);
+ const out=warp(src,vy,dx,mirror,kind!=='body'&&kind!=='cloth');
  if(kind==='hair'||kind==='tail'){
   // 前向定位原本相連的髮絲，補回反向取樣跳列留下的空格；保留透明背景。
   const s=src.data,o=out.data,W=64;
-  const point=(x,y)=>[x+(mirror?(x<32?-dx(y):dx(y)):dx(y)),y+vy(y,x)];
   const fill=(x,y,k)=>{if(x<0||y<0||x>=64||y>=64)return;const d=(y*64+x)*4;if(o[d+3])return;o[d]=s[k];o[d+1]=s[k+1];o[d+2]=s[k+2];o[d+3]=s[k+3]};
-  for(let y=0;y<63;y++)for(let x=0;x<64;x++){
-   const k=(y*64+x)*4,q=k+256;if(!s[k+3]||!s[q+3])continue;
-   const [ax,ay]=point(x,y),[bx,by]=point(x,y+1),steps=Math.max(Math.abs(bx-ax),Math.abs(by-ay));
-   for(let z=1;z<steps;z++)fill(Math.round(ax+(bx-ax)*z/steps),Math.round(ay+(by-ay)*z/steps),z/steps<.5?k:q);
-   if(ax!==bx&&ay!==by)fill(bx,ay,q);
+  for(let y=0;y<63;y++){
+   const ay=y+vy(y,0),by=y+1+vy(y+1,0),da=dx(y),db=dx(y+1);
+   for(let x=0;x<64;x++){
+    const k=(y*64+x)*4,q=k+256;if(!s[k+3]||!s[q+3])continue;
+    const sign=mirror&&x<32?-1:1,ax=x+sign*da,bx=x+sign*db,steps=Math.max(Math.abs(bx-ax),Math.abs(by-ay));
+    for(let z=1;z<steps;z++)fill(Math.round(ax+(bx-ax)*z/steps),Math.round(ay+(by-ay)*z/steps),z/steps<.5?k:q);
+    if(ax!==bx&&ay!==by)fill(bx,ay,q);
+   }
   }
  }
  return out;
 }
 function paint(ctx,layer,motion,kind='hair'){
  if(!motion){ctx.drawImage(layer,0,0);return;}
+ if(kind==='rigid'){const [x,y]=headOffset(motion);ctx.drawImage(layer,x,y);return;}
+ if(motion.mode==='idle'&&(kind==='body'||kind==='cloth')&&MODES.idle.b[motion.phase]===0){ctx.drawImage(layer,0,0);return;}
  const g=layer.getContext('2d'),out=deform(g.getImageData(0,0,64,64),motion.mode,motion.phase,kind),dd=g.createImageData(64,64);dd.data.set(out.data);g.putImageData(dd,0,0);ctx.drawImage(layer,0,0);
 }
-root.TTHairMotion={deform,paint,amplitude:1.5,MODES};if(typeof module==='object')module.exports=root.TTHairMotion;
+// 只補形變後新露出的單像素細縫：原髮層有顏色且合成畫面兩側仍相連。
+function seal(ctx,base){
+ const dd=ctx.getImageData(0,0,64,64),o=dd.data,h=base.getContext('2d').getImageData(0,0,64,64).data,alpha=o.slice(),changes=[];
+ for(let y=1;y<63;y++)for(let x=1;x<63;x++){
+  const k=(y*64+x)*4;if(o[k+3]||!h[k+3])continue;
+  if(!((alpha[k-4+3]&&alpha[k+4+3])||(alpha[k-256+3]&&alpha[k+256+3])))continue;
+  let best=k,light=h[k]+h[k+1]+h[k+2];
+  for(const d of [-4,4,-256,256]){const q=k+d,v=h[q]+h[q+1]+h[q+2];if(h[q+3]&&v>light){best=q;light=v;}}
+  changes.push([k,best]);
+ }
+ for(const [k,q] of changes){o[k]=h[q];o[k+1]=h[q+1];o[k+2]=h[q+2];o[k+3]=h[q+3];}
+ if(changes.length)ctx.putImageData(dd,0,0);return changes.length;
+}
+function headOffset(m){const M=MODES[m.mode],i=m.phase%M.b.length;return [M.lean?M.lean[i]:0,M.b[i]];}
+root.TTHairMotion={deform,paint,seal,headOffset,amplitude:1.5,MODES};if(typeof module==='object')module.exports=root.TTHairMotion;
 })(typeof window==='undefined'?globalThis:window);

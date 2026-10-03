@@ -3,7 +3,7 @@ const bridge=fs.readFileSync('tavern-ui-bridge.js','utf8'),html=fs.readFileSync(
 const code=bridge.slice(bridge.indexOf('  const oldAcc='),bridge.indexOf('  async function wear('));
 class Canvas{
  constructor(){this.data=new Uint8ClampedArray(64*64*4);this.dataset={};}
- getContext(){const c=this;return {imageSmoothingEnabled:false,clearRect:()=>c.data.fill(0),getImageData:()=>({data:c.data.slice(),width:64,height:64}),createImageData:()=>({data:new Uint8ClampedArray(c.data.length)}),putImageData:dd=>c.data.set(dd.data),drawImage:f=>{for(let k=0;k<c.data.length;k+=4)if(f.data[k+3])c.data.set(f.data.slice(k,k+4),k)}};}
+ getContext(){const c=this;return {imageSmoothingEnabled:false,clearRect:()=>c.data.fill(0),getImageData:()=>({data:c.data.slice(),width:64,height:64}),createImageData:()=>({data:new Uint8ClampedArray(c.data.length)}),putImageData:dd=>c.data.set(dd.data),drawImage:(f,dx=0,dy=0)=>{for(let y=0;y<64;y++)for(let x=0;x<64;x++){const k=(y*64+x)*4,tx=x+dx,ty=y+dy;if(f.data[k+3]&&tx>=0&&tx<64&&ty>=0&&ty<64)c.data.set(f.data.slice(k,k+4),(ty*64+tx)*4)}}};}
 }
 const src={data:new Uint8ClampedArray(64*64*4)};for(let y=10;y<55;y++)for(let x=12;x<52;x++)src.data.set([170,y+70,200,255],(y*64+x)*4);
 let forwarded;
@@ -23,3 +23,7 @@ const cv=new Canvas(),d={uiAccessories:[{z:'headTop'}]},motion={mode:'idle',phas
 assert.equal(cv.data[(11*64+30)*4],250,'head accessory follows head moving upward');
 assert(html.includes('tavern-ui-bridge.js?v=271'));
 console.log('PASS: actual bridge + setFrame forward animation, 12 live-cache phases change pixels, head accessories follow motion, future arguments preserved');
+
+const prior=a._hairKey;context._spriteFrameBudget=0;context.performance={now:()=>1};a._hairMotion={mode:'idle',phase:0};a._hairCache.clear();a.frame=null;context.setFrame(a,'idle');assert.equal(a._hairKey,prior);assert.equal(a._hairCache.size,0);context._spriteFrameBudget=100;context.setFrame(a,'idle');assert.equal(a._hairCache.size,1);
+a._renderVisible=false;a._hairMotion={mode:'idle',phase:1};context.setFrame(a,'idle');assert.equal(a._hairCache,null);a._renderVisible=true;context.setFrame(a,'idle');assert.equal(a._hairCache.size,1);
+console.log('PASS: frame generation defers over budget and retries; hidden actors skip drawing and release animation cache');
