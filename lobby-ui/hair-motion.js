@@ -5,9 +5,10 @@
     const W=64,s=src.data,o=new Uint8ClampedArray(s.length),points=new Int16Array(W*W*2).fill(-1);
     const walking=mode==='walk',n=walking?8:4,i=((phase%n)+n)%n,prev=(i+n-1)%n;
     const b=walking?[0,-1,0,-1,0,-1,0,-1]:[0,-1,-1,0];
-    const lean=[1,0,-1,0,1,0,-1,0],spread=[1.5,.5,0,.5];
+    const lean=[1,0,-1,0,1,0,-1,0],spread=[1.5,.5,-1.5,-.5];
+    let tip=23;for(let y=22;y<W;y++)for(let x=0;x<W;x++)if(s[(y*W+x)*4+3])tip=Math.max(tip,y);
     function point(x,y){
-      const t=Math.min(1,Math.max(0,(y-22)/34)),w=Math.pow(t,1.15);
+      const t=Math.min(1,Math.max(0,(y-22)/Math.max(1,tip-22))),w=Math.pow(t,1.15);
       const dx=walking?Math.round(w*lean[prev])+Math.round(w*1.5*(-.7+1.8*Math.sin(Math.PI*2*i/8-2.4*w))):Math.round(w*spread[i]*1.5)*(x<32?-1:1);
       return [x+dx,y+Math.round((b[prev]-b[i])*w)];
     }
