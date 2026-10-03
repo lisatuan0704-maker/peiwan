@@ -1432,7 +1432,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=256">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=255">
 <script src="lobby-ui/scene.js?v=265"></script>
-<script src="lobby-ui/hair-motion.js?v=267"></script>
+<script src="lobby-ui/hair-motion.js?v=268"></script>
 <script src="lobby-ui/presence.js?v=231"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=256">
@@ -1680,7 +1680,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v267</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v268</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -2955,6 +2955,7 @@ function makeAgent(key,b){
 function setFrame(a,p){
   if(!a.frames) return;
   const motion=a._hairMotion,blink=a._blinkUntil>Date.now();
+  if(a.cv.dataset)a.cv.dataset.hairFrame=motion?motion.mode+':'+motion.phase:'off';
   const key=p+'|'+(motion?motion.mode+motion.phase:'still')+'|'+blink;
   if(a.frame===p&&a._hairKey===key) return;
   a.frame=p;a._hairKey=key;
@@ -3206,7 +3207,7 @@ function tick(now){
     let walking=(a.state==='walk'||a.state==='walk2'||a.state==='walkKey'||(a.staff&&(a.state==='enter'||a.state==='toDoor'||a.state==='toServe'||a.state==='toDoorBack'||a.state==='back'||a.state==='exit'||a.chase))||(a.cloak&&a.moving));
     if(a.slime) walking=(a.state==='walk');
     const tt=now/1000;
-    const hairOn=TEST_MODE&&!a.slime&&!document.body.classList.contains('liteFX')&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const hairOn=TEST_MODE&&!a.slime&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
     a._hairMotion=hairOn?{mode:walking?'walk':'idle',phase:Math.floor(now/(walking?140:230)+a.seed)%(walking?8:4)}:null;
     let bob=0, hopRot=0, sqx=1, sqy=1;
     if(walking){
