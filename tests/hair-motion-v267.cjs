@@ -1,22 +1,20 @@
-const assert=require('node:assert/strict'),hair=require('../lobby-ui/hair-motion.js');
+const assert=require('node:assert/strict'),hair=require('../lobby-ui/hair-motion.js'),reference=require('./fixtures/prototype-warp-v270.cjs');
 const src={data:new Uint8ClampedArray(64*64*4)};
-for(let y=8;y<57;y++)for(let x=15;x<23;x++){const k=(y*64+x)*4;src.data.set([180,y+80,150,255],k)}
-for(const mode of ['idle','walk'])for(let phase=0;phase<(mode==='idle'?4:8);phase++){
- const d=hair.deform(src,mode,phase).data;
- // 頭頂原始像素不得位移；所有補色都必須來自原髮色，背景不能塗滿。
- for(let y=8;y<22;y++)for(let x=15;x<23;x++)assert.equal(d[(y*64+x)*4+3],255);
- let count=0;for(let k=0;k<d.length;k+=4)if(d[k+3]){count++;assert.equal(d[k],180);assert.equal(d[k+2],150);assert(d[k+1]>=88&&d[k+1]<=136)}
- assert(count<600&&count>=350);assert.equal(d[(40*64+40)*4+3],0);
- // 髮尾不能斷裂成不相連的區塊（四向相鄰）。
- const start=d.findIndex((v,i)=>i%4===3&&v>0)>>2,seen=new Set([start]),q=[start];
- for(let z=0;z<q.length;z++){const k=q[z];for(const v of [k-1,k+1,k-64,k+64])if(v>=0&&v<4096&&d[v*4+3]&&!seen.has(v)){seen.add(v);q.push(v)}}
- assert.equal(seen.size,count);
+for(let y=8;y<58;y++)for(let x=10;x<54;x++){if(x>24&&x<28&&y>32&&y<38)continue;src.data.set([180,y+80,x+110,255],(y*64+x)*4)}
+for(const mode of ['idle','walk'])for(let phase=0;phase<(mode==='idle'?4:8);phase++)for(const kind of ['hair','tail','body','cloth','rigid']){
+ const walking=mode==='walk',bs=walking?[0,-1,0,-1,0,-1,0,-1]:[0,-1,-1,0],n=bs.length,i=phase,p=(i+n-1)%n,b=bs[i],bp=bs[p],lean=[1,0,-1,0,1,0,-1,0],arm=walking?lean[i]:0,L=walking?lean[i]:0,Lp=walking?lean[p]:0;
+ const w=y=>{const t=(y-(kind==='tail'?40:22))/(kind==='tail'?16:34);return t<=0?0:t>=1?1:Math.pow(t,1.15)};
+ let vy,dx,mirror=false;
+ if(kind==='hair'||kind==='tail'){
+  vy=y=>Math.round(b*(1-w(y))+bp*w(y));
+  dx=y=>{let v=Math.round(L*(1-w(y))+Lp*w(y));if(walking){const z=w(y)*1.5;v+=Math.round(z*(-.7+1.8*Math.sin(Math.PI*2*i/8-2.4*z)))}else v+=Math.round(w(y)*[1.5,.5,0,.5][i]*1.5);return v};mirror=!walking;
+ }else if(kind==='body'||kind==='cloth'){
+  vy=(y,x)=>(y<=46?b:0)+(arm&&x>=40&&y>=38&&y<=47?arm:arm&&x<=27&&y>=42&&y<=50?-arm:0);dx=y=>y<=46?L:(kind==='cloth'&&y<=49?Lp:0);
+ }else{vy=()=>b;dx=()=>L;}
+ const expected=reference(src,vy,dx,mirror).data,actual=hair.deform(src,mode,phase,kind).data;
+ for(let k=0;k<expected.length;k+=4)if(expected[k+3]||!['hair','tail'].includes(kind))assert.deepEqual([...actual.slice(k,k+4)],[...expected.slice(k,k+4)],mode+phase+kind+' pixel '+k/4);
+ for(let y=52;y<58;y++)for(let x=28;x<38;x++)if(kind==='body'||kind==='cloth')assert.deepEqual([...actual.slice((y*64+x)*4,(y*64+x)*4+4)],[...src.data.slice((y*64+x)*4,(y*64+x)*4+4)]);
 }
-assert.equal(hair.amplitude,1.5);console.log('PASS: 12 hair phases, fixed crown, connected hair strands, local hair colors, transparent background preserved');
-
-// 髮尾只到 40px 的短髮也必須保留大幅度，不能因固定 56px 權重而消失。
-const short={data:new Uint8ClampedArray(64*64*4)};
-for(let y=12;y<=40;y++)for(let x=15;x<=48;x++)short.data.set([200,120,160,255],(y*64+x)*4);
-const widths=[];for(let i=0;i<4;i++){const d=hair.deform(short,'idle',i).data;let lo=64,hi=0;for(let y=39;y<43;y++)for(let x=0;x<64;x++)if(d[(y*64+x)*4+3]){lo=Math.min(lo,x);hi=Math.max(hi,x)}widths.push(hi-lo+1)}
-assert(Math.max(...widths)-Math.min(...widths)>=8);
-console.log('PASS: short hair reaches full large sway and visibly expands/contracts');
+assert.equal(hair.amplitude,1.5);
+assert.notDeepEqual(hair.deform(src,'idle',0,'body').data,hair.deform(src,'idle',1,'body').data);
+console.log('PASS: 60 layer/phase combinations match original prototype sampling, grounded feet, coordinated body/head/hair, 1.5 amplitude');
