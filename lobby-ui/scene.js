@@ -1,85 +1,94 @@
-/* 繪師原圖維持 1600 × 900 對位；只用顯示裁切分開遮擋順序。 */
+/* v262：大廳可走區改用繪師分圖層算出來的像素遮罩（地板減掉高腳椅、攤位、擺飾、牆邊坐墊；吧台後面可以從左端走進去,小人會被吧台擋住只露頭），
+   路徑用 8px 格子 A*，再拉直；找不到位置時往外擴圈找最近的可走點，不再退回固定座標。
+   世界座標 1600 × 900（繪師 1920 寬圖的中間 1600）。遮罩資料由 tools 以 Python 從分圖層產生。 */
 (function(root){
   'use strict';
-  const W=1600,H=900, bounds=[32,300,1536,873];
-  // 腳底碰撞區：吧台可從兩端繞入；棚頂不當成地面牆壁。
-  // 吧台右端沿透視斜邊收合，通道繞過櫃體前緣，不能借用櫃子內部。
-  const counter=[[382,352],[1140,352],[1140,310],[1180,310],[1308,430],[382,430]];
-  // 右牆與門的底緣是斜線，門板上方不是可以站立的地面。
-  const rightWall=[[1358,0],[1600,0],[1600,632],[1500,538],[1434,474],[1358,398]];
-  const polygons=[counter,rightWall];
-  const solids=[
-    [205,0,382,334], [0,0,205,397], [1260,0,1415,378],
-    [0,536,170,775], [210,595,290,640],
-    [682,423,738,456],[814,423,870,456],[946,423,1002,456],[1078,423,1134,456]
-  ];
-  const inside=(p,r)=>p[0]>r[0]&&p[0]<r[2]&&p[1]>r[1]&&p[1]<r[3];
-  const cross=(a,b)=>a[0]*b[1]-a[1]*b[0];
-  const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
-  const polygonEdges=poly=>poly.map((a,i)=>[a,poly[(i+1)%poly.length]]);
-  const edges=polygons.flatMap(polygonEdges);
-  function inPolygon(p,poly){
-    let hit=false;
-    for(const [a,b] of polygonEdges(poly)){
-      const d=sub(b,a),q=sub(p,a);
-      if(Math.abs(cross(d,q))<1e-7&&p[0]>=Math.min(a[0],b[0])&&p[0]<=Math.max(a[0],b[0])&&p[1]>=Math.min(a[1],b[1])&&p[1]<=Math.max(a[1],b[1]))return false;
-      if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])hit=!hit;
-    }
-    return hit;
+  const W=1600,H=900;
+  /* 每一列的可走區段：[x0,x1,x0,x1,…]（x1 不含） */
+  const ROWS=[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[199,1291],[198,1291],[197,1291],[196,1291],[196,1291],[196,1291],[196,1291],[195,1291],[194,1291],[193,1291],[192,1291],[191,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,1291],[190,378],[190,377],[190,376],[190,375],[190,374],[190,373],[190,373],[190,373],[190,373,1370,1376],[190,373,1370,1377],[190,373,1370,1378],[190,373,1370,1379],[190,373,1370,1380],[190,373,1370,1381],[190,373,1370,1382],[190,373,1370,1383],[190,373,1370,1384],[190,373,1370,1385],[190,373,1370,1386],[190,373,1370,1387],[190,373,1370,1388],[190,373,1370,1389],[190,373,1370,1390],[190,373,1370,1391],[190,374,1369,1392],[190,375,1368,1393],[190,376,1367,1394],[190,377,1366,1395],[190,378,1365,1396],[190,671,749,804,881,936,1013,1068,1145,1397],[190,670,750,803,882,935,1014,1067,1146,1398],[190,670,750,803,882,935,1014,1067,1146,1399],[190,670,750,803,882,935,1014,1067,1146,1400],[190,670,750,803,882,935,1014,1067,1146,1401],[190,670,750,803,882,935,1014,1067,1146,1402],[190,670,704,716,750,803,837,848,882,935,969,980,1014,1067,1101,1112,1146,1403],[190,671,703,717,749,804,836,849,881,936,968,981,1013,1068,1100,1113,1145,1404],[190,672,702,718,748,805,835,850,880,937,967,982,1012,1069,1099,1114,1144,1405],[190,673,701,719,747,806,834,851,879,938,966,983,1011,1070,1098,1115,1143,1406],[190,674,700,720,746,807,833,852,878,939,965,984,1010,1071,1097,1116,1142,1407],[190,675,699,721,745,808,832,853,877,940,964,985,1009,1072,1096,1117,1141,1408],[190,676,698,722,744,809,831,854,876,941,963,986,1008,1073,1095,1118,1140,1409],[190,677,697,723,743,810,830,855,875,942,962,987,1007,1074,1094,1119,1139,1410],[190,678,696,724,742,811,829,856,874,943,961,988,1006,1075,1093,1120,1138,1411],[190,679,695,725,741,812,828,857,873,944,960,989,1005,1076,1092,1121,1137,1412],[190,680,694,726,740,813,827,858,872,945,959,990,1004,1077,1091,1122,1136,1413],[190,681,693,727,739,814,826,859,871,946,958,991,1003,1078,1090,1123,1135,1414],[190,682,692,728,738,815,825,860,870,947,957,992,1002,1079,1089,1124,1134,1415],[190,683,691,729,737,816,824,861,869,948,956,993,1001,1080,1088,1125,1133,1416],[190,684,690,730,736,817,823,862,868,949,955,994,1000,1081,1087,1126,1132,1417],[190,1418],[190,1419],[190,1420],[190,1421],[190,1422],[190,1423],[190,1424],[190,1425],[190,1426],[190,1427],[190,1428],[190,1429],[190,1430],[190,1431],[190,1432],[190,1433],[190,1434],[190,1435],[140,1436],[140,1437],[140,1438],[140,1439],[140,1440],[140,1441],[140,1442],[140,1443],[140,1444],[140,1445],[140,1446],[140,1447],[140,1448],[140,1449],[140,1450],[140,1451],[140,1453],[140,1454],[140,1455],[140,1456],[140,1457],[140,1458],[140,1459],[140,1460],[140,1461],[140,1462],[140,1463],[140,1464],[140,1465],[140,1466],[140,1467],[140,1468],[140,1469],[140,1470],[140,1471],[140,1472],[140,1473],[140,1474],[140,1475],[140,1476],[140,1477],[140,1478],[140,1479],[140,1480],[140,1481],[140,1482],[140,1483],[140,1484],[140,1486],[140,1487],[140,1488],[140,1489],[140,1490],[140,1491],[140,1492],[140,1493],[140,1494],[140,1495],[140,1496],[140,1497],[140,1498],[140,1499],[140,1500],[140,1501],[140,1502],[140,1503],[140,1504],[140,1505],[140,1506],[140,1507],[140,1508],[140,1510],[140,1511],[140,1512],[140,1513],[140,1514],[140,1515],[140,1516],[140,1517],[140,1518],[140,1519],[140,1520],[140,1521],[140,1522],[140,1523],[140,1524],[140,1525],[140,1527],[140,1528],[140,1529],[140,1530],[140,1531],[140,1532],[140,1533],[140,1534],[140,1535],[140,1536],[140,1537],[140,1538],[140,1539],[140,1540],[140,1541],[140,1542],[140,1544],[140,1545],[140,1546],[140,1547],[140,1548],[140,1549],[140,1550],[140,1551],[140,1552],[140,1553],[140,1554],[140,1555],[140,1556],[140,1557],[140,1558],[140,1560],[140,1561],[304,1562],[304,1563],[304,1564],[304,1565],[304,1566],[304,1567],[304,1568],[304,1569],[304,1570],[304,1571],[304,1572],[304,1573],[304,1574],[304,1575],[304,1577],[304,1578],[304,1579],[304,1580],[304,1581],[303,1582],[302,1583],[301,1584],[300,1585],[299,1586],[298,1587],[297,1588],[296,1589],[295,1590],[294,1591],[293,1592],[292,1594],[291,1595],[284,1595],[284,1595],[283,1595],[282,1595],[281,1595],[280,1595],[279,1595],[280,1595],[281,1595],[282,1595],[283,1595],[284,1595],[284,1595],[284,1595],[284,1595],[284,1595],[284,1595],[284,1595],[284,1595],[284,1595],[283,1595],[282,1595],[281,1595],[280,1595],[279,1595],[278,1595],[277,1595],[276,1595],[275,1595],[274,1595],[273,1595],[272,1595],[271,1595],[270,1595],[269,1595],[268,1595],[267,1595],[257,1595],[256,1595],[212,213,255,1595],[211,226,254,1595],[210,227,253,1595],[209,228,252,1595],[208,229,251,1595],[207,230,250,1595],[206,231,249,1595],[205,232,248,1595],[205,233,247,1595],[205,234,246,1595],[205,1595],[204,1595],[203,1595],[202,1595],[201,1595],[200,1595],[199,1595],[198,1595],[197,1595],[196,1595],[196,1595],[196,1595],[196,1595],[195,1594],[194,1593],[193,1592],[192,1591],[191,1590],[190,1589],[189,1579,1584,1588],[188,1578,1585,1587],[187,1577],[186,1576],[185,1575],[184,1574],[184,1564,1569,1573],[184,1563,1570,1572],[184,1562],[183,1561],[182,1560],[181,1559],[182,1558],[183,1557],[184,1556],[185,1555],[186,1554],[187,1553],[188,1552],[188,1551],[188,1550],[188,1549],[189,1549],[190,1549],[191,1549],[191,1548],[191,1547],[191,1546],[191,1545],[191,1544],[191,1543],[192,1542],[193,1541],[194,1540],[194,1539],[194,1538],[194,1537],[194,1537],[194,1537],[194,1537],[194,1537],[194,1529],[194,1528],[194,1527],[194,1526],[194,1525],[194,1524],[194,1523],[194,1522],[194,1521],[194,1520],[194,1519],[194,1518],[194,1517],[194,1516],[194,1515],[194,1514],[194,1513],[194,1513],[194,1513],[194,1513],[194,1513],[194,1513],[194,1513],[194,1513],[194,1513],[194,1513],[195,1513],[196,1513],[197,1514],[197,1515],[197,1516],[197,1517],[197,1518],[197,1519],[197,1520],[197,1521],[197,1522],[197,1523],[198,1524],[199,1525],[199,1525],[199,1525],[199,1525],[199,1525],[198,1524],[197,1523],[196,1522],[195,1521],[194,1520],[193,1519],[192,1519],[191,1519],[190,1519],[189,1519],[188,1519],[181,182,187,1520],[180,1521],[179,1522],[178,1523],[177,1524],[176,1525],[175,1525],[174,1525],[173,1525],[172,1525],[171,1525],[170,1525],[170,1526],[170,1527],[170,1528],[170,1529],[170,1530],[170,1529],[170,1528],[170,1527],[170,1526],[170,1525],[170,1524],[170,1523],[170,1522],[170,1522],[170,1522],[170,1522],[170,1522],[170,1522],[170,1522],[170,1522],[170,1522],[170,1523],[170,1524],[170,1525],[170,1526],[170,1527],[170,1528],[170,1529],[170,1530],[170,1531],[170,1532],[170,1533],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1534],[170,1535],[170,1536],[170,1537],[170,1537],[170,1537],[170,1537],[170,1537],[170,1537],[170,1537],[170,1538],[170,1539],[170,1540],[170,1540],[170,1540],[170,1540],[170,1540],[170,1540],[170,1540],[170,1540],[170,1540],[170,1540],[170,1541],[170,1542],[170,1543],[170,1544],[170,1545],[170,1546],[170,1547],[170,1548],[170,1549],[],[],[],[],[]];
+  const bounds=(function(){let x0=W,x1=0,y0=H,y1=0;ROWS.forEach((r,y)=>{if(r.length){y0=Math.min(y0,y);y1=Math.max(y1,y);x0=Math.min(x0,r[0]);x1=Math.max(x1,r[r.length-1]-1);}});return [x0,y0,x1,y1];})();
+  function validInt(x,y){
+    if(y<0||y>=H||x<0||x>=W)return false;
+    const r=ROWS[y];for(let i=0;i<r.length;i+=2){if(x<r[i])return false;if(x<r[i+1])return true;}return false;
   }
-  const blocked=p=>polygons.some(poly=>inPolygon(p,poly));
-  const valid=p=>p[0]>=bounds[0]&&p[0]<=bounds[2]&&p[1]>=bounds[1]&&p[1]<=bounds[3]&&!blocked(p)&&!solids.some(r=>inside(p,r));
+  const valid=p=>p&&Number.isFinite(p[0])&&Number.isFinite(p[1])&&validInt(Math.round(p[0]),Math.round(p[1]));
+  /* 嚴格版：自己和上下左右 2px 都可走，路徑與目標都用這個,角色走邊線時四捨五入才不會掉出去 */
+  const okInt=(x,y)=>validInt(x,y)&&validInt(x-2,y)&&validInt(x+2,y)&&validInt(x,y-2)&&validInt(x,y+2);
+  /* 8px 導航格 */
+  const CS=8,GW=Math.ceil(W/CS),GH=Math.ceil(H/CS);
+  const grid=new Uint8Array(GW*GH);
+  for(let gy=0;gy<GH;gy++)for(let gx=0;gx<GW;gx++){
+    const cx=gx*CS+CS/2,cy=gy*CS+CS/2;
+    grid[gy*GW+gx]=okInt(cx,cy)&&validInt(cx-4,cy)&&validInt(cx+4,cy)&&validInt(cx,cy-4)&&validInt(cx,cy+4)?1:0;
+  }
+  const cellOk=(gx,gy)=>gx>=0&&gy>=0&&gx<GW&&gy<GH&&grid[gy*GW+gx]===1;
   const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  /* 最近可走點：先夾進世界，再一圈圈往外找（最多 700px） */
   function nearest(p){
-    if(!p.every(Number.isFinite))return [1392,680];
-    const q=[Math.max(bounds[0],Math.min(bounds[2],p[0])),Math.max(bounds[1],Math.min(bounds[3],p[1]))];
-    if(valid(q))return q;
-    const candidates=[];
-    for(const r of solids)if(inside(q,r))candidates.push([r[0]-2,q[1]],[r[2]+2,q[1]],[q[0],r[1]-2],[q[0],r[3]+2]);
-    for(const poly of polygons)if(inPolygon(q,poly))for(const [a,b] of polygonEdges(poly)){
-      const d=sub(b,a),length=Math.hypot(...d),t=Math.max(0,Math.min(1,((q[0]-a[0])*d[0]+(q[1]-a[1])*d[1])/(length*length)));
-      const x=a[0]+t*d[0],y=a[1]+t*d[1];
-      candidates.push([x-2*d[1]/length,y+2*d[0]/length],[x+2*d[1]/length,y-2*d[0]/length]);
-    }
-    return candidates.filter(valid).sort((a,b)=>distance(a,q)-distance(b,q))[0]||[340,470];
-  }
-  function clear(a,b){
-    if(!valid(a)||!valid(b))return false;
-    // 在斜邊交點間取樣，避免長步幅直接穿過桌角。
-    const d=sub(b,a),cuts=[0,1];
-    for(const [u,v] of edges){
-      const e=sub(v,u),den=cross(d,e);if(Math.abs(den)<1e-8)continue;
-      const q=sub(u,a),t=cross(q,e)/den,s=cross(q,d)/den;
-      if(t>0&&t<1&&s>=0&&s<=1)cuts.push(t);
-    }
-    cuts.sort((x,y)=>x-y);
-    for(let i=1;i<cuts.length;i++){const t=(cuts[i-1]+cuts[i])/2;if(blocked([a[0]+d[0]*t,a[1]+d[1]*t]))return false;}
-    for(const r of solids){
-      let low=0,high=1;
-      for(let axis=0;axis<2;axis++){
-        const d=b[axis]-a[axis];
-        if(Math.abs(d)<1e-8){if(a[axis]<=r[axis]||a[axis]>=r[axis+2]){low=2;break;}}
-        else{const u=(r[axis]-a[axis])/d,v=(r[axis+2]-a[axis])/d;low=Math.max(low,Math.min(u,v));high=Math.min(high,Math.max(u,v));}
+    if(!p||!p.every(Number.isFinite))return [1420,690];
+    const q=[Math.round(Math.max(0,Math.min(W-1,p[0]))),Math.round(Math.max(0,Math.min(H-1,p[1])))];
+    if(okInt(q[0],q[1]))return q;
+    let best=null,bd=Infinity;
+    for(let r=1;r<=700;r+=1){
+      if(best&&r>bd+2)break;
+      const step=r<40?1:2;
+      for(let dx=-r;dx<=r;dx+=step){
+        for(const dy of [-r,r]){const x=q[0]+dx,y=q[1]+dy;if(okInt(x,y)){const d=Math.hypot(dx,dy);if(d<bd){bd=d;best=[x,y];}}}
       }
-      if(low<high&&high>0&&low<1)return false;
+      for(let dy=-r+1;dy<r;dy+=step){
+        for(const dx of [-r,r]){const x=q[0]+dx,y=q[1]+dy;if(okInt(x,y)){const d=Math.hypot(dx,dy);if(d<bd){bd=d;best=[x,y];}}}
+      }
     }
+    return best||[1420,690];
+  }
+  /* 兩點之間每 1px 取樣，全程都要在可走區（含 2px 邊距） */
+  function clear(a,b){
+    if(!a||!b||!a.every(Number.isFinite)||!b.every(Number.isFinite))return false;
+    const d=distance(a,b),n=Math.max(1,Math.ceil(d));
+    for(let i=0;i<=n;i++){const t=i/n;if(!okInt(Math.round(a[0]+(b[0]-a[0])*t),Math.round(a[1]+(b[1]-a[1])*t)))return false;}
     return true;
   }
-  const corners=[...solids.flatMap(r=>[[r[0]-2,r[1]-2],[r[2]+2,r[1]-2],[r[0]-2,r[3]+2],[r[2]+2,r[3]+2]]),...polygons.flat().flatMap(([x,y])=>[[-2,-2],[2,-2],[-2,2],[2,2]].map(([dx,dy])=>[x+dx,y+dy]))].filter(valid);
-  // 新進酒館的玩家從門前地板進場，不再在整個場景隨機生成。
-  function spawn(seed=0){const h=seed>>>0;return nearest([1392+(h%5)*20,680+((h>>>3)%3)*18]);}
+  function spawn(seed=0){const h=seed>>>0;return nearest([1420+(h%5)*18,690+((h>>>3)%3)*16]);}
+  /* A*：8 方向，斜走時兩側都要可走（不切角） */
+  function astar(s,e){
+    /* 起點／終點若剛好落在格子邊緣(格心不可走),改用最近的可走格 */
+    const nearCell=(x,y)=>{if(cellOk(x,y))return [x,y];for(let r=1;r<=4;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(Math.max(Math.abs(dx),Math.abs(dy))===r&&cellOk(x+dx,y+dy))return [x+dx,y+dy];return null;};
+    const sc=nearCell(Math.min(GW-1,Math.floor(s[0]/CS)),Math.min(GH-1,Math.floor(s[1]/CS))),ec=nearCell(Math.min(GW-1,Math.floor(e[0]/CS)),Math.min(GH-1,Math.floor(e[1]/CS)));
+    if(!sc||!ec)return null;
+    const [sx,sy]=sc,[ex,ey]=ec,si=sy*GW+sx,ei=ey*GW+ex;
+    const g=new Float32Array(GW*GH).fill(Infinity),prev=new Int32Array(GW*GH).fill(-1),closed=new Uint8Array(GW*GH);
+    const open=[];const push=(i,f)=>{open.push([f,i]);let k=open.length-1;while(k>0){const p=(k-1)>>1;if(open[p][0]<=open[k][0])break;[open[p],open[k]]=[open[k],open[p]];k=p;}};
+    const pop=()=>{const top=open[0],last=open.pop();if(open.length){open[0]=last;let k=0;for(;;){let l=2*k+1,r=l+1,m=k;if(l<open.length&&open[l][0]<open[m][0])m=l;if(r<open.length&&open[r][0]<open[m][0])m=r;if(m===k)break;[open[m],open[k]]=[open[k],open[m]];k=m;}}return top;};
+    const h=i=>{const x=i%GW,y=(i/GW)|0,dx=Math.abs(x-ex),dy=Math.abs(y-ey);return Math.max(dx,dy)+0.4142*Math.min(dx,dy);};
+    g[si]=0;push(si,h(si));
+    const DIR=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.4142],[1,-1,1.4142],[-1,1,1.4142],[-1,-1,1.4142]];
+    let guard=0;
+    while(open.length&&guard++<60000){
+      const [,i]=pop();if(closed[i])continue;closed[i]=1;if(i===ei)break;
+      const x=i%GW,y=(i/GW)|0;
+      for(const [dx,dy,c] of DIR){
+        const nx=x+dx,ny=y+dy;if(!cellOk(nx,ny))continue;
+        if(dx&&dy&&!(cellOk(x+dx,y)&&cellOk(x,y+dy)))continue;
+        const ni=ny*GW+nx,ng=g[i]+c;
+        if(ng<g[ni]){g[ni]=ng;prev[ni]=i;push(ni,ng+h(ni));}
+      }
+    }
+    if(!Number.isFinite(g[ei]))return null;
+    const cells=[];for(let i=ei;i!==-1;i=prev[i])cells.push([(i%GW)*CS+CS/2,((i/GW)|0)*CS+CS/2]);
+    return cells.reverse();
+  }
   function route(from,to){
     const start=nearest(from),end=nearest(to);
     if(clear(start,end))return [end];
-    const nodes=[start,end,...corners],cost=nodes.map(()=>Infinity),prev=[],done=new Set();cost[0]=0;
-    for(let pass=0;pass<nodes.length;pass++){
-      let u=-1;for(let i=0;i<nodes.length;i++)if(!done.has(i)&&(u<0||cost[i]<cost[u]))u=i;
-      if(u<0||!Number.isFinite(cost[u]))break;
-      if(u===1){const path=[];for(let i=1;i!==0;i=prev[i])path.unshift(nodes[i]);return path;}
-      done.add(u);
-      for(let v=0;v<nodes.length;v++)if(!done.has(v)&&clear(nodes[u],nodes[v])){const next=cost[u]+distance(nodes[u],nodes[v]);if(next<cost[v]){cost[v]=next;prev[v]=u;}}
+    const cells=astar(start,end);
+    if(!cells)return [end];
+    /* 拉直：從目前點盡量跳到最遠的看得到的格子（頭尾格心也留著,起點若在格子邊緣才接得上） */
+    const pts=[start,...cells,end],out=[];let i=0;
+    while(i<pts.length-1){
+      let j=pts.length-1;while(j>i+1&&!clear(pts[i],pts[j]))j--;
+      out.push(pts[j]);i=j;
     }
-    return [start];
+    return out.length?out:[end];
   }
   function slide(from,to){
     const start=nearest(from),end=[Math.max(bounds[0],Math.min(bounds[2],to[0])),Math.max(bounds[1],Math.min(bounds[3],to[1]))];
@@ -94,6 +103,8 @@
     if(a._sceneGoal!==key){a._sceneGoal=key;a._scenePath=route([a.x*W,a.y*H],[a.tx*W,a.ty*H]);}
     const path=a._scenePath;
     while(path.length>1&&distance([a.x*W,a.y*H],path[0])<6&&clear([a.x*W,a.y*H],path[1]))path.shift();
+    /* 到了轉折點卻看不到下一點(例如被擠到邊上):從現在位置重算一次路,不要卡在原地 */
+    if(path.length>1&&distance([a.x*W,a.y*H],path[0])<2){a._scenePath=route([a.x*W,a.y*H],[a.tx*W,a.ty*H]);return target(a);}
     a._sceneTransit=path.length>1;
     return [path[0][0]/W,path[0][1]/H];
   }
@@ -103,22 +114,23 @@
     let bottom=0;for(let y=0;y<64;y++)for(let x=0;x<64;x++)if(data[(y*64+x)*4+3]>80)bottom=y+1;
     a._sceneBottom=(bottom||64)/64;return a._sceneBottom;
   }
-  function size(y){return 164+36*Math.max(0,Math.min(1,(y*H-300)/(873-300)));}
-  // 與角色腳底使用同一套排序；到達物件前緣就必須站在物件前面。
-  const ground={counter:430,stools:456,stall:619,board:633,wolf:633,white:634,flower:800};
+  function size(y){return 164+36*Math.max(0,Math.min(1,(y*H-343)/(873-343)));}
+  /* 各擺飾的「腳底線」：角色腳底在這條線下面就畫在前面 */
+  const ground={counter:430,stools:456,stall:633,board:633,wolf:633,white:634,flower:800,pink:834};
   const layerDepth=y=>Math.round(y/H*1000)-1;
   function mount(world){
-    const asset='img/lobby-layers-v254/';
+    const asset='img/lobby-layers-v260/';
     const layers=[
-      ['counter','fixtures.png',layerDepth(ground.counter),'inset(0px 270px 440px 350px)'],
-      ['stall','fixtures.png',layerDepth(ground.stall),'polygon(0 0,330px 0,330px 480px,190px 480px,190px 650px,330px 650px,330px 900px,0 900px)'],
-      ['board','fixtures.png',layerDepth(ground.board),'inset(480px 1270px 250px 190px)'],
-      ['flowers','fixtures.png',1001,'inset(0px 0px 0px 1450px)'],
-      // 枕頭需蓋住攤販地面陰影與告示牌底部，再由卡布疊在枕頭上。
-      ['cushions','wolf-cushions.png',layerDepth(ground.board),'inset(560px 0px 0px 0px)'],
-      ['wolf','wolf-cushions.png',layerDepth(ground.wolf),'inset(0px 0px 340px 0px)'],
-      ['purple','purple.png',layerDepth(ground.counter)],['white','white.png',layerDepth(ground.white)],['flower','flower.png',layerDepth(ground.flower)],
-      ['stools','stools.png',layerDepth(ground.stools)],['cat','cat.png',layerDepth(ground.counter)],['food','food.png',layerDepth(ground.counter)]
+      /* 吧台拆兩層:桌面(y<338)墊在所有小人後面、正面(y>=338)擋在吧台後方小人的前面 → 走進吧台後面會露出頭和肩膀 */
+      ['counterTop','counter.png',layerDepth(340)-10,'inset(0px 0px 562px 0px)'],
+      ['counter','counter.png',layerDepth(ground.counter),'inset(338px 0px 0px 0px)'],
+      ['food','food.png',layerDepth(ground.counter)+1],['cat','cat.png',layerDepth(ground.counter)+1],['purple','doll-purple.png',layerDepth(ground.counter)+1],
+      ['stools','stools.png',layerDepth(ground.stools)],
+      ['cushions','cushion.png',layerDepth(ground.wolf)-1],['wolf','doll-grey.png',layerDepth(ground.wolf)],
+      ['pink','doll-pink.png',layerDepth(ground.pink)],
+      /* 前景分兩塊：左邊攤位＋告示牌＋左上樹（腳底線 633）、右邊花盆＋右上樹（永遠最前面） */
+      ['stall','front.png',layerDepth(ground.stall),'inset(0px 1040px 0px 0px)'],
+      ['flowers','front.png',1001,'inset(0px 0px 0px 560px)']
     ];
     for(const [id,file,z,clip] of layers){
       const img=document.createElement('img');img.className='tt-scene-layer';img.dataset.layer=id;
@@ -126,5 +138,5 @@
       img.width=W;img.height=H;img.style.zIndex=z;if(clip)img.style.clipPath=clip;world.append(img);
     }
   }
-  root.TTScene={bounds,solids,counter,rightWall,valid,nearest,spawn,clear,route,slide,target,metrics,size,ground,layerDepth,mount};
+  root.TTScene={bounds,valid,nearest,spawn,clear,route,slide,target,metrics,size,ground,layerDepth,mount,rows:ROWS};
 })(typeof window!=='undefined'?window:globalThis);
