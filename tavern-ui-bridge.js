@@ -82,7 +82,19 @@
   csPick=function(d,key){return Array.isArray(d?.uiBaseSlots)&&d.uiBaseSlots.includes(key)?null:oldPick(d,key);};
   csAccList=function(d){if(!Array.isArray(d?.uiAccessories))return oldAcc(d);return d.uiAccessories.map(r=>{const p=window.__shopCfg?.[r.source]?.parts?.[r.slot];return p?{...p,z:group(p,r.source,r.slot)==='head'?'headTop':p.z}:null;}).filter(Boolean);};
   csAccZ=function(p){return p?.z==='headTop'?'headTop':oldZ(p);};
-  drawDollTo=function(cv,d,pose){oldDraw(cv,d,pose);if(Array.isArray(d?.uiAccessories))csAccBy(d,'headTop').forEach(p=>csDrawV(cv.getContext('2d'),p,d.hair||0,d.hairHex,d.hairHex2));};
+  // 保留所有繪製參數，包含身體／頭髮動畫；不能只轉傳姿勢而畫成靜態。
+  drawDollTo=function(cv,d,pose,...renderOptions){
+    oldDraw(cv,d,pose,...renderOptions);
+    if(!Array.isArray(d?.uiAccessories))return;
+    const parts=csAccBy(d,'headTop');if(!parts.length)return;
+    const motion=renderOptions[0];
+    if(motion&&window.TTHairMotion){
+      const layer=document.createElement('canvas');layer.width=layer.height=64;
+      const g=layer.getContext('2d');g.imageSmoothingEnabled=false;
+      parts.forEach(p=>csDrawV(g,p,d.hair||0,d.hairHex,d.hairHex2));
+      TTHairMotion.paint(cv.getContext('2d'),layer,motion,'rigid');
+    }else parts.forEach(p=>csDrawV(cv.getContext('2d'),p,d.hair||0,d.hairHex,d.hairHex2));
+  };
   async function wear(selection,color){
     const a=typeof me==='function'?me():null;if(!a||!db||!myKey)throw Error('先做一張闆卡，再保存穿搭');
     const d=makeDoll(selection,color,true);
