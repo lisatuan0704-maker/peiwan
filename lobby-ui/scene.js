@@ -127,7 +127,7 @@
       ['food','food.png',layerDepth(ground.counter)+1],['cat','cat.png',layerDepth(ground.counter)+1],['purple','doll-purple.png',layerDepth(ground.counter)+1],
       ['stools','stools.png',layerDepth(ground.stools)],
       /* 小灰坐在攤位與告示牌前方的坐墊上，必須高於左側前景一層。 */
-      ['cushions','cushion.png',layerDepth(ground.wolf)-1],['wolf','doll-grey.png',layerDepth(ground.wolf)+1],
+      ['cushions','cushion.png',layerDepth(ground.wolf)+1],['wolf','doll-grey.png',layerDepth(ground.wolf)+2],
       ['pink','doll-pink.png',layerDepth(ground.pink)],
       /* 前景分兩塊：左邊攤位＋告示牌＋左上樹（腳底線 633）、右邊花盆＋右上樹（永遠最前面） */
       ['stall','front.png',layerDepth(ground.stall),'inset(0px 1040px 0px 0px)'],
