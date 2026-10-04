@@ -1682,7 +1682,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v274</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v275</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3015,11 +3015,12 @@ function fsOverlayOpen(){
   if(t-_fsCheck>300){
     _fsCheck=t;
     const bm=document.getElementById('bookM');
-    _fsOpen=(bm&&bm.classList.contains('on'))||!!document.querySelector('.gwin.on');
+    _fsOpen=!!window.TinyTavernUI?.isActive?.()||(bm&&bm.classList.contains('on'))||!!document.querySelector('.gwin.on');
   }
   return _fsOpen;
 }
 function tick(now){
+  if(document.hidden){last=now;requestAnimationFrame(tick);return;}
   /* 全螢幕視窗開著時,暫停背景世界演算(每秒 2 幀維持狀態即可)——弱機開書/開視窗不再卡 */
   if(fsOverlayOpen()){
     if(!tick._slow||now-tick._slow>500){ tick._slow=now; last=now; }
@@ -3289,11 +3290,16 @@ function tick(now){
   updateCardpop();
   requestAnimationFrame(tick);
 }
+// 尺寸只在容器改變時讀取，避免每幀寫入角色位置後強制重新排版。
+let _hallSize={w:hall.clientWidth,h:hall.clientHeight};
+const refreshHallSize=()=>{_hallSize={w:hall.clientWidth,h:hall.clientHeight};};
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(refreshHallSize).observe(hall);
+else window.addEventListener('resize',refreshHallSize);
 let camView={x:0,y:0};
 let camFocus=null;
 function updateCamera(dt, now){
   const a=camFocus||me();
-  const vw=hall.clientWidth, vh=hall.clientHeight;
+  const vw=_hallSize.w, vh=_hallSize.h;
   let tx = a? a.x*WORLD.w : WORLD.w/2;
   let ty = a? a.y*WORLD.h - 40 : WORLD.h*0.6;
   const moving = a && (a.state==='walk');
@@ -3311,6 +3317,12 @@ function updateCamera(dt, now){
   cam.zoom += (cam.tzoom-cam.zoom)*Math.min(1,dt*4);
   cam.x += (tx-cam.x)*Math.min(1,dt*5);
   cam.y += (ty-cam.y)*Math.min(1,dt*5);
+  if(Math.abs(cam.zoom-cam.tzoom)<0.00001)cam.zoom=cam.tzoom;
+  if(Math.abs(cam.x-tx)<0.001)cam.x=tx;
+  if(Math.abs(cam.y-ty)<0.001)cam.y=ty;
+  const cameraKey=[vw,vh,cam.zoom,cam.x,cam.y,WORLD.w,WORLD.h].join('|');
+  if(updateCamera.lastKey===cameraKey)return;
+  updateCamera.lastKey=cameraKey;
   // 換算成 world 左上角位移,並夾在世界邊界內(避免露出世界外的黑邊)
   const halfW=vw/cam.zoom/2, halfH=vh/cam.zoom/2;
   let vx=Math.min(WORLD.w-halfW, Math.max(halfW, cam.x));
@@ -7696,7 +7708,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui-bridge.js?v=271"></script>
+<script src="tavern-ui-bridge.js?v=275"></script>
 <script src="lobby-ui/live.js?v=244"></script>
 <script src="lobby-ui/membership.js?v=273"></script>
 <script src="lobby-ui/order-flow.js?v=274"></script>

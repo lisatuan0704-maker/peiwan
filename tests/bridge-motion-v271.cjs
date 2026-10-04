@@ -21,7 +21,7 @@ for(const mode of ['idle','walk']){
 }
 const cv=new Canvas(),d={uiAccessories:[{z:'headTop'}]},motion={mode:'idle',phase:1};context.drawDollTo(cv,d,'idle',motion,'future-option');assert.equal(forwarded[4],'future-option');
 assert.equal(cv.data[(11*64+30)*4],250,'head accessory follows head moving upward');
-assert(html.includes('tavern-ui-bridge.js?v=271'));
+assert(/tavern-ui-bridge\.js\?v=\d+/.test(html));
 console.log('PASS: actual bridge + setFrame forward animation, 12 live-cache phases change pixels, head accessories follow motion, future arguments preserved');
 
 const prior=a._hairKey;context._spriteFrameBudget=0;context.performance={now:()=>1};a._hairMotion={mode:'idle',phase:0};a._hairCache.clear();a.frame=null;context.setFrame(a,'idle');assert.equal(a._hairKey,prior);assert.equal(a._hairCache.size,0);context._spriteFrameBudget=100;context.setFrame(a,'idle');assert.equal(a._hairCache.size,1);

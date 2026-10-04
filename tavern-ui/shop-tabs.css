@@ -57,3 +57,6 @@ body.motion-off .dye-cta-art{animation:none}
 .catalog{display:flex!important;flex-direction:column;gap:12px;grid-template-rows:none!important;height:auto!important;min-height:0}
 .singles{display:flex!important;flex-direction:column;gap:9px;grid-template-rows:none!important;height:auto!important}
 .singles .grid{flex:1 1 auto}
+
+/* v275：染色組合保留分類列，隱藏空的部件格與分頁。 */
+#singles.showing-bundles{grid-template-rows:auto!important;height:auto!important}#singles.showing-bundles #subtabs,#singles.showing-bundles #grid,#singles.showing-bundles #pager{display:none!important}

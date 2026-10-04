@@ -24,3 +24,8 @@
 .dyed-preview{display:block;width:150px;height:150px;image-rendering:pixelated;margin:auto}
 body[data-area=bag] #dyeTicket{border-style:solid;background:linear-gradient(110deg,#fff9,#badde999)}
 @media(max-width:420px){#dyeDialog .dye-card{padding:15px}#dyeDialog h2{font-size:20px}.dye-workspace{grid-template-columns:115px minmax(0,1fr);gap:12px}.dye-avatar{min-height:150px}.dye-avatar canvas{width:115px;height:115px}.dye-controls label{font-size:12px}.dye-controls input[type=color]{width:52px}.dye-controls .dye-gradient{gap:4px;font-size:12px}.dye-actions{justify-content:stretch}.dye-actions .primary{flex:1}}
+
+/* v275：保存染色縮圖留在自己的卡片內，不沿用整套立繪的絕對定位。 */
+.bundle .bundlebody .dyed-preview{position:static;display:block;width:120px;height:120px;max-width:100%;aspect-ratio:1;margin:10px auto;transform:none;object-fit:contain}
+
+.saved-dye-bundle{position:relative;display:block;min-width:0}.saved-dye-bundle .bundlebody{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:16px}.saved-dye-bundle .bundlebody h2{position:static;font-size:17px;line-height:1.5;letter-spacing:1px;overflow-wrap:anywhere;margin:0}.saved-dye-bundle .bundlebody p{display:block}.saved-dye-bundle .dyed-preview{flex:none}

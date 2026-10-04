@@ -67,18 +67,23 @@
   if(p.parts){const c=cv.getContext('2d');c.clearRect(0,0,64,64);for(const slot of ['back','front']){const q=p.parts.find(x=>x.slot===slot);if(!q)continue;const tmp=document.createElement('canvas');tmp.width=tmp.height=64;api.drawPart(tmp,ref(q),color);c.drawImage(tmp,0,0);}}
   else api.drawPart(cv,ref(p),color);
  }
+ let paintFrame=0;
+ function requestPaint(){if(paintFrame)return;paintFrame=requestAnimationFrame(()=>{paintFrame=0;paint();});}
  function paint(){
-  try{const d=api.makeDoll(selection,color);if(dyeDraft){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;}api.draw($('#avatar'),d);if(dyeDraft)api.draw($('#dyePreview'),d);}catch(e){tell(e.message);}
-  const list=entries();$$('[data-preview]').forEach(cv=>{const p=list.find(p=>p.id===cv.dataset.preview);if(p)drawPart(cv,p);});
-  $$('[data-outfit-preview]').forEach(cv=>{const o=data.catalog.find(o=>o.id===cv.dataset.outfitPreview);if(o)api.draw(cv,{...data.doll,...o.doll,set:o.id,ps:{},uiAccessories:undefined});});
-  $$('[data-dyed-preview]').forEach(cv=>{const s=data.dyed[cv.dataset.dyedPreview];if(s)api.draw(cv,api.makeDoll({...selection,front:s.front,back:s.back},{savedId:cv.dataset.dyedPreview}));});
+  const dyeVisible=!!dyeDraft&&!$('#dyeDialog').hidden;
+  try{const d=api.makeDoll(selection,color);if(dyeVisible){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;}api.draw($(dyeVisible?'#dyePreview':'#avatar'),d);}catch(e){tell(e.message);}
+  // 染髮彈窗遮住的商品與主舞臺不跟著每一次色票事件重畫。
+  if(dyeVisible)return;
+  const list=entries();$$('#singles:not([hidden]) [data-preview]').forEach(cv=>{const p=list.find(p=>p.id===cv.dataset.preview);if(p)drawPart(cv,p);});
+  $$('#bundles:not([hidden]) [data-outfit-preview]').forEach(cv=>{const o=data.catalog.find(o=>o.id===cv.dataset.outfitPreview);if(o)api.draw(cv,{...data.doll,...o.doll,set:o.id,ps:{},uiAccessories:undefined});});
+  $$('#bundles:not([hidden]) [data-dyed-preview]').forEach(cv=>{const s=data.dyed[cv.dataset.dyedPreview];if(s)api.draw(cv,api.makeDoll({...selection,front:s.front,back:s.back},{savedId:cv.dataset.dyedPreview}));});
  }
  function setArea(next){area=next==='bag'?'bag':'store';bagSection='wear';category='hair';page=0;selected=null;filter='all';mode='singles';render();}
  window.ttDyeShop=()=>{if(area!=='store'){init();setArea('store');syncOuter('store');}category='dye';render();};
  function swatches(){
   const preset=[0,2,3,4,5,6,7,1,9].filter(i=>data.colors[i]);
   $('#dyePanel').innerHTML='<div class="dye-head"><strong>主色</strong><span>'+(color.savedId?'已保存髮色':'即時試色')+'</span></div><div class="swatches">'+preset.map(i=>'<button data-color="'+i+'" aria-label="試穿髮色 '+(i+1)+'" style="--swatch:'+data.colors[i]+'" aria-pressed="'+(color.hair===i)+'" '+(color.savedId?'disabled':'')+'></button>').join('')+'</div>';
-  $$('[data-color]').forEach(b=>b.onclick=()=>{color={hair:Number(b.dataset.color)};swatches();paint();});
+  $$('[data-color]').forEach(b=>b.onclick=()=>{color={hair:Number(b.dataset.color)};swatches();requestPaint();});
  }
  function render(){
   document.body.dataset.area=area;document.body.dataset.section=bagSection;
@@ -97,7 +102,7 @@
   areaNav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.area===area)));
   mode=category==='bundles'?'bundles':'singles';
   const dyeShop=area==='store'&&category==='dye';
-  $('#singles').hidden=mode!=='singles'||dyeShop;$('#bundles').hidden=mode!=='bundles';$('#dyeShop').hidden=!dyeShop;$('#detail').hidden=dyeShop;
+  $('#singles').hidden=dyeShop;$('#singles').classList.toggle('showing-bundles',mode==='bundles');$('#bundles').hidden=mode!=='bundles';$('#dyeShop').hidden=!dyeShop;$('#detail').hidden=dyeShop;
   const cats=[['bundles',area==='bag'?'染色組合':'整套組合'],...categories,...(area==='store'?[['dye','染髮券']]:[])];
   $('#categories').innerHTML=cats.map(([id,name])=>'<button data-category="'+id+'" aria-pressed="'+(id===category)+'"'+(id==='dye'?' class="cat-dye"':'')+'><span>'+name+'</span></button>').join('');
   $$('[data-category]').forEach(b=>b.onclick=()=>{category=b.dataset.category;page=0;selected=null;render();});
@@ -141,7 +146,7 @@
   $('#bundlePager').innerHTML='';
   if(area==='bag'){
    const saved=Object.entries(data.dyed);
-   $('#bundlegrid').innerHTML=saved.map(([id,s])=>'<article class="bundle"><div class="bundlebody"><small>COLOR ARCHIVE</small><h2>'+esc(s.name||'專屬染髮')+'</h2><canvas class="dyed-preview" width="64" height="64" data-dyed-preview="'+esc(id)+'"></canvas><p>已固定瀏海、後髮與髮色。再次穿戴不扣券。</p><button class="primary" data-saved="'+esc(id)+'">試穿這組</button></div></article>').join('')||'<div class="live-empty"><p>還沒有保存染色組合。</p><button class="primary" id="emptyDye">開始染髮</button><p>先選好瀏海與後髮，再調整專屬髮色。</p></div>';
+   $('#bundlegrid').innerHTML=saved.map(([id,s])=>'<article class="bundle saved-dye-bundle"><div class="bundlebody"><small>COLOR ARCHIVE</small><h2>'+esc(s.name||'專屬染髮')+'</h2><canvas class="dyed-preview" width="64" height="64" data-dyed-preview="'+esc(id)+'"></canvas><p>已固定瀏海、後髮與髮色。再次穿戴不扣券。</p><button class="primary" data-saved="'+esc(id)+'">試穿這組</button></div></article>').join('')||'<div class="live-empty"><p>還沒有保存染色組合。</p><button class="primary" id="emptyDye">開始染髮</button><p>先選好瀏海與後髮，再調整專屬髮色。</p></div>';
    if($('#emptyDye'))$('#emptyDye').onclick=openDye;
    $$('[data-saved]').forEach(b=>b.onclick=()=>{const s=data.dyed[b.dataset.saved];selection.front=s.front;selection.back=s.back;color={savedId:b.dataset.saved};swatches();paint();$('#detail').innerHTML='<p>已試穿完整染色組合。</p><button class="primary" id="wearSaved">穿上這組</button>';$('#wearSaved').onclick=wear;});
    $('#detail').innerHTML='<p>染色組合保存後可重複整組穿戴。</p>';
@@ -174,8 +179,9 @@
   $('#dyeTail').disabled=dyeSaving||!$('#dyeGradient').checked;
  }
  function updateDye(){
+  const previous=dyeDraft;
   dyeDraft={name:$('#dyeName').value,main:$('#dyeMain').value,tail:$('#dyeGradient').checked?$('#dyeTail').value:$('#dyeMain').value};
-  $('#dyeTailLabel').hidden=!$('#dyeGradient').checked;dyeStatus();paint();
+  $('#dyeTailLabel').hidden=!$('#dyeGradient').checked;dyeStatus();if(!previous||previous.main!==dyeDraft.main||previous.tail!==dyeDraft.tail)requestPaint();
  }
  function openDye(preset){
   try{
