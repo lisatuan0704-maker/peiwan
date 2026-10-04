@@ -26,3 +26,6 @@
 
 /* v238:一起玩的冒險者改成圓形頭像 */
 .of-members .of-av{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #e6d3e3;box-shadow:0 2px 8px #8e6bb026;background:#fff}
+
+/* v274：商店商品結帳共用新版付款視窗。 */
+.of-product-line{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #cdbbd166}.of-product-line span{font-size:12px}.of-product-line b{text-align:right;overflow-wrap:anywhere}.tt-order-flow #payCoinInfo{margin-left:0;margin-right:0}.tt-order-flow .of-track{flex-wrap:wrap}

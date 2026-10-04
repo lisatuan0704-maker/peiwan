@@ -30,7 +30,16 @@
    const unit=curPlan.unitPrice??curPlan.p,qty=curPlan.quantity||1;
    return '<div class="of-receipt"><div><span>方案</span><b>'+esc(curPlan.n)+'</b></div><div><span>每位冒險者</span><b>NT$ '+money(unit)+'</b></div><div><span>冒險者人數</span><b>'+qty+' 位</b></div>'+(curBooking&&curReserveAt?'<div><span>預約時間</span><b>'+esc(fmtRes(curReserveAt))+'</b></div>':'')+'<div class="of-total"><span>方案合計</span><strong>'+money(unit)+' <i>× '+qty+' ＝</i> '+money(curPlan.p)+'</strong></div><small>優惠券如有使用，會從整筆合計折抵一次。</small></div>';
  }
- function checkout(){if(curKind!=='play')return;heading('shopM3','CHECK YOUR ORDER / 點單確認','這次，就一起玩吧。',3);context('shopM3');const card=$('shopM3').querySelector('.shopCard');let receipt=card.querySelector('.of-checkout-summary');if(!receipt){receipt=document.createElement('div');receipt.className='of-checkout-summary';card.querySelector('.of-context').after(receipt);}receipt.innerHTML=summary();}
+ function checkout(){
+   if(curKind==='shop'){
+     heading('shopM3','BOUTIQUE / 商品結帳','確認你的選購。',1);
+     const card=$('shopM3').querySelector('.shopCard');
+     card.querySelector('.of-ghost').textContent='SHOP';
+     card.querySelector('.of-track').innerHTML='<span><b>01</b> 選購商品</span><span class="active"><b>02</b> 確認付款</span>';
+     card.querySelectorAll('.of-context,.of-checkout-summary').forEach(el=>el.remove());
+     return;
+   }
+   if(curKind!=='play')return;heading('shopM3','CHECK YOUR ORDER / 點單確認','這次，就一起玩吧。',3);context('shopM3');const card=$('shopM3').querySelector('.shopCard');let receipt=card.querySelector('.of-checkout-summary');if(!receipt){receipt=document.createElement('div');receipt.className='of-checkout-summary';card.querySelector('.of-context').after(receipt);}receipt.innerHTML=summary();}
  function validate(list=members(),booking=pkMode==='book'){
    for(const p of list){const s=STAFF_ALL[p.cid],c=STAFF_CARDS[p.cid]||{};if(!s||(!booking&&(!s.on||s.busy))||(booking&&c.noBooking))throw Error(p.name+' 的接單狀態已變更，請返回名簿重新選擇');}
  }
@@ -43,7 +52,7 @@
      $('m2list').innerHTML=playItems().map((p,i)=>'<button type="button" class="planBtn" data-of-plan="'+esc(p.id)+'"><span class="of-plan-number">'+String(i+1).padStart(2,'0')+'</span><span class="of-plan-name"><b>'+esc(p.n)+'</b><small>這個方案會套用到所選的 '+count()+' 位冒險者</small></span><span class="pp">NT$ '+money(p.p)+'<small>／每位冒險者</small></span><span class="of-plan-arrow" aria-hidden="true">→</span></button>').join('');
      $('m2list').querySelectorAll('[data-of-plan]').forEach(b=>b.onclick=()=>pickPlan(b.dataset.ofPlan));
      $('shopM2').querySelector('.sc-back').textContent='← 調整冒險者名單';
-   } else if(step===3&&curKind==='play')checkout();
+   } else if(step===3&&(curKind==='play'||curKind==='shop'))checkout();
    else if(step===2||step===3){const modal=$('shopM'+step);modal.classList.remove('tt-order-flow');modal.querySelectorAll('.of-heading,.of-track,.of-context,.of-checkout-summary').forEach(e=>e.remove());modal.querySelector('.shopCard > h3').hidden=false;}
    return result;
  };
@@ -52,9 +61,9 @@
    try{validate();const p=playItems().find(x=>x.id===id);if(!p)throw Error('這個方案已下架，請重新選擇');const price=pricing(p.p,count());curPlan={...p,unitPrice:p.p,quantity:count(),p:price.total};curBooking=pkMode==='book';curReserveAt=null;if(curBooking)openReserve(()=>shopOpen(3));else shopOpen(3);}catch(e){toast(e.message);}
  };
  renderCoinInfo=function(){
-   const out=previous.coinInfo();if(curKind!=='play')return out;
+   const out=previous.coinInfo();if(curKind!=='play'&&curKind!=='shop')return out;
    const box=$('payCoinInfo'),label=box.querySelector('label'),topup=box.querySelector('a')?.closest('div'),balance=window.__wallet||0,amount=payFinalAmount();
-   box.innerHTML='<div class="of-payment-line"><span>本次應付</span><strong>'+money(amount)+' <small>金幣</small></strong></div><div class="of-wallet-line">持有 '+money(balance)+' 金幣 · 付款後剩 '+money(Math.max(0,balance-amount))+' 金幣</div>';
+   box.innerHTML=(curKind==='shop'?'<div class="of-product-line"><span>選購商品</span><b>'+esc(curPlan.n)+'</b></div>':'')+'<div class="of-payment-line"><span>本次應付</span><strong>'+money(amount)+' <small>金幣</small></strong></div><div class="of-wallet-line">持有 '+money(balance)+' 金幣 · 付款後剩 '+money(Math.max(0,balance-amount))+' 金幣</div>';
    if(label)box.append(label);if(topup)box.append(topup);checkout();return out;
  };
  async function bookings(list){
