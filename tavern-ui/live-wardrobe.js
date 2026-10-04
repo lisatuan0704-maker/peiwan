@@ -27,17 +27,25 @@
   return !!r&&r.slot===p.slot&&(p.base!==undefined?r.base===p.base:r.source===p.source);
  }
  function tell(s){$('#toast').textContent=s;$('#toast').hidden=false;clearTimeout(tell.timer);tell.timer=setTimeout(()=>$('#toast').hidden=true,3500);}
- function init(){
-  dyeDraft=null;$('#dyeDialog').hidden=true;document.querySelector('.shop').inert=false;
-  data=api.state();selection={};const d=data.doll;
-  for(const [sl,native] of [['front','front'],['back','back'],['cloth','cloth'],['eye','face'],['brow','brow']]){
-   const source=d.ps?.[sl]||d.set;
-   selection[sl]=source&&data.catalog.some(o=>o.id===source&&o.parts.some(p=>p.slot===sl))?{source,slot:sl}:{base:d[native]||0,slot:sl};
+ function selectionFromDoll(d){
+  const next={};
+  for(const [sl,native] of [['front','front'],['back','back'],['cloth','cloth'],['eye','face'],['brow','brow'],['pet','pet'],['seat','seat']]){
+   const source=d.uiBaseSlots?.includes(sl)?null:(d.ps?.[sl]||d.set);
+   const custom=source&&data.catalog.some(o=>o.id===source&&o.parts.some(p=>p.slot===sl));
+   next[sl]=custom?{source,slot:sl}:['pet','seat'].includes(sl)?null:{base:d[native]||0,slot:sl};
   }
   const accessories=d.uiAccessories||data.catalog.find(o=>o.id===d.set)?.parts.filter(p=>p.category==='acc')||Object.entries(d.ps||{}).filter(([k])=>/^acc\d*$/.test(k)).map(([slot,source])=>({source,slot}));
-  accessories.forEach(r=>{const p=data.catalog.find(o=>o.id===r.source)?.parts.find(p=>p.slot===r.slot);if(p)selection[key(p)]=ref(p);});
-  color=d.dyedHairSet&&data.dyed[d.dyedHairSet]?{savedId:d.dyedHairSet}:{hair:d.hair||0,keepOriginal:true};selected=null;page=0;
+  accessories.forEach(r=>{const p=data.catalog.find(o=>o.id===r.source)?.parts.find(p=>p.slot===r.slot);if(p)next[key(p)]=ref(p);});
+  return next;
  }
+ function init(){
+  dyeDraft=null;$('#dyeDialog').hidden=true;document.querySelector('.shop').inert=false;
+  data=api.state();const d=data.doll;selection=selectionFromDoll(d);
+  const saved=d.dyedHairSet&&data.dyed[d.dyedHairSet];
+  if(saved){selection.front={...saved.front};selection.back={...saved.back};}
+  color=saved?{savedId:d.dyedHairSet}:{hair:d.hair||0,keepOriginal:true};selected=null;page=0;
+ }
+ function outfitSelection(o){const next=selectionFromDoll(o.doll||{});o.parts.forEach(p=>next[key(p)]=ref(p));return next;}
  function products(){return data.catalog.filter(o=>area==='bag'?o.owned:o.sale);}
  function entries(){
   const out=[];
@@ -59,8 +67,10 @@
  }
  function tryItem(p){
   if(!p)return;
-  if(p.parts)p.parts.forEach(q=>selection[key(q)]=ref(q));else selection[key(p)]=ref(p);
-  if(p.category==='hair'){color={hair:data.doll.hair||0};dyeDraft=null;}
+  const next={...selection},nextColor=p.category==='hair'?{hair:data.doll.hair||0}:color;
+  if(p.parts)p.parts.forEach(q=>next[key(q)]=ref(q));else next[key(p)]=ref(p);
+  try{api.makeDoll(next,nextColor);}catch(e){tell(e.message);return;}
+  selection=next;color=nextColor;if(p.category==='hair')dyeDraft=null;
   selected=p.id;render();
  }
  function drawPart(cv,p){
@@ -75,7 +85,7 @@
   // 染髮彈窗遮住的商品與主舞臺不跟著每一次色票事件重畫。
   if(dyeVisible)return;
   const list=entries();$$('#singles:not([hidden]) [data-preview]').forEach(cv=>{const p=list.find(p=>p.id===cv.dataset.preview);if(p)drawPart(cv,p);});
-  $$('#bundles:not([hidden]) [data-outfit-preview]').forEach(cv=>{const o=data.catalog.find(o=>o.id===cv.dataset.outfitPreview);if(o)api.draw(cv,{...data.doll,...o.doll,set:o.id,ps:{},uiAccessories:undefined});});
+  $$('#bundles:not([hidden]) [data-outfit-preview]').forEach(cv=>{const o=data.catalog.find(o=>o.id===cv.dataset.outfitPreview);if(o)api.draw(cv,api.makeDoll(outfitSelection(o),{hair:o.doll?.hair||0}));});
   $$('#bundles:not([hidden]) [data-dyed-preview]').forEach(cv=>{const s=data.dyed[cv.dataset.dyedPreview];if(s)api.draw(cv,api.makeDoll({...selection,front:s.front,back:s.back},{savedId:cv.dataset.dyedPreview}));});
  }
  function setArea(next){area=next==='bag'?'bag':'store';bagSection='wear';category='hair';page=0;selected=null;filter='all';mode='singles';render();}
@@ -117,7 +127,7 @@
   $('#pager').innerHTML='<button id="prevPage" '+(!page?'disabled':'')+'>←</button><span>'+String(page+1).padStart(2,'0')+' / '+String(pages).padStart(2,'0')+'</span><button id="nextPage" '+(page+1>=pages?'disabled':'')+'>→</button><small>'+list.length+' 款</small>';
   $('#prevPage').onclick=()=>{page--;selected=null;render();};$('#nextPage').onclick=()=>{page++;selected=null;render();};
   const p=list.find(p=>p.id===selected);
-  $('#detail').innerHTML=p?'<div><small class="overline">'+(p.category==='acc'?'ACCESSORY / '+groupNames[p.group]:'YOUR STYLE')+'</small><h2>'+esc(p.name)+'</h2><p>'+esc(p.product.owned?'已取得，可自由搭配。':'包含於「'+p.product.name+'」，購買整組後可拆件搭配。')+'</p></div><div class="actions">'+(p.category==='acc'?'<button class="ghost" id="removePart">卸下</button>':'')+'<button class="primary" id="itemAction">'+(area==='bag'?'穿上目前搭配 →':p.product.owned?'已擁有':'選購整組 →')+'</button></div>':'<p>挑選另一個分類，繼續找喜歡的造型。</p>';
+  $('#detail').innerHTML=p?'<div><small class="overline">'+(p.category==='acc'?'ACCESSORY / '+groupNames[p.group]:'YOUR STYLE')+'</small><h2>'+esc(p.name)+'</h2><p>'+esc(p.product.owned?'已取得，可自由搭配。':'包含於「'+p.product.name+'」，購買整組後可拆件搭配。')+'</p></div><div class="actions">'+(['acc','pet','seat'].includes(p.category)?'<button class="ghost" id="removePart">卸下</button>':'')+'<button class="primary" id="itemAction">'+(area==='bag'?'穿上目前搭配 →':p.product.owned?'已擁有':'選購整組 →')+'</button></div>':'<p>挑選另一個分類，繼續找喜歡的造型。</p>';
   if(p){$('#itemAction').disabled=area==='store'&&p.product.owned;$('#itemAction').onclick=()=>area==='bag'?wear():!p.product.owned&&buy(p.product.id);if($('#removePart'))$('#removePart').onclick=()=>{selection[key(p)]=null;render();};}
   if(mode==='bundles')renderBundles();
   dyeCta();swatches();paint();clearTimeout(render.imageTimer);render.imageTimer=setTimeout(paint,450);
@@ -152,7 +162,7 @@
    $('#detail').innerHTML='<p>染色組合保存後可重複整組穿戴。</p>';
   }else{
    $('#bundlegrid').innerHTML=products().filter(o=>o.parts.length).map(o=>'<article class="bundle"><div class="hero"><span class="ribbon">'+(o.owned?'已擁有':'整組 NT$'+o.price)+'</span><h2>'+esc(o.name)+'</h2><canvas width="64" height="64" data-outfit-preview="'+esc(o.id)+'"></canvas></div><div class="bundlebody"><p>'+o.parts.length+' 件可搭配部件</p><div class="bundlebtns"><button class="primary" data-try-outfit="'+esc(o.id)+'">試穿這組</button><button class="ghost" data-buy-outfit="'+esc(o.id)+'">'+(o.owned?'已擁有':'選購整組')+'</button></div></div></article>').join('')||'<p class="live-empty">目前沒有上架組合。</p>';
-   $$('[data-try-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.tryOutfit);selection={};o.parts.forEach(p=>selection[key(p)]=ref(p));color={hair:data.doll.hair||0};paint();tell('已試穿「'+o.name+'」');});
+   $$('[data-try-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.tryOutfit);const next=outfitSelection(o),nextColor={hair:o.doll?.hair||0};try{api.makeDoll(next,nextColor);}catch(e){tell(e.message);return;}selection=next;color=nextColor;swatches();paint();tell('已試穿「'+o.name+'」');});
    $$('[data-buy-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.buyOutfit);if(!o.owned)buy(o.id);});
    $('#detail').innerHTML='<p>整組購買後，部件會收進個人背包。</p>';
   }
@@ -199,7 +209,7 @@
   dyeSaving=true;dyeStatus();$('#dyeError').hidden=true;
   try{
    const result=await api.saveDye(selection,dyeDraft,dyeRequest.id);
-   data=api.state();color={savedId:result.id};dyeDraft=null;$('#dyeDialog').hidden=true;document.querySelector('.shop').inert=false;mode='bundles';render();
+   data=api.state();color={savedId:result.id};dyeDraft=null;$('#dyeDialog').hidden=true;document.querySelector('.shop').inert=false;area='bag';bagSection='wear';category='bundles';page=0;syncOuter('bag');render();
    tell('染色組合已保存！按「穿上搭配」即可在大廳使用。');$('#showWear').focus();
   }catch(e){$('#dyeError').textContent=e.message||'保存未完成，請重試';$('#dyeError').hidden=false;data=api.state();}
   finally{dyeSaving=false;dyeStatus();}

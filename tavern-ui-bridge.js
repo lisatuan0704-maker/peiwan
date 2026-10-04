@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=275';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=276';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -53,7 +53,7 @@
     let changed=false;
     const usedGroups=new Set();
     for(const [slot,ref] of Object.entries(selection)){
-      if(ref===null)continue;
+      if(ref===null){if(['pet','seat'].includes(slot))baseKeys.push(slot);continue;}
       if(ref?.base!==undefined){
         const sl=baseSlots[slot]||slot,opts=window.__ownedParts?.()[sl]?.items||[];
         if(!Number.isInteger(ref.base)||!opts.some(x=>x.idx===ref.base))throw Error('這個部件尚未取得');
@@ -72,7 +72,7 @@
     if(color){
       if(Number.isInteger(color.hair)&&color.hair>=0&&color.hair<HAIRS.length){d.hair=color.hair;if(!color.keepOriginal){delete d.hairHex;delete d.hairHex2;}}
       if(color.savedId){const saved=(window.__owned||{}).dyedHairSets?.[color.savedId];if(!saved)throw Error('找不到染色組合');
-        const refs=JSON.stringify([selection.front,selection.back]);if(refs!==JSON.stringify([saved.front,saved.back]))throw Error('染色組合必須整組穿戴');d.hairHex=saved.main;d.hairHex2=saved.tail;d.dyedHairSet=color.savedId;
+        const sameRef=(a,b)=>!!a&&!!b&&a.slot===b.slot&&(a.base!==undefined||b.base!==undefined?a.base===b.base:a.source===b.source);if(!sameRef(selection.front,saved.front)||!sameRef(selection.back,saved.back))throw Error('染色組合必須整組穿戴');d.hairHex=saved.main;d.hairHex2=saved.tail;d.dyedHairSet=color.savedId;
       }else delete d.dyedHairSet;
     }
     return dollSafe(d);
@@ -111,7 +111,7 @@
     if(!selection?.front||!selection?.back)throw Error('請先選好瀏海與後髮');
     makeDoll(selection,{},true);
     const record={name:String(draft.name||'專屬染髮').trim().slice(0,24)||'專屬染髮',front:clone(selection.front),back:clone(selection.back),main:draft.main.toLowerCase(),tail:draft.tail.toLowerCase()};
-    const same=s=>s&&['name','front','back','main','tail'].every(k=>JSON.stringify(s[k])===JSON.stringify(record[k]));
+    const same=s=>s&&['name','main','tail'].every(k=>s[k]===record[k])&&['front','back'].every(k=>{const a=s[k],b=record[k];return !!a&&!!b&&a.slot===b.slot&&(a.base!==undefined||b.base!==undefined?a.base===b.base:a.source===b.source);});
     const ownedRef=db.ref(ROOT+'/owned/'+key);let reason='保存未完成，請再試一次';
     dyeSaving=true;
     try{
