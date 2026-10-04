@@ -60,3 +60,8 @@ body.motion-off .dye-cta-art{animation:none}
 
 /* v275：染色組合保留分類列，隱藏空的部件格與分頁。 */
 #singles.showing-bundles{grid-template-rows:auto!important;height:auto!important}#singles.showing-bundles #subtabs,#singles.showing-bundles #grid,#singles.showing-bundles #pager{display:none!important}
+
+/* v277：我的染髮收進頭髮分類。 */
+#singles.has-hair-sections #subtabs{display:block!important}.hair-sections{display:flex;gap:8px;flex-wrap:wrap}.hair-sections button{min-height:38px;padding:8px 16px;border:1px solid var(--line);border-radius:6px;background:#fff8;color:var(--ink);font:inherit;cursor:pointer}.hair-sections button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}.hair-sections span{margin-left:5px;font-size:11px;opacity:.85}.hair-section-hint{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.6}
+
+#singles.has-hair-sections .browsehead{display:block!important;min-height:0;height:auto}
