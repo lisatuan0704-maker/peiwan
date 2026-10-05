@@ -27,8 +27,10 @@
   /* 最近可走點：先夾進世界，再一圈圈往外找（最多 700px） */
   function nearest(p){
     if(!p||!p.every(Number.isFinite))return [1420,690];
-    const q=[Math.round(Math.max(0,Math.min(W-1,p[0]))),Math.round(Math.max(0,Math.min(H-1,p[1])))];
-    if(okInt(q[0],q[1]))return q;
+    // 保留有效位置的小數位移；逐幀取整會讓高更新率螢幕的步伐歸零。
+    const precise=[Math.max(0,Math.min(W-1,p[0])),Math.max(0,Math.min(H-1,p[1]))];
+    const q=precise.map(Math.round);
+    if(okInt(q[0],q[1]))return precise;
     let best=null,bd=Infinity;
     for(let r=1;r<=700;r+=1){
       if(best&&r>bd+2)break;
