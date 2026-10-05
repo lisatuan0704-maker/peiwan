@@ -10,6 +10,8 @@
   const bounds=(function(){let x0=W,x1=0,y0=H,y1=0;ROWS.forEach((r,y)=>{if(r.length){y0=Math.min(y0,y);y1=Math.max(y1,y);x0=Math.min(x0,r[0]);x1=Math.max(x1,r[r.length-1]-1);}});return [x0,y0,x1,y1];})();
   function validInt(x,y){
     if(y<0||y>=H||x<0||x>=W)return false;
+    // 吧台右端為斜角：預留角色身體寬度，避免抬高後從桌側露出。
+    if(y<=370&&x>1220&&x<1330)return false;
     const r=ROWS[y];for(let i=0;i<r.length;i+=2){if(x<r[i])return false;if(x<r[i+1])return true;}return false;
   }
   const valid=p=>p&&Number.isFinite(p[0])&&Number.isFinite(p[1])&&validInt(Math.round(p[0]),Math.round(p[1]));
