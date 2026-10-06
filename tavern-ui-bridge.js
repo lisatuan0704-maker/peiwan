@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=277';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=283';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -24,6 +24,7 @@
   }
   function staff(){return Object.entries(STAFF_ALL).filter(([,s])=>s).map(([cid,s])=>({cid,theme:THEMES[cid]||null,name:s.name||'冒險者',on:!!s.on,busy:!!s.busy,card:clone(STAFF_CARDS[cid]||{})}));}
   function group(part,source,key){
+    if(['head','ear','face','hand','back'].includes(part?.group))return part.group;
     const known={'cloth0:acc1':'hand','cloth0:acc2':'head','cloth0:acc3':'head','cloth3:acc1':'hand','cloth3:acc2':'ear','cloth3:acc3':'head','cloth2:acc2':'face','cloth2:acc3':'hand'};
     if(known[source+':'+key])return known[source+':'+key];
     const n=String(part?.n||'');
@@ -33,14 +34,14 @@
     if(/尾巴|背|翅膀|披風/.test(n))return 'back';
     return 'hand';
   }
-  const category=k=>({front:'hair',back:'hair',cloth:'cloth',eye:'eye',pet:'pet',seat:'seat'}[k]||(/^acc\d*$/.test(k)?'acc':null));
+  const category=k=>({front:'hair',back:'hair',cloth:'cloth',eye:'eye',brow:'eye',pet:'pet',seat:'seat'}[k]||(/^acc\d*$/.test(k)?'acc':null));
   const slotLabel={front:'瀏海',back:'後髮',cloth:'衣服',eye:'眼神',pet:'寵物',seat:'座椅'};
   function catalog(){
     const cfg=window.__shopCfg||{},own=window.__owned||{},now=Date.now();
     return (window.__outfitList?.()||[]).map(o=>{
       const c=cfg[o.id]||{},sale=(c.active===undefined?true:!!c.active)&&(!c.start||now>=c.start)&&(!c.end||now<c.end);
       return {id:o.id,name:c.name||o.nm,price:c.price??o.pr,owned:o.id==='cloth0'||!!own[o.id],sale,
-        doll:o.doll||null,img:c.img||null,parts:Object.entries(c.parts||{}).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件')),category:category(k),group:category(k)==='acc'?group(p,o.id,k):null}))};
+        doll:o.doll||null,img:c.img||null,featured:c.seasonFeatured||0,sourceLayerCount:c.sourceLayerCount||0,parts:Object.entries(c.parts||{}).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件')),category:category(k),group:category(k)==='acc'?group(p,o.id,k):null}))};
     });
   }
   function state(){const a=typeof me==='function'?me():null;return {loggedIn:!!a,doll:clone(a?.b?.doll||{back:0,front:0,cloth:0,face:0,acc:0,hair:0}),catalog:catalog(),baseParts:window.__ownedParts?.()||{},colors:HAIRS.map(h=>h[0]),tickets:Number((window.__owned||{}).dyeTickets)||0,dyed:clone((window.__owned||{}).dyedHairSets||{})};}
@@ -132,10 +133,13 @@
       return {id:requestId,tickets:saved.dyeTickets};
     }finally{dyeSaving=false;}
   }
+  const previewJobs=new WeakMap(),imageJobs=new Map();
+  function afterPreviewImages(cv,sources,draw){const token={};previewJobs.set(cv,token);const pending=[...new Set(sources.filter(Boolean))].map(src=>{const image=csImg(src);if(image.complete&&image.naturalWidth)return null;if(!imageJobs.has(src))imageJobs.set(src,new Promise(resolve=>{image.addEventListener('load',resolve,{once:true});image.addEventListener('error',resolve,{once:true});}));return imageJobs.get(src);}).filter(Boolean);if(pending.length)Promise.all(pending).then(()=>{if(previewJobs.get(cv)===token&&cv.isConnected)draw();});}
+  function drawPreview(cv,d){const sources=[];for(const source of new Set([d.set,...Object.values(d.ps||{}),...(d.uiAccessories||[]).map(p=>p.source)])){for(const p of Object.values(window.__shopCfg?.[source]?.parts||{}))if(p?.d)sources.push(p.d);}const draw=()=>drawDollTo(cv,d,'idle');draw();afterPreviewImages(cv,sources,draw);}
   window.TinyTavernUI={open,close,isActive:()=>active,staff,state,group,makeDoll,wear,saveDye,
     collection:()=>ACH_DEF.filter(a=>TT_STATS.u.includes(a.id)||!!(a.k&&(TT_STATS[a.k]||0)>=a.need)).map(a=>({id:a.id,name:a.n,description:a.d,image:AICON[a.ic],source:'酒館成就',kind:'成就紀錄'})),
     calendar:cid=>calWeekHtml(cid),booked:cid=>new Promise(resolve=>staffBookedTimes(cid,resolve)),
-    draw:(cv,d)=>drawDollTo(cv,d,'idle'),
+    draw:drawPreview,
     drawPart(cv,ref,color){const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
       if(ref.base!==undefined){const key={front:'前髮',back:'後髮',cloth:'衣服',eye:'眼睛',brow:'眉毛'}[ref.slot];const p=TP.parts[key]?.[ref.base];if(p)tpDraw(g,p,color?.hair||0);}
       else{const p=window.__shopCfg?.[ref.source]?.parts?.[ref.slot];if(p)csDrawV(g,p,color?.hair||0,color?.hairHex,color?.hairHex2);}
