@@ -97,7 +97,7 @@
   $$('[data-color]').forEach(b=>b.onclick=()=>{color={hair:Number(b.dataset.color)};swatches();requestPaint();});
  }
  function render(){
-  document.body.dataset.area=area;document.body.dataset.section=bagSection;
+  document.body.dataset.shopCategory=category;document.body.dataset.area=area;document.body.dataset.section=bagSection;
   bagNav.hidden=area!=='bag';bagNav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.archive===bagSection)));
   const collecting=area==='bag'&&bagSection==='collection';
   keepsakes.hidden=!collecting;$('#inventory').hidden=true;$('#catalog').hidden=collecting;document.querySelector('.preview').hidden=collecting;

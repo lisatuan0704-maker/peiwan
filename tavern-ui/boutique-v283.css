@@ -12,3 +12,57 @@ body{--ink:#65433e;--accent:#a96568;--muted:#947773;--line:#dcbdb1;background:#f
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 
 @media(min-width:901px) and (max-height:1100px){.shophead{min-height:64px!important}.workspace{padding:18px 24px!important}.categories{margin:4px 0 8px}.season-visual{min-height:235px;padding:18px 13px 5px}.season-visual img,.season-visual canvas{width:205px!important;height:205px!important}.season-info{padding:15px 18px}.season-info h2{font-size:22px}.season-info p{margin-bottom:10px}.season-price{padding-top:10px;margin-bottom:10px}.catalog-head h2{font-size:25px!important}}
+
+/* v285 當季套組依實際視窗高度排版，商品操作保持在首屏。 */
+@media(min-width:601px) and (min-height:400px){
+ body[data-area=store][data-shop-category=bundles] .shop{height:100dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column}
+ body[data-area=store][data-shop-category=bundles] .shophead{height:54px!important;min-height:54px!important;flex:0 0 54px;padding:5px 20px!important}
+ body[data-area=store][data-shop-category=bundles] .workspace{flex:1 1 0!important;min-height:0!important;height:0!important;padding:12px 18px!important;display:grid!important;align-items:stretch!important;gap:18px!important}
+ body[data-area=store][data-shop-category=bundles] .catalog{min-height:0!important;height:100%!important;display:grid!important;grid-template-rows:44px 38px minmax(0,1fr)!important;gap:8px!important}
+ body[data-area=store][data-shop-category=bundles] .catalog-head{min-height:0!important;height:auto!important}.catalog-head h2{margin:0}
+ body[data-area=store][data-shop-category=bundles] .categories{margin:0!important;flex-wrap:nowrap!important;gap:5px!important}
+ body[data-area=store][data-shop-category=bundles] .categories button{min-height:34px!important;padding:6px 9px!important;flex:1 1 auto;font-size:12px!important}
+ body[data-area=store][data-shop-category=bundles] #singles,body[data-area=store][data-shop-category=bundles] #detail,body[data-area=store][data-shop-category=bundles] #bundlePager{display:none!important}
+ body[data-area=store][data-shop-category=bundles] #bundles,body[data-area=store][data-shop-category=bundles] .bundle-grid{height:100%!important;min-height:0!important;overflow:visible!important}
+ body[data-area=store][data-shop-category=bundles] .season-card{display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0;border-radius:20px}
+ body[data-area=store][data-shop-category=bundles] .season-visual{min-height:0!important;height:100%;padding:12px 12px 3px;overflow:hidden}
+ body[data-area=store][data-shop-category=bundles] .season-visual img,body[data-area=store][data-shop-category=bundles] .season-visual canvas{width:auto!important;height:calc(100% - 18px)!important;max-height:260px;max-width:100%;min-height:0;flex:1 1 0;aspect-ratio:1;object-fit:contain}
+ body[data-area=store][data-shop-category=bundles] .season-kicker{font-size:8px;line-height:14px;flex:none}
+ body[data-area=store][data-shop-category=bundles] .season-info{padding:12px 15px}.season-info h2{line-height:1.25}
+ body[data-area=store][data-shop-category=bundles] .season-info h2{font-size:20px;margin-bottom:5px}
+ body[data-area=store][data-shop-category=bundles] .season-info p{font-size:11px;margin-bottom:8px;line-height:1.5}
+ body[data-area=store][data-shop-category=bundles] .season-price{padding-top:8px;margin-bottom:8px}
+ body[data-area=store][data-shop-category=bundles] .season-price strong{font-size:24px}
+ body[data-area=store][data-shop-category=bundles] .season-actions{grid-template-columns:1fr 1fr}
+ body[data-area=store][data-shop-category=bundles] .season-actions button{min-height:36px!important}
+ body[data-area=store][data-shop-category=bundles] .preview{position:static!important;min-height:0!important;height:100%!important;padding:12px!important;display:grid!important;grid-template-rows:26px minmax(80px,1fr) 53px 62px 34px!important;gap:8px!important}
+ body[data-area=store][data-shop-category=bundles] .preview .stage{min-height:0!important;height:100%!important}
+ body[data-area=store][data-shop-category=bundles] .stage canvas{width:auto!important;height:80%!important;max-height:230px;max-width:100%;aspect-ratio:1;object-fit:contain}
+ body[data-area=store][data-shop-category=bundles] .paneltitle strong{font-size:18px!important}
+ body[data-area=store][data-shop-category=bundles] .previewbar .ghost{height:32px;min-height:0;padding:5px 12px}
+ body[data-area=store][data-shop-category=bundles] .dye-ticket{min-height:0!important}
+}
+@media(min-width:601px) and (max-height:510px){
+ body[data-area=store][data-shop-category=bundles] .season-info p{display:none}
+ body[data-area=store][data-shop-category=bundles] .season-kicker{font-size:7px;letter-spacing:1px}
+ body[data-area=store][data-shop-category=bundles] .season-price>span{display:none}
+ body[data-area=store][data-shop-category=bundles] .season-info{padding:8px 12px}
+}
+@media(max-width:600px){
+ body[data-area=store][data-shop-category=bundles] .catalog{order:0}
+ body[data-area=store][data-shop-category=bundles] .preview{order:1}
+ body[data-area=store][data-shop-category=bundles] .bundle-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ body[data-area=store][data-shop-category=bundles] .season-visual{min-height:0;height:160px;padding:8px 6px 0}
+ body[data-area=store][data-shop-category=bundles] .season-visual img{width:140px!important;height:140px!important;max-width:100%;object-fit:contain}
+ body[data-area=store][data-shop-category=bundles] .season-kicker{font-size:6px;letter-spacing:.5px}
+ body[data-area=store][data-shop-category=bundles] .season-number{font-size:26px;top:20px;right:15px}
+ body[data-area=store][data-shop-category=bundles] .season-info{padding:10px}
+ body[data-area=store][data-shop-category=bundles] .season-info h2{font-size:18px;margin-bottom:8px}
+ body[data-area=store][data-shop-category=bundles] .season-info p,body[data-area=store][data-shop-category=bundles] .season-price>span,body[data-area=store][data-shop-category=bundles] #detail{display:none}
+ body[data-area=store][data-shop-category=bundles] .season-price strong{font-size:23px}
+ body[data-area=store][data-shop-category=bundles] .season-price small{font-size:10px}
+ body[data-area=store][data-shop-category=bundles] .season-actions{grid-template-columns:1fr;gap:5px}
+ body[data-area=store][data-shop-category=bundles] .season-actions button{min-height:36px!important}
+}
+
+@media(min-width:601px) and (min-height:400px){body[data-area=store][data-shop-category=bundles] .bundle-grid{grid-template-rows:minmax(0,1fr);align-content:stretch!important}}
