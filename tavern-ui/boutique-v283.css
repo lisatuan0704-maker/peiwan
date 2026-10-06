@@ -66,3 +66,16 @@ body{--ink:#65433e;--accent:#a96568;--muted:#947773;--line:#dcbdb1;background:#f
 }
 
 @media(min-width:601px) and (min-height:400px){body[data-area=store][data-shop-category=bundles] .bundle-grid{grid-template-rows:minmax(0,1fr);align-content:stretch!important}}
+
+@media(max-width:600px) and (max-height:680px){
+ body[data-area=store][data-shop-category=bundles] .shophead{min-height:54px!important;padding:4px 12px!important}
+ body[data-area=store][data-shop-category=bundles] .workspace{padding:10px!important;gap:14px!important}
+ body[data-area=store][data-shop-category=bundles] .catalog{gap:8px!important}
+ body[data-area=store][data-shop-category=bundles] .catalog-head{min-height:36px!important;height:36px!important}
+ body[data-area=store][data-shop-category=bundles] .categories{margin:0!important;gap:5px!important}
+ body[data-area=store][data-shop-category=bundles] .categories button{min-height:32px!important;padding:5px 9px!important}
+ body[data-area=store][data-shop-category=bundles] .season-visual{height:135px}
+ body[data-area=store][data-shop-category=bundles] .season-visual img{width:115px!important;height:115px!important}
+ body[data-area=store][data-shop-category=bundles] .season-info{padding:9px}
+ body[data-area=store][data-shop-category=bundles] .season-price{padding-top:8px;margin-bottom:8px}
+}
