@@ -1,0 +1,248 @@
+{
+  "version": 280,
+  "packs": [
+    {
+      "id": "devil",
+      "name": "中華風小惡魔",
+      "layers": [
+        {
+          "id": "devil-0",
+          "name": "中華風背後蝴蝶結",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/0.中華風背後蝴蝶結.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 0.0,
+          "visible": true
+        },
+        {
+          "id": "devil-1",
+          "name": "中華風包包後髮",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/1.中華風包包後髮.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 10.1,
+          "visible": true
+        },
+        {
+          "id": "devil-2",
+          "name": "中華風紅寶石髮飾",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/2.中華風紅寶石髮飾.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 20.2,
+          "visible": true
+        },
+        {
+          "id": "devil-3",
+          "name": "中華風眼",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/3.中華風眼.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 30.3,
+          "visible": true
+        },
+        {
+          "id": "devil-4",
+          "name": "中華風眉",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/4.中華風眉.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 40.4,
+          "visible": true
+        },
+        {
+          "id": "devil-5",
+          "name": "中華風小惡魔翅膀",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/5.中華風小惡魔翅膀.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 50.5,
+          "visible": true
+        },
+        {
+          "id": "devil-6",
+          "name": "中華風呆毛前髮",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/6.中華風呆毛前髮.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 60.6,
+          "visible": true
+        },
+        {
+          "id": "devil-7",
+          "name": "中華風金耳環",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/7.中華風金耳環.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 70.7,
+          "visible": true
+        },
+        {
+          "id": "devil-8",
+          "name": "中華風小惡魔角",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/8.中華風小惡魔角.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 80.8,
+          "visible": true
+        },
+        {
+          "id": "devil-9",
+          "name": "中華風拋袖",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/8.中華風拋袖.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 80.9,
+          "visible": true
+        },
+        {
+          "id": "devil-10",
+          "name": "中華風小籠包",
+          "src": "../img/outfit-studio-v280/時裝-中華風小惡魔/9.中華風小籠包.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 91.0,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "id": "valentine",
+      "name": "心動情人",
+      "layers": [
+        {
+          "id": "valentine-0",
+          "name": "心動背景愛心瓣",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/0.心動背景愛心瓣.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 0.0,
+          "visible": true
+        },
+        {
+          "id": "valentine-1",
+          "name": "心動後髮",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/1.心動後髮.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 10.1,
+          "visible": true
+        },
+        {
+          "id": "valentine-2",
+          "name": "心動眉",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/2.心動眉.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 20.2,
+          "visible": true
+        },
+        {
+          "id": "valentine-3",
+          "name": "心動眼",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/2.心動眼.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 20.3,
+          "visible": true
+        },
+        {
+          "id": "valentine-4",
+          "name": "心動下褲",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/3.心動下褲.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 30.4,
+          "visible": true
+        },
+        {
+          "id": "valentine-5",
+          "name": "心動花襯衫",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/3.心動花襯衫.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 30.5,
+          "visible": true
+        },
+        {
+          "id": "valentine-6",
+          "name": "心動披風",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/4.心動披風.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 40.6,
+          "visible": true
+        },
+        {
+          "id": "valentine-7",
+          "name": "心動披肩",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/5.心動披肩.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 50.7,
+          "visible": true
+        },
+        {
+          "id": "valentine-8",
+          "name": "心動耳環",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/6.心動耳環.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 60.8,
+          "visible": true
+        },
+        {
+          "id": "valentine-9",
+          "name": "心動前髮",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/7.心動前髮.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 70.9,
+          "visible": true
+        },
+        {
+          "id": "valentine-10",
+          "name": "心動墨鏡",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/8.心動墨鏡.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 81.0,
+          "visible": true
+        },
+        {
+          "id": "valentine-11",
+          "name": "心動一束花",
+          "src": "../img/outfit-studio-v280/時裝-心動情人/9.心動一束花.png",
+          "x": 0,
+          "y": 0,
+          "scale": 100,
+          "z": 91.1,
+          "visible": true
+        }
+      ]
+    }
+  ],
+  "body": "../img/outfit-studio-v280/body.png"
+}
