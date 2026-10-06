@@ -7,9 +7,9 @@
   const THEMES={'-OxY46ezlpnRt64hUIw9':'KABUKI','-OxY7C4vDkgsr1zcyWbk':'RIRA','-OzbfbQcF6J6fIR6YYGh':'MOMO'};
   let frame, overlay, trigger, pending, active=false;
   const clone=x=>JSON.parse(JSON.stringify(x));
-  function close(){if(overlay)overlay.hidden=true;active=false;trigger?.focus?.();}
+  function close(){if(overlay)overlay.hidden=true;active=false;document.body.classList.remove('tt-approved-open');trigger?.focus?.();}
   function open(view='roster',cid=null){
-    trigger=document.activeElement;pending={view,cid,mode:pkMode};active=true;
+    trigger=document.activeElement;pending={view,cid,mode:pkMode};active=true;document.body.classList.add('tt-approved-open');
     if(!overlay){
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
