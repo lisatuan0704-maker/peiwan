@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=285';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=287';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -36,12 +36,39 @@
   }
   const category=k=>({front:'hair',back:'hair',cloth:'cloth',eye:'eye',brow:'eye',pet:'pet',seat:'seat'}[k]||(/^acc\d*$/.test(k)?'acc':null));
   const slotLabel={front:'瀏海',back:'後髮',cloth:'衣服',eye:'眼神',pet:'寵物',seat:'座椅'};
+  // 拆件使用繪師原圖；不修改商城商品、持有紀錄或舊穿搭。
+  function partsFor(source){
+    const parts=window.__shopCfg?.[source]?.parts||{};
+    if(source!=='season283_devil')return parts;
+    const root='img/outfit-studio-v280/時裝-中華風小惡魔/';
+    const part=(n,file,group,z)=>({n,d:root+file,x:0,y:0,g:0,group,z,independent:true});
+    return {...parts,
+      acc1:part('小惡魔蝴蝶結','0.中華風背後蝴蝶結.png','back','back'),
+      acc2:{...part('紅寶石髮飾','2.中華風紅寶石髮飾.png','head','headTop'),requiresHair:['cloth0','season283_devil'],requirement:'限定髮型：波浪雙馬尾／中華風包包頭'},
+      acc5:part('小惡魔翅膀','5.中華風小惡魔翅膀.png','back','back'),
+      acc6:part('小惡魔角','8.中華風小惡魔角.png','head','headTop')};
+  }
+  const accessoryKey=p=>'accessory:'+(p.independent?p.source+':'+p.slot:p.group);
+  function expandAccessories(refs,d){
+    if(d?.uiAccessoryVersion>=287)return refs;
+    return refs.flatMap(r=>r.source==='season283_devil'&&['acc1','acc2'].includes(r.slot)?[r,{source:r.source,slot:r.slot==='acc1'?'acc5':'acc6'}]:[r]);
+  }
+  function compatible(p,selection){
+    if(!p.requiresHair)return true;
+    const hair=selection.back;
+    return !!hair&&(p.requiresHair.includes(hair.source)||(hair.base===0&&hair.slot==='back'));
+  }
+  function normalizeSelection(selection){
+    const next={...selection};
+    for(const [key,r] of Object.entries(next))if(key.startsWith('accessory:')&&r){const p=validPart(r);if(p&&!compatible(p,next))next[key]=null;}
+    return next;
+  }
   function catalog(){
     const cfg=window.__shopCfg||{},own=window.__owned||{},now=Date.now();
     return (window.__outfitList?.()||[]).map(o=>{
       const c=cfg[o.id]||{},sale=(c.active===undefined?true:!!c.active)&&(!c.start||now>=c.start)&&(!c.end||now<c.end);
       return {id:o.id,name:c.name||o.nm,price:c.price??o.pr,owned:o.id==='cloth0'||!!own[o.id],sale,
-        doll:o.doll||null,img:c.img||null,featured:c.seasonFeatured||0,sourceLayerCount:c.sourceLayerCount||0,parts:Object.entries(c.parts||{}).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件')),category:category(k),group:category(k)==='acc'?group(p,o.id,k):null}))};
+        doll:o.doll||null,img:c.img||null,featured:c.seasonFeatured||0,sourceLayerCount:c.sourceLayerCount||0,parts:Object.entries(partsFor(o.id)).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件')),category:category(k),group:category(k)==='acc'?group(p,o.id,k):null,independent:!!p.independent,requiresHair:p.requiresHair,requirement:p.requirement}))};
     });
   }
   function state(){const a=typeof me==='function'?me():null;return {loggedIn:!!a,doll:clone(a?.b?.doll||{back:0,front:0,cloth:0,face:0,acc:0,hair:0}),catalog:catalog(),baseParts:window.__ownedParts?.()||{},colors:HAIRS.map(h=>h[0]),tickets:Number((window.__owned||{}).dyeTickets)||0,dyed:clone((window.__owned||{}).dyedHairSets||{})};}
@@ -62,14 +89,16 @@
       }
       const p=validPart(ref,owned);if(!p)throw Error('搭配包含尚未取得或已移除的部件');
       if(p.category==='acc'){
-        if(slot!=='accessory:'+p.group||usedGroups.has(p.group))throw Error('同一配件部位只能穿戴一件');
-        usedGroups.add(p.group);
+        const place=accessoryKey(p);
+        if(slot!==place||usedGroups.has(place))throw Error('同一配件部位只能穿戴一件');
+        if(!compatible(p,selection))throw Error(p.requirement);
+        usedGroups.add(place);
       }else if(slot!==p.slot)throw Error('部件位置不正確');
       // 商城原配件鍵可能重複，實際組合另存於既有 doll 的自訂穿戴欄位。
       if(!slot.startsWith('accessory:'))ps[p.slot]=p.source;
       changed=true;
     }
-    if(changed){delete d.set;d.ps=ps;d.uiBaseSlots=baseKeys;d.acc=0;d.uiAccessories=Object.entries(selection).filter(([s,r])=>s.startsWith('accessory:')&&r).map(([,r])=>({source:r.source,slot:r.slot}));}
+    if(changed||Object.keys(selection).some(k=>k.startsWith('accessory:'))){delete d.set;d.ps=ps;d.uiBaseSlots=baseKeys;d.acc=0;d.uiAccessoryVersion=287;d.uiAccessories=Object.entries(selection).filter(([s,r])=>s.startsWith('accessory:')&&r).map(([,r])=>({source:r.source,slot:r.slot}));}
     if(color){
       if(Number.isInteger(color.hair)&&color.hair>=0&&color.hair<HAIRS.length){d.hair=color.hair;if(!color.keepOriginal){delete d.hairHex;delete d.hairHex2;}}
       if(color.savedId){const saved=(window.__owned||{}).dyedHairSets?.[color.savedId];if(!saved)throw Error('找不到染色組合');
@@ -81,7 +110,7 @@
   // 這份新穿戴資料才套用新部位規則；舊角色仍使用既有繪製方式。
   const oldAcc=csAccList,oldZ=csAccZ,oldDraw=drawDollTo,oldPick=csPick;
   csPick=function(d,key){return Array.isArray(d?.uiBaseSlots)&&d.uiBaseSlots.includes(key)?null:oldPick(d,key);};
-  csAccList=function(d){if(!Array.isArray(d?.uiAccessories))return oldAcc(d);return d.uiAccessories.map(r=>{const p=window.__shopCfg?.[r.source]?.parts?.[r.slot];return p?{...p,z:group(p,r.source,r.slot)==='head'?'headTop':p.z}:null;}).filter(Boolean);};
+  csAccList=function(d){if(!Array.isArray(d?.uiAccessories))return oldAcc(d);return expandAccessories(d.uiAccessories,d).map(r=>{const p=partsFor(r.source)[r.slot];const hair=d.uiBaseSlots?.includes('back')?{base:d.back||0,slot:'back'}:{source:d.ps?.back||d.set,base:!d.ps?.back&&!d.set?d.back||0:undefined,slot:'back'};return p&&compatible(p,{back:hair})?{...p,z:group(p,r.source,r.slot)==='head'?'headTop':p.z}:null;}).filter(Boolean);};
   csAccZ=function(p){return p?.z==='headTop'?'headTop':oldZ(p);};
   // 保留所有繪製參數，包含身體／頭髮動畫；不能只轉傳姿勢而畫成靜態。
   drawDollTo=function(cv,d,pose,...renderOptions){
@@ -135,14 +164,14 @@
   }
   const previewJobs=new WeakMap(),imageJobs=new Map();
   function afterPreviewImages(cv,sources,draw){const token={};previewJobs.set(cv,token);const pending=[...new Set(sources.filter(Boolean))].map(src=>{const image=csImg(src);if(image.complete&&image.naturalWidth)return null;if(!imageJobs.has(src))imageJobs.set(src,new Promise(resolve=>{image.addEventListener('load',resolve,{once:true});image.addEventListener('error',resolve,{once:true});}));return imageJobs.get(src);}).filter(Boolean);if(pending.length)Promise.all(pending).then(()=>{if(previewJobs.get(cv)===token&&cv.isConnected)draw();});}
-  function drawPreview(cv,d){const sources=[];for(const source of new Set([d.set,...Object.values(d.ps||{}),...(d.uiAccessories||[]).map(p=>p.source)])){for(const p of Object.values(window.__shopCfg?.[source]?.parts||{}))if(p?.d)sources.push(p.d);}const draw=()=>drawDollTo(cv,d,'idle');draw();afterPreviewImages(cv,sources,draw);}
-  window.TinyTavernUI={open,close,isActive:()=>active,staff,state,group,makeDoll,wear,saveDye,
+  function drawPreview(cv,d){const sources=[];for(const source of new Set([d.set,...Object.values(d.ps||{}),...(d.uiAccessories||[]).map(p=>p.source)])){for(const p of Object.values(partsFor(source)))if(p?.d)sources.push(p.d);}const draw=()=>drawDollTo(cv,d,'idle');draw();afterPreviewImages(cv,sources,draw);}
+  window.TinyTavernUI={open,close,isActive:()=>active,staff,state,group,makeDoll,wear,saveDye,accessoryKey,expandAccessories,compatible,normalizeSelection,
     collection:()=>ACH_DEF.filter(a=>TT_STATS.u.includes(a.id)||!!(a.k&&(TT_STATS[a.k]||0)>=a.need)).map(a=>({id:a.id,name:a.n,description:a.d,image:AICON[a.ic],source:'酒館成就',kind:'成就紀錄'})),
     calendar:cid=>calWeekHtml(cid),booked:cid=>new Promise(resolve=>staffBookedTimes(cid,resolve)),
     draw:drawPreview,
     drawPart(cv,ref,color){const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
       if(ref.base!==undefined){const key={front:'前髮',back:'後髮',cloth:'衣服',eye:'眼睛',brow:'眉毛'}[ref.slot];const p=TP.parts[key]?.[ref.base];if(p)tpDraw(g,p,color?.hair||0);}
-      else{const p=window.__shopCfg?.[ref.source]?.parts?.[ref.slot];if(p)csDrawV(g,p,color?.hair||0,color?.hairHex,color?.hairHex2);}
+      else{const p=partsFor(ref.source)[ref.slot];if(p){const draw=()=>{g.clearRect(0,0,64,64);csDrawV(g,p,color?.hair||0,color?.hairHex,color?.hairHex2);};draw();afterPreviewImages(cv,[p.d],draw);}}
     },
     choose(ids,mode){
       const keys=[...new Set((Array.isArray(ids)?ids:[ids]).filter(Boolean))];

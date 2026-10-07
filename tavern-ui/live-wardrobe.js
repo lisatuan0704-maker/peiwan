@@ -20,7 +20,7 @@
  }
 
  const ref=p=>p.base!==undefined?{base:p.base,slot:p.slot}:{source:p.source,slot:p.slot};
- const key=p=>p.category==='acc'?'accessory:'+p.group:p.slot;
+ const key=p=>p.category==='acc'?(api.accessoryKey?.(p)||'accessory:'+p.group):p.slot;
  function isTrying(p){
   if(p.parts)return p.parts.every(isTrying);
   const r=selection[key(p)];
@@ -36,8 +36,8 @@
    next[sl]=custom?{source,slot:sl}:['pet','seat'].includes(sl)?null:{base:d[native]||0,slot:sl};
   }
   const accessories=d.uiAccessories||data.catalog.find(o=>o.id===d.set)?.parts.filter(p=>p.category==='acc')||Object.entries(d.ps||{}).filter(([k])=>/^acc\d*$/.test(k)).map(([slot,source])=>({source,slot}));
-  accessories.forEach(r=>{const p=data.catalog.find(o=>o.id===r.source)?.parts.find(p=>p.slot===r.slot);if(p)next[key(p)]=ref(p);});
-  return next;
+  (api.expandAccessories?.(accessories,d)||accessories).forEach(r=>{const p=data.catalog.find(o=>o.id===r.source)?.parts.find(p=>p.slot===r.slot);if(p)next[key(p)]=ref(p);});
+  return api.normalizeSelection?.(next)||next;
  }
  function init(){
   dyeDraft=null;$('#dyeDialog').hidden=true;document.querySelector('.shop').inert=false;
@@ -68,11 +68,17 @@
  }
  function tryItem(p){
   if(!p)return;
-  const next={...selection},nextColor=p.category==='hair'?{hair:data.doll.hair||0}:color;
-  if(p.parts)p.parts.forEach(q=>next[key(q)]=ref(q));else next[key(p)]=ref(p);
+  let next={...selection};const nextColor=p.category==='hair'?{hair:data.doll.hair||0}:color;
+  const removing=['acc','pet','seat'].includes(p.category)&&isTrying(p);
+  if(removing)next[key(p)]=null;
+  else if(p.parts)p.parts.forEach(q=>next[key(q)]=ref(q));else next[key(p)]=ref(p);
+  const normalized=p.category==='hair'?(api.normalizeSelection?.(next)||next):next;
+  const removedDependency=Object.keys(next).some(k=>next[k]&&normalized[k]===null);next=normalized;
   try{api.makeDoll(next,nextColor);}catch(e){tell(e.message);return;}
   selection=next;color=nextColor;if(p.category==='hair')dyeDraft=null;
   selected=p.id;render();
+  if(removing)tell('已卸下「'+p.name+'」；完成後按「穿上搭配」保存。');
+  else if(removedDependency)tell('已更換髮型，並卸下不適用的紅寶石髮飾。');
  }
  function drawPart(cv,p){
   if(p.parts){const c=cv.getContext('2d');c.clearRect(0,0,64,64);for(const slot of ['back','front']){const q=p.parts.find(x=>x.slot===slot);if(!q)continue;const tmp=document.createElement('canvas');tmp.width=tmp.height=64;api.drawPart(tmp,ref(q),color);c.drawImage(tmp,0,0);}}
@@ -87,7 +93,7 @@
   if(dyeVisible)return;
   const list=entries();$$('#singles:not([hidden]) [data-preview]').forEach(cv=>{const p=list.find(p=>p.id===cv.dataset.preview);if(p)drawPart(cv,p);});
   $$('#bundles:not([hidden]) [data-outfit-preview]').forEach(cv=>{const o=data.catalog.find(o=>o.id===cv.dataset.outfitPreview);if(o)api.draw(cv,api.makeDoll(outfitSelection(o),{hair:o.doll?.hair||0}));});
-  $$('#bundles:not([hidden]) [data-dyed-preview]').forEach(cv=>{const s=data.dyed[cv.dataset.dyedPreview];if(s)api.draw(cv,api.makeDoll({...selection,front:s.front,back:s.back},{savedId:cv.dataset.dyedPreview}));});
+  $$('#bundles:not([hidden]) [data-dyed-preview]').forEach(cv=>{const s=data.dyed[cv.dataset.dyedPreview];if(s)api.draw(cv,api.makeDoll(api.normalizeSelection({...selection,front:s.front,back:s.back}),{savedId:cv.dataset.dyedPreview}));});
  }
  function setArea(next){area=next==='bag'?'bag':'store';bagSection='wear';category=area==='store'?'bundles':'hair';hairSection='original';page=0;selected=null;filter='all';mode='singles';render();}
  window.ttDyeShop=()=>{if(area!=='store'){init();setArea('store');syncOuter('store');}category='dye';render();};
@@ -129,13 +135,13 @@
   $$('[data-group]').forEach(b=>b.onclick=()=>{filter=b.dataset.group;page=0;selected=null;render();});
   const list=entries(),per=innerWidth<601?2:6,pages=Math.max(1,Math.ceil(list.length/per));page=Math.min(page,pages-1);
   if(!list.some(p=>p.id===selected))selected=list.slice(page*per,(page+1)*per).find(isTrying)?.id||null;
-  $('#grid').innerHTML=list.slice(page*per,(page+1)*per).map((p,i)=>'<button class="item" data-item="'+esc(p.id)+'" aria-label="試穿'+esc(p.name)+'" aria-pressed="'+isTrying(p)+'"><span class="itemtop"><span class="item-number">'+String(page*per+i+1).padStart(2,'0')+'</span><span class="status">'+(p.product.owned?'已擁有':'')+'</span></span><span class="thumb"><canvas width="64" height="64" data-preview="'+esc(p.id)+'"></canvas></span><span class="item-caption"><strong>'+esc(p.name)+'</strong><small>'+esc(area==='bag'?'已收藏 · 可搭配':p.product.owned?'已收藏':'整組 '+p.product.price+' 金幣')+'</small></span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'這個分類還沒有已取得的部件。':'目前沒有上架商品。')+'</p>';
+  $('#grid').innerHTML=list.slice(page*per,(page+1)*per).map((p,i)=>'<button class="item" data-item="'+esc(p.id)+'" aria-label="'+(isTrying(p)&&['acc','pet','seat'].includes(p.category)?'卸下':'試穿')+esc(p.name)+'" aria-pressed="'+isTrying(p)+'"><span class="itemtop"><span class="item-number">'+String(page*per+i+1).padStart(2,'0')+'</span><span class="status">'+(p.product.owned?'已擁有':'')+'</span></span><span class="thumb"><canvas width="64" height="64" data-preview="'+esc(p.id)+'"></canvas></span><span class="item-caption"><strong>'+esc(p.name)+'</strong><small>'+esc(isTrying(p)?(['acc','pet','seat'].includes(p.category)?'已搭配 · 再點卸下':'已搭配'):area==='bag'?'已收藏 · 點選搭配':p.product.owned?'已收藏':'整組 '+p.product.price+' 金幣')+'</small>'+(p.requirement?'<small class="accessory-requirement">'+esc(p.requirement)+'</small>':'')+'</span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'這個分類還沒有已取得的部件。':'目前沒有上架商品。')+'</p>';
   $$('[data-item]').forEach(b=>b.onclick=()=>tryItem(list.find(p=>p.id===b.dataset.item)));
   $('#pager').innerHTML='<button id="prevPage" '+(!page?'disabled':'')+'>←</button><span>'+String(page+1).padStart(2,'0')+' / '+String(pages).padStart(2,'0')+'</span><button id="nextPage" '+(page+1>=pages?'disabled':'')+'>→</button><small>'+list.length+' 款</small>';
   $('#prevPage').onclick=()=>{page--;selected=null;render();};$('#nextPage').onclick=()=>{page++;selected=null;render();};
   const p=list.find(p=>p.id===selected);
-  $('#detail').innerHTML=p?'<div><small class="overline">'+(p.category==='acc'?'ACCESSORY / '+groupNames[p.group]:'YOUR STYLE')+'</small><h2>'+esc(p.name)+'</h2><p>'+esc(p.product.owned?'已取得，可自由搭配。':'包含於「'+p.product.name+'」，購買整組後可拆件搭配。')+'</p></div><div class="actions">'+(['acc','pet','seat'].includes(p.category)?'<button class="ghost" id="removePart">卸下</button>':'')+'<button class="primary" id="itemAction">'+(area==='bag'?'穿上目前搭配 →':p.product.owned?'已擁有':'選購整組 →')+'</button></div>':'<p>挑選另一個分類，繼續找喜歡的造型。</p>';
-  if(p){$('#itemAction').disabled=area==='store'&&p.product.owned;$('#itemAction').onclick=()=>area==='bag'?wear():!p.product.owned&&buy(p.product.id);if($('#removePart'))$('#removePart').onclick=()=>{selection[key(p)]=null;render();};}
+  $('#detail').innerHTML=p?'<div><small class="overline">'+(p.category==='acc'?'ACCESSORY / '+groupNames[p.group]:'YOUR STYLE')+'</small><h2>'+esc(p.name)+'</h2><p>'+esc(p.requirement||(p.product.owned?'已取得，可自由搭配。':'包含於「'+p.product.name+'」，購買整組後可拆件搭配。'))+'</p></div><div class="actions">'+(['acc','pet','seat'].includes(p.category)?'<span class="accessory-toggle-hint">點選配件搭配，再點一次卸下</span>':'')+'<button class="primary" id="itemAction">'+(area==='bag'?'穿上目前搭配 →':p.product.owned?'已擁有':'選購整組 →')+'</button></div>':'<p>挑選另一個分類，繼續找喜歡的造型。</p>';
+  if(p){$('#itemAction').disabled=area==='store'&&p.product.owned;$('#itemAction').onclick=()=>area==='bag'?wear():!p.product.owned&&buy(p.product.id);}
   if(mode==='bundles')renderBundles();
   dyeCta();swatches();paint();clearTimeout(render.imageTimer);render.imageTimer=setTimeout(paint,450);
  }
@@ -165,7 +171,7 @@
    const saved=Object.entries(data.dyed);
    $('#bundlegrid').innerHTML=saved.map(([id,s])=>'<article class="bundle saved-dye-bundle"><div class="bundlebody"><small>MY HAIR</small><h2>'+esc(s.name||'專屬染髮')+'</h2><canvas class="dyed-preview" width="64" height="64" data-dyed-preview="'+esc(id)+'"></canvas><p>已固定瀏海、後髮與髮色。再次穿戴不扣券。</p><button class="primary" data-saved="'+esc(id)+'">試穿這組</button></div></article>').join('')||'<div class="live-empty"><p>還沒有保存的染髮。</p><button class="primary" id="emptyDye">開始染髮</button><p>先選好瀏海與後髮，再調整專屬髮色。</p></div>';
    if($('#emptyDye'))$('#emptyDye').onclick=openDye;
-   $$('[data-saved]').forEach(b=>b.onclick=()=>{const s=data.dyed[b.dataset.saved];selection.front=s.front;selection.back=s.back;color={savedId:b.dataset.saved};swatches();paint();$('#detail').innerHTML='<p>已試穿完整染色組合。</p><button class="primary" id="wearSaved">穿上這組</button>';$('#wearSaved').onclick=wear;});
+   $$('[data-saved]').forEach(b=>b.onclick=()=>{const s=data.dyed[b.dataset.saved];selection=api.normalizeSelection({...selection,front:s.front,back:s.back});color={savedId:b.dataset.saved};swatches();paint();$('#detail').innerHTML='<p>已試穿完整染色組合。</p><button class="primary" id="wearSaved">穿上這組</button>';$('#wearSaved').onclick=wear;});
    $('#detail').innerHTML='<p>選一款我的染髮，即可試穿；再次穿戴不扣券。</p>';
   }else{
    const available=products().filter(o=>o.parts.length),featured=available.filter(o=>o.featured===283),show=featured.length?featured:available;

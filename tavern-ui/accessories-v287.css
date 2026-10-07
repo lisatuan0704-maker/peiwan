@@ -1,0 +1,6 @@
+/* 限定配件的名稱、穿戴狀態與適用髮型皆完整顯示。 */
+.item:has(.accessory-requirement){grid-template-rows:minmax(80px,1fr) auto;min-height:190px}
+.item:has(.accessory-requirement) .item-caption{height:auto;min-height:68px;justify-content:center;gap:3px}
+.item:has(.accessory-requirement) .item-caption>*{flex-shrink:0}
+.item .accessory-requirement{white-space:normal;line-height:1.5}
+.accessory-toggle-hint{font-size:11px;color:var(--muted);max-width:150px;line-height:1.6}

@@ -1,0 +1,26 @@
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
+const bridge=fs.readFileSync('tavern-ui-bridge.js','utf8'),ui=fs.readFileSync('tavern-ui/live-wardrobe.js','utf8');
+const products=JSON.parse(fs.readFileSync('img/season-v283/products.json','utf8')).products;
+const original=JSON.stringify(products);let doll={back:0,front:0,cloth:0,face:0,hair:0};
+const c={window:{__shopCfg:products,__owned:{season283_devil:true,season283_valentine:true},__outfitList:()=>Object.entries(products).map(([id,v])=>({id,nm:v.name,pr:v.price})),__ownedParts:()=>Object.fromEntries(['back','front','cloth','face','brow'].map(k=>[k,{items:[{idx:0},{idx:1}]}]))},me:()=>({b:{doll}}),HAIRS:[['#fff']],dollSafe:x=>JSON.parse(JSON.stringify(x)),console};
+vm.createContext(c);
+vm.runInContext('const clone=x=>JSON.parse(JSON.stringify(x));'+bridge.slice(bridge.indexOf('  function group('),bridge.indexOf('  // 這份新穿戴資料'))+';this.api={state,makeDoll,accessoryKey,expandAccessories,compatible,normalizeSelection};',c);
+let cat=c.api.state().catalog,devil=cat.find(p=>p.id==='season283_devil');
+assert.equal(devil.parts.filter(p=>p.category==='acc').length,6);
+assert(!devil.parts.some(p=>p.name.includes('與')));
+const parts=devil.parts.filter(p=>['acc1','acc2','acc5','acc6'].includes(p.slot));
+const sel={back:{base:0,slot:'back'}};
+for(const p of parts)sel[c.api.accessoryKey(p)]={source:p.source,slot:p.slot};
+let d=c.api.makeDoll(sel,{},true);assert.equal(d.uiAccessories.length,4);assert.equal(d.uiAccessoryVersion,287);
+assert.equal(c.api.makeDoll(c.api.normalizeSelection({...sel,back:{source:'season283_devil',slot:'back'}}),{},true).uiAccessories.length,4);
+const other=c.api.normalizeSelection({...sel,back:{base:1,slot:'back'}});assert.equal(c.api.makeDoll(other,{},true).uiAccessories.length,3);
+assert.throws(()=>c.api.makeDoll({...sel,back:{base:1,slot:'back'}},{},true),/限定髮型/);
+c.window.__owned.season283_devil=false;assert.throws(()=>c.api.makeDoll(sel,{},true),/尚未取得/);c.window.__owned.season283_devil=true;
+const legacy=[{source:'season283_devil',slot:'acc1'},{source:'season283_devil',slot:'acc2'}];assert.equal(c.api.expandAccessories(legacy,{}).length,4);assert.equal(c.api.expandAccessories(legacy,{uiAccessoryVersion:287}).length,2);
+c.data=c.api.state();c.selection=sel;c.color={};c.selected=null;c.dyeDraft=null;c.tell=()=>{};c.render=()=>{};
+for(const pattern of [/const ref=p=>[^\n]+/,/const key=p=>[^\n]+/,/function isTrying\([^]*?\n }/,/function selectionFromDoll\([^]*?\n }/,/function tryItem\([^]*?\n }/])vm.runInContext(ui.match(pattern)[0],c);
+for(const p of parts){c.tryItem(p);assert.equal(c.selection[c.api.accessoryKey(p)],null);assert.equal(c.api.makeDoll(c.selection,{},true).uiAccessories.length,3);c.tryItem(p);assert.equal(c.api.makeDoll(c.selection,{},true).uiAccessories.length,4);}
+const restored=c.selectionFromDoll(c.api.makeDoll(c.selection,{},true));assert.equal(c.api.makeDoll(restored,{},true).uiAccessories.length,4);
+const oldRestored=c.selectionFromDoll({back:0,uiAccessories:legacy});assert.equal(c.api.makeDoll(oldRestored,{},true).uiAccessories.length,4);
+assert.equal(JSON.stringify(products),original,'不得改寫商品來源資料');
+console.log('PASS: 四件分開、同時搭配、逐件切換、兩種適用髮型、換髮卸下、不適用拒絕、所有權驗證、舊穿搭展開、新穿搭重開、來源資料不變');
