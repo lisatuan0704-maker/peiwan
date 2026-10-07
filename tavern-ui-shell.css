@@ -6,3 +6,8 @@
 /* v286 視窗開啟時收起背景個人頭像，保留位置避免版面跳動。 */
 body.tt-approved-open #hud2{visibility:hidden!important;pointer-events:none!important}
 body.tt-approved-open #hud2 *{animation-play-state:paused!important}
+
+/* v288 新玩家先完成定位；背包／名簿開啟時不顯示背景角色。 */
+#world .npc.tt-await-position{visibility:hidden!important;pointer-events:none!important}
+body.tt-approved-open #world .npc{opacity:0!important;pointer-events:none!important}
+body.tt-approved-open #world .npc,body.tt-approved-open #world .npc *{animation-play-state:paused!important}
