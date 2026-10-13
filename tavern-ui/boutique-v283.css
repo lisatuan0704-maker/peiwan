@@ -79,3 +79,11 @@ body{--ink:#65433e;--accent:#a96568;--muted:#947773;--line:#dcbdb1;background:#f
  body[data-area=store][data-shop-category=bundles] .season-info{padding:9px}
  body[data-area=store][data-shop-category=bundles] .season-price{padding-top:8px;margin-bottom:8px}
 }
+
+/* v289 染髮券依文字高度排版，避免窄欄換行後超出卡片。 */
+body[data-area=bag] .preview{grid-template-rows:auto minmax(205px,1fr) auto auto auto!important}
+.dye-ticket{height:auto!important;min-height:64px;display:flex;align-items:center;gap:10px;padding:10px 12px!important;box-sizing:border-box;flex-shrink:0}
+.dye-ticket>.dye-cta-text{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;text-align:left}
+.dye-ticket strong,.dye-ticket small{white-space:normal;overflow-wrap:anywhere;line-height:1.5!important}
+.dye-ticket>b,.dye-ticket>svg{flex-shrink:0}
+@media(max-width:600px){body[data-area=bag] .preview{grid-template-rows:28px auto auto auto!important}.dye-ticket{gap:7px;padding:9px!important}}

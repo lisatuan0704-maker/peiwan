@@ -1645,19 +1645,6 @@ body.artBub.bub3s .npc .bub{
   <div id="ordList" style="max-height:58vh;overflow-y:auto;overscroll-behavior:contain"></div>
   <div class="btns"><button class="sc-back" onclick="shopClose()">關閉</button></div>
 </div></div>
-<div class="shopModal" id="merchM"><div class="shopCard">
-  <h3>周邊專區</h3>
-  <div class="paybox">
-    <b>期間限定預購制</b><br>
-    限定期間內付款預購,收單後才開始製作,每檔<b>限量、不再重販</b>。錯過就真的沒有了唷。
-  </div>
-  <div class="ordItem"><b>第一彈</b> —— Coming Soon</div>
-  <div class="ordItem">會員每月限定小禮(套餐會員限定,不另售)</div>
-  <div class="btns">
-    <button class="sc-back" onclick="merchM.style.display='none'">下次再來</button>
-    <button class="sc-go" onclick="window.open('https://discord.gg/aK9GFarxm')">開賣時通知我 → 加入 Discord</button>
-  </div>
-</div></div>
 <div class="shopModal" id="boardM"><div class="shopCard">
   <h3>掌櫃布告欄</h3>
   <div id="boardBody"></div>
@@ -1682,7 +1669,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v288</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v289</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3155,7 +3142,6 @@ function tick(now){
         a.moving=true;
       }
     }
-    else if(a.merch){ /* 周邊專區固定站攤 */ }
     else if(!a.isMe && posMap[a.key]){
       TTPresence.receive(a,posMap[a.key],now,(point,map)=>{
         let c=clampIn(MAPS[map].floor,...point);
@@ -3190,7 +3176,7 @@ function tick(now){
         if(Math.abs(dxp)>12){const nl=dxp<0; if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
       }
     }
-    if(a.isMe||!posMap[a.key]||a.staff||a.slime||a.cloak||a.merch){ const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : MAPS[a.mapLoc||'hall'].floor);
+    if(a.isMe||!posMap[a.key]||a.staff||a.slime||a.cloak){ const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : MAPS[a.mapLoc||'hall'].floor);
       let c=clampIn(fl,a.x,a.y);
       if(fl===MAPS.hall.floor)c=TTScene.nearest([c[0]*1600,c[1]*900]).map((v,i)=>v/(i?900:1600));
       a.x=c[0]; a.y=c[1]; }
@@ -3218,7 +3204,7 @@ function tick(now){
     const size=Math.round(actorMap==='hall'?TTScene.size(a.y):(a.slime?150:120)*depth);
     let walking=(a.state==='walk'||a.state==='walk2'||a.state==='walkKey'||(a.staff&&(a.state==='enter'||a.state==='toDoor'||a.state==='toServe'||a.state==='toDoorBack'||a.state==='back'||a.state==='exit'||a.chase))||(a.cloak&&a.moving));
     if(a.slime) walking=(a.state==='walk');
-    a._renderVisible=actorMap===curMap&&(a.staff||a.merch||a.slime||a.cloak||a.isMe||!!posMap[a.key]);
+    a._renderVisible=actorMap===curMap&&(a.staff||a.slime||a.cloak||a.isMe||!!posMap[a.key]);
     const tt=now/1000;
     const hairOn=TEST_MODE&&!a.slime&&a._renderVisible&&!_hairMotionPreference.matches;
     a._hairMotion=hairOn?{mode:walking?'walk':'idle',phase:Math.floor(now/(walking?140:230)+a.seed)%(walking?8:4)}:null;
@@ -3251,7 +3237,7 @@ function tick(now){
     if(a.slime && a.bopT>0){ sqy*=1-0.35*a.bopT; sqx*=1+0.30*a.bopT; }
     const vm = a.slime ? 'forest' : (a.isMe ? curMap : (a.mapLoc||'hall'));
     /* v43.1:在線判斷併入主迴圈(唯一的顯示開關,避免與其他邏輯互搶造成閃爍) */
-    const online = a.staff||a.merch||a.slime||a.cloak||a.isMe||!!posMap[a.key];
+    const online = a.staff||a.slime||a.cloak||a.isMe||!!posMap[a.key];
     const vis = (vm===curMap) && online;
     a.el.style.display = vis ? '' : 'none';
     if(!vis){ return; }
@@ -3349,7 +3335,7 @@ function sync(){
   const keys=Object.keys(bosses);
   cnt.textContent=keys.length;
   emptyMsg.style.display=keys.length?'none':'block';
-  agents.forEach((a,k)=>{ if(!a.staff && !a.cloak && !a.merch && !a.slime && !bosses[k]){a.el.remove();agents.delete(k);} });
+  agents.forEach((a,k)=>{ if(!a.staff && !a.cloak && !a.slime && !bosses[k]){a.el.remove();agents.delete(k);} });
   Object.entries(bosses).forEach(([k,b])=>{
     if(agents.has(k)){
       const a=agents.get(k),changed=JSON.stringify(a.b.doll)!==JSON.stringify(b.doll);a.b=b;
@@ -5063,29 +5049,6 @@ function mergeCloudOrders(){
 }
 if(db) mergeCloudOrders();
 if(typeof claimMe==='function'){ const _cm2=claimMe; claimMe=function(k){ _cm2(k); setTimeout(mergeCloudOrders,500); }; }
-/* 周邊專區:周邊攤 NPC(站在右側木桶區) */
-(function(){
-  const el=document.createElement('div');el.className='npc staff';
-  const cv=document.createElement('canvas');cv.width=64;cv.height=64;
-  const sh=document.createElement('div');sh.className='shadow';
-  const tag=document.createElement('div');tag.className='tag';tag.textContent='周邊專區';
-  el.appendChild(sh);el.appendChild(cv);el.appendChild(tag);
-  world.appendChild(el);
-  const a={key:'merch_npc',el,cv,tag,sh:sh,mapLoc:'hall',
-    x:0.90,y:0.60,tx:0.90,ty:0.60,state:'post',
-    seed:7,faceLeft:true,flipT:-1,flipping:false,sitting:false,
-    staff:false,b:{name:'周邊專區',doll:{hair:9,back:2,front:2,face:0,cloth:1,acc:5}}};
-  a.frames={};
-  POSES.forEach(p=>{
-    const f=document.createElement('canvas');f.width=64;f.height=64;
-    drawDollTo(f,a.b.doll,p);a.frames[p]=f;
-  });
-  a.frame=null; setFrame(a,'idle');
-  el.style.cursor='pointer';
-  el.onclick=(ev)=>{ev.stopPropagation(); document.getElementById('merchM').style.display='flex';};
-  a.state='idle'; a.timer=9999; a.merch=true;
-  agents.set(a.key,a);
-})();
 if(DEMO_MODE){
   const demos=['demo1','demo2','demo3'];
   setTimeout(()=>{
@@ -5856,15 +5819,14 @@ const SFX=(function(){
 /* ================= 💬 NPC 個性台詞 ================= */
 (function(){
   const staffLines=['歡迎回來,今天想玩點什麼?','這裡坐,幫你留了位子 ✦','累了就靠著吧檯歇會兒吧','想找人一起上分嗎?我在唷','偷偷幫你把燈調暖了一點','今天也謝謝你來'];
-  const merchLines=['新周邊偷偷在趕工中…','這批小禮物超可愛的啦','會員每月都有限定小禮唷','喜歡的話記得先收藏 ✦'];
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   function tick(){
     if(typeof fsOverlayOpen==='function'&&fsOverlayOpen()){ setTimeout(tick,8000); return; }
     /* 接單中/移動中的店員不講閒聊台詞,只有站崗待命的才說話 */
     const list=[...agents.values()].filter(a=>a.el && a.el.style.display!=='none'
-      && ( a.merch || (a.staff && a.state==='post' && !a.busy) ));
+      && a.staff && a.state==='post' && !a.busy);
     if(list.length && typeof showBubble==='function'){ const a=list[Math.floor(Math.random()*list.length)];
-      showBubble(a, a.merch?pick(merchLines):pick(staffLines)); }
+      showBubble(a, pick(staffLines)); }
     setTimeout(tick, 14000+Math.random()*12000);
   }
   setTimeout(tick, 8000);
@@ -6795,7 +6757,7 @@ function applyPresence(){
   /* 只負責計數;顯示/隱藏由主迴圈統一處理,避免互搶閃爍 */
   let visible=0;
   agents.forEach((a,k)=>{
-    if(a.staff||a.merch||a.slime||a.cloak) return;
+    if(a.staff||a.slime||a.cloak) return;
     if(a.isMe || posMap[k]) visible++;
   });
   try{
@@ -6830,7 +6792,6 @@ document.addEventListener('keydown',e=>{
   const mx=myR.left+myR.width/2, my=myR.top+myR.height*0.7;
   let best=null,bd=1e9;
   const cand=[...document.querySelectorAll('.door,.amCat,.boardNPC,.propHot')];
-  const m=agents.get('merch_npc'); if(m&&m.el) cand.push(m.el);
   cand.forEach(el=>{
     if(!el.offsetParent) return;
     const r=el.getBoundingClientRect();
@@ -7709,7 +7670,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui-bridge.js?v=287"></script>
+<script src="tavern-ui-bridge.js?v=289"></script>
 <script src="lobby-ui/live.js?v=244"></script>
 <script src="lobby-ui/membership.js?v=273"></script>
 <script src="lobby-ui/order-flow.js?v=274"></script>
