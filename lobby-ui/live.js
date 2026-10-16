@@ -188,10 +188,10 @@
     }
     return numberCache.get(key)||null;
   }
-  function identity(no){
-    if(!no)return '<div class="ticket-identity"><span class="ticket-id-label">後台單號</span><code>待建立／同步</code></div>';
-    let x=0;const bars=[];for(const ch of no)for(let bit=0;bit<4;bit++){const n=ch.charCodeAt(0),w=1+((n>>bit)&1);bars.push('<rect x="'+x+'" width="'+w+'" height="25"/>');x+=w+1+((n>>(bit+2))&1);}
-    return '<div class="ticket-identity"><span class="ticket-id-label">後台單號</span><svg class="ticket-barcode" viewBox="0 0 '+x+' 25" preserveAspectRatio="none" aria-hidden="true">'+bars.join('')+'</svg><code>'+text(no)+'</code></div>';
+  function identity(no,id){
+    // 票根視覺條碼；不作為付款或掃碼憑證，也不虛構後台單號。
+    let x=0;const bars=[];for(const ch of (String(no||id)+'|TINY-TAVERN|').slice(0,80))for(let bit=0;bit<4;bit++){const n=ch.charCodeAt(0),w=1+((n>>bit)&1);bars.push('<rect x="'+x+'" width="'+w+'" height="25"/>');x+=w+1+((n>>(bit+2))&1);}
+    return '<div class="ticket-identity"><svg class="ticket-barcode" viewBox="0 0 '+Math.max(1,x)+' 25" preserveAspectRatio="none" aria-hidden="true">'+bars.join('')+'</svg><div class="ticket-number"><span class="ticket-id-label">後台單號</span><code>'+text(no||'待建立／同步')+'</code></div></div>';
   }
   function orderCard(id,o){
     const done=o.status==='done',cancelled=o.status==='cancelled',issued=!!issueSent()[id];
@@ -203,11 +203,12 @@
     if(cancelled&&o.refunded)status+='・'+(Number(o.amount)||0)+' 金幣已退回錢包';
     const steps=cancelled?'':'<div class="steps" aria-label="'+attr(status)+'">'+[current>0?'已付款':'待付款確認',current>0?'已確認':'待確認',done?'已完成':'待完成'].map((lb,i)=>'<span class="'+(done||i<current?'done':i===current?'current':'future')+'">'+(!done&&i===current?'<i aria-hidden="true"></i>':'')+lb+(!done&&i===current?'<small>目前進度</small>':'')+'</span>').join('')+'</div>';
     const controls=[];
-    if(!cancelled){if(issued)controls.push('<div class="ticket-help"><span class="help-state"><i aria-hidden="true"></i>掌櫃處理中</span><p>已收到你的問題，請等候回覆。</p></div>');else controls.push('<button class="text-btn order-assist" data-order-action="issue" data-order="'+attr(id)+'">需要協助？聯絡掌櫃 ↗</button>');}
+    const assist=cancelled?'':'<button class="order-assist ticket-report" '+(issued?'disabled':'data-order-action="issue" data-order="'+attr(id)+'"')+' aria-label="'+(issued?'問題已回報，掌櫃處理中':'回報這筆訂單的問題')+'" title="'+(issued?'掌櫃處理中':'回報訂單問題')+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V4m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0"/><path d="M12 7v4m0 2v.1"/></svg></button>';
+
     if(o.cancelPending)controls.push('<p class="tt-order-note">取消處理中，金幣會退回你的錢包。</p>');
     else if(!done&&!cancelled&&canSelfCancel(o))controls.push('<div class="tt-cancel"><span>尚未接單，可取消並退回金幣。</span><button data-order-action="cancel" data-order="'+attr(id)+'">取消並退回金幣</button></div>');
     if(done&&(o.type==='play'||!o.type))controls.push('<button class="text-btn order-reorder" data-order-action="reorder">再點一次 <span aria-hidden="true">↗</span></button>');
-    return '<article class="order '+(done?'is-complete':issued?'needs-help':'is-upcoming')+'"><div class="ticket-date"><small>'+(o.reserveAt?'約定日期':'訂單日期')+'</small><b>'+date+'</b><span>'+time+'</span></div><div class="ticket-body"><div class="order-top"><div><h2>'+text(o.planName||'訂單')+'</h2>'+(o.staffName?'<small>與 '+text(o.staffName)+' 一起玩</small>':'')+'</div><strong>NT$ '+Number(o.amount||0).toLocaleString()+'</strong></div><p class="order-status">'+text(status)+'</p>'+(o.groupId?'<p class="tt-order-note">同組 '+Number(o.groupSize)+' 位陪玩・整組實付 NT$ '+Number(o.groupAmount).toLocaleString()+'；這張為 '+text(o.staffName)+' 的陪玩紀錄。</p>':'')+(o.couponUsed&&o.couponDisc?'<p class="tt-order-note">已使用優惠券折抵 NT$ '+text(o.couponDisc)+'</p>':'')+(o.declineReason?'<p class="tt-order-note">陪玩無法接單：'+text(o.declineReason)+'</p>':'')+steps+'<div class="ticket-bottom"><div class="tt-order-actions">'+controls.join('')+'</div><div class="ticket-footer">'+identity(backendNumber(o))+'</div></div></div></article>';
+    return '<article class="order '+(done?'is-complete':issued?'needs-help':'is-upcoming')+'"><div class="ticket-date"><small>'+(o.reserveAt?'約定日期':'訂單日期')+'</small><b>'+date+'</b><span>'+time+'</span></div><div class="ticket-body"><div class="order-top"><div><h2>'+text(o.planName||'訂單')+'</h2>'+(o.staffName?'<small>與 '+text(o.staffName)+' 一起玩</small>':'')+'</div><strong>NT$ '+Number(o.amount||0).toLocaleString()+'</strong></div><p class="order-status">'+text(status)+'</p>'+(o.groupId?'<p class="tt-order-note">同組 '+Number(o.groupSize)+' 位陪玩・整組實付 NT$ '+Number(o.groupAmount).toLocaleString()+'；這張為 '+text(o.staffName)+' 的陪玩紀錄。</p>':'')+(o.couponUsed&&o.couponDisc?'<p class="tt-order-note">已使用優惠券折抵 NT$ '+text(o.couponDisc)+'</p>':'')+(o.declineReason?'<p class="tt-order-note">陪玩無法接單：'+text(o.declineReason)+'</p>':'')+steps+'<div class="ticket-bottom"><div class="tt-order-actions">'+controls.join('')+'</div><div class="ticket-footer">'+identity(backendNumber(o),id)+assist+'</div></div></div></article>';
   }
   renderMyOrders=function(){
     const ids=myOrderIds(),active=ids.filter(id=>myOrdersCache[id]&&!['done','cancelled'].includes(myOrdersCache[id].status)),history=ids.filter(id=>myOrdersCache[id]&&['done','cancelled'].includes(myOrdersCache[id].status));
