@@ -167,7 +167,7 @@
  $('#catalog .catalog-head').after($('#categories'));
  // 分頁放在標題旁，兩套商品仍完整留在首屏。
  $('#catalog .catalog-head').append($('#bundlePager'));
- const seasonStyle=document.createElement('style');seasonStyle.textContent='body[data-area=store][data-shop-category=bundles] #catalog #bundlePager{display:flex!important;gap:8px;align-items:center;margin:0;font-size:12px}#catalog .catalog-head{display:flex;justify-content:space-between;align-items:center}#bundlePager:empty{display:none!important}#dyeHighlightLabel small{display:block;font-size:12px;line-height:1.5}';document.head.append(seasonStyle);
+ const seasonStyle=document.createElement('style');seasonStyle.textContent='body[data-area=store][data-shop-category=bundles] #catalog #bundlePager{display:flex!important;gap:8px;align-items:center;margin:0;font-size:12px}#catalog .catalog-head{display:flex;justify-content:space-between;align-items:center}#bundlePager:empty{display:none!important}#dyeHighlightLabel{display:grid;grid-template-columns:1fr auto;gap:6px}#dyeHighlightLabel[hidden]{display:none!important}#dyeHighlightLabel small{grid-column:1/-1;display:block;font-size:12px;line-height:1.5}';document.head.append(seasonStyle);
  function renderBundles(){
   $('#bundlePager').innerHTML='';
   if(area==='bag'){
