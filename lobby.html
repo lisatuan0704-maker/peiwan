@@ -2021,7 +2021,7 @@ function csTintCv(srcUrl,hi,hx,hx2){
   if(CSTINT[key]) return CSTINT[key];
   const im=csImg(srcUrl); if(!im.complete||!im.naturalWidth) return null;
   const c=document.createElement('canvas');c.width=128;c.height=128;
-  const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(im,0,0,128,128);
+  const g=c.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(im,0,0,128,128);
   const dd=g.getImageData(0,0,128,128),p=dd.data;
   const LUT=tpMkLut(hx||HAIRS[hi][0]);
   let LUT2=null,y0=128,y1=0;
@@ -2116,7 +2116,7 @@ function tpTint(d,hi,hx,hx2){
   if(TINTC[key]) return TINTC[key];
   const im=tpImg(d); if(!im.complete) return null;
   const c=document.createElement('canvas');c.width=128;c.height=128;
-  const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(im,0,0,128,128);
+  const g=c.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(im,0,0,128,128);
   const dd=g.getImageData(0,0,128,128),p=dd.data;
   /* 查表法:256 級亮度 → RGB(拖曳調色每幀 ~1ms) */
   const LUT=tpMkLut(hx||HAIRS[hi][0]);
