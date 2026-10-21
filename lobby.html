@@ -1433,6 +1433,8 @@ body.artBub.bub3s .npc .bub{
   border:0!important;box-shadow:none!important;background:transparent!important;
 }
 </style>
+<link rel="stylesheet" href="lobby-ui/contacts.css?v=296">
+<script src="lobby-ui/contacts.js?v=296"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
 <link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=293">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=255">
@@ -1674,7 +1676,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v295</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v296</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -6418,42 +6420,9 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   function rowBtn(lb,fn,warn){ return '<button class="pcGo'+(warn?' warn':'')+'" style="border:none;background:'+(warn?'#F4E3E9':'#F0E7FA')+';color:'+(warn?'#B0567A':'#6E58A6')
     +';font-family:inherit;font-size:12px;font-weight:700;padding:5px 10px;border-radius:9px;cursor:pointer" onclick="'+fn+'">'+lb+'</button>'; }
   window.frPaint=function(){
-    const el=document.getElementById('frBody'); if(!el) return;
-    let h='';
-    const rq=Object.entries(FRQ);
-    if(rq.length){
-      h+='<div class="pcSec">好友邀請</div>';
-      rq.forEach(([k,v])=>{ h+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13.5px">'
-        +'<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">'+esc((v&&v.name)||'？')+'</b>'
-        +rowBtn('接受',"frAccept('"+k+"')")+rowBtn('婉拒',"frDecline('"+k+"')")+rowBtn('封鎖',"frBlock('"+k+"')",1)+'</div>'; });
-    }
-    h+='<div class="pcSec">好友('+Object.keys(FR).length+')</div>';
-    if(!Object.keys(FR).length) h+='<div style="font-size:12.5px;color:#8E7AB0;margin:6px 0">還沒有好友——在大廳點其他老闆的小人,闆卡上就有「加好友」 ✦</div>';
-    Object.entries(FR).forEach(([k,v])=>{
-      const on=(typeof agents!=='undefined')&&agents.has(k);
-      const un=(DMM[k]&&DMM[k].unread)||0;
-      h+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13.5px">'
-        +'<span style="width:8px;height:8px;border-radius:50%;background:'+(on?'#57A87C':'#D8CCE4')+';flex:0 0 auto"></span>'
-        +'<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">'+esc((v&&v.name)||'？')+'</b>'
-        +(un?'<span style="background:#E14E6B;color:#fff;font-size:11px;padding:1px 7px;border-radius:9px">'+un+'</span>':'')
-        +rowBtn('私訊',"dmOpen('"+k+"')")+rowBtn('刪除',"frRemove('"+k+"')",1)+'</div>';
-    });
-    const bl=Object.keys(BLK);
-    if(bl.length){
-      h+='<div class="pcSec">封鎖名單('+bl.length+')</div>';
-      bl.forEach(k=>{ h+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px;color:#8E7AB0">'
-        +'<span style="flex:1">'+esc((BLK[k]&&BLK[k].name)||'(老闆)')+'</span>'+rowBtn('解除封鎖',"frUnblock('"+k+"')")+'</div>'; });
-    }
-    const hd=Object.entries((window.__ttHidden)||{});
-    if(hd.length){
-      h+='<div class="pcSec">屏蔽名單('+hd.length+')</div>'
-        +'<div style="font-size:11.5px;color:#B7A6C9;margin:2px 0 4px">屏蔽只影響你自己的畫面,對方不會知道</div>';
-      hd.forEach(([k,nm])=>{ h+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px;color:#8E7AB0">'
-        +'<span style="flex:1">'+esc(nm||'(老闆)')+'</span>'+rowBtn('解除屏蔽',"ttUnhide('"+k+"')")+'</div>'; });
-    }
-    el.innerHTML=h;
+    const el=document.getElementById('frBody'); if(!el||!window.TTContacts) return;
+    TTContacts.render(el,{friends:FR,requests:FRQ,blocked:BLK,messages:DMM,hidden:window.__ttHidden||{},present:new Set([...agents.keys()])},{message:k=>dmOpen(k),remove:k=>frRemove(k),accept:k=>frAccept(k),decline:k=>frDecline(k),block:k=>frBlock(k),unblock:k=>frUnblock(k),unhide:k=>ttUnhide(k)});
   };
-
   /* --- 好友動作 --- */
   window.frAdd=function(k,name){
     if(!myKey){ toast('先做一張闆卡才能加好友 ✦'); return; }
