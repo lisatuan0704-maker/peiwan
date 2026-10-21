@@ -21,7 +21,8 @@ hub.querySelector('.hub-close').onclick=close;hub.addEventListener('click',e=>{i
 hub.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}if(e.key==='Tab'){const focusable=[...hub.querySelectorAll('button,input,select,a[href],[tabindex="0"]')].filter(x=>!x.disabled&&x.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}});
 // Native actions that open another modal release this mounted view first.
 const originalOpen=window.gOpen;window.gOpen=function(id){if(current&&id!==views[current].id)close();return originalOpen(id);};
-const originalShop=window.shopOpen;window.shopOpen=function(n){if(current&&!(current==='orders'&&n===4))close();return originalShop(n);};
+const originalShop=window.shopOpen;window.shopOpen=function(...args){const n=args[0];if(current&&!(current==='orders'&&n===4))close();return originalShop.apply(this,args);};
+const originalShopClose=window.shopClose;window.shopClose=function(...args){if(current==='orders')close();return originalShopClose.apply(this,args);};
 const originalClose=window.gClose;window.gClose=function(id){if(current&&id===views[current].id)close();return originalClose(id);};
 const dock=$('ttMainDock');if(dock){const entry=document.createElement('button');entry.type='button';entry.id='ttHubButton';entry.innerHTML='<img src="lobby-ui/assets/chat.png" alt=""><span>我的酒館</span>';entry.onclick=()=>show('friends');dock.prepend(entry);for(const id of ['frBtn','ttAchBtn','ttWalletBtn','ttMailBtn','ordBtn'])$(id)?.classList.add('hub-old-shortcut');
  const badge=document.createElement('b');badge.className='hub-unread';badge.hidden=true;entry.append(badge);
