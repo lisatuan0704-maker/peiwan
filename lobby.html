@@ -2,6 +2,8 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<script src="lobby-ui/discord-auth.js?v=298"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>酒館大廳｜Tiny Tavern 小小酒館</title>
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -6162,7 +6164,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
     if(dc){
       b.className='h2dc bound';
       const av=dc.avatar?('https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=32'):'';
-      b.innerHTML=(av?'<img src="'+av+'" alt="">':'')+'@'+(dc.global_name||dc.username);
+      b.innerHTML=(av?'<img src="'+av+'" alt="">':'')+'@'+TTDiscordAuth.escapeText(dc.global_name||dc.username);
       b.title='已綁定 Discord(解除綁定請聯絡掌櫃)';
     }else{
       b.className='h2dc'; b.textContent='綁定 Discord'; b.title='';
@@ -6170,8 +6172,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   }
   renderDC();
   window.dcAuth=function(){
-    location.href='https://discord.com/oauth2/authorize?client_id='+DC_CLIENT
-      +'&response_type=token&scope=identify&redirect_uri='+encodeURIComponent(DC_REDIRECT);
+    try{ location.href=TTDiscordAuth.begin(DC_CLIENT,DC_REDIRECT); }catch(e){ alert('無法儲存登入驗證資料，請確認瀏覽器允許此網站使用儲存空間後再試。'); }
   };
   /* v44:進場閘門 —— 順序:先做闆卡 → 再綁 Discord → 進大廳 */
   (function(){

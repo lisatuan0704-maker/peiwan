@@ -2,6 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<script src="lobby-ui/discord-auth.js?v=298"></script>
+<script>window.__ttDiscordCallback=TTDiscordAuth.consume();</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Discord 綁定｜Tiny Tavern 小小酒館</title>
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -55,19 +58,20 @@ function restoreAccount(dcid){
   function fail(msg){
     card.innerHTML='<h1>綁定沒有成功</h1><p>'+msg+'</p><a class="btn" href="lobby.html">回酒館大廳</a>';
   }
-  const h=new URLSearchParams(location.hash.replace(/^#/,''));
-  const tok=h.get('access_token');
-  if(!tok){ fail('沒有拿到授權,請回大廳再點一次「綁定 Discord」。'); return; }
-  fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+tok}})
+  const callback=window.__ttDiscordCallback||{}; delete window.__ttDiscordCallback;
+  const tok=callback.token;
+  if(!tok){ fail(callback.error||'請回大廳重新開始 Discord 綁定。'); return; }
+  fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+tok},redirect:'error',signal:AbortSignal.timeout(10000)})
     .then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
     .then(u=>{
+      if(!/^[0-9]{16,22}$/.test(u.id||'')||(u.avatar&&!/^(a_)?[a-f0-9]{32}$/.test(u.avatar)))throw Error('invalid user');
       const dc={id:u.id,username:u.username,global_name:u.global_name||'',avatar:u.avatar||''};
       try{ localStorage.setItem('tt_dc',JSON.stringify(dc)); }catch(e){}
       try{ history.replaceState(null,'',location.pathname); }catch(e){}
       const av=dc.avatar?('https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=128'):'';
       restoreAccount(dc.id).then(restored=>{
         card.innerHTML=(av?'<img class="av" src="'+av+'" alt="">':'')
-          +'<h1>綁定成功!</h1><div class="nm">@'+(dc.global_name||dc.username)+'</div>'
+          +'<h1>綁定成功!</h1><div class="nm">@'+TTDiscordAuth.escapeText(dc.global_name||dc.username)+'</div>'
           +(restored?'<p>已找回你的闆卡與帳號資料 —— 換了裝置也回得來。</p>':'<p>之後點單會自動帶上你的 Discord 名稱,接單店員直接找得到你。</p>')
           +'<a class="btn" href="lobby.html">回酒館大廳</a>';
         setTimeout(()=>{ location.href='lobby.html'; },2600);
