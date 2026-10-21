@@ -1793,7 +1793,7 @@ function timelogRow(id,o,colspan){
   return `<tr><td colspan="${colspan}" style="background:#FFF9EC;padding:8px 14px">${rows||'<span style="font-size:12px;color:var(--ink-soft)">尚無紀錄</span>'}</td></tr>`;
 }
 function hmsShort(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return h?`${h}時${m}分`:`${m}分`;}
-function esc(x){return String(x==null?"":x).replace(/</g,"&lt;");}
+function esc(x){return customerAttr(x);}
 function months(){
   const set=new Set(Object.values(orders).map(o=>o.month).filter(Boolean));
   const now=new Date(); set.add(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`);
@@ -2044,7 +2044,7 @@ function renderChars(){
     <h2>角色名冊（真人身分只存在這裡，客人／客服前台只見角色）</h2>
     ${list.length? `<table><tr><th>角色</th><th>介紹</th><th>帳號</th><th>分潤%</th><th>啟用</th><th></th></tr>
       ${list.map(([id,c])=>`<tr>
-        <td>${c.avatar?`<img class="face sm" src="${c.avatar}"> `:(c.emoji||"✨")+" "}<b>${esc(c.name)}</b><br>
+        <td>${c.avatar?`<img class="face sm" src="${esc(c.avatar)}"> `:esc(c.emoji||"✨")+" "}<b>${esc(c.name)}</b><br>
           <input placeholder="img/xxx.png" value="${esc(c.avatar||'')}" style="width:140px;font-size:11px;padding:4px;margin-top:4px" onchange="db.ref(ROOT+'/characters/${id}/avatar').set(this.value.trim()||null)"></td>
         <td style="font-size:12px;color:var(--ink-soft)">${esc(c.tagline||"")}</td>
         <td style="font-size:12px">${linkOf(id,'char')
