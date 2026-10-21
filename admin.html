@@ -1698,7 +1698,7 @@ function mutesCardHtml(){
     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:2px dashed var(--parch2);padding:7px 2px">'
     +'<b>'+esc(m.name||k)+'</b>'
     +'<span style="font-size:12px;color:var(--ink-soft)">'+(m.until===-1?'永久':('至 '+new Date(m.until).toLocaleString('zh-TW')))+(m.reason?'・'+esc(m.reason):'')+'</span>'
-    +'<button onclick="mailCompose(\''+k+'\',\''+esc(m.name||'')+'\')" style="margin-left:auto;border:none;background:#DCEBFA;color:#3F6E9E;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">寄信</button>'
+    +'<button data-customer-key="'+customerAttr(k)+'" data-customer-name="'+customerAttr(m.name||'')+'" onclick="mailCompose(this.dataset.customerKey,this.dataset.customerName)" style="margin-left:auto;border:none;background:#DCEBFA;color:#3F6E9E;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">寄信</button>'
     +'<button onclick="unmute(\''+k+'\')" style="border:none;background:#EADFF7;color:#6E58A6;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">解除</button>'
     +'</div>').join('')+'</div>';
 }
@@ -2014,7 +2014,7 @@ function renderSvcs(){
         <td>${esc(v.name)}</td><td>${{hour:"按小時",round:"按局",package:"套餐"}[v.mode]||v.mode}</td>
         <td>NT$ ${v.price}</td><td>${esc(v.unitLabel||"—")}</td>
         <td><button class="btn sm ${v.active?'ok':'ghost'}" onclick="db.ref(ROOT+'/config/services/${id}/active').set(${!v.active})">${v.active?'上架中':'已下架'}</button></td>
-        <td><button class="btn sm ghost" onclick="if(confirm('刪除「${esc(v.name)}」？'))db.ref(ROOT+'/config/services/${id}').remove()">刪</button></td>
+        <td><button class="btn sm ghost" data-record-id="${customerAttr(id)}" data-record-name="${customerAttr(v.name)}" onclick="if(confirm('刪除「'+this.dataset.recordName+'」？'))db.ref(ROOT+'/config/services/'+this.dataset.recordId).remove()">刪</button></td>
       </tr>`).join("")}</table>` : `<div class="empty">還沒有價目，先新增或一鍵建立範例</div>`}
     <h2 style="margin-top:16px">新增項目</h2>
     <div class="grid">
@@ -2054,7 +2054,7 @@ function renderChars(){
             : `<button class="btn sm" onclick="makeInvite('${id}','char')">產生邀請碼</button>`)}</td>
         <td><input type="number" value="${c.share!=null?c.share:80}" style="width:60px" onchange="db.ref(ROOT+'/characters/${id}/share').set(Number(this.value))"></td>
         <td><button class="btn sm ${c.active?'ok':'ghost'}" onclick="db.ref(ROOT+'/characters/${id}/active').set(${!c.active})">${c.active?'啟用中':'停用'}</button></td>
-        <td><button class="btn sm ghost" onclick="if(confirm('刪除角色「${esc(c.name)}」？單子紀錄會保留'))db.ref(ROOT+'/characters/${id}').remove()">刪</button></td>
+        <td><button class="btn sm ghost" data-record-id="${customerAttr(id)}" data-record-name="${customerAttr(c.name)}" onclick="if(confirm('刪除角色「'+this.dataset.recordName+'」？單子紀錄會保留'))db.ref(ROOT+'/characters/'+this.dataset.recordId).remove()">刪</button></td>
       </tr>`).join("")}</table>` : `<div class="empty">還沒有角色，新增第一位吧</div>`}
     <h2 style="margin-top:16px">新增角色</h2>
     <div class="grid">
@@ -2096,7 +2096,7 @@ function renderStaff(){
               : `<button class="btn sm" onclick="makeInvite('${id}','staff')">產生邀請碼</button>`)}</td>
           <td>${cnt} 筆</td>
           <td><button class="btn sm ${k.active!==false?'ok':'ghost'}" onclick="db.ref(ROOT+'/staff/${id}/active').set(${k.active===false})">${k.active!==false?'啟用中':'停用'}</button></td>
-          <td><button class="btn sm ghost" onclick="if(confirm('刪除客服「${esc(k.name)}」？派過的單會保留'))db.ref(ROOT+'/staff/${id}').remove()">刪</button></td>
+          <td><button class="btn sm ghost" data-record-id="${customerAttr(id)}" data-record-name="${customerAttr(k.name)}" onclick="if(confirm('刪除客服「'+this.dataset.recordName+'」？派過的單會保留'))db.ref(ROOT+'/staff/'+this.dataset.recordId).remove()">刪</button></td>
         </tr>`;
       }).join("")}</table>` : `<div class="empty">還沒有客服，先把你和管理加進來</div>`}
     <h2 style="margin-top:16px">新增客服</h2>
@@ -2538,6 +2538,7 @@ let custQ='', custFilter='all', custSort='seen';
 function custAgo(t){ const d=Date.now()-t; if(d<3600000) return Math.max(1,Math.round(d/60000))+' 分前';
   if(d<86400000) return Math.round(d/3600000)+' 小時前'; if(d<86400000*30) return Math.round(d/86400000)+' 天前';
   return new Date(t).toLocaleDateString('zh-TW'); }
+function customerAttr(x){return String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function custInfo(k){
   const lb=(lobbyChars||{})[k]||{}, cd=(cardsData||{})[k]||{};
   const accByKey={};
@@ -2663,9 +2664,9 @@ function openCust(k){
     +(r.muted?'<br><b style="color:#B03A5B">🔇 禁言中</b>'+(r.muted.until?'(至 '+new Date(r.muted.until).toLocaleString('zh-TW')+')':''):'')
     +'</div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">'
-    +'<button onclick="mailCompose(\''+r.k+'\',\''+esc(r.nm)+'\')" style="flex:1;border:none;background:#DCEBFA;color:#3F6E9E;padding:10px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:10px">寄信</button>'
-    +'<button onclick="walletAdjust(\''+r.k+'\',\''+esc(r.nm)+'\')" style="flex:1;border:none;background:#FBEFC0;color:#B8860B;padding:10px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:10px">調整金幣</button>'
-    +'<button onclick="delCustomer(\''+r.k+'\',\''+esc(r.nm)+'\')" style="border:none;background:#F4D7DE;color:#B03A5B;padding:10px 14px;cursor:pointer;font-family:inherit;border-radius:10px">刪除角色</button>'
+    +'<button data-customer-key="'+customerAttr(r.k)+'" data-customer-name="'+customerAttr(r.nm)+'" onclick="mailCompose(this.dataset.customerKey,this.dataset.customerName)" style="flex:1;border:none;background:#DCEBFA;color:#3F6E9E;padding:10px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:10px">寄信</button>'
+    +'<button data-customer-key="'+customerAttr(r.k)+'" data-customer-name="'+customerAttr(r.nm)+'" onclick="walletAdjust(this.dataset.customerKey,this.dataset.customerName)" style="flex:1;border:none;background:#FBEFC0;color:#B8860B;padding:10px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:10px">調整金幣</button>'
+    +'<button data-customer-key="'+customerAttr(r.k)+'" data-customer-name="'+customerAttr(r.nm)+'" onclick="delCustomer(this.dataset.customerKey,this.dataset.customerName)" style="border:none;background:#F4D7DE;color:#B03A5B;padding:10px 14px;cursor:pointer;font-family:inherit;border-radius:10px">刪除角色</button>'
     +'</div>'
     +'<button onclick="document.getElementById(\'custM\').style.display=\'none\'" style="display:block;width:100%;border:none;background:#EADFF7;color:#6E58A6;font-family:inherit;font-size:13.5px;padding:11px;border-radius:10px;cursor:pointer;margin-top:10px">關閉</button>'
     +'</div>';
