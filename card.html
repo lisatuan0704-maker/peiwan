@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+<script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -647,8 +648,8 @@ document.addEventListener('pointerdown',function(e){
 function goLobby(){
   const dcid=fDcid.value.trim();
   const key=dcid?btoa(encodeURIComponent(dcid)).replace(/[=+/]/g,''):'';
-  try{ if(key) localStorage.setItem('tt_me', key); }catch(e){}
-  location.href='lobby.html'+(key?('?me='+key):'');
+  try{ if(key) TTLegacyIdentity.rememberCreated(key); }catch(e){}
+  location.href='lobby.html';
 }
 function backEdit(){pgResult.style.display='none';pgMake.style.display='block';}
 function dlCard(){
