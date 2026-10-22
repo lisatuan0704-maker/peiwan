@@ -2,7 +2,7 @@ import {beginVoiceLogin} from './voice-rehearsal.mjs?v=306';
 const API='https://api.tinytavern.tw';
 export function installOrderVoice({auth,partner=false,notice=()=>{}}){
  let items=[],working=false,lastError="",lastErrorAt=0;const queueKey='tt_voice_order_queue_v1';
- const errors={STAFF_NOT_BOUND:'這位陪玩尚未完成 Discord 綁定。',CUSTOMER_BINDING_PENDING:'這筆訂單的語音資料尚未同步，系統會自動重試。',STAFF_ACCESS_DENIED:'目前登入帳號沒有這筆訂單的陪玩權限。',ORDER_EXPIRED:'這筆訂單的語音時段已結束。',ORDER_NOT_ELIGIBLE:'這筆訂單目前不能建立語音房。',ACCOUNT_REQUIRED:'請使用已綁定酒館角色的 Discord 帳號登入。'};
+ const errors={INSUFFICIENT_DRINKS:'持有的飲料不足。',INSUFFICIENT_BALANCE:'金幣餘額不足。',PRODUCT_UNAVAILABLE:'這杯飲料目前未上架。',REQUEST_CONFLICT:'交易編號衝突，請聯絡掌櫃。',STAFF_NOT_BOUND:'這位陪玩尚未完成 Discord 綁定。',CUSTOMER_BINDING_PENDING:'這筆訂單的語音資料尚未同步，系統會自動重試。',STAFF_ACCESS_DENIED:'目前登入帳號沒有這筆訂單的陪玩權限。',ORDER_EXPIRED:'這筆訂單的語音時段已結束。',ORDER_NOT_ELIGIBLE:'這筆訂單目前不能建立語音房。',ACCOUNT_REQUIRED:'請使用已綁定酒館角色的 Discord 帳號登入。'};
  async function call(path,body){const user=auth.currentUser;if(!user)throw Error('請先登入 Discord。');const token=await user.getIdToken();if(auth.currentUser?.uid!==user.uid)throw Error('帳號已切換，請重試。');const r=await fetch(API+path,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const data=await r.json();if(auth.currentUser?.uid!==user.uid)throw Error('帳號已切換，請重試。');if(!r.ok)throw Object.assign(Error(errors[data.error]||'語音連線尚未完成，請稍後重試。'),{code:data.error});return data}
  function queue(){try{return JSON.parse(localStorage.getItem(queueKey)||'[]')}catch{return []}}
  async function flush(){if(working||!auth.currentUser?.uid?.startsWith('discord_'))return;working=true;try{for(const task of queue()){if(task.uid!==auth.currentUser.uid)continue;try{await call('/v1/voice/order',{ids:task.ids});localStorage.setItem(queueKey,JSON.stringify(queue().filter(t=>t.id!==task.id)));}catch(e){if(e.code==='ORDER_NOT_ELIGIBLE')continue;if(e.message!==lastError||Date.now()-lastErrorAt>60000){lastError=e.message;lastErrorAt=Date.now();notice(e.message)}break}}}finally{working=false}}
@@ -12,6 +12,8 @@ export function installOrderVoice({auth,partner=false,notice=()=>{}}){
  async function refreshRewards(){if(partner||rewardsBusy||!auth.currentUser?.uid?.startsWith('discord_'))return;rewardsBusy=true;try{const uid=auth.currentUser.uid,data=await call('/v1/voice/rewards',{});if(auth.currentUser?.uid!==uid)return;window.TTCompanionRewards={...data,uid};window.dispatchEvent(new Event('tt-companion-rewards'));rewardsAt=Date.now()}catch{rewardsAt=Date.now()}finally{rewardsBusy=false}}
  const stopRewardAuth=auth.onAuthStateChanged?.(()=>{window.TTCompanionRewards=null;rewardsAt=0;window.dispatchEvent(new Event('tt-companion-rewards'));void refreshRewards()})||(()=>{});
  const api={
+  userId:()=>auth.currentUser?.uid,
+  drinks:body=>call('/v1/voice/drinks',body),
   equipFrame:frameId=>call('/v1/voice/frame',{frameId}),
   serviceTime:body=>call('/v1/voice/time',body),
   ensureLogin(){if(auth.currentUser?.uid?.startsWith('discord_'))return true;notice('點單前請先登入 Discord，完成後再回來選擇方案。');beginVoiceLogin();return false},

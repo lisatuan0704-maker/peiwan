@@ -4158,6 +4158,8 @@ document.getElementById('payProof').addEventListener('change',ev=>{
 });
 function myOrderIds(){ try{return JSON.parse(localStorage.getItem('tt_orders')||'[]');}catch(e){return[];} }
 function submitOrder(){
+ if(['pet_drink_blue','pet_drink_sakura','pet_drink_ghost'].includes(curPlan?.itemId)){toast('請到其他分類選擇飲料杯數購買。');return;}
+
   const name=document.getElementById('payName').value.trim();
   const last5=document.getElementById('payLast5').value.trim();
   if(!name){ toast('請填稱呼或 Discord 名'); shake('payName'); return; }
@@ -4282,6 +4284,8 @@ async function walletLookup(ids){
 }
 function rememberPaymentIds(ids){try{localStorage.setItem('tt_orders',JSON.stringify([...new Set([...myOrderIds(),...ids])]));}catch(_){} }
 async function payWithCoins(){
+ if(['pet_drink_blue','pet_drink_sakura','pet_drink_ghost'].includes(curPlan?.itemId)){toast('請到其他分類選擇飲料杯數購買。');return;}
+
  if(_submitting)return;
  const name=(document.getElementById('payNameCoin').value||'').trim();
  if(!name){toast('請填稱呼或 Discord 名');shake('payNameCoin');return;}
@@ -7655,7 +7659,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=313"></script>
+<script src="tavern-ui-bridge.js?v=314"></script>
 <script src="lobby-ui/live.js?v=305"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
@@ -7663,7 +7667,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/order-flow.js?v=305"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=312';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=314';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
