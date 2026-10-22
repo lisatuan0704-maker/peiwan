@@ -73,3 +73,6 @@ body[data-shop-category=dye] #singles,body[data-shop-category=dye] #detail,body[
 .drink-scene>.drink-watermark{letter-spacing:var(--watermark-spacing,6px)}
 
 .drink-scene>.drink-watermark{font-family:var(--text-font,Arial,sans-serif);font-weight:var(--text-weight,900);-webkit-text-stroke:var(--text-stroke,2.5px) var(--text-stroke-color,#fff);color:var(--text-fill,transparent);opacity:var(--text-opacity,.78);transform:translate(-50%,-50%) rotate(var(--text-rotation,0deg)) skewX(var(--text-skew,0deg)) scaleX(var(--text-stretch,1));line-height:var(--text-leading,1.05);white-space:pre;text-align:var(--text-align,center);filter:drop-shadow(0 0 var(--text-glow,0px) var(--text-stroke-color,#fff))}
+
+/* The card editor font takes precedence over the global game UI font. */
+.drink-scene>.drink-watermark{font-family:var(--text-font,Arial,sans-serif)!important}

@@ -68,7 +68,7 @@
     art.innerHTML='<svg viewBox="0 0 350 310"><g class="lobby-lines"><path d="M-50 250 370 -20M-40 300 400 20M65 310 350 110"/><path d="M195 -20V105H305"/></g><g class="lobby-facets"><path d="M250 122 308 220 194 220Z"/><path d="M65 27 103 95 28 95Z"/></g><g class="lobby-diamonds"><path d="m171 42 31 31-31 31-31-31Z"/><path d="m308 102 12 12-12 12-12-12Z"/></g><g class="lobby-stars"><path d="M116 30Q119 45 135 48Q119 51 116 66Q113 51 97 48Q113 45 116 30ZM311 235Q314 248 327 251Q314 254 311 267Q308 254 295 251Q308 248 311 235Z"/></g><path class="lobby-trace" d="M-40 300 400 20"/></svg><span class="lobby-dots"></span>';
     document.body.append(art);
   }
-  const chatHeading=document.createElement('div');chatHeading.className='tt-chat-heading';chatHeading.innerHTML='<b>酒館閒聊</b><span>TAVERN CHAT</span>'; $('chatbox').prepend(chatHeading);
+  const chatHeading=document.createElement('div');chatHeading.className='tt-chat-heading';chatHeading.innerHTML='<b>酒館閒聊</b><span>TAVERN CHAT</span>'; const minimize=document.createElement('button');minimize.type='button';minimize.className='tt-chat-minimize';minimize.textContent='−';minimize.setAttribute('aria-label','最小化聊天室');minimize.onclick=()=>document.getElementById('chattoggle').click();chatHeading.append(minimize);$('chatbox').prepend(chatHeading);
   $('chatin').placeholder='說點什麼…（最多 18 字）';$('chatin').setAttribute('aria-label','大廳聊天訊息，最多 18 字');
   $('gearBtn').innerHTML='<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 8h18M5 14h18M5 20h18M10 5v6M19 11v6M12 17v6"/></svg>';
   const cat=document.querySelector('.amCat');

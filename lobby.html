@@ -1439,7 +1439,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/contacts.css?v=319">
 <script src="lobby-ui/contacts.js?v=319"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=293">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=339">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=255">
 <script src="lobby-ui/scene.js?v=279"></script>
 <script src="lobby-ui/hair-motion.js?v=272"></script>
@@ -5170,14 +5170,9 @@ function tryServeNudge(staff){
 /* 聊天框:手機預設收合,可用 💬 切換;收合時來訊亮紅點 */
 (function(){
   const chatbox=document.getElementById('chatbox'), chattoggle=document.getElementById('chattoggle');
-  function apply(){
-    if(isMobile()){ chattoggle.style.display='block'; if(chatbox.dataset.open!=='1') chatbox.style.display='none'; }
-    else { chattoggle.style.display='none'; chatbox.style.display=''; chatbox.dataset.open='1'; }
-  }
-  chattoggle.onclick=()=>{
-    if(chatbox.style.display==='none'){ chatbox.style.display='block'; chatbox.dataset.open='1'; chattoggle.classList.remove('unread'); }
-    else { chatbox.style.display='none'; chatbox.dataset.open=''; }
-  };
+  let collapsed;try{const saved=localStorage.getItem('tt_chat_minimized');collapsed=saved===null?isMobile():saved==='1';}catch{collapsed=isMobile();}
+  function apply(){chatbox.style.display=collapsed?'none':'block';chatbox.dataset.open=collapsed?'':'1';chattoggle.style.display=collapsed?'block':'none';chattoggle.setAttribute('aria-expanded',String(!collapsed));chattoggle.setAttribute('aria-controls','chatbox');chattoggle.setAttribute('aria-label',collapsed?'展開聊天室':'最小化聊天室');chattoggle.title=collapsed?'展開聊天室':'最小化聊天室';}
+  chattoggle.onclick=()=>{collapsed=!collapsed;try{localStorage.setItem('tt_chat_minimized',collapsed?'1':'0')}catch{}if(!collapsed)chattoggle.classList.remove('unread');apply();};
   addEventListener('resize',apply);
   apply();
 })();
@@ -7669,8 +7664,8 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=338"></script>
-<script src="lobby-ui/live.js?v=316"></script>
+<script src="tavern-ui-bridge.js?v=339"></script>
+<script src="lobby-ui/live.js?v=339"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=337">

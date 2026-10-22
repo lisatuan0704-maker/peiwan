@@ -606,8 +606,8 @@ function punch(on){
   if(on){
     staffRef.update({on:true, name:me.name||'店員', busy:false, updatedAt:firebase.database.ServerValue.TIMESTAMP})
       .catch(rollback);
-    /* 手機被關掉、沒電、斷線時自動下班 —— 不然大廳會一直顯示你在線上,客人點了卻沒人接 */
-    try{ staffRef.onDisconnect().update({on:false, busy:false, offBy:'disconnect'}); }catch(e){}
+    // 值班由本人明確切換；短暫斷線不能代替下班。
+    try{ staffRef.onDisconnect().cancel().catch(()=>{}); }catch(e){}
     punchTxt.textContent='上班中 🏮';
   }else{
     try{ staffRef.onDisconnect().cancel(); }catch(e){}
@@ -637,9 +637,11 @@ function boot(){
   booted=true;
   pgLogin.style.display="none"; pgMain.style.display="block";renderPartnerArt(cid);
   staffRef = db.ref(ROOT+"/staffStatus/"+cid);
-  staffRef.once("value",s=>{
+  try{ staffRef.onDisconnect().cancel().catch(()=>{}); }catch(e){}
+  staffRef.on("value",s=>{
     const st=s.val();
-    if(st&&st.on){punchChk.checked=true;punchTxt.textContent='上班中 🏮';}
+    punchChk.checked=!!(st&&st.on);
+    punchTxt.textContent=punchChk.checked?'上班中 🏮':'下班中';
     syncDutyUI();
   });
   db.ref(ROOT+"/characters/"+cid).on("value",s=>{

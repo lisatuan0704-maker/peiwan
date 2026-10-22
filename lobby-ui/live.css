@@ -228,3 +228,8 @@ body.tt214 #hint2.is-visible{opacity:1;visibility:visible}
 .tt-live-ui .ticket-report svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .tt-live-ui .ticket-report:hover{background:#fff9ef!important}.tt-live-ui .ticket-report:focus-visible{outline:2px solid #986d50;outline-offset:3px}.tt-live-ui .ticket-report:disabled{opacity:.5;cursor:default}
 @media(max-width:560px){.tt-live-ui .panel[data-view=orders] .ticket-bottom .ticket-barcode{flex-basis:48px;width:48px;height:25px}.tt-live-ui .panel[data-view=orders] .ticket-bottom .ticket-identity{gap:8px}.tt-live-ui .panel[data-view=orders] .ticket-bottom .ticket-footer{gap:6px}}
+
+.tt-chat-heading{gap:10px}.tt-chat-heading span{margin-left:auto}.tt-chat-minimize{width:28px;height:26px;padding:0;border:1px solid #ffffff60;border-radius:6px;background:#ffffff15;color:#fff;font-size:22px;line-height:1;cursor:pointer;flex-shrink:0}#chattoggle[aria-expanded=false]{display:block}
+
+/* v339: slightly larger lobby chat text. */
+body.tt214 #chatlog{font-size:14px;line-height:1.7}body.tt214 #chatin{font-size:16px}

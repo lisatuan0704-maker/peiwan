@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=338';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=339';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -50,8 +50,8 @@
         const layout=staffPetLayout[pet.asset],scale=Math.round(TTScene.size(a.y))/160;
         Object.assign(img.style,{width:layout.size*scale+'px',height:layout.size*112/96*scale+'px',left:'calc(50% + '+layout.x*scale+'px)',right:'auto',bottom:'auto',top:'calc(var(--tt-foot) + '+layout.y*scale+'px)'});
         const step=a._staffWalking?Math.sin(performance.now()/1000*17+a.seed+1):0;
-        img.style.transform='translate(-50%,-100%) translateY('+Math.round(-Math.abs(step)*3)+'px)';
-      }
+        img.style.transform='translate(-50%,-100%) translateY('+Math.round(-Math.abs(step)*3)+'px) scaleX('+(a.faceLeft?-1:1)+')';
+      }else img.style.transform='scaleX('+(a.faceLeft?-1:1)+')';
     }
     return previousSetFrame(a,p);
   };

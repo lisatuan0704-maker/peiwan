@@ -18,3 +18,5 @@ body[data-shop-category=other] #detail{padding-bottom:0!important}
 
 #drinkOrderDialog .drink-quantity-label{display:flex;align-items:center;gap:6px;color:white;font-size:18px}#drinkOrderDialog #drinkQuantity{box-sizing:border-box;width:72px;min-height:44px;padding:8px;text-align:center;font-family:inherit;font-weight:700;font-size:23px;color:white;background:#ffffff10;border:1px solid #ffffff55;border-radius:10px}#drinkOrderDialog #drinkQuantity:focus{outline:2px solid var(--jelly-glow);outline-offset:2px;background:#ffffff22}
 
+
+body[data-area=bag]:not([data-shop-category=other]) #detail{display:none!important}
