@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與時裝間';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=311';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=313';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -67,11 +67,11 @@
     const cfg={...(window.__shopCfg||{}),...(window.TTSeasonDrafts||{})},own=window.__owned||{},now=Date.now();
     const base=(window.__outfitList?.()||[]).filter(o=>!window.TTSeasonDrafts?.[o.id]);
     const ids=new Set(base.map(o=>o.id));
-    const pets=Object.keys(cfg).filter(id=>cfg[id]?.custom&&cfg[id]?.type==='寵物'&&!ids.has(id)).map(id=>({id}));
+    const pets=Object.keys(cfg).filter(id=>cfg[id]?.custom&&['寵物','其他'].includes(cfg[id]?.type)&&!ids.has(id)).map(id=>({id}));
     return [...base,...pets,...Object.keys(window.TTSeasonDrafts||{}).map(id=>({id}))].map(o=>{
       const c=cfg[o.id]||{},sale=(c.active===undefined?true:!!c.active)&&(!c.start||now>=c.start)&&(!c.end||now<c.end);
       return {id:o.id,name:c.name||o.nm,type:c.type||'時裝',price:c.price??o.pr,owned:o.id==='cloth0'||!!own[o.id],sale,previewOnly:!!c.previewOnly,highlightHair:!!c.highlightHair,
-        doll:c.doll||o.doll||null,img:c.img||null,featured:c.seasonFeatured||0,sourceLayerCount:c.sourceLayerCount||0,parts:Object.entries(partsFor(o.id)).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件')),category:category(k),group:category(k)==='acc'?group(p,o.id,k):null,independent:!!p.independent,requiresHair:p.requiresHair,requirement:p.requirement,defaultEquipped:p.defaultEquipped}))};
+        doll:c.doll||o.doll||null,img:c.img||null,featured:c.seasonFeatured||0,sourceLayerCount:c.sourceLayerCount||0,parts:Object.entries(partsFor(o.id)).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件')),category:c.type==='其他'?'other':category(k),group:category(k)==='acc'?group(p,o.id,k):null,independent:!!p.independent,requiresHair:p.requiresHair,requirement:p.requirement,defaultEquipped:p.defaultEquipped}))};
     });
   }
   function state(){const a=typeof me==='function'?me():null;return {loggedIn:!!a,doll:clone(a?.b?.doll||{back:0,front:0,cloth:0,face:0,acc:0,hair:0}),catalog:catalog(),baseParts:window.__ownedParts?.()||{},colors:HAIRS.map(h=>h[0]),tickets:Number((window.__owned||{}).dyeTickets)||0,dyed:clone((window.__owned||{}).dyedHairSets||{})};}
@@ -189,7 +189,7 @@
       close();shopOpen(2,'play');
     },
     originalInfo(cid){const s=staff().find(s=>s.cid===cid);if(s){close();oldInfo(cid,{name:s.name,st:s.on?(s.busy?'busy':'free'):'off'},0);}},
-    buy(source){const o=catalog().find(x=>x.id===source);if(!o||!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(o.owned)throw Error('這件商品已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:o.id,n:(o.type==='寵物'?'寵物・':'時裝・')+o.name,p:o.price,itemId:o.id,itemName:o.name};shopClose();shopOpen(3);},
+    buy(source){const o=catalog().find(x=>x.id===source);if(!o||!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(o.owned)throw Error('這件商品已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:o.id,n:(['寵物','其他'].includes(o.type)?o.type+'・':'時裝・')+o.name,p:o.price,itemId:o.id,itemName:o.name};shopClose();shopOpen(3);},
     /* v258:染髮券商品(一張全包主色+漸層;價格可由掌櫃在商城新增 id 為 dyeTicket 的商品覆蓋,預設 299) */
     dyePrice(){return Number(window.__shopCfg?.dyeTicket?.price)||299;},
     buyDye(){if(typeof me!=='function'||!me())throw Error('先做一張闆卡，再購買染髮券');close();curKind='shop';curBooking=false;curReserveAt=null;const p=this.dyePrice();curPlan={id:'dyeTicket',n:'染髮券 1 張',p,itemId:'dyeTicket',itemName:'染髮券 1 張'};shopClose();shopOpen(3);},
