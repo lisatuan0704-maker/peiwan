@@ -2,10 +2,13 @@
 (()=>{'use strict';
 const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
 const avatarCache=new Map();
-function avatar(id,name){const wrap=make('span','contact-avatar');const cv=make('canvas','');cv.width=cv.height=64;cv.setAttribute('role','img');cv.setAttribute('aria-label',name+'的像素小人');wrap.append(cv);
- const draw=d=>{if(window.TinyTavernUI)TinyTavernUI.draw(cv,d||{front:0,back:0,cloth:0,face:0,hair:0});else if(typeof drawDollTo==='function')drawDollTo(cv,d||DEF_DOLL,'idle');};
- let doll;try{doll=agents.get(id)?.b?.doll||bosses[id]?.doll}catch{}draw(doll);if(doll)avatarCache.set(id,Promise.resolve(doll));
- if(!doll){if(!avatarCache.has(id)){try{avatarCache.set(id,db?db.ref(ROOT+'/lobby/'+id).once('value').then(s=>s.val()?.doll).catch(()=>null):Promise.resolve(null))}catch{avatarCache.set(id,Promise.resolve(null))}}avatarCache.get(id).then(d=>{if(d&&cv.isConnected)draw(d)});}return wrap;}
+function avatar(id,name){const wrap=make('span','contact-avatar');const cv=make('canvas','');cv.width=cv.height=64;cv.setAttribute('role','img');cv.setAttribute('aria-label',name+'的像素小人');
+ const draw=record=>{const fid=typeof ttFrameId==='function'?ttFrameId(record?.pub?.frm):'wr1';wrap.dataset.frame=fid;
+  if(typeof ttFrame==='function'){const inner=ttFrame(wrap,fid==='wr1'?{anim:false}:{art:fid});inner.append(cv);}else wrap.replaceChildren(cv);
+  const doll=record?.doll||{front:0,back:0,cloth:0,face:0,hair:0};if(window.TinyTavernUI)TinyTavernUI.draw(cv,doll);else if(typeof drawDollTo==='function')drawDollTo(cv,doll,'idle');};
+ let record;try{record=agents.get(id)?.b||bosses[id]}catch{}draw(record);
+ if(!record){try{if(!avatarCache.has(id))avatarCache.set(id,db?db.ref(ROOT+'/lobby/'+id).once('value').then(s=>{const v=s.val();return v?{doll:v.doll,pub:{frm:v.pub?.frm}}:null}).catch(()=>null):Promise.resolve(null));const pending=avatarCache.get(id);pending.then(v=>{if(v&&cv.isConnected)draw(v)}).finally(()=>{if(avatarCache.get(id)===pending)avatarCache.delete(id)});}catch{}}
+ return wrap;}
 window.TTContactAvatar=avatar;
 const labels={friends:'好友',requests:'邀請',blocked:'封鎖與屏蔽'};
 function render(host,data,actions){
