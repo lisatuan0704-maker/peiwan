@@ -408,7 +408,7 @@ button{transition:scale .13s cubic-bezier(.34,1.56,.64,1),filter .15s}
 button:not(:disabled):hover{filter:brightness(1.05) saturate(1.06)}
 button:not(:disabled):active{scale:.94}
 </style>
-<script src="lobby-ui/discord-auth.js?v=298"></script><style>.partner-discord-binding{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid #d6c9e5;font-size:13px}.partner-dc-button{font:inherit;color:#4a3b63;background:#f7f3fc;border:1px solid #aa94c7;border-radius:8px;padding:8px 12px;cursor:pointer}.partner-dc-button:focus-visible{outline:3px solid #8e7ab0;outline-offset:2px}</style></head>
+<script src="lobby-ui/discord-auth.js?v=298"></script><style>.partner-discord-binding{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid #d6c9e5;font-size:13px}.partner-dc-button{font:inherit;color:#4a3b63;background:#f7f3fc;border:1px solid #aa94c7;border-radius:8px;padding:8px 12px;cursor:pointer}.partner-dc-button:focus-visible{outline:3px solid #8e7ab0;outline-offset:2px}</style><style>#partnerCompanions:not([hidden]){display:flex;align-items:end;justify-content:center;gap:20px;padding:6px 0 12px}#partnerCompanions figure{margin:0;text-align:center}#partnerCompanions img{display:block;width:100px;height:102px;object-fit:contain;image-rendering:pixelated}#partnerCompanions .pet{width:80px;height:94px}#partnerCompanions figcaption{font-size:12px;color:var(--ink-soft)}</style></head>
 <body>
 <button id="themeBtn" title="切換日間／夜間模式" aria-label="切換日間夜間模式">☀️</button>
 <script>
@@ -478,6 +478,7 @@ button:not(:disabled):active{scale:.94}
         </label>
         <button class="logout" onclick="logout()">登出</button>
       </div>
+      <div id="partnerCompanions" hidden></div>
       <div id="partnerDiscordBinding" class="partner-discord-binding"></div>
       <div id="offDutyWarn" style="display:none;margin-top:10px;background:#FFF0DA;border-left:4px solid #E8A33D;border-radius:9px;padding:9px 12px;font-size:12.5px;color:#8A5A2B;line-height:1.7">
         <b>你目前是下班中</b> —— 客人在大廳看不到你、也無法指定你即時點單。要接單請打開上面的開關 ✦<br>
@@ -630,9 +631,11 @@ function setNoBooking(on){
 function setBusy(b){
   if(staffRef && punchChk.checked) staffRef.update({busy:!!b, updatedAt:firebase.database.ServerValue.TIMESTAMP});
 }
+const PARTNER_ART={'-OxY7C4vDkgsr1zcyWbk':{name:'縭',asset:'rira'},'-OxY46ezlpnRt64hUIw9':{name:'蕪',asset:'kabuki'},'-OzbfbQcF6J6fIR6YYGh':{name:'桃',asset:'momo'}};
+function renderPartnerArt(id){const root=document.getElementById('partnerCompanions'),info=PARTNER_ART[id];root.replaceChildren();root.hidden=!info;if(!info)return;for(const role of ['staff','pet']){const figure=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');img.src='img/companions-v315/'+info.asset+'-'+role+'.gif';img.alt=role==='staff'?info.name:info.name+'的寵物';if(role==='pet')img.className='pet';label.textContent=role==='staff'?info.name:'寵物';figure.append(img,label);root.append(figure)}}
 function boot(){
   booted=true;
-  pgLogin.style.display="none"; pgMain.style.display="block";
+  pgLogin.style.display="none"; pgMain.style.display="block";renderPartnerArt(cid);
   staffRef = db.ref(ROOT+"/staffStatus/"+cid);
   staffRef.once("value",s=>{
     const st=s.val();
@@ -641,7 +644,7 @@ function boot(){
   });
   db.ref(ROOT+"/characters/"+cid).on("value",s=>{
     me=s.val(); if(!me){logout();return;}
-    meEmoji.innerHTML = me.avatar? `<img class="face me" src="${me.avatar}">` : (me.emoji||"✨"); meName.textContent=me.name; meTag.textContent=me.tagline||"";
+    meEmoji.innerHTML = me.avatar? `<img class="face me" src="${me.avatar}">` : (me.emoji||"✨"); meName.textContent=PARTNER_ART[cid]?.name||me.name; meTag.textContent=me.tagline||"";
   });
   /* 只抓自己的工單:原本抓全店最後 500 筆,店裡單量一多,自己還沒結的舊單會憑空不見 */
   db.ref(ROOT+"/orders").orderByChild("cid").equalTo(cid).on("value",s=>{orders=s.val()||{};render();});
