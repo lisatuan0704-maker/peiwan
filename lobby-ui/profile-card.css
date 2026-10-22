@@ -32,3 +32,9 @@
 #cardClose{top:14px!important;right:14px!important;width:33px!important;height:33px!important;border:1.5px solid #987293!important;background:#fffaf0!important;box-shadow:0 3px #ceadb9!important;color:#795277!important;border-radius:6px!important;font-size:18px!important;z-index:9}
 @media(max-width:760px){#cardBox .pcGrid{grid-template-columns:1fr}#cardBox .pcL{border-right:0;border-bottom:1px solid #e6d6ec}
   #cardBox .pcHd{padding:15px 18px 12px}#cardBox .pcHd .outline-word{font-size:36px;right:52px;top:18px}#cardBox .pcHd .title-chip{font-size:20px}}
+
+/* Keep the companion sprite within the illustration column. */
+#cardBox .pcStage .pcBeside{left:auto;right:-24px;transform:translateY(-100%)}
+
+
+@media(min-width:761px){#cardBox .pcStage .pcBeside canvas{width:140px;height:140px}}
