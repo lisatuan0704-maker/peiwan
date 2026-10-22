@@ -1,12 +1,18 @@
 /* Contact rendering only; identity and mutations remain in the existing handlers. */
 (()=>{'use strict';
 const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
+const avatarCache=new Map();
+function avatar(id,name){const wrap=make('span','contact-avatar');const cv=make('canvas','');cv.width=cv.height=64;cv.setAttribute('role','img');cv.setAttribute('aria-label',name+'的像素小人');wrap.append(cv);
+ const draw=d=>{if(window.TinyTavernUI)TinyTavernUI.draw(cv,d||{front:0,back:0,cloth:0,face:0,hair:0});else if(typeof drawDollTo==='function')drawDollTo(cv,d||DEF_DOLL,'idle');};
+ let doll;try{doll=agents.get(id)?.b?.doll||bosses[id]?.doll}catch{}draw(doll);if(doll)avatarCache.set(id,Promise.resolve(doll));
+ if(!doll){if(!avatarCache.has(id)){try{avatarCache.set(id,db?db.ref(ROOT+'/lobby/'+id).once('value').then(s=>s.val()?.doll).catch(()=>null):Promise.resolve(null))}catch{avatarCache.set(id,Promise.resolve(null))}}avatarCache.get(id).then(d=>{if(d&&cv.isConnected)draw(d)});}return wrap;}
+window.TTContactAvatar=avatar;
 const labels={friends:'好友',requests:'邀請',blocked:'封鎖與屏蔽'};
 function render(host,data,actions){
  let ui=host._contacts;
  if(!ui){
   host.replaceChildren();host.classList.add('tt-contacts');
-  const head=make('div','contacts-heading');head.append(make('small','','MY ADDRESS BOOK'),make('h2','','通訊錄'));
+  const head=make('div','contacts-heading');head.append(make('small','','TAVERN CONNECTIONS'),make('h2','','在酒館，相遇的人。'),make('p','','把想再見的人，留在這一頁。'));const stamp=make('span','contacts-stamp','✦');head.append(stamp);
   const search=make('input','contacts-search');search.type='search';search.placeholder='搜尋名字';search.setAttribute('aria-label','搜尋通訊錄名字');
   const tabs=make('div','contacts-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','通訊錄分類');
   const list=make('div','contacts-list');list.id='contactEntries';list.setAttribute('role','tabpanel');
@@ -27,12 +33,12 @@ function paint(host){const ui=host._contacts,{data,actions,tab}=ui;
  rows.sort((a,b)=>Number(data.present.has(b.id))-Number(data.present.has(a.id))||a.name.localeCompare(b.name,'zh-Hant'));
  ui.result.textContent=query?'找到 '+rows.length+' 位旅人':labels[tab]+' · '+rows.length+' 位';
  const button=(parent,label,fn)=>{const b=make('button','contact-action',label);b.type='button';b.onclick=fn;parent.append(b);};
- for(const row of rows){const article=make('article','contact-entry');article.dataset.contact=row.id;
-  const icon=make('span','contact-initial',Array.from(row.name)[0]);icon.setAttribute('aria-hidden','true');
+ for(const row of rows){const article=make('article','contact-entry');article.dataset.contact=row.id;article.style.setProperty('--contact-tone',String([...row.id].reduce((n,c)=>n+c.codePointAt(0),0)%3));article.dataset.tone=String([...row.id].reduce((n,c)=>n+c.codePointAt(0),0)%3);
+  const icon=avatar(row.id,row.name);article.classList.toggle('is-present',data.present.has(row.id));article.dataset.kind=row.kind;
   const info=make('div','contact-info');info.append(make('strong','',row.name));
-  const state=row.kind==='block'?'已封鎖':row.kind==='hide'?'已在你的畫面屏蔽':row.kind==='request'?'想和你成為好友':data.present.has(row.id)?'在此大廳':'未在此大廳';info.append(make('small','',state));
+  const state=row.kind==='block'?'已封鎖':row.kind==='hide'?'已在你的畫面屏蔽':row.kind==='request'?'想和你成為好友':data.present.has(row.id)?'在此大廳':'未在此大廳';info.append(make('small','contact-presence',state));if(row.kind==='friend')info.append(make('p','contact-last',data.messages[row.id]?.last||'今天也來聊兩句吧。'));
   const controls=make('div','contact-actions');
-  if(row.kind==='friend'){const unread=Number(data.messages[row.id]?.unread)||0;if(unread)info.append(make('span','contact-unread',unread+' 則未讀'));button(controls,'私訊',()=>actions.message(row.id));button(controls,'移除',()=>actions.remove(row.id));}
+  if(row.kind==='friend'){const unread=Number(data.messages[row.id]?.unread)||0;if(unread)info.append(make('span','contact-unread',unread+' 則未讀'));button(controls,'聊聊 ↗',()=>actions.message(row.id));button(controls,'移除',()=>actions.remove(row.id));}
   if(row.kind==='request'){button(controls,'接受',()=>actions.accept(row.id));button(controls,'婉拒',()=>actions.decline(row.id));button(controls,'封鎖',()=>actions.block(row.id));}
   if(row.kind==='block')button(controls,'解除封鎖',()=>actions.unblock(row.id));
   if(row.kind==='hide')button(controls,'解除屏蔽',()=>actions.unhide(row.id));
