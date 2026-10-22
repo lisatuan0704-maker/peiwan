@@ -1545,5 +1545,5 @@ const openLogs=new Set();
 import {mountBinding} from './lobby-ui/partner-binding.mjs?v=300';
 let binding;const timer=setInterval(()=>{if(auth.currentUser&&cid){clearInterval(timer);binding=mountBinding({root:document.getElementById('partnerDiscordBinding'),getUser:()=>auth.currentUser,getCid:()=>cid})}},500);
 window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
-</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=301';mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth});</script></body>
+</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=303';mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth});</script></body>
 </html>
