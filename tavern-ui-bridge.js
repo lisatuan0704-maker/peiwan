@@ -36,7 +36,19 @@
   }
   const companionPets={pet_bubu:{name:'布布',asset:'kabuki'},pet_guigui:{name:'鬼鬼',asset:'rira'},pet_dengdeng:{name:'燈燈',asset:'momo'}};
   function followingPet(d){if(d?.uiBaseSlots?.includes('pet'))return null;const id=d?.ps?.pet||d?.set;return companionPets[id]?{...companionPets[id],id,src:'img/companions-v315/'+companionPets[id].asset+'-pet.gif'}:null;}
-  const previousSetFrame=setFrame;setFrame=function(a,p){const pet=followingPet(a.b?.doll);if(!pet){a._companionPet?.remove();a._companionPet=null;}else if(a.el){let img=a._companionPet;if(!img){img=document.createElement('img');img.className='companion-follower';img.style.cssText='position:absolute;width:32px;height:42px;right:-17px;bottom:7px;pointer-events:none;image-rendering:pixelated;object-fit:contain';a.el.append(img);a._companionPet=img;}if(img.dataset.pet!==pet.id){img.dataset.pet=pet.id;img.src=pet.src;img.alt=pet.name;}}return previousSetFrame(a,p);};
+  const staffPets={'-OxY7C4vDkgsr1zcyWbk':'pet_guigui','-OxY46ezlpnRt64hUIw9':'pet_bubu','-OzbfbQcF6J6fIR6YYGh':'pet_dengdeng'};
+  const previousSetFrame=setFrame;setFrame=function(a,p){
+    const staffPet=a.staff&&staffPets[a.cid];
+    const pet=followingPet(staffPet?{ps:{pet:staffPet}}:a.b?.doll);
+    if(!pet){a._companionPet?.remove();a._companionPet=null;}
+    else if(a.el){
+      let img=a._companionPet;
+      if(!img){img=document.createElement('img');img.className='companion-follower';img.style.cssText='position:absolute;width:32px;height:42px;right:-17px;bottom:7px;pointer-events:none;image-rendering:pixelated;object-fit:contain';a.el.append(img);a._companionPet=img;}
+      if(img.dataset.pet!==pet.id){img.dataset.pet=pet.id;img.src=pet.src;img.alt=pet.name;}
+      if(staffPet){img.style.width='48px';img.style.height='56px';img.style.right='-20px';img.style.bottom='18px';img.style.transform=a.faceLeft?'scaleX(-1)':'';}
+    }
+    return previousSetFrame(a,p);
+  };
   let drinkCounts={},drinkUid=null;
   const drinkCompanions={pet_drink_ghost:{name:'縭',asset:'rira'},pet_drink_blue:{name:'蕪',asset:'kabuki'},pet_drink_sakura:{name:'桃',asset:'momo'}};
   const isDrink=id=>['pet_drink_blue','pet_drink_sakura','pet_drink_ghost'].includes(id);
