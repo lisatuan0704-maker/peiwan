@@ -29,3 +29,24 @@ body[data-shop-category=dye] #singles,body[data-shop-category=dye] #detail,body[
 @media(max-width:600px){.drink-slide{min-width:0;flex-basis:100%;min-height:460px;padding:22px 10px 14px}.drink-track{padding-left:9%;padding-right:9%}.drink-scene{height:320px}.drink-center{width:300px;height:310px;max-width:none}.drink-friend{width:118px;height:130px}.drink-friend.pet{width:124px;height:146px}}
 
 .drink-watermark{position:absolute;left:0;right:0;top:24%;text-align:center;font-family:Arial,sans-serif;font-size:clamp(54px,7vw,82px);font-weight:900;letter-spacing:-4px;line-height:1;color:transparent;-webkit-text-stroke:1px var(--light);opacity:.28;pointer-events:none;user-select:none;z-index:-1}
+
+/* v329: separate hero and companion zones, calibrated per original asset. */
+.drink-slide{padding:24px 14px 18px;min-height:0;background:radial-gradient(ellipse at 20% 5%,var(--wash),transparent 62%),linear-gradient(155deg,var(--card-a),var(--card-b) 86%)}
+.drink-slide[data-tone=kabuki]{--card-a:#639fc9;--card-b:#243f66;--wash:#ffffffdd;--light:#effaff}
+.drink-slide[data-tone=rira]{--card-a:#8856ab;--card-b:#38204f;--wash:#ffae58bb;--light:#ffd0a0}
+.drink-slide[data-tone=momo]{--card-a:#b75e85;--card-b:#17131d;--wash:#ffc5de77;--light:#ffd5e9}
+.drink-heading{display:grid;grid-template-columns:1fr auto;text-align:left;align-items:center;gap:8px;padding:0 10px 15px;border-bottom:1px solid #ffffff29}
+.drink-heading small{grid-column:1/-1;font-size:8px;letter-spacing:2px}
+.drink-heading h2{font-size:24px;margin:0!important;line-height:1.3}
+.drink-heading .drink-unit-price{font-size:11px;white-space:nowrap;border:1px solid #ffffff30;border-radius:20px;padding:7px 9px;background:#ffffff09}
+.drink-watermark{top:21%;opacity:.22}
+.drink-scene{container-type:inline-size;aspect-ratio:320/430;height:auto;min-height:0;margin-top:16px;isolation:isolate}
+.drink-center,.drink-friend,.drink-friend.pet{position:absolute;margin:0;right:auto;bottom:auto;max-width:none;align-self:auto;transform:translate(-50%,-100%)}
+.drink-center{width:var(--drink-size);height:var(--drink-size);left:calc(50% + var(--drink-x));top:var(--drink-bottom)}
+.drink-center:after{display:none}
+.drink-friend.staff{width:var(--staff-size);height:var(--staff-size);left:calc(50% + var(--staff-x));top:var(--staff-bottom)}
+.drink-friend.pet{width:var(--pet-size);height:calc(var(--pet-size)*112/96);left:calc(50% + var(--pet-x));top:var(--pet-bottom);transform:translate(-50%,-100%) scaleX(-1)}
+.drink-scene:after{content:'';position:absolute;left:10%;right:10%;bottom:1%;height:11%;border-radius:50%;background:radial-gradient(ellipse,#0b0a192e,transparent 70%);z-index:-1;pointer-events:none}
+@media(max-width:600px){.drink-slide{padding:20px 12px 14px;min-height:0}.drink-heading{padding:0 2px 12px;gap:6px}.drink-heading h2{font-size:20px}.drink-heading .drink-unit-price{font-size:10px;padding:6px}.drink-scene{height:auto}.drink-heading small{font-size:7px;letter-spacing:1px}}
+
+.drink-slide[data-tone=kabuki] .drink-heading h2,.drink-slide[data-tone=kabuki] .drink-heading small,.drink-slide[data-tone=kabuki] .drink-heading .drink-unit-price{color:#213b59!important;text-shadow:none}.drink-slide[data-tone=kabuki] .drink-unit-price{background:#ffffff66;border-color:#ffffff88}

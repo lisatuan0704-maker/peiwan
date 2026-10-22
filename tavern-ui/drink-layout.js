@@ -1,0 +1,3 @@
+/* Shared 320 x 430 design coordinates for store cards and editor. */
+window.TTDrinkLayout={"kabuki": {"drink": {"size": 350, "x": 0, "y": -100}, "staff": {"size": 142, "x": -91, "y": 14}, "pet": {"size": 158, "x": 94, "y": 16}}, "rira": {"drink": {"size": 362, "x": 4, "y": -95}, "staff": {"size": 145, "x": -88, "y": 14}, "pet": {"size": 154, "x": 97, "y": -1}}, "momo": {"drink": {"size": 348, "x": -4, "y": -105}, "staff": {"size": 142, "x": -89, "y": 12}, "pet": {"size": 143, "x": 99, "y": 12}}};
+window.ttDrinkLayoutStyle=layout=>Object.entries(layout).map(([role,p])=>`--${role}-size:${p.size/3.2}cqw;--${role}-x:${p.x/3.2}cqw;--${role}-bottom:${(430+p.y)/3.2}cqw`).join(';');
