@@ -28,3 +28,9 @@
 #dmM .dm-is-sticker img{display:block;width:100px;height:100px;object-fit:contain}
 #dmM:has(.dm-sticker-tray:not([hidden])) #dmLog{height:min(250px,30dvh)!important;min-height:100px}
 @media(max-width:600px){#dmM .dm-sticker-grid img{height:50px}#dmM .dm-sticker-grid{max-height:145px}#dmM .dm-composer{padding-left:12px;padding-right:12px}#dmM .dm-sticker-tray{padding:10px 14px}}
+
+/* Keep the name beside the avatar rather than centered across the header. */
+#dmM .dm-heading{gap:10px;justify-content:flex-start}
+#dmM .dm-identity,#dmM #dmTitle{text-align:left!important}
+#dmM #dmTitle{margin:0!important;width:auto!important}
+#dmM .dm-heading>.contact-avatar,#dmM .dm-heading>.gx{flex-shrink:0}
