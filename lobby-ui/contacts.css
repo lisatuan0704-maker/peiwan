@@ -33,3 +33,4 @@
 #frM .contacts-empty{background:transparent!important;color:#e0cfe5;border:0;border-radius:0;margin:0}
 @media(max-width:650px){#frM #frBody.tt-contacts{padding:14px!important}#frM #frBody.tt-contacts .contact-entry{grid-template-columns:44px minmax(0,1fr) 60px;gap:10px;padding:13px 10px!important}#frM .contact-avatar{width:44px;height:50px}#frM .contact-avatar canvas{width:44px;height:44px}#frM .contact-info{display:block}#frM .contact-info strong{font-size:14px}#frM .contact-info .contact-presence{margin-top:4px;font-size:10px}#frM .contact-last{margin-top:5px;font-size:11px}#frM .contact-actions{flex-direction:column;gap:2px;align-items:stretch}#frM .contact-action,#frM .contact-action:first-child{min-width:0;padding:6px;font-size:11px;min-height:29px}#frM #frBody.tt-contacts .contacts-heading h2{font-size:22px}}
 @media(prefers-reduced-motion:reduce){#frM .contact-entry{transition:none!important}}
+#frM .contact-action{white-space:nowrap}
