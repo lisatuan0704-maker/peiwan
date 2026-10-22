@@ -105,16 +105,21 @@
   const wrap=document.createElement('section');wrap.className='drink-carousel';wrap.setAttribute('aria-label','選擇飲料');
   const index=Math.max(0,list.findIndex(x=>x.id===p.id));
   wrap.innerHTML='<div class="drink-track" tabindex="0" aria-label="左右滑動選擇飲料">'+list.map((entry,i)=>{const o=entry.product,a=o.companion;return '<article class="drink-slide '+(i===index?'is-current':'')+'" data-tone="'+esc(a?.asset||'rira')+'" aria-label="'+esc(entry.name)+'"><div class="drink-heading"><small>FOR YOU · 一杯小小心意</small><h2>'+esc(entry.name)+'</h2><div class="drink-unit-price">每杯 99 金幣</div></div><div class="drink-scene">'+(a?'<img class="drink-friend staff" src="../img/companions-v315/'+esc(a.asset)+'-staff.gif" alt="'+esc(a.name)+'">':'')+'<div class="drink-center"><img src="'+esc(o.img)+'" alt="'+esc(entry.name)+'"></div>'+(a?'<img class="drink-friend pet" src="../img/companions-v315/'+esc(a.asset)+'-pet.gif" alt="'+esc(a.name)+'的寵物">':'')+'</div></article>'}).join('')+'</div><nav class="drink-navigation" aria-label="切換飲料"><button type="button" class="drink-prev" aria-label="上一款飲料">←</button><div class="drink-dots">'+list.map((entry,i)=>'<button type="button" data-drink-index="'+i+'" aria-label="'+esc(entry.name)+'" aria-current="'+(i===index)+'"></button>').join('')+'</div><button type="button" class="drink-next" aria-label="下一款飲料">→</button></nav>';
-  const track=wrap.querySelector('.drink-track');let ready=false;const slides=[...track.children];const offset=i=>slides[i].offsetLeft-track.offsetLeft-(track.clientWidth-slides[i].offsetWidth)/2;const nearest=()=>slides.reduce((best,el,i)=>Math.abs(offset(i)-track.scrollLeft)<Math.abs(offset(best)-track.scrollLeft)?i:best,0);
+  const track=wrap.querySelector('.drink-track');let ready=false,drag=null,touching=false;const slides=[...track.children];const offset=i=>slides[i].offsetLeft-track.offsetLeft-(track.clientWidth-slides[i].offsetWidth)/2;const nearest=()=>slides.reduce((best,el,i)=>Math.abs(offset(i)-track.scrollLeft)<Math.abs(offset(best)-track.scrollLeft)?i:best,0);
   const choose=i=>{if(drinkBusy)return;i=(i+list.length)%list.length;if(list[i].id===selected)return;['drinkSubmit','drinkPlus','drinkMinus'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});track.scrollTo({left:offset(i),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});};
   wrap.querySelector('.drink-prev').onclick=()=>choose(index-1);wrap.querySelector('.drink-next').onclick=()=>choose(index+1);
   wrap.querySelectorAll('[data-drink-index]').forEach(b=>b.onclick=()=>choose(Number(b.dataset.drinkIndex)));
   wrap.querySelectorAll('button').forEach(b=>b.disabled=drinkBusy||list.length<2);
   track.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();choose(index+(e.key==='ArrowRight'?1:-1));}};
-  track.onscroll=()=>{if(!ready||drinkBusy)return;const i=nearest();slides.forEach((el,n)=>el.classList.toggle('is-current',n===i));clearTimeout(track.timer);track.timer=setTimeout(()=>{if(!track.isConnected)return;const n=nearest();if(list[n].id!==selected){selected=list[n].id;drinkQuantity=1;render();}},180);};
+  track.onscroll=()=>{if(!ready||drinkBusy||drag||touching)return;const i=nearest();slides.forEach((el,n)=>el.classList.toggle('is-current',n===i));clearTimeout(track.timer);track.timer=setTimeout(()=>{if(!track.isConnected)return;const n=nearest();if(list[n].id!==selected){selected=list[n].id;drinkQuantity=1;render();}},180);};
+  track.querySelectorAll('img').forEach(img=>img.draggable=false);
+  track.onpointerdown=e=>{if(drinkBusy)return;if(e.pointerType==='touch'){touching=true;clearTimeout(track.timer);return;}if(e.button!==0)return;clearTimeout(track.timer);drag={x:e.clientX,start:track.scrollLeft};track.setPointerCapture(e.pointerId);track.classList.add('dragging');};
+  track.onpointermove=e=>{if(!drag)return;track.scrollLeft=drag.start+drag.x-e.clientX;};
+  const endDrag=()=>{if(touching){touching=false;track.onscroll();return;}if(!drag)return;drag=null;track.classList.remove('dragging');track.scrollTo({left:offset(nearest()),behavior:'smooth'});track.onscroll();};
+  track.onpointerup=endDrag;track.onpointercancel=endDrag;
   requestAnimationFrame(()=>{track.scrollLeft=offset(index);requestAnimationFrame(()=>ready=true);});return wrap;
  }
- const drinkDesign=document.createElement('link');drinkDesign.rel='stylesheet';drinkDesign.href='drink-cards.css?v=317';document.head.append(drinkDesign);
+ const drinkDesign=document.createElement('link');drinkDesign.rel='stylesheet';drinkDesign.href='drink-cards.css?v=326';document.head.append(drinkDesign);
  function showDrinkDialogue(result,product){
   let dialog=document.getElementById('drinkDialogue');if(!dialog){dialog=document.createElement('dialog');dialog.id='drinkDialogue';dialog.style.cssText='max-width:420px;width:calc(100% - 48px);border:2px solid #cab5d9;border-radius:18px;background:#fff8fb;color:#614461;padding:24px;box-shadow:0 12px 48px #55334c55';document.body.append(dialog);}
   dialog.replaceChildren();const msg=document.createElement('p');msg.style.cssText='font-size:18px;line-height:1.8;white-space:pre-wrap';msg.textContent=result.message;const done=document.createElement('button');done.className='primary';done.textContent='關閉';done.onclick=()=>dialog.close();dialog.append(companionArt(product),msg,done);dialog.showModal();
@@ -149,7 +154,7 @@
   const cats=[...(area==='store'?[['bundles','當季套組']]:[]),...categories,...(area==='store'?[['dye','染髮券']]:[])];
   $('#categories').innerHTML=cats.map(([id,name])=>'<button data-category="'+id+'" aria-pressed="'+(id===category)+'"'+(id==='dye'?' class="cat-dye"':'')+'><span>'+name+'</span></button>').join('');
   $$('[data-category]').forEach(b=>b.onclick=()=>{category=b.dataset.category;page=0;selected=null;render();});
-  if(dyeShop){renderDyeShop();dyeCta();swatches();paint();return;}
+  if(dyeShop){$('#grid').replaceChildren();$('#subtabs').replaceChildren();$('#pager').replaceChildren();$('#bundlePager').replaceChildren();$('#detail').replaceChildren();renderDyeShop();dyeCta();swatches();paint();return;}
   $('#singles').classList.toggle('has-accessory-filter',category==='acc');
   $('#subtabs').innerHTML=category==='acc'?'<nav class="accessory-filter" aria-label="配件部位">'+[['all','全部'],...Object.entries(groupNames)].map(([id,n])=>'<button data-group="'+id+'" aria-pressed="'+(id===filter)+'">'+n+'</button>').join('')+'</nav>':category==='hair'?(area==='bag'?'瀏海與後髮可分別搭配':'完整髮型 · 整組試穿'):'點圖片，即時試穿';
   if(area==='bag'&&category==='hair'){

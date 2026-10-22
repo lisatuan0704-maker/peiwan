@@ -16,3 +16,14 @@ body[data-shop-category=other] #detail>.actions{border-top:1px solid #e3c2e324;m
 @media(max-width:600px){.drink-track{padding-left:7%;padding-right:7%;gap:10px}.drink-slide{padding:22px 8px 10px;border-radius:19px}.drink-heading h2{font-size:24px}.drink-heading small{font-size:8px;letter-spacing:1.5px}.drink-scene{gap:1px;min-height:218px}.drink-center{width:180px;height:205px;max-width:64%}.drink-friend{width:38px;height:48px}.drink-friend.pet{width:34px;height:46px}body[data-shop-category=other] #detail>.actions{margin:0 6%;gap:12px}#drinkSubmit{padding:12px 18px}}
 @media(prefers-reduced-motion:reduce){.drink-slide{transition:none}.drink-slide:after{animation:none;transform:translateX(0)}.drink-navigation>button{transition:none}}
 body[data-shop-category=other] #catalog #categories button{background:#ffffff0b!important;border-color:#b99ab34d!important;color:#d4becf!important}body[data-shop-category=other] #catalog #categories button[aria-pressed=true]{background:#ba93af!important;color:#fff8ef!important;border-color:#ddbacf!important}body[data-shop-category=other] #catalog #categories .cat-dye{background:#6c527b!important;color:#edcff0!important}
+
+/* v326: portrait collectible cards, with real mouse dragging and native touch scrolling. */
+body[data-shop-category=dye] #singles,body[data-shop-category=dye] #detail,body[data-shop-category=dye] #bundlePager{display:none!important}
+.drink-track{--card-width:min(420px,82%);padding:16px max(9%,calc((100% - 420px)/2)) 28px;scroll-padding:0;cursor:grab;touch-action:pan-x pan-y;perspective:none}
+.drink-track.dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}
+.drink-slide{flex:0 0 var(--card-width);width:var(--card-width);min-width:280px;min-height:510px;padding:28px 14px 18px;border-radius:22px}
+.drink-scene{height:370px;min-height:0;display:block;position:relative}
+.drink-center{position:absolute;width:230px;height:260px;max-width:none;left:50%;top:18px;transform:translateX(-50%)}
+.drink-friend{position:absolute;left:0;bottom:4px;width:142px;height:146px;margin:0;z-index:2}
+.drink-friend.pet{left:auto;right:-8px;bottom:0;width:146px;height:164px;margin:0;transform:scaleX(-1)}
+@media(max-width:600px){.drink-slide{min-width:0;flex-basis:100%;min-height:460px;padding:22px 10px 14px}.drink-track{padding-left:9%;padding-right:9%}.drink-scene{height:320px}.drink-center{width:200px;height:220px;max-width:none}.drink-friend{width:118px;height:130px}.drink-friend.pet{width:124px;height:146px}}

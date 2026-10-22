@@ -3435,9 +3435,11 @@ const STAFF_GIF={'-OxY7C4vDkgsr1zcyWbk':{asset:'rira',name:'縭',top:6,bottom:10
 const lastStaffPosts=new Map();
 function randomStaffPost(cid){
   const occupied=[...agents.values()].filter(a=>a.staff&&a.cid!==cid&&a.state!=='exit'&&a.post).map(a=>[a.post[0]*1600,a.post[1]*900]);
-  const previous=lastStaffPosts.get(cid);let best=null,bestScore=-1;
+  const previous=lastStaffPosts.get(cid);let best=TTScene.nearest([280,580]),bestScore=-1;
   for(let i=0;i<100;i++){
-    const p=TTScene.nearest([440+Math.random()*780,500+Math.random()*140]);
+    const side=Math.random()<.5;
+    const p=TTScene.nearest([side?200+Math.random()*180:1220+Math.random()*140,490+Math.random()*140]);
+    if(p[0]>420&&p[0]<1180)continue;
     const score=Math.min(...occupied.map(o=>Math.hypot(p[0]-o[0],(p[1]-o[1])*1.5)),previous?Math.hypot(p[0]-previous[0],p[1]-previous[1])*2:Infinity);
     if(score>bestScore){best=p;bestScore=score;}
     if(score>=230&&occupied.every(o=>Math.abs(p[1]-o[1])>=28)) {best=p;break;}
@@ -7685,7 +7687,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=325"></script>
+<script src="tavern-ui-bridge.js?v=326"></script>
 <script src="lobby-ui/live.js?v=316"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
