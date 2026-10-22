@@ -2219,7 +2219,7 @@ if(TEST_MODE){
     const customAcc=z=>csAccBy(d,z).forEach(v=>layer(/尾巴/.test(v.n||'')?'tail':'rigid',fg=>csDrawV(fg,v,hi,hx,hx2)));
     const nativeAcc=(list,kind)=>{if(!strict&&list?.length)layer(kind,fg=>accLayer(fg,list,hi,hx));};
     slot('back','後髮',d.back||0,'hair',false);customAcc('back');nativeAcc(ap.b,'tail');nativeAcc(ap.m,'rigid');
-    layer('body',fg=>{if(!csSlot(fg,d,'body',hi,hx,hx2)&&!strict){const im=tpBody(pose,d.skin||0);if(im.complete)fg.drawImage(im,0,0,64,64);}});
+    layer('body',fg=>{const ownSkin=Number.isInteger(d.skin)&&d.skin>=0&&d.skin<4;if(ownSkin||(!csSlot(fg,d,'body',hi,hx,hx2)&&!strict)){const im=tpBody(pose,d.skin||0);if(im.complete)fg.drawImage(im,0,0,64,64);}});
     slot('cloth','衣服',d.cloth||0,'cloth',false);
     layer('rigid',fg=>{
       let done=false;if(d._blink){if(csSlot(fg,d,'eyeClose',hi,hx,hx2))done=true;else if(!strict){const ce=tpCloseEye();if(ce){tpDraw(fg,ce,hi,hx);done=true;}}}
@@ -3110,8 +3110,8 @@ function tick(now){
         }
         if(a.atkT>0) a.atkT=Math.max(0, a.atkT-dt*4);
       }
-      else if(dist<6){
-        if(a.state==='enter'||a.state==='back'){ a.state='post'; }
+      else if(dist<6&&!a._sceneTransit){
+        if(a.state==='enter'||a.state==='back'){a.x=a.tx;a.y=a.ty;a.state='post';}
         else if(a.state==='toDoor'){
           a.mapLoc='forest';
           const sp2=MAPS.hall.door.spawn; a.x=sp2[0]; a.y=sp2[1];
@@ -3125,8 +3125,8 @@ function tick(now){
         }
         else if(a.state==='exit'){ a.el.remove(); agents.delete(a.key); return; }
       }else{
-        const sp=125*depthNow;
-        a.x+=dxp/dist*sp*dt/WORLD.w; a.y+=dyp/dist*sp*dt/WORLD.h;
+        const step=Math.min(dist,125*depthNow*dt);
+        if(dist>0){a.x+=dxp/dist*step/WORLD.w;a.y+=dyp/dist*step/WORLD.h;}
         if(Math.abs(dxp)>12){const nl=dxp<0;if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
       }
     }
@@ -3464,9 +3464,9 @@ function makeStaff(cid, st, idx){
   el.appendChild(sh);el.appendChild(led);el.appendChild(cv);el.appendChild(tag);
   world.appendChild(el);
   const look=STAFF_LOOKS[hash(cid)%STAFF_LOOKS.length];
-  const post=randomStaffPost(cid);
+  const post=randomStaffPost(cid),entrance=TTScene.spawn(hash(cid));
   const a={key:'staff_'+cid,cid,el,cv,tag,sh:sh,led,
-    x:1.04,y:post[1],tx:post[0],ty:post[1],
+    x:entrance[0]/1600,y:entrance[1]/900,tx:post[0],ty:post[1],
     post, serveSpot:SERVE[idx%SERVE.length], mapLoc:'hall',
     state:'enter',timer:0,seed:hash(cid)%10,
     faceLeft:true,flipT:-1,flipping:false,sitting:false,
@@ -7669,7 +7669,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=335"></script>
+<script src="tavern-ui-bridge.js?v=336"></script>
 <script src="lobby-ui/live.js?v=316"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>

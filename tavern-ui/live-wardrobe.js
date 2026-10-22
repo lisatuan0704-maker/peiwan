@@ -7,7 +7,7 @@
  const categories=[['hair','頭髮'],['cloth','衣服'],['acc','配件'],['eye','臉'],['pet','寵物'],['seat','座椅'],['other','其他']];
  const groupNames={head:'頭飾',ear:'耳環',face:'面部配件',hand:'手持物',back:'背飾／尾巴'};
  let data,selection={},color={},area='store',category='bundles',mode='singles',filter='all',page=0,selected=null,saving=false;
- let drinkQuantity=1,drinkBusy=false;
+ let drinkQuantity=1,drinkBusy=false,drinkDialogOpen=false;
  let hairSection='original',seasonPage=0;
  let dyeDraft=null,bagSection='wear',dyeSaving=false,dyeRequest=null;
  const bagNav=document.createElement('nav');bagNav.className='archive-nav';bagNav.setAttribute('aria-label','背包收納');
@@ -101,6 +101,25 @@
  }
  const companionStyle=document.createElement('style');companionStyle.textContent='body[data-shop-category=other] #grid .item{min-height:220px;grid-template-rows:14px minmax(145px,1fr) 36px}body[data-shop-category=other] #grid{grid-auto-rows:minmax(220px,auto)} .thumb:has(.drink-product-image){position:relative;overflow:hidden}.thumb .drink-product-image{width:100%;height:100%;object-fit:contain;image-rendering:auto;position:absolute;inset:0;display:block} .drink-companions{display:flex;justify-content:center;align-items:end;gap:20px;margin:12px 0}.drink-companions figure{margin:0;text-align:center}.drink-companions img{display:block;object-fit:contain;image-rendering:pixelated;width:100px;height:114px}.drink-companions .drink-pet{width:80px;height:104px}.drink-companions figcaption{font-size:12px;margin-top:4px}#detail:has(.drink-companions){display:grid!important;grid-template-columns:minmax(0,1fr);height:auto!important;min-height:0;gap:8px}#detail>.drink-companions{grid-row:2;margin:0}#detail:has(.drink-companions)>.actions{display:flex!important;flex-wrap:wrap;justify-content:center;gap:10px;min-width:0;max-width:100%;grid-row:3}#detail:has(.drink-companions) .primary{max-width:100%;white-space:normal}';document.head.append(companionStyle);const carouselStyle=document.createElement('style');carouselStyle.textContent="\nbody[data-shop-category=other] .workspace{grid-template-columns:minmax(0,1fr)!important}body[data-shop-category=other] #catalog{grid-column:1/-1!important;width:100%} .drink-heading .drink-unit-price{display:block!important;text-align:center!important}body[data-shop-category=other] #grid,body[data-shop-category=other] #pager,body[data-shop-category=other] #bundlePager{display:none!important}\nbody[data-shop-category=other] #detail{display:flex!important;flex-direction:column;padding:0 0 24px;gap:14px;overflow:hidden;border-radius:24px;background:linear-gradient(145deg,#fffcf6,#f5e2e6);min-width:0}\nbody[data-shop-category=other] #detail>div:first-of-type{display:none}\nbody[data-shop-category=other] #detail>.actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:16px;padding:0 16px}\n.drink-carousel{width:100%;min-width:0}.drink-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x pan-y}.drink-track::-webkit-scrollbar{display:none}\n.drink-slide{flex:0 0 100%;min-width:0;scroll-snap-align:center;scroll-snap-stop:always;text-align:center;padding:22px 16px 0;box-sizing:border-box}\n.drink-heading small{font-size:10px;letter-spacing:2px;color:#ae7d80}.drink-heading h2{font-size:26px;margin:8px 0}.drink-heading .drink-unit-price{font-size:13px;margin:0;color:#9d7373}\n.drink-scene{display:flex;align-items:center;justify-content:center;gap:14px;min-height:250px;position:relative}.drink-center{width:240px;height:240px;max-width:50%;position:relative;display:grid;place-items:center}.drink-center:before{content:\"\";position:absolute;inset:15%;border-radius:50%;background:#fff9f3;box-shadow:0 0 55px #fff9f3}.drink-center img{position:relative;width:100%;height:100%;object-fit:contain}\n.drink-friend{object-fit:contain;image-rendering:pixelated;width:72px;height:82px;flex-shrink:0;align-self:flex-end;margin-bottom:44px}.drink-friend.pet{width:58px;height:76px;transform:scaleX(-1)}\n.drink-navigation{display:flex;justify-content:center;align-items:center;gap:24px;padding:0 16px 8px}.drink-navigation>button{width:36px;height:36px;border-radius:50%;font-size:19px}.drink-dots{display:flex;gap:10px}.drink-dots button{width:9px;height:9px;padding:0;border-radius:50%;background:#dfc7c7;border:0}.drink-dots button[aria-current=true]{background:#9c606b;box-shadow:0 0 0 4px #9c606b15}\n@media(max-width:600px){.drink-slide{padding:20px 8px 0}.drink-scene{gap:4px;min-height:208px}.drink-center{width:190px;height:190px;max-width:60%}.drink-friend{width:48px;height:58px;margin-bottom:34px}.drink-friend.pet{width:42px;height:56px}.drink-heading h2{font-size:23px}}\n";document.head.append(carouselStyle);
  function companionArt(product){const info=product?.companion;if(!info||!['rira','kabuki','momo'].includes(info.asset))return document.createElement('span');const row=document.createElement('div');row.className='drink-companions';for(const role of ['staff','pet']){const figure=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');img.src='../img/companions-v315/'+info.asset+'-'+role+'.gif';img.alt=role==='staff'?info.name:info.name+'的寵物';if(role==='pet')img.className='drink-pet';label.textContent=role==='staff'?info.name:'寵物';figure.append(img,label);row.append(figure)}return row;}
+
+ const orderStyle=document.createElement('link');orderStyle.rel='stylesheet';orderStyle.href='drink-order.css?v=336';document.head.append(orderStyle);
+ const orderDialog=document.createElement('dialog');orderDialog.id='drinkOrderDialog';orderDialog.setAttribute('aria-labelledby','drinkOrderTitle');document.body.append(orderDialog);
+ function closeDrinkOrder(){if(drinkBusy)return;drinkDialogOpen=false;orderDialog.close();document.querySelector('.drink-slide.is-current')?.focus();}
+ orderDialog.addEventListener('cancel',e=>{e.preventDefault();closeDrinkOrder()});
+ orderDialog.addEventListener('click',e=>{if(e.target===orderDialog)closeDrinkOrder()});
+ function updateDrinkOrder(p){
+  const actions=$('#detail>.actions');if(!drinkDialogOpen){actions?.remove();if(orderDialog.open)orderDialog.close();return;}
+  const oldScroll=orderDialog.scrollTop,wasOpen=orderDialog.open,focused=document.activeElement?.id,card=$('#detail .drink-slide.is-current').cloneNode(true);card.removeAttribute('tabindex');card.removeAttribute('role');card.classList.add('order-card');
+  orderDialog.dataset.tone=p.product.companion?.asset||'rira';
+  orderDialog.innerHTML='<div class="drink-order-shell"><i class="order-flow flow-one" aria-hidden="true"></i><i class="order-flow flow-two" aria-hidden="true"></i><button class="order-close" aria-label="關閉飲料選購">×</button><div class="order-art"></div><section class="order-copy"><small>TINY TAVERN · FOR YOU</small><h2 id="drinkOrderTitle">老闆今天<br>需要幾杯呢？</h2><p class="order-product"></p><p class="order-note"></p><div class="order-controls"></div><button class="order-return">再看看其他飲料</button><p class="order-feedback" role="status"></p></section></div>';
+  orderDialog.querySelector('.order-art').append(card);orderDialog.querySelector('.order-product').textContent=p.name;
+  orderDialog.querySelector('.order-note').textContent=area==='bag'?'選好杯數，把心意送給夥伴。':'每杯 99 金幣 · 購買後收進背包';
+  if(actions)orderDialog.querySelector('.order-controls').append(actions);
+  orderDialog.querySelector('.order-close').onclick=closeDrinkOrder;orderDialog.querySelector('.order-return').onclick=closeDrinkOrder;
+  if(!orderDialog.open)orderDialog.showModal();
+  if(focused&&orderDialog.querySelector('#'+focused))orderDialog.querySelector('#'+focused).focus({preventScroll:true});else orderDialog.querySelector('.order-close')?.focus({preventScroll:true});orderDialog.scrollTop=wasOpen?oldScroll:0;
+ }
+
  function drinkCarousel(list,p){
   const wrap=document.createElement('section');wrap.className='drink-carousel';wrap.setAttribute('aria-label','選擇飲料');
   const index=Math.max(0,list.findIndex(x=>x.id===p.id));
@@ -111,12 +130,13 @@
   wrap.querySelectorAll('[data-drink-index]').forEach(b=>b.onclick=()=>choose(Number(b.dataset.drinkIndex)));
   wrap.querySelectorAll('button').forEach(b=>b.disabled=drinkBusy||list.length<2);
   track.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();choose(index+(e.key==='ArrowRight'?1:-1));}};
-  track.onscroll=()=>{if(!ready||drinkBusy||drag||touching)return;const i=nearest();slides.forEach((el,n)=>el.classList.toggle('is-current',n===i));clearTimeout(track.timer);track.timer=setTimeout(()=>{if(!track.isConnected)return;const n=nearest();if(list[n].id!==selected){selected=list[n].id;drinkQuantity=1;render();}},180);};
+  track.onscroll=()=>{if(touching)track.suppressClick=true;if(!ready||drinkBusy||drag||touching)return;const i=nearest();slides.forEach((el,n)=>el.classList.toggle('is-current',n===i));clearTimeout(track.timer);track.timer=setTimeout(()=>{if(!track.isConnected)return;const n=nearest();if(list[n].id!==selected){selected=list[n].id;drinkQuantity=1;render();}},180);};
   track.querySelectorAll('img').forEach(img=>img.draggable=false);
-  track.onpointerdown=e=>{if(drinkBusy)return;if(e.pointerType==='touch'){touching=true;clearTimeout(track.timer);return;}if(e.button!==0)return;clearTimeout(track.timer);drag={x:e.clientX,start:track.scrollLeft};track.setPointerCapture(e.pointerId);track.classList.add('dragging');};
-  track.onpointermove=e=>{if(!drag)return;track.scrollLeft=drag.start+drag.x-e.clientX;};
+  track.onpointerdown=e=>{if(drinkBusy)return;track.suppressClick=false;if(e.pointerType==='touch'){touching=true;clearTimeout(track.timer);return;}if(e.button!==0)return;clearTimeout(track.timer);drag={x:e.clientX,start:track.scrollLeft};track.classList.add('dragging');};
+  track.onpointermove=e=>{if(!drag)return;if(Math.abs(e.clientX-drag.x)>8){track.suppressClick=true;track.setPointerCapture(e.pointerId);}track.scrollLeft=drag.start+drag.x-e.clientX;};
   const endDrag=()=>{if(touching){touching=false;track.onscroll();return;}if(!drag)return;drag=null;track.classList.remove('dragging');track.scrollTo({left:offset(nearest()),behavior:'smooth'});track.onscroll();};
   track.onpointerup=endDrag;track.onpointercancel=endDrag;
+  slides.forEach((slide,i)=>{slide.tabIndex=0;slide.setAttribute('role','button');slide.setAttribute('aria-label',list[i].name+'，選擇杯數');const open=()=>{if(drinkBusy||track.suppressClick)return;selected=list[i].id;drinkQuantity=1;drinkDialogOpen=true;render()};slide.onclick=open;slide.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();open()}};});
   requestAnimationFrame(()=>{track.scrollLeft=offset(index);requestAnimationFrame(()=>ready=true);});return wrap;
  }
  const drinkDesign=document.createElement('link');drinkDesign.rel='stylesheet';drinkDesign.href='drink-cards.css?v=332';document.head.append(drinkDesign);
@@ -124,7 +144,7 @@
   let dialog=document.getElementById('drinkDialogue');if(!dialog){dialog=document.createElement('dialog');dialog.id='drinkDialogue';dialog.style.cssText='max-width:420px;width:calc(100% - 48px);border:2px solid #cab5d9;border-radius:18px;background:#fff8fb;color:#614461;padding:24px;box-shadow:0 12px 48px #55334c55';document.body.append(dialog);}
   dialog.replaceChildren();const msg=document.createElement('p');msg.style.cssText='font-size:18px;line-height:1.8;white-space:pre-wrap';msg.textContent=result.message;const done=document.createElement('button');done.className='primary';done.textContent='關閉';done.onclick=()=>dialog.close();dialog.append(companionArt(product),msg,done);dialog.showModal();
  }
- function setArea(next){drinkQuantity=1;area=next==='bag'?'bag':'store';bagSection='wear';category=area==='store'?'bundles':'hair';hairSection='original';page=0;selected=null;filter='all';mode='singles';render();}
+ function setArea(next){drinkDialogOpen=false;orderDialog.close();drinkQuantity=1;area=next==='bag'?'bag':'store';bagSection='wear';category=area==='store'?'bundles':'hair';hairSection='original';page=0;selected=null;filter='all';mode='singles';render();}
  window.ttDyeShop=()=>{if(area!=='store'){init();setArea('store');syncOuter('store');}category='dye';render();};
  function swatches(){
   const preset=[0,2,3,4,5,6,7,1,9].filter(i=>data.colors[i]);
@@ -180,7 +200,8 @@
     $('#detail').prepend(drinkCarousel(list,p));
     $('#drinkMinus').disabled=drinkBusy||drinkQuantity<=1;$('#drinkPlus').disabled=drinkBusy||drinkQuantity>=max;$('#drinkSubmit').disabled=drinkBusy||max<1;
     $('#drinkMinus').onclick=()=>{drinkQuantity--;render()};$('#drinkPlus').onclick=()=>{drinkQuantity++;render()};
-    $('#drinkSubmit').onclick=async()=>{if(drinkBusy)return;const action=area==='bag'?'feed':'buy',qty=drinkQuantity;if(!confirm(action==='buy'?'購買 '+qty+' 杯，共 '+(qty*99)+' 金幣？':'餵食 '+qty+' 杯？將消耗 '+qty+' 杯飲料。'))return;drinkBusy=true;render();try{const result=await api.drinkAction(action,p.product.id,qty);data=api.state();if(action==='feed')showDrinkDialogue(result,p.product);else tell('已購買 '+qty+' 杯，可到背包 → 其他餵食。');}catch(e){tell(e.message)}finally{drinkBusy=false;render()}};
+    $('#drinkSubmit').onclick=async()=>{if(drinkBusy)return;const action=area==='bag'?'feed':'buy',qty=drinkQuantity;drinkBusy=true;render();try{const result=await api.drinkAction(action,p.product.id,qty);data=api.state();drinkDialogOpen=false;orderDialog.close();if(action==='feed')showDrinkDialogue(result,p.product);else tell('已購買 '+qty+' 杯，可到背包 → 其他餵食。');}catch(e){tell(e.message);orderDialog.dataset.error=e.message}finally{drinkBusy=false;render();if(orderDialog.open)orderDialog.querySelector('.order-feedback').textContent=orderDialog.dataset.error||''}};
+    updateDrinkOrder(p);
    }
   }
   if(mode==='bundles')renderBundles();
@@ -279,7 +300,7 @@
  $$('#dyeDialog input').forEach(el=>el.oninput=updateDye);$('#dyeTicket').onclick=()=>openDye();
  document.querySelector('.paneltitle strong').textContent='我的試衣舞臺';document.querySelector('.collection-mark span').textContent='星光換裝間';document.querySelector('.collection-mark strong').textContent='DRESS UP & PLAY';
  window.ttDressArea=next=>{init();setArea(next);};
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();if(!$('#dyeDialog').hidden)closeDye();else api.close();}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();if(orderDialog.open){closeDrinkOrder();return;}if(!$('#dyeDialog').hidden)closeDye();else api.close();}});
  let compactLayout=innerWidth<601;
  window.addEventListener('resize',()=>{const next=innerWidth<601;if(next!==compactLayout){compactLayout=next;render();}});
  init();render();[200,600,1400,3000].forEach(t=>setTimeout(paint,t));
