@@ -56,6 +56,7 @@ function restoreAccount(dcid){
 }
 (function(){
   const card=document.getElementById('card');
+  if(sessionStorage.getItem('tt_voice_rehearsal_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=301').then(m=>m.finishRehearsal(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
   if(sessionStorage.getItem('tt_partner_discord_bind_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/partner-binding.mjs?v=300').then(m=>m.finishBinding(callback,firebase.auth(),card)).catch(()=>{card.textContent='無法載入綁定功能，請返回陪玩工作頁重試。'});return;}
   function fail(msg){
     card.innerHTML='<h1>綁定沒有成功</h1><p>'+msg+'</p><a class="btn" href="lobby.html">回酒館大廳</a>';

@@ -483,7 +483,7 @@ button:not(:disabled):active{scale:.94}
         <span style="color:#A9834E">(已預約的單不受影響,時間到還是要出席)</span>
       </div>
     </div>
-    <div class="tabs">
+    <div id="partnerVoiceInbox"></div><div class="tabs">
       <button id="tb0" class="on" onclick="showTab(0)">🔔 新單<span id="cntNew"></span></button>
       <button id="tb1" onclick="showTab(1)">⏱️ 進行中<span id="cntRun"></span></button>
       <button id="tb2" onclick="showTab(2)">📖 本月</button>
@@ -1545,5 +1545,5 @@ const openLogs=new Set();
 import {mountBinding} from './lobby-ui/partner-binding.mjs?v=300';
 let binding;const timer=setInterval(()=>{if(auth.currentUser&&cid){clearInterval(timer);binding=mountBinding({root:document.getElementById('partnerDiscordBinding'),getUser:()=>auth.currentUser,getCid:()=>cid})}},500);
 window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
-</script></body>
+</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=301';mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth});</script></body>
 </html>
