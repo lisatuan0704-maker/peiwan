@@ -7653,7 +7653,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/membership.js?v=273"></script>
 <script src="lobby-ui/order-flow.js?v=274"></script>
 <script type="module">
-import {beginRehearsal,mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=303';
+import {beginRehearsal,mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=304';
 window.beginVoiceRehearsal=()=>beginRehearsal(_selStaff()?.cid);
 const timer=setInterval(()=>{const entry=document.getElementById('voiceRehearsalEntry');if(entry)entry.hidden=!(curKind==='play'&&_selStaff()&&myKey&&typeof agents!=='undefined'&&agents.get(myKey)?.b?.name==='吉喵喵測試用')},500);
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'開啟信箱查看進房連結',onclick:()=>{renderMailBox();gOpen('mailBoxM')}})});
