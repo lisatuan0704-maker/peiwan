@@ -2358,6 +2358,9 @@ try{ localStorage.removeItem('tt_avabox'); }catch(e){}   /* 已定案,不再自�
    隨 VIP 等級解鎖:vip1 迎賓~vip5 貴賓。pic 給照片用;小人像素圖四邊有留白,用 doll(放大一點、往下一點) */
 /* v259:pic/doll 位置為 D 用 frame-adjust.html 校正後的參數 */
 const TTF_ART={
+  companion_rira:{nm:'大卡角色框',src:'img/frames/companions/companion_rira.png',pic:{x:50,y:50,d:66},doll:{x:50,y:50,d:66}},
+  companion_kabuki:{nm:'卡布角色框',src:'img/frames/companions/companion_kabuki.png',pic:{x:50,y:50,d:66},doll:{x:50,y:50,d:66}},
+  companion_momo:{nm:'小mo角色框',src:'img/frames/companions/companion_momo.png',pic:{x:50,y:50,d:66},doll:{x:50,y:50,d:66}},
   vip1:{nm:'藍調樂手框',src:'img/frames/vip1.webp',pic:{x:50.2,y:51.3,d:77},doll:{x:50.7,y:49.6,d:74.8}},
   vip2:{nm:'酒館饗宴框',src:'img/frames/vip2.webp',pic:{x:50.2,y:51.3,d:79.9},doll:{x:53.1,y:51.2,d:77}},
   vip3:{nm:'薔薇緞帶框',src:'img/frames/vip3.webp',pic:{x:50.15,y:56.45,d:74.3},doll:{x:51.4,y:54.9,d:73.4}},
@@ -5978,11 +5981,12 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   /* v257:頭像框全部改為繪師圖。花圈框人人可用;VIP1~5 各解鎖一款(繪師交件),舊 CSS 框退役 */
   const FRAMES2=[
     {n:'花圈框',cls:'wr1',own:true},
+    ...['rira','kabuki','momo'].map(k=>({n:TTF_ART['companion_'+k].nm,cls:'companion_'+k,companion:true,req:'與該位陪玩累積 10 小時解鎖'})),
     {n:TTF_ART.vip1.nm,cls:'vip1',vip:1},{n:TTF_ART.vip2.nm,cls:'vip2',vip:2},{n:TTF_ART.vip3.nm,cls:'vip3',vip:3},
     {n:TTF_ART.vip4.nm,cls:'vip4',vip:4},{n:TTF_ART.vip5.nm,cls:'vip5',vip:5}
   ];
-  function frameOwned(f){ if(f.own) return true; if(f.vip){ try{ return (vipInfo().lv|0)>=f.vip; }catch(e){ return false; } } return false; }
-  let curFrame='wr1', _fgLast='fgrid';
+  function frameOwned(f){ if(f.companion)return window.TTCompanionRewards?.key===myKey&&window.TTCompanionRewards.frames?.some(x=>x.id===f.cls&&x.unlocked)===true; if(f.cls==='wr1') return true; if(f.vip){ try{ return (vipInfo().lv|0)>=f.vip; }catch(e){ return false; } } return false; }
+  let frameSaving=false;let curFrame='wr1', _fgLast='fgrid';
   try{ const sv=localStorage.getItem('tt_frame');
     if(sv) curFrame=ttFrameId(sv);
     if(curFrame!==sv) localStorage.setItem('tt_frame',curFrame);
@@ -6036,8 +6040,10 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
         const li=document.createElement('img'); li.src=AICON.lock; lw.appendChild(li); fav.appendChild(lw); }
       cell.appendChild(fav);
       cell.insertAdjacentHTML('beforeend','<div class="fn2">'+f.n+'</div><div class="fs2 '+(f.own?'own':'lk')+'">'+(f.own?'已擁有':(f.vip?('VIP '+f.vip+' 解鎖'):(f.req||'')))+'</div>');
-      cell.addEventListener('click',()=>{
+      cell.addEventListener('click',async()=>{
+        if(frameSaving)return;
         if(!f.own){ cell.classList.remove('shake'); void cell.offsetWidth; cell.classList.add('shake'); return; }
+        if(f.companion){frameSaving=true;try{const result=await window.TTVoiceOrders.equipFrame(f.cls);if(result.key!==myKey||result.frameId!==f.cls)throw Error('ACCOUNT_CHANGED')}catch(e){toast('尚未完成解鎖或儲存失敗，請稍後重試');return}finally{frameSaving=false}}
         curFrame=f.cls; try{localStorage.setItem('tt_frame',curFrame);}catch(e){}
         applyFrame(); buildFrames2(gid);
         const av=document.getElementById('h2ava'); if(av) sparkBurst(av,'#F6CE5A');
@@ -6048,6 +6054,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   }
   window.__openFrames=()=>{ buildFrames2('fgrid'); gOpen('frameM'); };
   window.__buildFrames2=buildFrames2;
+  window.addEventListener('tt-companion-rewards',()=>{buildFrames2();applyFrame();});
   document.getElementById('h2ava').addEventListener('click',()=>{ if(window.bookOpen) bookOpen(); else window.__openFrames(); });
   /* --- VIP 系統(暫訂數字,之後改 VIP_CFG 的 need 即可) --- */
   const VIP_CFG=[
@@ -7656,7 +7663,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/order-flow.js?v=305"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=309';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=312';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
