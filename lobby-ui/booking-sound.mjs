@@ -1,0 +1,8 @@
+export function installBookingSound({root,getUser,notice=()=>{},audio=new Audio('./lobby-ui/assets/audio/booking-reminder.wav?v=308'),now=Date.now}){
+ let enabled=false,busy=false,items=[];const seen=new Set();audio.preload='auto';audio.volume=.55;
+ const button=document.createElement('button');button.type='button';button.className='btn';button.style.cssText='font-size:12px;padding:7px 12px';root.append(button);
+ function label(){button.textContent=enabled?'預約通知音：開啟':'啟用預約通知音';button.setAttribute('aria-pressed',String(enabled));button.title='預約開始前三分鐘播放提示音；請保持手札開啟'}label();
+ button.onclick=async()=>{if(enabled){enabled=false;audio.pause();label();return}try{audio.currentTime=0;await audio.play();enabled=true;label();notice('預約通知音已開啟','開始前三分鐘會響，請保持手札開啟。');void check()}catch{enabled=false;label();notice('通知音未開啟','請允許此網站播放聲音後再試一次。')}};
+ async function check(){const uid=getUser()?.uid;if(!enabled||busy||!uid)return;const at=now();const due=items.filter(i=>i.status==='confirmed'&&i.reminderEligible!==false&&i.url&&at>=(i.reminderAt??i.startAt-180000)&&at<i.startAt);const fresh=due.filter(i=>{const key='tt_booking_sound:'+uid+':'+i.id+':'+i.revision;try{return !seen.has(key)&&localStorage.getItem(key)!=='1'}catch{return !seen.has(key)}});if(!fresh.length)return;busy=true;try{audio.currentTime=0;await audio.play();for(const i of fresh){const key='tt_booking_sound:'+uid+':'+i.id+':'+i.revision;seen.add(key);try{localStorage.setItem(key,'1')}catch{}}notice('預約即將開始',fresh.map(i=>i.orderNo||i.customerName||'預約').join('、')+'・請從訂單進入語音房。')}catch{enabled=false;label();notice('瀏覽器暫停了通知音','請按「啟用預約通知音」重新開啟。')}finally{busy=false}}
+ return {update(next){items=Array.isArray(next)?next:[];void check()},dispose(){enabled=false;audio.pause();button.remove()}};
+}
