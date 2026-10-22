@@ -1599,7 +1599,7 @@ body.artBub.bub3s .npc .bub{
     <input type="text" id="payNameCoin" maxlength="30" placeholder="例:阿明 / @boss123">
     <div class="paybox" id="payCoinInfo" style="margin-top:8px"></div>
   </div>
-  <div id="voiceRehearsalEntry" hidden style="padding:10px"><button type="button" onclick="window.beginVoiceRehearsal()">語音點單演練（不扣款）</button></div><div class="btns"><button class="sc-back" onclick="shopOpen(2,curKind)">‹ 上一步</button><button class="sc-go" id="paySubmitBtn" onclick="paySubmit()">送出訂單</button></div>
+  <div class="btns"><button class="sc-back" onclick="shopOpen(2,curKind)">‹ 上一步</button><button class="sc-go" id="paySubmitBtn" onclick="paySubmit()">送出訂單</button></div>
 </div></div>
 <div class="gwin" id="topupM"><div class="gcard">
   <div class="gtop"><span class="gt">金幣錢包</span><button class="gx" onclick="gClose('topupM')">✕</button></div>
@@ -4312,6 +4312,7 @@ async function payWithCoins(){
  else if(window.lobbyNotify)lobbyNotify({ok:true,icon:'coin',title:'已用金幣付款!',sub:'「'+plan.n+'」訂單已成立',onclick:()=>shopOpen(4),hold:7000});
  else toast('付款成功!');
  try{statInc('orders');notifyOrder(o);watchMyOrders();}catch(_){}
+ if(kind==='play')void window.TTVoiceOrders?.register([ref.key]);
 }
 /* 錢包顯示 + 儲值 */
 function updateCoinChip(){ const el=document.getElementById('coinBal'); if(el) el.textContent=(window.__wallet||0);
@@ -7647,17 +7648,18 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
 <script src="tavern-ui-bridge.js?v=292"></script>
-<script src="lobby-ui/live.js?v=293"></script>
+<script src="lobby-ui/live.js?v=305"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/membership.js?v=273"></script>
-<script src="lobby-ui/order-flow.js?v=274"></script>
+<script src="lobby-ui/order-flow.js?v=305"></script>
 <script type="module">
-import {beginRehearsal,mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=304';
-window.beginVoiceRehearsal=()=>beginRehearsal(_selStaff()?.cid);
-const timer=setInterval(()=>{const entry=document.getElementById('voiceRehearsalEntry');if(entry)entry.hidden=!(curKind==='play'&&_selStaff()&&myKey&&typeof agents!=='undefined'&&agents.get(myKey)?.b?.name==='吉喵喵測試用')},500);
-const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'開啟信箱查看進房連結',onclick:()=>{renderMailBox();gOpen('mailBoxM')}})});
-window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
+import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=305';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=305';
+const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
+let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();await orderVoice.preflight((selected?.members||[selected]).filter(Boolean).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
+const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
+
 </script></body>
 </html>
 

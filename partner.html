@@ -911,9 +911,10 @@ function writeWorkOrder(coid,o,fromPool){
     clientOrderId:coid
   };
   const ref=db.ref(ROOT+'/orders').push();
-  ref.set(rec).then(()=>{
-    db.ref(ROOT+'/clientOrders/'+coid).update({accepted:true, workOrderId:ref.key});
+  ref.set(rec).then(async()=>{
+    await db.ref(ROOT+'/clientOrders/'+coid).update({accepted:true, workOrderId:ref.key});
     mailCustomer(o,'accept');
+    void window.TTVoiceOrders?.approve(coid);
     if(typeof showTab==='function') showTab(1);
     ptNotify(fromPool?'搶到啦!這張是你的了':'已接單!','「'+esc(o.name||'客人')+'」進到「進行中」,開始服務就按開始計時 ▶');
   }).catch(()=>{
@@ -1366,7 +1367,7 @@ function render(){
   cntNew.textContent=(ib.count+news.length)?`${ib.count+news.length}`:"";
   const legacy = news.length? '<div class="card">'+news.map(([id,o])=>`
     <div class="order">
-      <div class="top"><span class="no">📄 ${o.no}</span><span class="amt">NT$ ${(+o.amount||0).toLocaleString()}</span></div>
+      <div data-voice-order="${esc(o.clientOrderId||'')}" style="margin:8px 0"></div><div class="top"><span class="no">📄 ${o.no}</span><span class="amt">NT$ ${(+o.amount||0).toLocaleString()}</span></div>
       <div class="meta">${esc(o.serviceName)}${o.mode==='package'?'':' × '+o.qty}｜客人：${esc(o.customer)}<br>
       派單：${esc(o.kefuName||'—')}｜${fmt(o.createdAt)}
       <span class="pay ${o.paid?'yes':'no'}">${o.paid?'已付款':'未付款'}</span></div>
@@ -1386,6 +1387,7 @@ function render(){
     const serving=o.status==="serving";
     const running=!!o.running;
     return `<div class="order ${serving?'live':''}">
+      <div data-voice-order="${esc(o.clientOrderId||'')}" style="margin:8px 0"></div>
       <div class="top"><span class="no">📄 ${o.no}</span><span class="amt">NT$ ${(+o.amount||0).toLocaleString()}</span></div>
       <div class="meta">${esc(o.serviceName)}${o.mode==='package'?'':' × '+o.qty}｜客人：${esc(o.customer)}</div>
       ${o.reserveAt?`<div style="font-size:12.5px;color:#8E68C8;font-weight:700;margin:2px 0 4px">🕐 預約 ${fmtResP(o.reserveAt)}${(o.reserveAt-Date.now()>0&&o.reserveAt-Date.now()<1800000)?' <span style="color:#D96A8B">・快到了!</span>':''}</div>`:''}
@@ -1545,5 +1547,5 @@ const openLogs=new Set();
 import {mountBinding} from './lobby-ui/partner-binding.mjs?v=300';
 let binding;const timer=setInterval(()=>{if(auth.currentUser&&cid){clearInterval(timer);binding=mountBinding({root:document.getElementById('partnerDiscordBinding'),getUser:()=>auth.currentUser,getCid:()=>cid})}},500);
 window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
-</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=304';mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script></body>
+</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=305';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=305';const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>orderVoice.update(items),notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script></body>
 </html>

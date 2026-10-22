@@ -202,7 +202,7 @@
     if(!done&&!cancelled&&o.booking&&o.status==='confirmed')status=o.staffDeclined?'陪玩無法接單，掌櫃正在協助退款或改期':o.accepted?'陪陪已確認，準時赴約。':'等待陪陪確認時段';
     if(cancelled&&o.refunded)status+='・'+(Number(o.amount)||0)+' 金幣已退回錢包';
     const steps=cancelled?'':'<div class="steps" aria-label="'+attr(status)+'">'+[current>0?'已付款':'待付款確認',current>0?'已確認':'待確認',done?'已完成':'待完成'].map((lb,i)=>'<span class="'+(done||i<current?'done':i===current?'current':'future')+'">'+(!done&&i===current?'<i aria-hidden="true"></i>':'')+lb+(!done&&i===current?'<small>目前進度</small>':'')+'</span>').join('')+'</div>';
-    const controls=[];
+    const controls=[];if(!done&&!cancelled&&o.type==='play')controls.push('<div data-voice-order="'+attr(id)+'" style="margin:8px 0"></div>');
     const assist=cancelled?'':'<button class="order-assist ticket-report" '+(issued?'disabled':'data-order-action="issue" data-order="'+attr(id)+'"')+' aria-label="'+(issued?'問題已回報，掌櫃處理中':'回報這筆訂單的問題')+'" title="'+(issued?'掌櫃處理中':'回報訂單問題')+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V4m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0"/><path d="M12 7v4m0 2v.1"/></svg></button>';
 
     if(o.cancelPending)controls.push('<p class="tt-order-note">取消處理中，金幣會退回你的錢包。</p>');

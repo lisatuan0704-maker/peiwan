@@ -122,6 +122,7 @@
        }});
      }else await db.ref(ROOT).update(updates);
      try{const ids=[...new Set([...myOrderIds(),...records.map(r=>r.id)])];localStorage.setItem('tt_orders',JSON.stringify(ids));}catch(_){}
+     if(method==='coin')void window.TTVoiceOrders?.register(records.map(r=>r.id));
      proofData=null;shopClose();
      try{statInc('orders');watchMyOrders();}catch(_){}
      records.forEach(({order})=>{try{notifyOrder(order);}catch(_){}});
