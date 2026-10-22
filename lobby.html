@@ -2995,6 +2995,7 @@ function pickTarget(a){
   a.tx=tx; a.ty=ty;
 }
 function agentVisible(a){
+  if(!a||window.ttPlayerSuppressed?.(a.myKey||a.key))return false;
   const vm = a.slime ? 'forest' : (a.isMe ? curMap : (a.mapLoc||'hall'));
   return vm===curMap;
 }
@@ -3250,7 +3251,7 @@ function tick(now){
     const vm = a.slime ? 'forest' : (a.isMe ? curMap : (a.mapLoc||'hall'));
     /* v43.1:在線判斷併入主迴圈(唯一的顯示開關,避免與其他邏輯互搶造成閃爍) */
     const online = a.staff||a.slime||a.cloak||a.isMe||!!posMap[a.key];
-    const vis = (vm===curMap) && online;
+    const vis = agentVisible(a) && online;
     a.el.style.display = vis ? '' : 'none';
     if(!vis){ return; }
     a.el.style.left=(a.x*WORLD.w-size/2+(a.lungeX||0))+'px';
@@ -3429,6 +3430,7 @@ worldbg.style.backgroundImage="url('"+MAPS.hall.bg+"')";
 /* ====== 店員 NPC 層 ====== */
 const POSTS=[[0.32,0.565],[0.50,0.565],[0.68,0.565]];
 const SERVE=[[0.50,0.74],[0.68,0.82],[0.84,0.68]];   // 森林陪玩點(史萊姆附近)
+const STAFF_GIF={'-OxY7C4vDkgsr1zcyWbk':{asset:'rira',name:'縭',top:6,bottom:104},'-OxY46ezlpnRt64hUIw9':{asset:'kabuki',name:'蕪',top:10,bottom:104},'-OzbfbQcF6J6fIR6YYGh':{asset:'momo',name:'桃',top:2,bottom:106}};
 function makeStaff(cid, st, idx){
   const el=document.createElement('div');el.className='npc staff';
   const cv=document.createElement('canvas');cv.width=64;cv.height=64;
@@ -3451,7 +3453,15 @@ function makeStaff(cid, st, idx){
     drawDollTo(f,look,p);a.frames[p]=f;
   });
   a.frame=null; setFrame(a,'idle');
-  tag.textContent='☆ '+(st.name||'店員');
+  const art=STAFF_GIF[cid];
+  if(art){
+    const img=document.createElement('img');img.className='staff-sprite';img.src='img/companions-v315/'+art.asset+'-staff.gif';img.alt=art.name;img.draggable=false;
+    img.style.cssText='display:block;margin:0 auto;image-rendering:pixelated;object-fit:contain;transform-origin:50% 100%;filter:drop-shadow(1px 3px 1px rgba(40,20,30,.25))';
+    // GIF remains a browser image so all original animation frames keep playing.
+    cv.replaceWith(img);a.cv=img;a.frames=null;a._staffGif=true;a._headTop=art.top/114;a._sceneBottom=art.bottom/114;
+    img.onerror=()=>{img.replaceWith(cv);a.cv=cv;a._staffGif=false;delete a._headTop;delete a._sceneBottom;a.frames={};POSES.forEach(p=>{const f=document.createElement('canvas');f.width=f.height=64;drawDollTo(f,look,p);a.frames[p]=f;});a.frame=null;setFrame(a,'idle');};
+  }
+  tag.textContent='☆ '+(art?.name||st.name||'店員');
   agents.set(a.key,a);
   return a;
 }
@@ -3501,7 +3511,7 @@ if(db) db.ref(ROOT+'/staffStatus').on('value',snap=>{
     let a=agents.get(key);
     if(st.on){
       if(!a){ a=makeStaff(cid,st,idx); a.led.className='led g'; a.led.textContent='待接單'; }
-      a.b.name=st.name||'店員'; a.tag.textContent='☆ '+a.b.name;
+      a.b.name=STAFF_GIF[cid]?.name||st.name||'店員'; a.tag.textContent='☆ '+a.b.name;
       if(st.busy!==undefined) setStaffServe(a, !!st.busy);
     }else if(a){
       a.led.className='led'; a.state='exit'; a.sitting=false; a.busy=false;
@@ -3652,7 +3662,7 @@ function buildLegacyBubble(a, text){
   return b;
 }
 function showBubble(a,text){
-  if(!a||!a.el)return;
+  if(!a||!a.el||window.ttPlayerSuppressed?.(a.myKey||a.key))return;
   const calibration=window.TTBubbleCalibration;
   text=calibration?calibration.clip(text):String(text||'').slice(0,18);
   const key=bubKeyFor(a);
@@ -3681,7 +3691,7 @@ function showBubble(a,text){
 const CHATBUF=[];   // 本地脈絡緩衝(供檢舉時附帶前後文)
 function pushLog(name, text, mine, meta){
   /* v190:被你屏蔽的玩家,聊天紀錄也不顯示 */
-  try{ if(!mine&&meta&&meta.key&&window.__ttHidden&&window.__ttHidden[meta.key]) return; }catch(e){}
+  try{ if(!mine&&meta?.key&&window.ttPlayerSuppressed?.(meta.key)) return; }catch(e){}
   const log=document.getElementById('chatlog');
   const d=document.createElement('div');
   d.className='logline';
@@ -6386,6 +6396,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
    全部訊息掌櫃後台可調閱,檢舉會帶最後 20 句上下文 */
 (function(){
   let FR={}, FRQ={}, BLK={}, DMM={}, _frBound=false, _dmRef=null, _dmWith=null;
+  window.ttPlayerSuppressed=k=>!!(k&&k!==myKey&&(Object.hasOwn(window.__ttHidden||{},k)||Object.hasOwn(BLK,k)));
   function myName(){ try{ return (agents.get(myKey).b.name)||'？'; }catch(e){ return '？'; } }
   function pairKey(a,b){ return [a,b].sort().join('~'); }
   function frBind(){
@@ -6393,7 +6404,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     try{
       db.ref(ROOT+'/friends/'+myKey).on('value',s=>{ FR=s.val()||{}; frBadge(); frPaint(); });
       db.ref(ROOT+'/friendReq/'+myKey).on('value',s=>{ FRQ=s.val()||{}; frBadge(); frPaint(); });
-      db.ref(ROOT+'/blocks/'+myKey).on('value',s=>{ BLK=s.val()||{}; frPaint(); });
+      db.ref(ROOT+'/blocks/'+myKey).on('value',s=>{ BLK=s.val()||{}; applyHidden(); if(_dmWith&&window.ttPlayerSuppressed(_dmWith))dmClose(); frPaint(); });
       db.ref(ROOT+'/dmMeta/'+myKey).on('value',s=>{ DMM=s.val()||{}; frBadge(); frPaint(); });
     }catch(e){}
   }
@@ -6462,7 +6473,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   };
   window.frBlock=function(k){
     const nm=(FRQ[k]&&FRQ[k].name)||(FR[k]&&FR[k].name)||'';
-    ttConfirmish('封鎖後對方無法傳私訊或送好友邀請給你。確定封鎖?',()=>{
+    ttConfirmish('封鎖後會隱藏對方的角色、大廳氣泡及聊天訊息，並停止私訊與好友邀請。確定封鎖?',()=>{
       db.ref(ROOT+'/blocks/'+myKey+'/'+k).set({name:nm,at:Date.now()});
       db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove();
       db.ref(ROOT+'/friends/'+myKey+'/'+k).remove();
@@ -6572,7 +6583,14 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     toast('已屏蔽,這位玩家不會再出現在你的大廳'); };
   window.ttUnhide=function(k){ delete HID[k]; hidSave(); applyHidden(); frPaint(); };
   function applyHidden(){
-    try{ agents.forEach(a=>{ if(a&&a.myKey&&a.el) a.el.style.display=HID[a.myKey]?'none':''; }); }catch(e){}
+    try{ agents.forEach(a=>{
+      if(!a?.el)return;const hidden=window.ttPlayerSuppressed(a.myKey||a.key);
+      if(hidden){clearTimeout(a.bubT);a.bubEl?.remove();a.bubPtr?.remove();a.bubEl=null;a.bubPtr=null;}
+      const online=a.staff||a.slime||a.cloak||a.isMe||!!posMap[a.key];
+      a.el.style.display=!hidden&&agentVisible(a)&&online?'':'none';
+    });
+    document.querySelectorAll('#chatlog .logline[data-key]').forEach(row=>{if(window.ttPlayerSuppressed(row.dataset.key))row.remove()});
+    }catch(e){}
   }
   /* 像素小人右鍵選單 */
   function npcMenu(ev,a){
