@@ -7655,8 +7655,8 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/membership.js?v=273"></script>
 <script src="lobby-ui/order-flow.js?v=305"></script>
 <script type="module">
-import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=305';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=305';
+import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=306';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
