@@ -114,8 +114,8 @@
   dock.append(newButton('ttAchBtn','star','成就',()=>open('achM',()=>buildAch2())));
   dock.append(newButton('ttWalletBtn','coin','錢包',()=>openTopup()));
   dock.append(newButton('ttMailBtn','mail','信箱',()=>open('mailBoxM',()=>renderMailBox())));
-  // 正式站原本就有的時裝間、背包、好友與闆卡功能，不能因試做導覽而消失。
-  for(const [id,label] of [['ordBtn','訂單'],['dressBtn','時裝間'],['wardBtn','背包'],['shopBtn','我要點單']]){
+  // 正式站原本就有的商城、背包、好友與闆卡功能，不能因試做導覽而消失。
+  for(const [id,label] of [['ordBtn','訂單'],['dressBtn','商城'],['wardBtn','背包'],['shopBtn','我要點單']]){
     const b=$(id); if(!b)continue;b.classList.add('tt-dock-item');
     const lab=document.createElement('span');lab.className='tt-dock-label';lab.textContent=label;b.append(lab);dock.append(b);
   }
@@ -217,7 +217,7 @@
     $('ordTabA').setAttribute('aria-selected',String(_ordTab==='active'));$('ordTabH').setAttribute('aria-selected',String(_ordTab==='history'));
     const list=(_ordTab==='active'?active:history).slice().reverse(),pages=Math.max(1,Math.ceil(list.length/ORD_PER));_ordPage=Math.max(0,Math.min(_ordPage,pages-1));
     const visible=list.slice(_ordPage*ORD_PER,(_ordPage+1)*ORD_PER);
-    $('ordList').innerHTML=visible.length?visible.map(id=>orderCard(id,myOrdersCache[id])).join(''):'<div class="tt-empty"><img src="'+asset('receipt')+'" alt=""><h2>'+(_ordTab==='active'?'目前沒有進行中的訂單':'還沒有歷史訂單')+'</h2><p>點「我要點單」找店員一起玩，或逛逛時裝間。</p><button class="primary" data-order-action="shop">我要點單 →</button></div>';
+    $('ordList').innerHTML=visible.length?visible.map(id=>orderCard(id,myOrdersCache[id])).join(''):'<div class="tt-empty"><img src="'+asset('receipt')+'" alt=""><h2>'+(_ordTab==='active'?'目前沒有進行中的訂單':'還沒有歷史訂單')+'</h2><p>點「我要點單」找店員一起玩，或逛逛商城。</p><button class="primary" data-order-action="shop">我要點單 →</button></div>';
     if(pages>1)$('ordList').insertAdjacentHTML('beforeend','<div class="ordPg"><button data-page="-1" '+(_ordPage===0?'disabled':'')+'>‹ 上一頁</button><span>'+(_ordPage+1)+' / '+pages+'</span><button data-page="1" '+(_ordPage===pages-1?'disabled':'')+'>下一頁 ›</button></div>');
     $('ordList').querySelectorAll('[data-order-action]').forEach(b=>b.onclick=()=>{const id=b.dataset.order;switch(b.dataset.orderAction){case 'issue':openIssue(id);break;case 'cancel':selfCancel(id);break;case 'reorder':reorderPlay();break;case 'shop':shopOpen(1);break;}});
     $('ordList').querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>ordPage(Number(b.dataset.page)));
