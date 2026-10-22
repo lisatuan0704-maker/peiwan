@@ -408,7 +408,7 @@ button{transition:scale .13s cubic-bezier(.34,1.56,.64,1),filter .15s}
 button:not(:disabled):hover{filter:brightness(1.05) saturate(1.06)}
 button:not(:disabled):active{scale:.94}
 </style>
-</head>
+<script src="lobby-ui/discord-auth.js?v=298"></script><style>.partner-discord-binding{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid #d6c9e5;font-size:13px}.partner-dc-button{font:inherit;color:#4a3b63;background:#f7f3fc;border:1px solid #aa94c7;border-radius:8px;padding:8px 12px;cursor:pointer}.partner-dc-button:focus-visible{outline:3px solid #8e7ab0;outline-offset:2px}</style></head>
 <body>
 <button id="themeBtn" title="切換日間／夜間模式" aria-label="切換日間夜間模式">☀️</button>
 <script>
@@ -477,6 +477,7 @@ button:not(:disabled):active{scale:.94}
         </label>
         <button class="logout" onclick="logout()">登出</button>
       </div>
+      <div id="partnerDiscordBinding" class="partner-discord-binding"></div>
       <div id="offDutyWarn" style="display:none;margin-top:10px;background:#FFF0DA;border-left:4px solid #E8A33D;border-radius:9px;padding:9px 12px;font-size:12.5px;color:#8A5A2B;line-height:1.7">
         <b>你目前是下班中</b> —— 客人在大廳看不到你、也無法指定你即時點單。要接單請打開上面的開關 ✦<br>
         <span style="color:#A9834E">(已預約的單不受影響,時間到還是要出席)</span>
@@ -1540,5 +1541,9 @@ function renderTimelog(oid,o){
 const openLogs=new Set();
 
 </script>
-</body>
+<script type="module">
+import {mountBinding} from './lobby-ui/partner-binding.mjs?v=300';
+let binding;const timer=setInterval(()=>{if(auth.currentUser&&cid){clearInterval(timer);binding=mountBinding({root:document.getElementById('partnerDiscordBinding'),getUser:()=>auth.currentUser,getCid:()=>cid})}},500);
+window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
+</script></body>
 </html>
