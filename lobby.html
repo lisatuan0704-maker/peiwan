@@ -3219,7 +3219,8 @@ function tick(now){
     if(a.slime) walking=(a.state==='walk');
     a._renderVisible=actorMap===curMap&&(a.staff||a.slime||a.cloak||a.isMe||!!posMap[a.key]);
     const tt=now/1000;
-    const hairOn=TEST_MODE&&!a.slime&&a._renderVisible&&!_hairMotionPreference.matches;
+    a._staffWalking=!!(a._staffGif&&walking&&!_hairMotionPreference.matches);
+    const hairOn=TEST_MODE&&!a.slime&&!a._staffGif&&a._renderVisible&&!_hairMotionPreference.matches;
     a._hairMotion=hairOn?{mode:walking?'walk':'idle',phase:Math.floor(now/(walking?140:230)+a.seed)%(walking?8:4)}:null;
     let bob=0, hopRot=0, sqx=1, sqy=1;
     if(walking){
@@ -3246,7 +3247,7 @@ function tick(now){
       setFrame(a,'idle');
     }
     // 試做頁已逐層處理呼吸與腳步，避免再疊加另一套縮放、跳動或傾斜。
-    if(a._hairMotion){bob=0;hopRot=0;sqx=1;sqy=1;}
+    if(a._hairMotion||(a._staffGif&&(!walking||_hairMotionPreference.matches))){bob=0;hopRot=0;sqx=1;sqy=1;}
     if(a.slime && a.bopT>0){ sqy*=1-0.35*a.bopT; sqx*=1+0.30*a.bopT; }
     const vm = a.slime ? 'forest' : (a.isMe ? curMap : (a.mapLoc||'hall'));
     /* v43.1:在線判斷併入主迴圈(唯一的顯示開關,避免與其他邏輯互搶造成閃爍) */
@@ -3431,6 +3432,18 @@ worldbg.style.backgroundImage="url('"+MAPS.hall.bg+"')";
 const POSTS=[[0.32,0.565],[0.50,0.565],[0.68,0.565]];
 const SERVE=[[0.50,0.74],[0.68,0.82],[0.84,0.68]];   // 森林陪玩點(史萊姆附近)
 const STAFF_GIF={'-OxY7C4vDkgsr1zcyWbk':{asset:'rira',name:'縭',top:6,bottom:104},'-OxY46ezlpnRt64hUIw9':{asset:'kabuki',name:'蕪',top:10,bottom:104},'-OzbfbQcF6J6fIR6YYGh':{asset:'momo',name:'桃',top:2,bottom:106}};
+const lastStaffPosts=new Map();
+function randomStaffPost(cid){
+  const occupied=[...agents.values()].filter(a=>a.staff&&a.cid!==cid&&a.state!=='exit'&&a.post).map(a=>[a.post[0]*1600,a.post[1]*900]);
+  const previous=lastStaffPosts.get(cid);let best=null,bestScore=-1;
+  for(let i=0;i<100;i++){
+    const p=TTScene.nearest([440+Math.random()*780,500+Math.random()*140]);
+    const score=Math.min(...occupied.map(o=>Math.hypot(p[0]-o[0],(p[1]-o[1])*1.5)),previous?Math.hypot(p[0]-previous[0],p[1]-previous[1])*2:Infinity);
+    if(score>bestScore){best=p;bestScore=score;}
+    if(score>=230&&occupied.every(o=>Math.abs(p[1]-o[1])>=28)) {best=p;break;}
+  }
+  lastStaffPosts.set(cid,best);return [best[0]/1600,best[1]/900];
+}
 function makeStaff(cid, st, idx){
   const el=document.createElement('div');el.className='npc staff';
   const cv=document.createElement('canvas');cv.width=64;cv.height=64;
@@ -3440,7 +3453,7 @@ function makeStaff(cid, st, idx){
   el.appendChild(sh);el.appendChild(led);el.appendChild(cv);el.appendChild(tag);
   world.appendChild(el);
   const look=STAFF_LOOKS[hash(cid)%STAFF_LOOKS.length];
-  const post=POSTS[idx%POSTS.length];
+  const post=randomStaffPost(cid);
   const a={key:'staff_'+cid,cid,el,cv,tag,sh:sh,led,
     x:1.04,y:post[1],tx:post[0],ty:post[1],
     post, serveSpot:SERVE[idx%SERVE.length], mapLoc:'hall',
@@ -3661,7 +3674,16 @@ function buildLegacyBubble(a, text){
   }
   return b;
 }
+function showNpcDrinkThanks(cid,text){
+  const a=agents.get('staff_'+cid);if(!a?.el||!a.staff||typeof text!=='string')return;
+  a.bubEl?.remove();a.bubPtr?.remove();a.bubPtr=null;clearTimeout(a.bubT);
+  const box=document.createElement('div');box.className='npc-drink-thanks';box.setAttribute('role','status');box.textContent=text.slice(0,180);
+  box.style.cssText='position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);width:max-content;max-width:240px;padding:10px 14px;border:1px solid #ab927a;border-radius:10px;background:#f5eadc;color:#503d30;font:600 14px/1.5 sans-serif;white-space:normal;overflow-wrap:anywhere;box-shadow:0 3px 8px #35241922;pointer-events:none;z-index:5';
+  a.el.append(box);a.bubEl=box;a.bubT=setTimeout(()=>{box.remove();if(a.bubEl===box)a.bubEl=null},8000);
+}
 function showBubble(a,text){
+  if(a?.staff)return;
+
   if(!a||!a.el||window.ttPlayerSuppressed?.(a.myKey||a.key))return;
   const calibration=window.TTBubbleCalibration;
   text=calibration?calibration.clip(text):String(text||'').slice(0,18);
@@ -5130,7 +5152,7 @@ function tryServeNudge(staff){
   if(document.querySelector('.shopModal[style*="flex"]')) return;   // 有彈窗開著就不打擾
   if(myOrderIds().length) return;                                   // 已是客人不再推
   _lastNudge=now;
-  if(staff) showBubble(staff,'謝謝旅人~ 想被這樣陪玩嗎?');
+
   pulseShop();
 }
 
@@ -5842,22 +5864,6 @@ const SFX=(function(){
   }
   [[600,200],[700,196],[800,206],[900,196],[1000,200]].forEach(p=>hot(p[0],p[1],32,'bottle'));
   [[43,136],[149,70],[1250,54],[1520,140]].forEach(p=>hot(p[0],p[1],40,'lantern'));
-})();
-
-/* ================= 💬 NPC 個性台詞 ================= */
-(function(){
-  const staffLines=['歡迎回來,今天想玩點什麼?','這裡坐,幫你留了位子 ✦','累了就靠著吧檯歇會兒吧','想找人一起上分嗎?我在唷','偷偷幫你把燈調暖了一點','今天也謝謝你來'];
-  const pick=a=>a[Math.floor(Math.random()*a.length)];
-  function tick(){
-    if(typeof fsOverlayOpen==='function'&&fsOverlayOpen()){ setTimeout(tick,8000); return; }
-    /* 接單中/移動中的店員不講閒聊台詞,只有站崗待命的才說話 */
-    const list=[...agents.values()].filter(a=>a.el && a.el.style.display!=='none'
-      && a.staff && a.state==='post' && !a.busy);
-    if(list.length && typeof showBubble==='function'){ const a=list[Math.floor(Math.random()*list.length)];
-      showBubble(a, pick(staffLines)); }
-    setTimeout(tick, 14000+Math.random()*12000);
-  }
-  setTimeout(tick, 8000);
 })();
 
 /* ================= 📌 掌櫃布告欄 ================= */
@@ -7679,7 +7685,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=323"></script>
+<script src="tavern-ui-bridge.js?v=325"></script>
 <script src="lobby-ui/live.js?v=316"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
