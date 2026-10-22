@@ -4185,6 +4185,7 @@ function submitOrder(){
   db.ref(ROOT).update({['clientOrders/'+ref.key]:o,['clientOrderProofs/'+ref.key]:proofData}).then(()=>{
     const ids=myOrderIds(); ids.push(ref.key);
     try{localStorage.setItem('tt_orders',JSON.stringify(ids));}catch(e){}
+    if(o.type==='play'&&o.staffCid)void window.TTVoiceOrders?.register([ref.key]);
     proofData=null;
     shopClose();
     if(window.lobbyNotify) lobbyNotify({icon:'receipt',title:(o.booking?'預約已送出!':'訂單已成立!'),sub:(o.booking?('預約 '+fmtRes(o.reserveAt)+',等待掌櫃確認'):'等待掌櫃核帳,可點右下角「訂單」查看進度'),onclick:()=>shopOpen(4),hold:8000});
@@ -7657,7 +7658,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=305';
 import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=305';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
-let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();await orderVoice.preflight((selected?.members||[selected]).filter(Boolean).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
+let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
 </script></body>
