@@ -36,6 +36,7 @@
   }
   const companionPets={pet_bubu:{name:'布布',asset:'kabuki'},pet_guigui:{name:'鬼鬼',asset:'rira'},pet_dengdeng:{name:'燈燈',asset:'momo'}};
   function followingPet(d){if(d?.uiBaseSlots?.includes('pet'))return null;const id=d?.ps?.pet||d?.set;return companionPets[id]?{...companionPets[id],id,src:'img/companions-v315/'+companionPets[id].asset+'-pet.gif'}:null;}
+  const staffPetLayout={kabuki:{size:123,x:86,y:22},rira:{size:133,x:-93,y:-4},momo:{size:125,x:-89,y:-51}};
   const staffPets={'-OxY7C4vDkgsr1zcyWbk':'pet_guigui','-OxY46ezlpnRt64hUIw9':'pet_bubu','-OzbfbQcF6J6fIR6YYGh':'pet_dengdeng'};
   const previousSetFrame=setFrame;setFrame=function(a,p){
     const staffPet=a.staff&&staffPets[a.cid];
@@ -46,9 +47,10 @@
       if(!img){img=document.createElement('img');img.className='companion-follower';img.style.cssText='position:absolute;width:32px;height:42px;right:-17px;bottom:7px;pointer-events:none;image-rendering:pixelated;object-fit:contain';a.el.append(img);a._companionPet=img;}
       if(img.dataset.pet!==pet.id){img.dataset.pet=pet.id;img.src=pet.src;img.alt=pet.name;}
       if(staffPet){
-        img.style.width='96px';img.style.height='112px';img.style.right='-48px';img.style.bottom='10px';
+        const layout=staffPetLayout[pet.asset],scale=Math.round(TTScene.size(a.y))/160;
+        Object.assign(img.style,{width:layout.size*scale+'px',height:layout.size*112/96*scale+'px',left:'calc(50% + '+layout.x*scale+'px)',right:'auto',bottom:'auto',top:'calc(var(--tt-foot) + '+layout.y*scale+'px)'});
         const step=a._staffWalking?Math.sin(performance.now()/1000*17+a.seed+1):0;
-        img.style.transform='translateY('+(-Math.abs(step)*3)+'px) rotate('+(step*3)+'deg) scaleX('+(a.faceLeft?-1:1)+')';
+        img.style.transform='translate(-50%,-100%) translateY('+Math.round(-Math.abs(step)*3)+'px)';
       }
     }
     return previousSetFrame(a,p);

@@ -2958,6 +2958,8 @@ function makeAgent(key,b){
 }
 function setFrame(a,p){
   if(!a.frames)return;
+  // Redrawn assets/outfits invalidate the cached floor anchor and motion frames.
+  if(a.frame===null){a._sceneBottom=null;a._hairCache=null;a._hairFrames=null;}
   if(a._renderVisible===false){a._hairCache=null;a._hairFrames=null;return;}
   const motion=a._hairMotion,blink=a._blinkUntil>Date.now();
   const key=p+'|'+(motion?motion.mode+motion.phase:'still')+'|'+blink;
@@ -3246,7 +3248,8 @@ function tick(now){
       setFrame(a,'idle');
     }
     // 試做頁已逐層處理呼吸與腳步，避免再疊加另一套縮放、跳動或傾斜。
-    if(a._hairMotion||(a._staffGif&&(!walking||_hairMotionPreference.matches))){bob=0;hopRot=0;sqx=1;sqy=1;}
+    if(a._hairMotion){bob=0;hopRot=0;sqx=1;sqy=1;}
+    if(a._staffGif){hopRot=0;sqx=1;sqy=1;bob=walking&&!_hairMotionPreference.matches?Math.round(bob):0;}
     if(a.slime && a.bopT>0){ sqy*=1-0.35*a.bopT; sqx*=1+0.30*a.bopT; }
     const vm = a.slime ? 'forest' : (a.isMe ? curMap : (a.mapLoc||'hall'));
     /* v43.1:在線判斷併入主迴圈(唯一的顯示開關,避免與其他邏輯互搶造成閃爍) */
@@ -3434,16 +3437,22 @@ const SERVE=[[0.50,0.74],[0.68,0.82],[0.84,0.68]];   // 森林陪玩點(史萊�
 const STAFF_GIF={'-OxY7C4vDkgsr1zcyWbk':{asset:'rira',name:'縭',top:6,bottom:104},'-OxY46ezlpnRt64hUIw9':{asset:'kabuki',name:'蕪',top:10,bottom:104},'-OzbfbQcF6J6fIR6YYGh':{asset:'momo',name:'桃',top:2,bottom:106}};
 const lastStaffPosts=new Map();
 function randomStaffPost(cid){
+  // Corner pockets exclude the left noticeboard, the entrance mat and central aisle.
+  const pockets=[[380,440,740,780],[1200,1300,515,550],[1220,1320,760,800]];
   const occupied=[...agents.values()].filter(a=>a.staff&&a.cid!==cid&&a.state!=='exit'&&a.post).map(a=>[a.post[0]*1600,a.post[1]*900]);
-  const previous=lastStaffPosts.get(cid);let best=TTScene.nearest([280,580]),bestScore=-1;
-  for(let i=0;i<100;i++){
-    const side=Math.random()<.5;
-    const p=TTScene.nearest([side?200+Math.random()*180:1220+Math.random()*140,490+Math.random()*140]);
-    if(p[0]>420&&p[0]<1180)continue;
-    const score=Math.min(...occupied.map(o=>Math.hypot(p[0]-o[0],(p[1]-o[1])*1.5)),previous?Math.hypot(p[0]-previous[0],p[1]-previous[1])*2:Infinity);
+  const previous=lastStaffPosts.get(cid);let best=null,bestScore=-Infinity;
+  for(let i=0;i<120;i++){
+    const box=pockets[i%pockets.length];
+    const p=[box[0]+Math.random()*(box[1]-box[0]),box[2]+Math.random()*(box[3]-box[2])];
+    if(!TTScene.valid(p))continue;
+    const clearance=Math.min(...occupied.map(o=>Math.hypot(p[0]-o[0],p[1]-o[1])));
+    if(clearance<200)continue;
+    const moved=previous?Math.hypot(p[0]-previous[0],p[1]-previous[1]):0;
+    const score=Math.min(clearance,500)+Math.min(moved,150)+Math.random()*20;
     if(score>bestScore){best=p;bestScore=score;}
-    if(score>=230&&occupied.every(o=>Math.abs(p[1]-o[1])>=28)) {best=p;break;}
   }
+  // All three pockets are valid; retain a prior safe post if more actors occupy them.
+  if(!best)best=previous||[410,760];
   lastStaffPosts.set(cid,best);return [best[0]/1600,best[1]/900];
 }
 function makeStaff(cid, st, idx){
@@ -3471,9 +3480,9 @@ function makeStaff(cid, st, idx){
   const art=STAFF_GIF[cid];
   if(art){
     const img=document.createElement('img');img.className='staff-sprite';img.src='img/companions-v315/'+art.asset+'-staff.gif';img.alt=art.name;img.draggable=false;
-    img.style.cssText='display:block;margin:0 auto;image-rendering:pixelated;object-fit:contain;transform-origin:50% 100%;filter:drop-shadow(1px 3px 1px rgba(40,20,30,.25))';
+    img.style.cssText='display:block;margin:0 auto;image-rendering:pixelated;object-fit:contain;transform-origin:50% 100%';
     // GIF remains a browser image so all original animation frames keep playing.
-    cv.replaceWith(img);a.cv=img;a.frames=null;a._staffGif=true;a._headTop=art.top/114;a._sceneBottom=art.bottom/114;
+    cv.replaceWith(img);a.cv=img;a.frames=null;a._staffGif=true;a._headTop=art.top/114;a._sceneBottom=(art.bottom+2)/118;
     img.onerror=()=>{img.replaceWith(cv);a.cv=cv;a._staffGif=false;delete a._headTop;delete a._sceneBottom;a.frames={};POSES.forEach(p=>{const f=document.createElement('canvas');f.width=f.height=64;drawDollTo(f,look,p);a.frames[p]=f;});a.frame=null;setFrame(a,'idle');};
   }
   tag.textContent='☆ '+(art?.name||st.name||'店員');
@@ -7660,7 +7669,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=332"></script>
+<script src="tavern-ui-bridge.js?v=335"></script>
 <script src="lobby-ui/live.js?v=316"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
