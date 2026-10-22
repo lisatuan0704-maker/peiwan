@@ -6512,7 +6512,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     _dmWith=null;
     if(silent!==true){ const m=document.getElementById('dmM'); if(m) m.classList.remove('on'); }
   };
-  window.dmSend=async function(stickerCode){if(TTLegacySocial.isolated)return false;
+  window.dmSend=async function(stickerCode){if(window.TTLegacySocial?.isolated)return false;
     const i=document.getElementById('dmIn');if(!i||!_dmWith||!myKey)return false;
     const sticker=typeof stickerCode==='string'&&window.TTChatStickers?.decode(stickerCode);
     if(stickerCode!==undefined&&!sticker)return false;
@@ -6521,7 +6521,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     if(!FR[_dmWith]){toast('你們已不是好友');return false;}
     const k=_dmWith,sender=myKey,senderName=myName(),recipientName=FR[_dmWith]?.name||'';
     try{const s=await db.ref(ROOT+'/blocks/'+k+'/'+sender).once('value');
-      if(TTLegacySocial.isolated||myKey!==sender||_dmWith!==k||!FR[k]||window.__mute)return false;
+      if(window.TTLegacySocial?.isolated||myKey!==sender||_dmWith!==k||!FR[k]||window.__mute)return false;
       if(s.val())return false;
       await db.ref(ROOT+'/dm/'+pairKey(sender,k)).push({f:sender,x:t.slice(0,200),at:Date.now()});
       if(!sticker&&myKey===sender&&_dmWith===k&&i.value.trim()===t){i.value='';i.dispatchEvent(new Event('input',{bubbles:true}));}
