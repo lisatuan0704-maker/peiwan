@@ -119,7 +119,7 @@
   track.onpointerup=endDrag;track.onpointercancel=endDrag;
   requestAnimationFrame(()=>{track.scrollLeft=offset(index);requestAnimationFrame(()=>ready=true);});return wrap;
  }
- const drinkDesign=document.createElement('link');drinkDesign.rel='stylesheet';drinkDesign.href='drink-cards.css?v=330';document.head.append(drinkDesign);
+ const drinkDesign=document.createElement('link');drinkDesign.rel='stylesheet';drinkDesign.href='drink-cards.css?v=331';document.head.append(drinkDesign);
  function showDrinkDialogue(result,product){
   let dialog=document.getElementById('drinkDialogue');if(!dialog){dialog=document.createElement('dialog');dialog.id='drinkDialogue';dialog.style.cssText='max-width:420px;width:calc(100% - 48px);border:2px solid #cab5d9;border-radius:18px;background:#fff8fb;color:#614461;padding:24px;box-shadow:0 12px 48px #55334c55';document.body.append(dialog);}
   dialog.replaceChildren();const msg=document.createElement('p');msg.style.cssText='font-size:18px;line-height:1.8;white-space:pre-wrap';msg.textContent=result.message;const done=document.createElement('button');done.className='primary';done.textContent='關閉';done.onclick=()=>dialog.close();dialog.append(companionArt(product),msg,done);dialog.showModal();

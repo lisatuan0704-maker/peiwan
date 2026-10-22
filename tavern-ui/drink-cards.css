@@ -69,3 +69,5 @@ body[data-shop-category=dye] #singles,body[data-shop-category=dye] #detail,body[
 @keyframes drinkTriangle{0%{transform:translate(0,0) rotate(-12deg);opacity:.35}50%{opacity:.75}100%{transform:translate(6px,-12px) rotate(35deg);opacity:.45}}
 @keyframes drinkRing{from{transform:translateY(6px) scale(.85) rotate(0deg)}to{transform:translateY(-10px) scale(1.15) rotate(35deg)}}
 @media(prefers-reduced-motion:reduce){.drink-geometry[data-geometry] span{animation:none}}
+
+.drink-scene>.drink-watermark{letter-spacing:var(--watermark-spacing,6px)}
