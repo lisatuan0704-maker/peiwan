@@ -1,6 +1,10 @@
 /* Desktop uses one logical viewport, so scene and UI resize together. */
 (()=>{
  'use strict';
+ const query=new URLSearchParams(location.search);
+ window.TTMobile=!(matchMedia('(hover: hover) and (pointer: fine)').matches);
+ if(query.has('preview')&&query.get('mobile')==='1')window.TTMobile=true;
+ if(window.TTMobile)document.documentElement.classList.add('tt-mobile');
  window.ttNavigate=url=>{
   let framed=false;try{framed=window.parent!==window&&window.parent.location.pathname.endsWith('/lobby-view.html');}catch{}
   if(framed)window.parent.location.assign(url);else window.location.assign(url);

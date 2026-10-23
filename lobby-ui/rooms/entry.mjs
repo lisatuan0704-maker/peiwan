@@ -4,7 +4,7 @@ import {createPresencePublisher,createServerClock} from './presence-publisher.mj
 import {watchPublicRooms} from './room-directory.mjs';
 import {mountRoomSelector} from './room-selector.mjs';
 import {createChatComposer} from './chat-composer.mjs';
-import {beginVoiceLogin} from '../voice-rehearsal.mjs?v=324';
+import {beginVoiceLogin} from '../voice-rehearsal.mjs?v=353';
 const API='https://api.tinytavern.tw';
 const entry=document.createElement('button');entry.id='roomEntry';entry.type='button';entry.textContent='大廳選單 ▾';entry.setAttribute('aria-haspopup','dialog');
 const dialog=document.createElement('dialog');dialog.id='roomDialog';dialog.setAttribute('aria-label','大廳選單');

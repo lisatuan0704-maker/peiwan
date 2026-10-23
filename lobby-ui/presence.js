@@ -10,16 +10,22 @@
     const signature=[point[0],point[1],map,p.f,p.s,p.w,p.t].join('|');
     let state=a._remotePosition;
     if(!state||state.signature!==signature){
+      // Reordered packets must not pull a moving character backwards.
+      if(state&&Number.isFinite(p.t)&&Number.isFinite(state.time)&&p.t<state.time)return receive(a,state.packet,now,legacyClamp);
       const distance=Math.hypot((point[0]-a.x)*1600,(point[1]-a.y)*900);
-      const snap=!state||a.mapLoc!==map||distance>96||distance<0.25;
-      state=a._remotePosition={signature,from:[a.x,a.y],to:point,at:now,snap};
+      const gap=state?now-state.at:150;
+      const snap=!state||a.mapLoc!==map||distance<0.25;
+      // Slow acknowledgements can leave more than 96px between updates.
+      // Stay continuous within a map and adapt to the actual delivery cadence.
+      const duration=Math.max(120,Math.min(650,gap*.8));
+      state=a._remotePosition={signature,from:[a.x,a.y],to:point,at:now,snap,duration,time:p.t,packet:{...p}};
       a._sceneGoal=null;a._scenePath=null;a._sceneTransit=false;
     }
-    const ratio=state.snap?1:Math.max(0,Math.min(1,(now-state.at)/120));
+    const ratio=state.snap?1:Math.max(0,Math.min(1,(now-state.at)/state.duration));
     a.x=state.from[0]+(state.to[0]-state.from[0])*ratio;
     a.y=state.from[1]+(state.to[1]-state.from[1])*ratio;
     a.tx=state.to[0];a.ty=state.to[1];a.mapLoc=map;a.sitting=!!p.s;
-    const moving=!a.sitting&&(ratio<1||(p.w===1&&now-state.at<400));
+    const moving=!a.sitting&&(ratio<1||(p.w===1&&now-state.at<Math.max(400,state.duration+150)));
     a.state=moving?'walk2':'idle';
     const face=p.f===1;if(face!==a.faceLeft){a.faceLeft=face;a.flipping=true;}
     return true;

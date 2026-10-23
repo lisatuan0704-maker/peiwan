@@ -1,4 +1,4 @@
-import {beginVoiceLogin} from './voice-rehearsal.mjs?v=306';
+import {beginVoiceLogin} from './voice-rehearsal.mjs?v=353';
 const API='https://api.tinytavern.tw';
 export function installOrderVoice({auth,partner=false,notice=()=>{}}){
  let items=[],working=false,lastError="",lastErrorAt=0;const queueKey='tt_voice_order_queue_v1';

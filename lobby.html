@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<script src="lobby-ui/fixed-view.js?v=352"></script>
+<script src="lobby-ui/fixed-view.js?v=353"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1449,7 +1449,7 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/hair-motion.js?v=272"></script>
 <script src="lobby-ui/dm-log.js?v=350"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
-<script src="lobby-ui/presence.js?v=231"></script>
+<script src="lobby-ui/presence.js?v=353"></script>
 <script src="lobby-ui/payment-safety.js?v=273"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=274">
@@ -1463,8 +1463,10 @@ body.artBub.bub3s .npc .bub{
 <script src="tavern-ui/sticker-catalog.js?v=249"></script>
 <script src="tavern-ui/sticker-approved.js?v=247"></script>
 <script src="lobby-ui/stickers.js?v=249"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-home.css?v=353">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script></head>
 <body>
+<script>if(window.TTMobile)document.body.classList.add("mhome-on");</script>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
 <div id="hall"><div id="hallBackdrop" aria-hidden="true"><div class="tt-mirror-side tt-mirror-left"></div><div class="tt-mirror-side tt-mirror-right"></div></div><div id="world"><div id="worldbg"></div></div><div id="hallShade" aria-hidden="true"></div></div>
 <div id="vig"></div>
@@ -1510,11 +1512,11 @@ body.artBub.bub3s .npc .bub{
   <div class="mhActions">
     <button class="mhBtn primary" id="mhOrder" data-ic="mug">我要點單<small>找店員陪你打遊戲、語音聊天</small></button>
     <button class="mhBtn lav" id="mhDress" data-ic="dress">逛商城<small>服裝試穿 · 寵物 · 座椅</small></button>
-    <button class="mhBtn" id="mhWard" data-ic="gift">背包・換裝區<small>已擁有的部件自由搭配</small></button>
+    <button class="mhBtn" id="mhWard" data-ic="gift">我的背包<small>查看收藏，搭配喜歡的造型</small></button>
     <button class="mhBtn" id="mhCard" data-ic="star">我也要做闆卡<small>捏一隻專屬自己的小人</small></button>
     <button class="mhBtn" id="mhOrders" data-ic="receipt">我的訂單<span class="mhBadge" id="mhBadge"></span><small>查看點單進度</small></button>
   </div>
-  <button class="mhEnter" id="mhEnter">走進酒館走走 —— 把手機轉橫,體驗完整 2.5D 大廳 ›</button>
+  <button class="mhEnter" id="mhEnter">電腦版可使用酒館大廳</button>
 </div>
 <div id="chatbox">
   <div id="chatlog"></div>
@@ -1684,7 +1686,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v352</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v353</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3028,6 +3030,7 @@ function fsOverlayOpen(){
   return _fsOpen;
 }
 function tick(now){
+  if(window.TTMobile){last=now;requestAnimationFrame(tick);return;}
   if(document.hidden){last=now;requestAnimationFrame(tick);return;}
   /* 全螢幕視窗開著時,暫停背景世界演算(每秒 2 幀維持狀態即可)——弱機開書/開視窗不再卡 */
   if(fsOverlayOpen()){
@@ -5722,18 +5725,18 @@ function tryServeNudge(staff){
 
 /* ================= 📱 手機直式專屬首頁 ================= */
 (function(){
-  function isPortraitHome(){ return window.innerWidth<=680 && window.innerHeight>window.innerWidth; }
+  function isPortraitHome(){ return !!window.TTMobile; }
   function drawMhDoll(){
     const cv=document.getElementById('mhDoll'); if(!cv) return;
     const a=(typeof me==='function')?me():null;
     const doll=(a&&a.b&&a.b.doll)?a.b.doll:{back:0,front:0,cloth:0,face:0,brow:0,acc:0,hair:0};
     drawDollTo(cv, doll, 'idle');
     const nm=document.getElementById('mhName');
-    if(nm) nm.textContent=(a&&a.b&&a.b.name)?('★ '+a.b.name+'・歡迎回來'):'還沒有闆卡?做一張進來玩 ✦';
+    if(nm) nm.textContent=(a&&a.b&&a.b.name)?('★ '+a.b.name+'・歡迎回來'):'歡迎來到小小酒館';
   }
   function updateMh(){
     const n=(typeof bosses==='object'&&bosses)?Object.keys(bosses).length:0;
-    const e=document.getElementById('mhCount'); if(e) e.textContent='今天有 '+n+' 位闆闆在酒館裡';
+    const e=document.getElementById('mhCount'); if(e) e.textContent=window.TTMobile?'點一段陪伴，收藏自己的小日常。':'今天有 '+n+' 位闆闆在酒館裡';
     const ob=document.getElementById('ordBadge'), mb=document.getElementById('mhBadge');
     if(ob&&mb){ mb.style.display=(ob.style.display==='block')?'block':'none'; mb.textContent=ob.textContent; }
   }
@@ -5742,12 +5745,12 @@ function tryServeNudge(staff){
     else document.body.classList.remove('mhome-on');
   }
   const g=id=>document.getElementById(id);
-  g('mhOrder').onclick=()=>{ if(typeof shopOpen==='function') shopOpen(1); };
+  g('mhOrder').onclick=()=>{ if(window.TTMobile&&typeof shopStep==='function')shopStep('play');else if(typeof shopOpen==='function')shopOpen(1); };
   g('mhDress').onclick=()=>{ const d=g('dressBtn'); if(d) d.click(); };
   g('mhOrders').onclick=()=>{ if(typeof shopOpen==='function') shopOpen(4); };
   g('mhCard').onclick=()=>ttNavigate('card.html');
   { const w=g('mhWard'); if(w) w.onclick=()=>{ if(window.openWardrobe) openWardrobe(); }; }
-  g('mhEnter').onclick=()=>{ if(typeof toast==='function') toast('把手機轉橫,就會走進完整的 2.5D 酒館大廳 ✦'); };
+  g('mhEnter').hidden=true;
   addEventListener('resize', apply);
   addEventListener('orientationchange', ()=>setTimeout(apply,120));
   setInterval(()=>{ if(document.body.classList.contains('mhome-on')){ drawMhDoll(); updateMh(); } }, 1500);
@@ -6793,7 +6796,7 @@ function applyPresence(){
     cnt.textContent=visible;
     emptyMsg.style.display = visible ? 'none' : 'block';
     const mc=document.getElementById('mhCount');
-    if(mc) mc.textContent='現在有 '+visible+' 位闆闆在酒館裡';
+    if(mc) mc.textContent=window.TTMobile?'點一段陪伴，收藏自己的小日常。':'現在有 '+visible+' 位闆闆在酒館裡';
   }catch(e){}
 }
 /* 名單同步後也套一次在線過濾 */
@@ -7673,7 +7676,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=352"></script>
+<script src="tavern-ui-bridge.js?v=353"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
 <script src="lobby-ui/live.js?v=347"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
@@ -7683,15 +7686,15 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/membership.js?v=273"></script>
 <script src="lobby-ui/order-flow.js?v=305"></script>
 <script type="module">
-import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=324';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=314';
+import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=353';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=353';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
 </script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346">
 <script src="lobby-ui/rooms/world-bridge.js?v=343"></script>
-<script type="module" src="lobby-ui/rooms/entry.mjs?v=346"></script>
+<script type="module" src="lobby-ui/rooms/entry.mjs?v=353"></script>
 </body>
 </html>
 
