@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=357"></script>
-<script src="lobby-ui/fixed-view.js?v=357"></script>
+<script src="lobby-ui/fixed-view.js?v=358"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1687,7 +1687,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v357</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v358</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -7006,13 +7006,31 @@ function buildBag(){
     PAY_NOTE=p.note||'';
     if(p.mins) PAY_MINS=Math.max(5,parseInt(p.mins,10)||60);
   }); }catch(e){}
+  let ownedRef=null,ownedListener=null,ownedAccount=null;
+  function stopOwned(){
+    if(ownedRef&&ownedListener)ownedRef.off('value',ownedListener);
+    ownedRef=null;ownedListener=null;ownedAccount=null;window.__owned={};
+  }
   function watchOwned(){
-    if(typeof myKey==='undefined'||!myKey) return;
-    try{ db.ref(ROOT+'/owned/'+myKey).on('value',s=>{ window.__owned=s.val()||{};
-      if(window.__dressRefresh)window.__dressRefresh(); }); }catch(e){}
+    const key=typeof myKey==='undefined'?null:myKey;
+    if(key===ownedAccount)return;
+    stopOwned();if(!key)return;
+    ownedAccount=key;const seen=new Set();let loaded=false;
+    const listener=s=>{
+      if(ownedAccount!==key||myKey!==key||ownedListener!==listener)return;
+      const owned=s.val()||{};
+      const keys=Object.keys(owned).filter(k=>k!=='dyeTickets'&&k!=='dyedHairSets');
+      const fresh=loaded?keys.filter(k=>!seen.has(k)&&!window.TTRetiredOutfits?.retired(k,window.__shopCfg?.[k])):[];
+      keys.forEach(k=>seen.add(k));loaded=true;window.__owned=owned;
+      if(window.__dressRefresh)window.__dressRefresh();
+      if(fresh.length&&window.celebrate){const nm=owned[fresh[0]]?.name||'新時裝';
+        window.celebrate('獲得新時裝!','「'+esc(nm)+'」已收進背包 — 到商城穿上身');}
+    };
+    ownedListener=listener;ownedRef=db.ref(ROOT+'/owned/'+key);ownedRef.on('value',listener);
   }
   watchOwned();
-  if(typeof claimMe==='function'){ const _c=claimMe; claimMe=function(k){ _c(k); setTimeout(watchOwned,300); }; }
+  if(typeof claimMe==='function'){ const _c=claimMe; claimMe=function(k){ if(k!==ownedAccount)stopOwned();_c(k); setTimeout(watchOwned,300); }; }
+  window.addEventListener('pagehide',stopOwned,{once:true});
 })();
 
 /* ================= v48:juice JS(點擊火花 / 關閉過場 / 慶祝) ================= */
@@ -7047,16 +7065,7 @@ function buildBag(){
       document.body.appendChild(c); setTimeout(()=>c.remove(),3600); }
     try{ SFX.clink(); }catch(e){}
   };
-  /* 購買通過:偵測 owned 新增 → 慶祝(客人在被掌櫃確認收款那刻看到) */
-  let _ownedKeys=null;
-  const iv=setInterval(function(){
-    const cur=Object.keys(window.__owned||{}).filter(k=>k!=='dyeTickets'&&k!=='dyedHairSets');
-    if(_ownedKeys===null){ _ownedKeys=cur; return; }
-    const fresh=cur.filter(k=>_ownedKeys.indexOf(k)<0);
-    if(fresh.length){ const nm=(window.__owned[fresh[0]]&&window.__owned[fresh[0]].name)||'新時裝';
-      window.celebrate('獲得新時裝!','「'+nm+'」已收進背包 — 到商城穿上身'); }
-    _ownedKeys=cur;
-  },1500);
+  /* 新時裝慶祝由 owned 訂閱處理；第一次收到背包只建立基準。 */
 })();
 
 /* v49:載入畫面品牌 logo(糖果奶昔杯) */
@@ -7691,7 +7700,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/season-v291.js?v=291"></script>
 <script src="tavern-ui-bridge.js?v=357"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
-<script src="lobby-ui/live.js?v=347"></script>
+<script src="lobby-ui/live.js?v=358"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
@@ -7705,9 +7714,9 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358">
 <script src="lobby-ui/rooms/world-bridge.js?v=343"></script>
-<script type="module" src="lobby-ui/rooms/entry.mjs?v=353"></script>
+<script type="module" src="lobby-ui/rooms/entry.mjs?v=358"></script>
 </body>
 </html>
 

@@ -1,0 +1,54 @@
+/* v358: keep the full-bleed scene, reduce only the desktop overlay footprint. */
+html:not(.tt-mobile) body.tt214 #hud2{scale:.85;transform-origin:top left}
+html:not(.tt-mobile) body.tt214 #gearBtn{scale:.85;transform-origin:top right}
+html:not(.tt-mobile) body.tt214 #ttMainDock{scale:.85;transform-origin:bottom right}
+html:not(.tt-mobile) body.tt214 #chatbox{scale:.85;transform-origin:bottom left}
+html:not(.tt-mobile) body.tt214 #chatlog{max-height:140px}
+html:not(.tt-mobile) body.tt214 #sign{transform:translateX(-50%) scale(.85);transform-origin:top center}
+html:not(.tt-mobile) body.tt214 #hint2{transform:translateX(-50%) scale(.85);transform-origin:bottom center}
+html:not(.tt-mobile) body.tt214 .lobby-geometry{scale:.85;transform-origin:top right}
+html:not(.tt-mobile) body.tt214 .lobby-geometry.bottom{transform-origin:bottom left}
+/* Settings keep their existing controls, with a smaller, content-sized shell. */
+#setM .panel[data-view=settings]{width:min(460px,100%);height:auto;border-radius:18px}
+#setM .panel-head{padding:16px 20px 12px}
+#setM .panel-head h1{font-size:23px}
+#setM .panel-head .eyebrow,#setM .panel-head .outline-word,#setM .panel-head p,#setM .geometry,#setM .frame-decoration,#setM .record-player,#setM .issue-label,#setM .section-caption{display:none}
+#setM .panel-head .close{width:34px;height:34px;top:12px;right:14px;font-size:24px}
+#setM .panel-content{padding:12px 20px}
+#setM .tuning-layout{display:block;min-height:0}
+#setM .music-card,#setM .tuning-controls{padding:0;background:none;border:0;border-radius:0;min-height:0;box-shadow:none}
+#setM .setting{padding:10px 0;margin:0;font-size:13px;min-height:0}
+#setM .setT{font-size:14px}
+#setM .setD{font-size:11px;margin-top:2px}
+#setM .panel-head .heading{margin:0}
+#setM .panel-head .title-chip{padding:5px 15px}
+#setM #volRow{flex-direction:row;align-items:center;gap:18px}
+#setM #volRow .setL{flex:0 0 76px}
+#setM #volSl2{height:20px}
+#setM .tgl{scale:.85;transform-origin:right center}
+#setM .actions a{padding:8px 12px;font-size:12px}
+#setM .actions{margin-top:10px}
+#setM .panel-footer{padding:10px 20px;min-height:0}
+#setM #roomEntry{position:static;transform:none;display:block;width:100%;margin:12px 0 0;padding:11px 13px;text-align:left;box-shadow:none;border:1px solid #cdb9d1;border-radius:9px;font-size:13px}
+/* A short list for channels instead of oversized cards. */
+#roomDialog{width:min(480px,calc(100% - 28px));border-radius:18px}
+#roomDialog .room-top{padding:14px 18px}
+#roomDialog .room-top small,#roomDialog .room-top::after{display:none}
+#roomDialog .room-top h2{font-size:20px;margin:0}
+#roomDialog .room-body{padding:14px 18px}
+#roomDialog .room-original{padding:10px 12px;border-radius:10px}
+#roomDialog .room-original strong{font-size:14px}
+#roomDialog .room-access-note{margin:10px 0 8px;font-size:12px;min-height:0}
+#roomDialog .room-login{margin-bottom:12px;padding:8px 12px}
+#roomDialog .room-grid{grid-template-columns:1fr;gap:7px}
+#roomDialog .room-choice{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:0 10px;padding:9px 11px;min-height:58px;align-items:center;border-radius:10px}
+#roomDialog .room-choice h3{font-size:13px}
+#roomDialog .room-choice button{margin:0;align-self:center;font-size:12px;padding:8px 10px}
+#roomDialog .room-choice p{font-size:11px}
+#roomDialog .room-picker h2{font-size:12px;margin-bottom:8px}
+#roomDialog .room-picker>section{padding-bottom:12px}
+#roomDialog .room-picker .private-section{padding:12px 0 0;margin:0}
+#roomDialog .private-actions{gap:10px}
+#roomDialog .private-actions input{font-size:13px;padding:8px 10px}
+#roomDialog .room-rules{padding-top:9px;margin-top:10px;font-size:11px;line-height:1.6}
+@media(max-width:600px){#roomDialog .private-actions input{font-size:16px}#roomDialog .room-choice button{min-height:42px}}

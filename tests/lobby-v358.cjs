@@ -1,0 +1,20 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const html=fs.readFileSync('lobby.html','utf8').replace(/\r\n/g,'\n');
+const start=html.indexOf("(function(){\n  if(typeof db==='undefined'||!db) return;\n  window.__shopCfg={};");
+assert(start>=0);const source=html.slice(start,html.indexOf('})();',start)+5);
+const handlers=new Map(),calls=[],pending=[];let adds=0,removes=0;
+const c={myKey:'alice',ROOT:'test',Set,esc:s=>s.replace(/</g,'&lt;'),setTimeout:f=>pending.push(f),claimMe(k){c.myKey=k},addEventListener(){},celebrate:(...a)=>calls.push(a),db:{ref:path=>({on(type,fn){handlers.set(path,fn);if(path.includes('/owned/'))adds++},off(type,fn){if(handlers.get(path)===fn)handlers.delete(path);removes++}})}};c.window=c;vm.runInNewContext(source,c);
+const send=(key,value)=>handlers.get('test/owned/'+key)({val:()=>value});
+assert.equal(calls.length,0);send('alice',{cloth2:{name:'原有時裝'}});assert.equal(calls.length,0,'slow first load is baseline');
+send('alice',{cloth2:{name:'原有時裝'},dyeTickets:2,dyedHairSets:{x:{}}});assert.equal(calls.length,0);
+send('alice',{cloth2:{},cloth3:{name:'真的新增'}});assert.equal(calls.length,1);assert(calls[0][1].includes('真的新增'));
+send('alice',null);send('alice',{cloth2:{},cloth3:{}});assert.equal(calls.length,1,'replayed data does not celebrate');
+c.claimMe('alice');pending.shift()();assert.equal(adds,1,'no duplicate watcher');
+const late=handlers.get('test/owned/alice');c.claimMe('bob');assert.equal(removes,1);pending.shift()();send('bob',{cloth4:{}});assert.equal(calls.length,1,'account switch baselines independently');
+late({val:()=>({cloth99:{}})});assert(!c.__owned.cloth99,'stale account cannot overwrite inventory');
+send('bob',{cloth4:{},cloth5:{name:'<new>'}});assert.equal(calls.length,2);assert(calls[1][1].includes('&lt;new>'));
+c.claimMe('empty');pending.shift()();send('empty',null);send('empty',{cloth2:{name:'第一件'}});assert.equal(calls.length,3,'empty baseline still allows first purchase');
+const partner=fs.readFileSync('partner.html','utf8');const art=partner.slice(partner.indexOf('const PARTNER_ART='),partner.indexOf('function renderPartnerArt'));
+const p={document:{createElement:()=>({style:{}})}};vm.createContext(p);vm.runInContext(art,p);
+for(const [id,asset] of [['-OxY7C4vDkgsr1zcyWbk','rira'],['-OxY46ezlpnRt64hUIw9','kabuki'],['-OzbfbQcF6J6fIR6YYGh','momo']]){const root={replaceChildren(){},append(x){this.img=x}};p.renderPartnerAvatar(root,id,{avatar:'old-ai.png'});assert.equal(root.img.src,'img/companions-v352/'+asset+'-staff.gif?v=358');assert(fs.existsSync(root.img.src.split('?')[0]));assert.equal(root.img.style.objectFit,'contain');}
+console.log('PASS: delayed initial inventory, repeated snapshots, metadata, genuine acquisitions, account switch, stale callback, empty baseline and three pixel journal avatars');

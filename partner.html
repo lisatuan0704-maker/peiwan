@@ -632,6 +632,11 @@ function setBusy(b){
   if(staffRef && punchChk.checked) staffRef.update({busy:!!b, updatedAt:firebase.database.ServerValue.TIMESTAMP});
 }
 const PARTNER_ART={'-OxY7C4vDkgsr1zcyWbk':{name:'縭',asset:'rira'},'-OxY46ezlpnRt64hUIw9':{name:'蕪',asset:'kabuki'},'-OzbfbQcF6J6fIR6YYGh':{name:'桃',asset:'momo'}};
+function renderPartnerAvatar(root,id,person){
+  const info=PARTNER_ART[id];root.replaceChildren();
+  if(info||person.avatar){const img=document.createElement('img');img.className='face me';img.style.objectFit='contain';img.alt=info?.name||person.name||'角色頭貼';img.src=info?'img/companions-v352/'+info.asset+'-staff.gif?v=358':person.avatar;root.append(img);}
+  else root.textContent=person.emoji||'✨';
+}
 function renderPartnerArt(id){const root=document.getElementById('partnerCompanions'),info=PARTNER_ART[id];root.replaceChildren();root.hidden=!info;if(!info)return;for(const role of ['staff','pet']){const figure=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');img.src='img/companions-v352/'+info.asset+'-'+role+'.gif?v=356';img.alt=role==='staff'?info.name:info.name+'的寵物';if(role==='pet')img.className='pet';label.textContent=role==='staff'?info.name:'寵物';figure.append(img,label);root.append(figure)}}
 function boot(){
   booted=true;
@@ -646,7 +651,7 @@ function boot(){
   });
   db.ref(ROOT+"/characters/"+cid).on("value",s=>{
     me=s.val(); if(!me){logout();return;}
-    meEmoji.innerHTML = me.avatar? `<img class="face me" src="${me.avatar}">` : (me.emoji||"✨"); meName.textContent=PARTNER_ART[cid]?.name||me.name; meTag.textContent=me.tagline||"";
+    renderPartnerAvatar(meEmoji,cid,me); meName.textContent=PARTNER_ART[cid]?.name||me.name; meTag.textContent=me.tagline||"";
   });
   /* 只抓自己的工單:原本抓全店最後 500 筆,店裡單量一多,自己還沒結的舊單會憑空不見 */
   db.ref(ROOT+"/orders").orderByChild("cid").equalTo(cid).on("value",s=>{orders=s.val()||{};render();});

@@ -12,7 +12,7 @@
     topupM: ['wallet', '金幣錢包', '為下一段陪伴，留一點期待。', 'TAVERN WALLET', 'WALLET'],
     topupPayM: ['wallet', '儲值付款', '選擇付款方式，金額與入帳金幣都在這裡。', 'TAVERN WALLET', 'PAYMENT'],
     vipM: ['wallet', 'VIP 等級與獎勵', '謝謝你，讓酒館的日常更熱鬧。', 'TAVERN MEMBERSHIP', 'MEMBER'],
-    setM: ['settings', '酒館調頻', '調成你喜歡的節奏。', 'MAKE YOURSELF AT HOME', 'TUNE IN'],
+    setM: ['settings', '酒館設定', '調成你喜歡的節奏。', 'MAKE YOURSELF AT HOME', 'TUNE IN'],
     mailBoxM: ['mail', '我的信箱', '給你的每一句話，都在這裡。', 'LETTERS TO YOU', 'POST'],
     shopM4: ['orders', '我的訂單', '約好的時間，替你好好記著。', 'TAVERN ORDERS', 'ORDERS'],
     shopM1: ['menu', '想來點什麼？', '找店員一起玩，或看看酒館的會員方案。', 'ORDER MENU', 'ORDER']

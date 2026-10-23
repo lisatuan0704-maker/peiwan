@@ -8,7 +8,7 @@ import {beginVoiceLogin} from '../voice-rehearsal.mjs?v=353';
 const API='https://api.tinytavern.tw';
 const entry=document.createElement('button');entry.id='roomEntry';entry.type='button';entry.textContent='大廳選單 ▾';entry.setAttribute('aria-haspopup','dialog');
 const dialog=document.createElement('dialog');dialog.id='roomDialog';dialog.setAttribute('aria-label','大廳選單');
-dialog.innerHTML='<div class="room-top"><div><small>TAVERN SPACES</small><h2>選個地方，一起坐坐。</h2></div><button class="room-close" aria-label="關閉大廳選單">×</button></div><div class="room-body"><div class="room-original"><div><strong>酒館大廳</strong><p>大家平常相遇的地方</p></div><button type="button" id="roomOriginal">目前所在</button></div><p class="room-access-note" role="status">登入 Discord 後，可切換分流或建立私人大廳。</p><button type="button" class="room-login">登入 Discord</button><div id="roomPicker"></div><p class="room-rules">私人大廳最多 12 人，有效 12 小時。每人同時可建立一間；只有持有邀請碼的人能加入。離開前記得複製邀請碼，之後可用同一組邀請碼回來。</p></div>';
+dialog.innerHTML='<div class="room-top"><div><small>TAVERN SPACES</small><h2>切換大廳</h2></div><button class="room-close" aria-label="關閉大廳選單">×</button></div><div class="room-body"><div class="room-original"><div><strong>酒館大廳</strong><p>大家平常相遇的地方</p></div><button type="button" id="roomOriginal">目前所在</button></div><p class="room-access-note" role="status">登入 Discord 後，可切換分流或建立私人大廳。</p><button type="button" class="room-login">登入 Discord</button><div id="roomPicker"></div><p class="room-rules">私人大廳最多 12 人，有效 12 小時。每人同時可建立一間；只有持有邀請碼的人能加入。離開前記得複製邀請碼，之後可用同一組邀請碼回來。</p></div>';
 document.body.append(entry,dialog);
 const note=dialog.querySelector('.room-access-note'),login=dialog.querySelector('.room-login'),original=dialog.querySelector('#roomOriginal');
 let client=null,roomAuth=null,clock=null,publisher=null,bootstrapPending=null,identity=null,room=null,stopDirectory=()=>{},epoch=0;
@@ -21,7 +21,7 @@ const picker=mountRoomSelector(dialog.querySelector('#roomPicker'),{
  joinPrivate:async code=>{await bootstrap();return client.joinPrivate(code)},onEntered:()=>dialog.close()
 });
 picker.update(availableRooms,null);
-function place(){const home=document.getElementById('mhEnter'),sign=document.getElementById('sign');if(document.body.classList.contains('mhome-on')&&home)home.before(entry);else (sign||document.body).append(entry)}
+function place(){const settings=document.querySelector('#setM .tuning-controls');if(settings&&entry.parentElement!==settings)settings.append(entry);}
 place();addEventListener('resize',place);
 new MutationObserver(place).observe(document.body,{attributes:true,attributeFilter:['class']});
 function authReady(auth){return new Promise((resolve,reject)=>{let stop=()=>{};stop=auth.onAuthStateChanged(u=>{queueMicrotask(stop);resolve(u)},reject)})}
