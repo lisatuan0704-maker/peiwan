@@ -8,7 +8,7 @@ assert.equal(ach.states(rewards,'alice').filter(x=>x.unlocked).length,1);
 assert(ach.states(rewards,'bob').every(x=>!x.unlocked&&!x.loaded));
 assert(ach.states(rewards,null).every(x=>!x.unlocked&&!x.loaded));
 assert(ach.states(null,'alice').every(x=>!x.unlocked&&!x.loaded));
-for(const c of ach.states(rewards,'alice')){assert(fs.existsSync('img/companions-v315/'+c.asset+'-staff.gif'));assert(fs.existsSync('img/frames/companions/'+c.id+'.png'));}
+for(const c of ach.states(rewards,'alice')){assert(fs.existsSync('img/companions-v352/'+c.asset+'-staff.gif'));assert(fs.existsSync('img/frames/companions/'+c.id+'.png'));}
 const html=fs.readFileSync('lobby.html','utf8'),start=html.indexOf('  window.dmSend=async function'),end=html.indexOf('  window.dmBlockCur=',start);
 let release,posts=0,blocked=false;const button={disabled:false,setAttribute(){},removeAttribute(){}};
 const input={value:'測試訊息',parentElement:{querySelector:()=>button},dispatchEvent(){}};

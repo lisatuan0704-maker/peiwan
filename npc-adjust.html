@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NPC 站位調整｜小小酒館</title>
+<link rel="stylesheet" href="lobby-ui/npc-adjust.css?v=352">
+<script src="lobby-ui/scene.js?v=279" defer></script>
+<script src="lobby-ui/npc-adjust.js?v=352" defer></script>
+</head>
+<body>
+<header><div><p class="eyebrow">TINY TAVERN · SCENE STUDIO</p><h1>替每位夥伴，找個喜歡的位置。</h1><p>拖曳小人調整站位；左右鏡像可以分別設定。</p></div><a href="lobby.html">回到酒館 ↗</a></header>
+<main>
+<section class="scene-panel" aria-label="大廳站位預覽">
+<div class="scene-toolbar"><span>酒館大廳 <small>原場景・原角色</small></span><label>畫面縮放 <select id="zoom"><option value="1">完整大廳</option><option value="1.5">放大 1.5 倍</option><option value="2">放大 2 倍</option></select></label></div>
+<div id="viewport"><div id="stageSpace"><div id="world" aria-label="拖曳 NPC 或點地板放置所選角色"><img class="scene-base" src="img/lobby-layers-v254/base.png" alt="小小酒館大廳" draggable="false"></div></div></div>
+<div class="scene-caption"><span>選小人 → 拖曳，或點地板放置</span><label><input id="clean" type="checkbox"> 隱藏編輯標記</label></div>
+<p id="placementNotice" role="status"></p>
+</section>
+<aside>
+<section class="control-card"><p class="eyebrow">01 / 選擇夥伴</p><div id="roster" aria-label="選擇 NPC"></div></section>
+<section class="control-card"><p class="eyebrow">02 / 位置與方向</p><h2 id="selectedName">桃的站位</h2>
+<button id="mirror" type="button" aria-pressed="false">↔ 左右鏡像</button><p id="mirrorState" class="muted"></p>
+<div class="coordinates"><label>左右位置 <input id="x" type="number" min="0" max="1600" step="1"></label><label>上下位置 <input id="y" type="number" min="0" max="900" step="1"></label></div>
+<p class="muted">座標以腳底為準。選中小人後，方向鍵移動 1 格；按住 Shift 移動 10 格。</p>
+<button id="resetOne" class="quiet" type="button">還原這位的起始站位</button>
+</section>
+<section class="control-card save-card"><p class="eyebrow">03 / 留下這個安排</p><p id="saveState" role="status">調整會自動保存在這個瀏覽器。</p><button id="export" class="primary" type="button">下載站位設定 ↓</button><button id="import" class="quiet" type="button">匯入之前的設定</button><input id="importFile" type="file" accept="application/json,.json" hidden><p class="muted">調好後把設定檔傳給我，就能套用到大廳。這裡的拖曳不會即時移動正式大廳的 NPC。</p><details><summary>查看／複製設定</summary><textarea id="json" aria-label="NPC 站位設定" readonly></textarea></details></section>
+</aside>
+</main>
+<footer>使用酒館原始場景圖層、角色與寵物動畫。大小與家具遮擋隨站位呈現。</footer>
+</body></html>

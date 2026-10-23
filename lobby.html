@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<script src="lobby-ui/fixed-view.js?v=352"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1683,9 +1684,9 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v350</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v352</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
-<button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
+<button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
 
 <div id="bookM">
@@ -3486,7 +3487,7 @@ function makeStaff(cid, st, idx){
   a.frame=null; setFrame(a,'idle');
   const art=STAFF_GIF[cid];
   if(art){
-    const img=document.createElement('img');img.className='staff-sprite';img.src='img/companions-v315/'+art.asset+'-staff.gif';img.alt=art.name;img.draggable=false;
+    const img=document.createElement('img');img.className='staff-sprite';img.src='img/companions-v352/'+art.asset+'-staff.gif';img.alt=art.name;img.draggable=false;
     img.style.cssText='display:block;margin:0 auto;image-rendering:pixelated;object-fit:contain;transform-origin:50% 100%';
     // GIF remains a browser image so all original animation frames keep playing.
     cv.replaceWith(img);a.cv=img;a.frames=null;a._staffGif=true;a._headTop=art.top/114;a._sceneBottom=(art.bottom+2)/118;
@@ -4383,7 +4384,7 @@ function updateCoinChip(){ const el=document.getElementById('coinBal'); if(el) e
 function needCard(msg){
   if(myKey) return false;
   toast(msg||'先做一張闆卡,金幣才會記在你身上 ✦');
-  setTimeout(()=>{ if(confirm('要先做一張闆卡嗎?\n金幣、時裝、訂單都會綁在闆卡上。')) location.href='card.html'; },350);
+  setTimeout(()=>{ if(confirm('要先做一張闆卡嗎?\n金幣、時裝、訂單都會綁在闆卡上。')) ttNavigate('card.html'); },350);
   return true;
 }
 function openTopup(){
@@ -4469,7 +4470,7 @@ window.tuPayOnline=async function(){
     const j=await r.json();
     if(j&&j.ok&&j.url){
       if(j.orderId){ try{ const ids=myOrderIds(); ids.push(j.orderId); localStorage.setItem('tt_orders',JSON.stringify(ids)); }catch(e){} }
-      location.href=j.url; return;
+      ttNavigate(j.url); return;
     }
     toast('線上付款暫時忙線,可先用下方轉帳,或稍後再試');
   }catch(e){ toast('連不上付款服務,可先用下方轉帳'); }
@@ -5192,7 +5193,7 @@ function tryServeNudge(staff){
   const intro=document.getElementById('intro');
   function close(){ intro.classList.remove('on'); try{localStorage.setItem('tt_seen_intro','1');}catch(e){} }
   document.getElementById('introGo').onclick=()=>{ close(); if(typeof shopOpen==='function') shopOpen(1); };
-  document.getElementById('introCard2').onclick=()=>{ close(); location.href='card.html'; };
+  document.getElementById('introCard2').onclick=()=>{ close(); ttNavigate('card.html'); };
   document.getElementById('introSkip').onclick=close;
   let seen=false; try{ seen=!!localStorage.getItem('tt_seen_intro'); }catch(e){}
   const portraitHome=()=>window.innerWidth<=680 && window.innerHeight>window.innerWidth;
@@ -5744,7 +5745,7 @@ function tryServeNudge(staff){
   g('mhOrder').onclick=()=>{ if(typeof shopOpen==='function') shopOpen(1); };
   g('mhDress').onclick=()=>{ const d=g('dressBtn'); if(d) d.click(); };
   g('mhOrders').onclick=()=>{ if(typeof shopOpen==='function') shopOpen(4); };
-  g('mhCard').onclick=()=>location.href='card.html';
+  g('mhCard').onclick=()=>ttNavigate('card.html');
   { const w=g('mhWard'); if(w) w.onclick=()=>{ if(window.openWardrobe) openWardrobe(); }; }
   g('mhEnter').onclick=()=>{ if(typeof toast==='function') toast('把手機轉橫,就會走進完整的 2.5D 酒館大廳 ✦'); };
   addEventListener('resize', apply);
@@ -6217,7 +6218,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   }
   renderDC();
   window.dcAuth=function(){
-    try{ location.href=TTDiscordAuth.begin(DC_CLIENT,DC_REDIRECT); }catch(e){ alert('無法儲存登入驗證資料，請確認瀏覽器允許此網站使用儲存空間後再試。'); }
+    try{ ttNavigate(TTDiscordAuth.begin(DC_CLIENT,DC_REDIRECT)); }catch(e){ alert('無法儲存登入驗證資料，請確認瀏覽器允許此網站使用儲存空間後再試。'); }
   };
   /* v44:進場閘門 —— 順序:先做闆卡 → 再綁 Discord → 進大廳 */
   (function(){
@@ -6233,7 +6234,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
       b.textContent='開始製作闆卡';
       b.style.background='linear-gradient(180deg,#FBB6D0,#F28FB2)';
       b.style.boxShadow='inset 0 -4px 0 #E27FA6';
-      b.onclick=(e)=>{ e.preventDefault(); location.href='card.html'; };
+      b.onclick=(e)=>{ e.preventDefault(); ttNavigate('card.html'); };
       cardEl.querySelector('.dgSub').innerHTML='做好闆卡就能走進大廳;之後綁定 Discord 可保存進度、換裝置找回。闆卡每人只有一張,請認真捏!<br><br><a href="#" id="dgRestore" style="color:#8E68C8;font-weight:700">已經有帳號了?綁定 Discord 找回 ›</a>';
       const rl=cardEl.querySelector('#dgRestore');
       if(rl) rl.onclick=(e)=>{ e.preventDefault(); dcAuth(); };
@@ -7672,8 +7673,8 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=349"></script>
-<script src="lobby-ui/companion-achievements.js?v=347"></script>
+<script src="tavern-ui-bridge.js?v=352"></script>
+<script src="lobby-ui/companion-achievements.js?v=352"></script>
 <script src="lobby-ui/live.js?v=347"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>

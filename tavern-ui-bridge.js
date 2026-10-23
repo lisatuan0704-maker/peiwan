@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=349';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=352';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -35,9 +35,9 @@
     return 'hand';
   }
   // Visible bounds cover all 16 original GIF frames, including the floating effects.
-  const companionPets={pet_bubu:{name:'布布',asset:'kabuki',bounds:[6,44,68,90]},pet_guigui:{name:'鬼鬼',asset:'rira',bounds:[14,10,78,88]},pet_dengdeng:{name:'燈燈',asset:'momo',bounds:[6,16,78,104]}};
+  const companionPets={pet_bubu:{name:'布布',asset:'kabuki',bounds:[6,44,68,90]},pet_guigui:{name:'鬼鬼',asset:'rira',bounds:[14,10,78,88]},pet_dengdeng:{name:'燈燈',asset:'momo',bounds:[12,12,84,110]}};
   const staffPetLayout={kabuki:{size:123,x:86,y:22},rira:{size:133,x:-93,y:-4},momo:{size:125,x:-89,y:-51}};
-  function followingPet(d){if(d?.uiBaseSlots?.includes('pet'))return null;const id=d?.ps?.pet||d?.set,pet=companionPets[id];return pet?{...pet,id,layout:{reference:160,...staffPetLayout[pet.asset]},src:'img/companions-v315/'+pet.asset+'-pet.gif'}:null;}
+  function followingPet(d){if(d?.uiBaseSlots?.includes('pet'))return null;const id=d?.ps?.pet||d?.set,pet=companionPets[id];return pet?{...pet,id,layout:{reference:160,...staffPetLayout[pet.asset]},src:'img/companions-v352/'+pet.asset+'-pet.gif'}:null;}
   const staffPets={'-OxY7C4vDkgsr1zcyWbk':'pet_guigui','-OxY46ezlpnRt64hUIw9':'pet_bubu','-OzbfbQcF6J6fIR6YYGh':'pet_dengdeng'};
   const previousSetFrame=setFrame;setFrame=function(a,p){
     const staffPet=a.staff&&staffPets[a.cid];
