@@ -18,7 +18,7 @@ const fail=e=>{if(TTRoomWorld.active){original.disabled=false;original.textConte
 const picker=mountRoomSelector(dialog.querySelector('#roomPicker'),{
  joinPublic:async id=>{await bootstrap();return client.joinPublic(id)},
  createPrivate:async title=>{await bootstrap();return client.createPrivate(title)},
- joinPrivate:async code=>{await bootstrap();return client.joinPrivate(code)},onEntered:()=>dialog.close()
+ joinPrivate:async code=>{await bootstrap();return client.joinPrivate(code)},onEntered:()=>{dialog.close();window.gClose?.('setM');}
 });
 picker.update(availableRooms,null);
 function place(){const settings=document.querySelector('#setM .tuning-controls');if(settings&&entry.parentElement!==settings)settings.append(entry);}
