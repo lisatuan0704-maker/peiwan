@@ -28,3 +28,11 @@ body:not(.in-forest) .tt-mirror-right{width:calc(var(--tt-gap-right) + 3px);back
 body:not(.in-forest) #worldbg{background-color:transparent!important}
 body:not(.in-forest) #world.tt-soft-sides{-webkit-mask-image:none;mask-image:none}
 body:not(.in-forest) #hall.tt-extended #hallShade{background:linear-gradient(to right,rgba(28,16,26,.6),transparent calc(var(--tt-gap-left) - var(--tt-stage-width) * .1 + 60px),transparent calc(100% - var(--tt-gap-right) + var(--tt-stage-width) * .1 - 60px),rgba(28,16,26,.6))}
+
+/* Full artist layers: the walkable world keeps its original coordinates. */
+body:not(.in-forest) #worldbg{left:-160px;width:1920px!important;background-size:1920px 900px}
+.tt-scene-layer{left:-160px;width:1920px}
+body:not(.in-forest) #hallBackdrop{background-image:none}
+body:not(.in-forest) #hallBackdrop::before{display:block;background-image:url('../img/lobby-wide-v253.png')}
+body:not(.in-forest) .tt-mirror-side{display:none}
+body:not(.in-forest) #hallShade{display:none}

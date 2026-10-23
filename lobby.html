@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<script src="lobby-ui/fixed-view.js?v=355"></script>
+<script src="lobby-ui/fixed-view.js?v=356"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1444,8 +1444,8 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/contacts.js?v=341"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
 <link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=347">
-<link rel="stylesheet" href="lobby-ui/scene.css?v=255">
-<script src="lobby-ui/scene.js?v=279"></script>
+<link rel="stylesheet" href="lobby-ui/scene.css?v=356">
+<script src="lobby-ui/scene.js?v=356"></script>
 <script src="lobby-ui/hair-motion.js?v=272"></script>
 <script src="lobby-ui/dm-log.js?v=350"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
@@ -1686,7 +1686,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v355</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v356</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2781,7 +2781,7 @@ const worldbg=document.getElementById('worldbg');
 // 虛擬世界尺寸(小人與座標都以此為基準;鏡頭在其中平移縮放)
 const WORLD={w:1600,h:900};
 const MAPS={
-  hall:{ bg:'img/lobby-layers-v254/base.png',
+  hall:{ bg:'img/lobby-layers-v356/base.png',
     floor:{y0:343/900,y1:0.97,farX0:0.02,farX1:0.96,nearX0:0.02,nearX1:0.96},   /* v261:地板上緣 343,實際可走區由 TTScene 遮罩決定 */
     door:{x:0.957,y:0.66,emo:'✦',label:'往森林小徑',to:'forest',spawn:[0.18,0.78]} },
   forest:{ bg:'img/forestbase.jpg',
@@ -3319,7 +3319,8 @@ function updateCamera(dt, now){
   let ty = a? a.y*WORLD.h - 40 : WORLD.h*0.6;
   const moving = a && (a.state==='walk');
   // 完整全景：依原圖比例呈現，不再裁去天花板或下方地板。
-  const fitZoom = Math.min(vw/WORLD.w, vh/WORLD.h);
+  // Include the artist's 160px extension on each side without changing multiplayer coordinates.
+  const fitZoom = Math.min(vw/(curMap==='hall'?1920:WORLD.w), vh/WORLD.h);
   if(isMobile()){
     // 手機直屏:楓谷式跟隨鏡頭——拉近讓小人變大,上下左右都跟著小人,裁掉多餘空地板
     cam.tzoom = (vh/WORLD.h) * 1.42;
@@ -3447,7 +3448,7 @@ worldbg.style.backgroundImage="url('"+MAPS.hall.bg+"')";
 const POSTS=[[0.32,0.565],[0.50,0.565],[0.68,0.565]];
 const SERVE=[[0.50,0.74],[0.68,0.82],[0.84,0.68]];   // 森林陪玩點(史萊姆附近)
 const STAFF_GIF={'-OxY7C4vDkgsr1zcyWbk':{asset:'rira',name:'縭',top:6,bottom:104},'-OxY46ezlpnRt64hUIw9':{asset:'kabuki',name:'蕪',top:10,bottom:104},'-OzbfbQcF6J6fIR6YYGh':{asset:'momo',name:'桃',top:2,bottom:106}};
-const STAFF_LAYOUT={"-OxY46ezlpnRt64hUIw9":{"x":551,"y":438,"mirror":false},"-OxY7C4vDkgsr1zcyWbk":{"x":307,"y":777,"mirror":false},"-OzbfbQcF6J6fIR6YYGh":{"x":1398,"y":466,"mirror":true}};
+const STAFF_LAYOUT={"-OxY46ezlpnRt64hUIw9":{"x":551,"y":438,"mirror":false},"-OxY7C4vDkgsr1zcyWbk":{"x":410,"y":436,"mirror":false},"-OzbfbQcF6J6fIR6YYGh":{"x":1398,"y":466,"mirror":true}};
 const lastStaffPosts=new Map();
 function randomStaffPost(cid){
   const saved=STAFF_LAYOUT[cid];if(saved)return [saved.x/1600,saved.y/900];
@@ -7680,7 +7681,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=353"></script>
+<script src="tavern-ui-bridge.js?v=356"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
 <script src="lobby-ui/live.js?v=347"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">

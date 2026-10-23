@@ -4,7 +4,7 @@
  const $=id=>document.getElementById(id),W=1600,H=900,storageKey='tt-npc-layout-v1';
  const people=[
   {asset:'kabuki',cid:'-OxY46ezlpnRt64hUIw9',name:'蕪',bottom:104,pet:{size:123,x:86,y:22},initial:{x:551,y:438,mirror:false}},
-  {asset:'rira',cid:'-OxY7C4vDkgsr1zcyWbk',name:'縭',bottom:104,pet:{size:133,x:-93,y:-4},initial:{x:307,y:777,mirror:false}},
+  {asset:'rira',cid:'-OxY7C4vDkgsr1zcyWbk',name:'縭',bottom:104,pet:{size:133,x:-93,y:-4},initial:{x:410,y:436,mirror:false}},
   {asset:'momo',cid:'-OzbfbQcF6J6fIR6YYGh',name:'桃',bottom:106,pet:{size:125,x:-89,y:-51},initial:{x:1398,y:466,mirror:true}}
  ];
  let settings=Object.fromEntries(people.map(p=>[p.asset,{...p.initial}])),selected='momo',scale=1,drag=null;
@@ -22,7 +22,7 @@
  function save(){const json=JSON.stringify(documentValue(),null,2);$('json').value=json;try{localStorage.setItem(storageKey,json);$('saveState').textContent='已自動儲存在這個瀏覽器。調好後可下載設定。';}catch{$('saveState').textContent='瀏覽器無法儲存，請下載設定以免遺失。';}}
  for(const p of people){
   const button=document.createElement('button');button.type='button';button.className='edit-npc';button.setAttribute('aria-label',p.name+'，拖曳調整站位');button.dataset.npc=p.asset;
-  button.innerHTML='<span class="shadow"></span><img class="sprite" src="img/companions-v352/'+p.asset+'-staff.gif" alt="" draggable="false"><img class="pet" src="img/companions-v352/'+p.asset+'-pet.gif" alt="" draggable="false"><span class="led">離線中</span><span class="name">☆ '+p.name+'</span><span class="foot-marker"></span>';
+  button.innerHTML='<span class="shadow"></span><img class="sprite" src="img/companions-v352/'+p.asset+'-staff.gif" alt="" draggable="false"><img class="pet" src="img/companions-v352/'+p.asset+'-pet.gif?v=356" alt="" draggable="false"><span class="led">離線中</span><span class="name">☆ '+p.name+'</span><span class="foot-marker"></span>';
   $('world').append(button);nodes.set(p.asset,button);
   button.addEventListener('pointerdown',e=>{if(e.button!==0)return;select(p.asset);const q=point(e),c=settings[p.asset];drag={id:e.pointerId,asset:p.asset,dx:q.x-c.x,dy:q.y-c.y};button.setPointerCapture(e.pointerId);button.focus({preventScroll:true});e.preventDefault();});
   button.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const q=point(e);move(q.x-drag.dx,q.y-drag.dy);});
@@ -47,8 +47,8 @@
  for(const axis of ['x','y']){const update=()=>{if(!Number.isFinite($(axis).valueAsNumber))return;const c=settings[selected];move(axis==='x'?$(axis).valueAsNumber:c.x,axis==='y'?$(axis).valueAsNumber:c.y);};$(axis).addEventListener('input',update);$(axis).addEventListener('change',()=>{update();render();});}
  $('resetOne').onclick=()=>{settings[selected]={...people.find(p=>p.asset===selected).initial};render();save();};
  $('clean').onchange=()=>$('world').classList.toggle('clean',$('clean').checked);
- function fit(){const heightLimit=innerWidth<=950?innerHeight*.65:Math.max(180,innerHeight-260);scale=Math.min($('viewport').clientWidth/W,heightLimit/H)*Number($('zoom').value);$('world').style.transform='scale('+scale+')';$('stageSpace').style.width=W*scale+'px';$('stageSpace').style.height=H*scale+'px';}
- new ResizeObserver(fit).observe($('viewport'));addEventListener('resize',fit);$('zoom').onchange=()=>{fit();const c=settings[selected];$('viewport').scrollTo({left:c.x*scale-$('viewport').clientWidth/2,top:c.y*scale-$('viewport').clientHeight/2});};
+ function fit(){const heightLimit=innerWidth<=950?innerHeight*.65:Math.max(180,innerHeight-260);scale=Math.min($('viewport').clientWidth/1920,heightLimit/H)*Number($('zoom').value);$('world').style.left=160*scale+'px';$('world').style.transform='scale('+scale+')';$('stageSpace').style.width=1920*scale+'px';$('stageSpace').style.height=H*scale+'px';}
+ new ResizeObserver(fit).observe($('viewport'));addEventListener('resize',fit);$('zoom').onchange=()=>{fit();const c=settings[selected];$('viewport').scrollTo({left:(c.x+160)*scale-$('viewport').clientWidth/2,top:c.y*scale-$('viewport').clientHeight/2});};
  $('export').onclick=()=>{save();const url=URL.createObjectURL(new Blob([JSON.stringify(documentValue(),null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='小小酒館-NPC站位設定.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
  $('import').onclick=()=>$('importFile').click();$('importFile').onchange=async()=>{const file=$('importFile').files[0];if(!file)return;try{if(file.size>100000)throw Error('設定檔過大，請選擇匯出的站位 JSON。');const next=parse(JSON.parse(await file.text()));settings=next;render();save();$('saveState').textContent='已匯入並儲存站位設定。';}catch(e){$('saveState').textContent='匯入失敗：'+e.message;}finally{$('importFile').value='';}};
  render();fit();

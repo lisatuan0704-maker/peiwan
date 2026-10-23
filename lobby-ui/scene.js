@@ -143,7 +143,7 @@
   const ground={counter:430,stools:456,stall:633,board:633,wolf:633,white:634,flower:800,pink:834};
   const layerDepth=y=>Math.round(y/H*1000)-1;
   function mount(world){
-    const asset='img/lobby-layers-v260/';
+    const asset='img/lobby-layers-v356/';
     const layers=[
       /* 吧台桌面與正面共同遮擋後方角色，避免角色從桌面中間穿出。 */
       ['counter','counter.png',layerDepth(ground.counter)],
@@ -153,13 +153,13 @@
       ['cushions','cushion.png',layerDepth(ground.wolf)+1],['wolf','doll-grey.png',layerDepth(ground.wolf)+2],
       ['pink','doll-pink.png',layerDepth(ground.pink)],
       /* 前景分兩塊：左邊攤位＋告示牌＋左上樹（腳底線 633）、右邊花盆＋右上樹（永遠最前面） */
-      ['stall','front.png',layerDepth(ground.stall),'inset(0px 1040px 0px 0px)'],
-      ['flowers','front.png',1001,'inset(0px 0px 0px 560px)']
+      ['stall','front.png',layerDepth(ground.stall),'inset(0px 1200px 0px 0px)'],
+      ['flowers','front.png',1001,'inset(0px 0px 0px 720px)']
     ];
     for(const [id,file,z,clip] of layers){
       const img=document.createElement('img');img.className='tt-scene-layer';img.dataset.layer=id;
       img.src=asset+file;img.alt='';img.draggable=false;img.setAttribute('aria-hidden','true');
-      img.width=W;img.height=H;img.style.zIndex=z;if(clip)img.style.clipPath=clip;world.append(img);
+      img.width=1920;img.height=H;img.style.zIndex=z;if(clip)img.style.clipPath=clip;world.append(img);
     }
   }
   root.TTScene={bounds,valid,nearest,spawn,clear,route,slide,target,metrics,size,lift,ground,layerDepth,mount,rows:ROWS};

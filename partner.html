@@ -632,7 +632,7 @@ function setBusy(b){
   if(staffRef && punchChk.checked) staffRef.update({busy:!!b, updatedAt:firebase.database.ServerValue.TIMESTAMP});
 }
 const PARTNER_ART={'-OxY7C4vDkgsr1zcyWbk':{name:'縭',asset:'rira'},'-OxY46ezlpnRt64hUIw9':{name:'蕪',asset:'kabuki'},'-OzbfbQcF6J6fIR6YYGh':{name:'桃',asset:'momo'}};
-function renderPartnerArt(id){const root=document.getElementById('partnerCompanions'),info=PARTNER_ART[id];root.replaceChildren();root.hidden=!info;if(!info)return;for(const role of ['staff','pet']){const figure=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');img.src='img/companions-v352/'+info.asset+'-'+role+'.gif';img.alt=role==='staff'?info.name:info.name+'的寵物';if(role==='pet')img.className='pet';label.textContent=role==='staff'?info.name:'寵物';figure.append(img,label);root.append(figure)}}
+function renderPartnerArt(id){const root=document.getElementById('partnerCompanions'),info=PARTNER_ART[id];root.replaceChildren();root.hidden=!info;if(!info)return;for(const role of ['staff','pet']){const figure=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');img.src='img/companions-v352/'+info.asset+'-'+role+'.gif?v=356';img.alt=role==='staff'?info.name:info.name+'的寵物';if(role==='pet')img.className='pet';label.textContent=role==='staff'?info.name:'寵物';figure.append(img,label);root.append(figure)}}
 function boot(){
   booted=true;
   pgLogin.style.display="none"; pgMain.style.display="block";renderPartnerArt(cid);
