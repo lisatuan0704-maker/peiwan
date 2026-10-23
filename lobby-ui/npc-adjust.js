@@ -3,9 +3,9 @@
  'use strict';
  const $=id=>document.getElementById(id),W=1600,H=900,storageKey='tt-npc-layout-v1';
  const people=[
-  {asset:'kabuki',cid:'-OxY46ezlpnRt64hUIw9',name:'蕪',bottom:104,pet:{size:123,x:86,y:22},initial:{x:410,y:760,mirror:false}},
-  {asset:'rira',cid:'-OxY7C4vDkgsr1zcyWbk',name:'縭',bottom:104,pet:{size:133,x:-93,y:-4},initial:{x:1260,y:780,mirror:true}},
-  {asset:'momo',cid:'-OzbfbQcF6J6fIR6YYGh',name:'桃',bottom:106,pet:{size:125,x:-89,y:-51},initial:{x:1260,y:535,mirror:true}}
+  {asset:'kabuki',cid:'-OxY46ezlpnRt64hUIw9',name:'蕪',bottom:104,pet:{size:123,x:86,y:22},initial:{x:551,y:438,mirror:false}},
+  {asset:'rira',cid:'-OxY7C4vDkgsr1zcyWbk',name:'縭',bottom:104,pet:{size:133,x:-93,y:-4},initial:{x:307,y:777,mirror:false}},
+  {asset:'momo',cid:'-OzbfbQcF6J6fIR6YYGh',name:'桃',bottom:106,pet:{size:125,x:-89,y:-51},initial:{x:1398,y:466,mirror:true}}
  ];
  let settings=Object.fromEntries(people.map(p=>[p.asset,{...p.initial}])),selected='momo',scale=1,drag=null;
  const nodes=new Map();

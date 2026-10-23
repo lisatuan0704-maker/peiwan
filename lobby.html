@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<script src="lobby-ui/fixed-view.js?v=354"></script>
+<script src="lobby-ui/fixed-view.js?v=355"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1686,7 +1686,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v354</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v355</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3081,7 +3081,7 @@ function tick(now){
       if(a.bopT>0) a.bopT=Math.max(0,a.bopT-dt*3);
     }
     else if(a.staff){
-      const aim=actorTarget(a);
+      const aim=a.state==='post'?a.post:actorTarget(a);
       const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h, dist=Math.hypot(dxp,dyp);
       if(a.state==='post'){ /* 站崗 */ }
       else if(a.state==='serving'){
@@ -3200,7 +3200,8 @@ function tick(now){
         if(Math.abs(dxp)>12){const nl=dxp<0; if(nl!==a.faceLeft){a.faceLeft=nl;a.flipping=true;}}
       }
     }
-    if(a.isMe||!posMap[a.key]||a.staff||a.slime||a.cloak){ const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : MAPS[a.mapLoc||'hall'].floor);
+    // Approved static NPC feet may overlap furniture; do not move them to a walking cell.
+    if(!(a.staff&&a.state==='post'&&STAFF_LAYOUT[a.cid])&&(a.isMe||!posMap[a.key]||a.staff||a.slime||a.cloak)){ const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : MAPS[a.mapLoc||'hall'].floor);
       let c=clampIn(fl,a.x,a.y);
       if(fl===MAPS.hall.floor)c=TTScene.nearest([c[0]*1600,c[1]*900]).map((v,i)=>v/(i?900:1600));
       a.x=c[0]; a.y=c[1]; }
@@ -3446,8 +3447,10 @@ worldbg.style.backgroundImage="url('"+MAPS.hall.bg+"')";
 const POSTS=[[0.32,0.565],[0.50,0.565],[0.68,0.565]];
 const SERVE=[[0.50,0.74],[0.68,0.82],[0.84,0.68]];   // 森林陪玩點(史萊姆附近)
 const STAFF_GIF={'-OxY7C4vDkgsr1zcyWbk':{asset:'rira',name:'縭',top:6,bottom:104},'-OxY46ezlpnRt64hUIw9':{asset:'kabuki',name:'蕪',top:10,bottom:104},'-OzbfbQcF6J6fIR6YYGh':{asset:'momo',name:'桃',top:2,bottom:106}};
+const STAFF_LAYOUT={"-OxY46ezlpnRt64hUIw9":{"x":551,"y":438,"mirror":false},"-OxY7C4vDkgsr1zcyWbk":{"x":307,"y":777,"mirror":false},"-OzbfbQcF6J6fIR6YYGh":{"x":1398,"y":466,"mirror":true}};
 const lastStaffPosts=new Map();
 function randomStaffPost(cid){
+  const saved=STAFF_LAYOUT[cid];if(saved)return [saved.x/1600,saved.y/900];
   // Corner pockets exclude the left noticeboard, the entrance mat and central aisle.
   const pockets=[[380,440,740,780],[1200,1300,515,550],[1220,1320,760,800]];
   const occupied=[...agents.values()].filter(a=>a.staff&&a.cid!==cid&&a.state!=='exit'&&a.post).map(a=>[a.post[0]*1600,a.post[1]*900]);
@@ -3480,7 +3483,7 @@ function makeStaff(cid, st, idx){
     x:post[0],y:post[1],tx:post[0],ty:post[1],
     post, serveSpot:SERVE[idx%SERVE.length], mapLoc:'hall',
     state:'post',timer:0,seed:hash(cid)%10,
-    faceLeft:true,flipT:-1,flipping:false,sitting:false,
+    faceLeft:STAFF_LAYOUT[cid]?.mirror??true,flipT:STAFF_LAYOUT[cid]?.mirror===false?1:-1,flipping:false,sitting:false,
     staff:true,on:!!st.on,busy:false,cloakA:null,b:{name:st.name||'店員',doll:look}};
   a.frames={};
   POSES.forEach(p=>{
@@ -3556,6 +3559,7 @@ function syncResidentStaff(all){
     setStaffServe(a,a.on&&!!st.busy);
     a.state='post';a.mapLoc='hall';a.sitting=false;a.chase=false;
     a.x=a.tx=a.post[0];a.y=a.ty=a.post[1];
+    const placement=STAFF_LAYOUT[cid];if(placement){a.faceLeft=placement.mirror;a.flipT=placement.mirror?-1:1;a.flipping=false;}
     a.led.className='led '+(!a.on?'off':a.busy?'r':'g');
     a.led.textContent=!a.on?'離線中':a.busy?'接單中':'待接單';
     idx++;
