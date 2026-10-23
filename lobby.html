@@ -2,7 +2,8 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<script src="lobby-ui/fixed-view.js?v=356"></script>
+<script src="lobby-ui/retired-outfits.js?v=357"></script>
+<script src="lobby-ui/fixed-view.js?v=357"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1444,8 +1445,8 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/contacts.js?v=341"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
 <link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=347">
-<link rel="stylesheet" href="lobby-ui/scene.css?v=356">
-<script src="lobby-ui/scene.js?v=356"></script>
+<link rel="stylesheet" href="lobby-ui/scene.css?v=357">
+<script src="lobby-ui/scene.js?v=357"></script>
 <script src="lobby-ui/hair-motion.js?v=272"></script>
 <script src="lobby-ui/dm-log.js?v=350"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
@@ -1686,7 +1687,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v356</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v357</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2004,7 +2005,7 @@ function csDefault(key){
       const L=(window.__outfitList?window.__outfitList():[]);
       L.forEach(function(o){
         if(o.id!=='cloth0'&&!own[o.id]) return;
-        const c=cfg[o.id]; if(!c||!c.parts) return;
+        const c=cfg[o.id]; if(!c||!c.parts||window.TTRetiredOutfits?.retired(o.id,c)) return;
         Object.keys(c.parts).forEach(function(k){ if(!CSDEF.m[k]) CSDEF.m[k]=c.parts[k]; });
       });
     }
@@ -3318,9 +3319,9 @@ function updateCamera(dt, now){
   let tx = a? a.x*WORLD.w : WORLD.w/2;
   let ty = a? a.y*WORLD.h - 40 : WORLD.h*0.6;
   const moving = a && (a.state==='walk');
-  // 完整全景：依原圖比例呈現，不再裁去天花板或下方地板。
-  // Include the artist's 160px extension on each side without changing multiplayer coordinates.
-  const fitZoom = Math.min(vw/(curMap==='hall'?1920:WORLD.w), vh/WORLD.h);
+  // B 版：背景等比例滿版置中，超出視窗的邊緣裁切。
+  // Approved B layout: fill the viewport with the full-width artwork, cropping overflow.
+  const fitZoom = curMap==='hall'?Math.max(vw/1920,vh/WORLD.h):Math.min(vw/WORLD.w,vh/WORLD.h);
   if(isMobile()){
     // 手機直屏:楓谷式跟隨鏡頭——拉近讓小人變大,上下左右都跟著小人,裁掉多餘空地板
     cam.tzoom = (vh/WORLD.h) * 1.42;
@@ -3341,9 +3342,10 @@ function updateCamera(dt, now){
   updateCamera.lastKey=cameraKey;
   // 換算成 world 左上角位移,並夾在世界邊界內(避免露出世界外的黑邊)
   const halfW=vw/cam.zoom/2, halfH=vh/cam.zoom/2;
-  let vx=Math.min(WORLD.w-halfW, Math.max(halfW, cam.x));
+  const sceneLeft=curMap==='hall'?-160:0,sceneRight=curMap==='hall'?1760:WORLD.w;
+  let vx=Math.min(sceneRight-halfW, Math.max(sceneLeft+halfW, cam.x));
   let vy=Math.min(WORLD.h-halfH, Math.max(halfH, cam.y));
-  if(WORLD.w < halfW*2) vx=WORLD.w/2;
+  if(sceneRight-sceneLeft < halfW*2) vx=WORLD.w/2;
   if(WORLD.h < halfH*2) vy=WORLD.h/2;
   camView.x=vx-halfW; camView.y=vy-halfH;
   world.style.transform='scale('+cam.zoom+') translate('+(-camView.x)+'px,'+(-camView.y)+'px)';
@@ -4220,6 +4222,7 @@ document.getElementById('payProof').addEventListener('change',ev=>{
 });
 function myOrderIds(){ try{return JSON.parse(localStorage.getItem('tt_orders')||'[]');}catch(e){return[];} }
 function submitOrder(){
+ if(curKind==='shop'&&window.TTRetiredOutfits?.retired(curPlan?.itemId,(window.__shopCfg||{})[curPlan?.itemId])){toast('這套測試時裝已下架，請重新選擇商品。');return;}
  if(['pet_drink_blue','pet_drink_sakura','pet_drink_ghost'].includes(curPlan?.itemId)){toast('請到其他分類選擇飲料杯數購買。');return;}
 
   const name=document.getElementById('payName').value.trim();
@@ -4346,6 +4349,7 @@ async function walletLookup(ids){
 }
 function rememberPaymentIds(ids){try{localStorage.setItem('tt_orders',JSON.stringify([...new Set([...myOrderIds(),...ids])]));}catch(_){} }
 async function payWithCoins(){
+ if(curKind==='shop'&&window.TTRetiredOutfits?.retired(curPlan?.itemId,(window.__shopCfg||{})[curPlan?.itemId])){toast('這套測試時裝已下架，請重新選擇商品。');return;}
  if(['pet_drink_blue','pet_drink_sakura','pet_drink_ghost'].includes(curPlan?.itemId)){toast('請到其他分類選擇飲料杯數購買。');return;}
 
  if(_submitting)return;
@@ -5288,7 +5292,7 @@ function tryServeNudge(staff){
   }
   function itemState(id,defActive){
     const c=(window.__shopCfg||{})[id]||{};
-    const active=c.active!==undefined?c.active:defActive;
+    const active=!window.TTRetiredOutfits?.retired(id,c)&&(c.active!==undefined?c.active:defActive);
     const now=Date.now();
     const started=!c.start||now>=c.start, ended=c.end&&now>c.end;
     return {price:(c.price!=null?c.price:null), active, onSale:active&&started&&!ended,
@@ -5297,6 +5301,7 @@ function tryServeNudge(staff){
   function fmtDue(ms){ const d=new Date(ms); return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
   function wearOutfit(i){ wearOutfitId(typeof i==='number'?('cloth'+i):i); }
   function wearOutfitId(id){
+    if(window.TTRetiredOutfits?.retired(id,(window.__shopCfg||{})[id])){toast('這套測試時裝已停用');return;}
     const a=(typeof me==='function')?me():null; if(!a){toast('先做一張闆卡');return;}
     const o=outfitById(id); if(!o) return;
     const cfg=(window.__shopCfg||{})[id]||{};
@@ -5314,6 +5319,7 @@ function tryServeNudge(staff){
   }
   function buyOutfit(i){ buyOutfitId(typeof i==='number'?('cloth'+i):i); }
   function buyOutfitId(id){
+    if(window.TTRetiredOutfits?.retired(id,(window.__shopCfg||{})[id])){toast('這套測試時裝已下架');return;}
     const o=outfitById(id); if(!o) return;
     const st=itemState(id,true);
     const price=st.price!=null?st.price:o.pr;
@@ -5387,7 +5393,7 @@ function tryServeNudge(staff){
   }
   function switchCat(c){ cat=c; document.querySelectorAll('.dsNavB').forEach(x=>x.classList.toggle('on',x.dataset.t===c)); renderGrid(); renderBuy(); }
   function resetStage(){ const md=meDoll(); if(md){ stageDoll=Object.assign({},md); setStageName('目前的樣子'); } else { const _o=outfitById(selCloth)||{}; stageDoll=Object.assign({},_o.doll||{},{hair:selColor}); setStageName(_o.nm||''); } drawStage(); }
-  function randStage(){ const L=outfitList(); const pick=L[Math.floor(Math.random()*L.length)]||L[0];
+  function randStage(){ const L=outfitList().filter(o=>itemState(o.id,true).onSale); if(!L.length){setStageName('目前沒有上架中的時裝');return;}const pick=L[Math.floor(Math.random()*L.length)]||L[0];
     selCloth=pick.id; selColor=Math.floor(Math.random()*HAIRS.length);
     const cfg3=(window.__shopCfg||{})[pick.id]||{};
     const base3=pick.doll?Object.assign({},pick.doll):Object.assign({},meDoll()||{back:0,front:0,cloth:0,face:0,brow:0,acc:0});
@@ -5433,7 +5439,7 @@ function tryServeNudge(staff){
       const L=window.__outfitList?window.__outfitList():[];
       L.forEach(function(o){
         if(o.id!=='cloth0'&&!own[o.id]) return;
-        const c=cfg[o.id]; if(!c||!c.parts) return;
+        const c=cfg[o.id]; if(!c||!c.parts||window.TTRetiredOutfits?.retired(o.id,c)) return;
         if(sl==='acc'){
           Object.keys(c.parts).filter(k=>/^acc\d*$/.test(k))
             .sort((a2,b2)=>(parseInt(a2.slice(3),10)||0)-(parseInt(b2.slice(3),10)||0))
@@ -5502,7 +5508,7 @@ function tryServeNudge(staff){
     }
     clearInterval(window._wdWaitT);
     if(!_wd){
-      _wd=Object.assign({back:0,front:0,cloth:0,face:0,brow:0,acc:0,hair:0},d);
+      _wd=window.TTRetiredOutfits?.sanitize(d,window.__shopCfg)||Object.assign({back:0,front:0,cloth:0,face:0,brow:0,acc:0,hair:0},d);
       if(_wd.set){
         try{ const c=(window.__shopCfg||{})[_wd.set];
           if(c&&c.parts){ _wd.ps=Object.assign({},_wd.ps||{});
@@ -5530,6 +5536,7 @@ function tryServeNudge(staff){
     const _from=_wpage*WD_PER, _to=_from+WD_PER;
     let grid='', _n=0;
     arrEff.forEach((p,idx)=>{
+      if(window.TTRetiredOutfits?.baseRetired(sl,idx))return;
       const _pos=_n++; if(_pos<_from||_pos>=_to) return;
       const lk=lockedSets(map,sl,idx);
       const _k=SLOT2KEY[sl];
@@ -5679,6 +5686,7 @@ function tryServeNudge(staff){
     _info=''; build(); try{if(window.SFX)SFX.tap();}catch(e){}
   };
   window.wardPick=function(sl,idx){
+    if(window.TTRetiredOutfits?.baseRetired(sl,idx)){toast('這個測試部件已停用');return;}
     const map=partSets();
     const lk=(sl==='hair')?null:lockedSets(map,sl,idx);
     if(lk){
@@ -5707,7 +5715,7 @@ function tryServeNudge(staff){
     if(!_wd||!_wd.hairHex2) delete nd.hairHex2;
     if(!_wd||!_wd.ps) delete nd.ps;
     if(!_wd||!_wd.set) delete nd.set;
-    a.b.doll=dollSafe(nd);
+    a.b.doll=dollSafe(window.TTRetiredOutfits?.sanitize(nd,window.__shopCfg)||nd);
     if(a.frames)POSES.forEach(p=>{ if(a.frames[p]) drawDollTo(a.frames[p],a.b.doll,p); });
     a.frame=null; try{ setFrame(a,'idle'); }catch(e){}
     saveDoll(a.b.doll);
@@ -5722,7 +5730,7 @@ function tryServeNudge(staff){
     const map=partSets(); const out={};
     SLOTS.forEach(([sl,label,getArr])=>{
       const arr=getArr(); out[sl]={label,items:[]};
-      arr.forEach((p,idx)=>{ if(!lockedSets(map,sl,idx)) out[sl].items.push({idx,n:p.n||''}); });
+      arr.forEach((p,idx)=>{ if(!window.TTRetiredOutfits?.baseRetired(sl,idx)&&!lockedSets(map,sl,idx)) out[sl].items.push({idx,n:p.n||''}); });
     });
     return out;
   };
@@ -6930,9 +6938,9 @@ function buildBag(){
     if(!o.doll) return false;
     return d.back===o.doll.back&&d.front===o.doll.front&&d.cloth===o.doll.cloth&&d.face===o.doll.face&&d.acc===o.doll.acc;
   }
-  const ownedList=OUT.filter(o=>own[o.id]);
+  const ownedList=OUT.filter(o=>own[o.id]&&!window.TTRetiredOutfits?.retired(o.id,(window.__shopCfg||{})[o.id]));
   /* 露亞經典裝(cloth0)為預設款,人人皆有 */
-  if(!ownedList.some(o=>o.id==='cloth0')){ const d0=OUT.find(o=>o.id==='cloth0'); if(d0) ownedList.unshift(d0); }
+  if(!window.TTRetiredOutfits?.retired('cloth0')&&!ownedList.some(o=>o.id==='cloth0')){ const d0=OUT.find(o=>o.id==='cloth0'); if(d0) ownedList.unshift(d0); }
   let clothHtml='';
   ownedList.forEach(o=>{ if(!o) return;
     const wearing=sameOutfit(curDoll,o);
@@ -7681,7 +7689,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=356"></script>
+<script src="tavern-ui-bridge.js?v=357"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
 <script src="lobby-ui/live.js?v=347"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">

@@ -32,15 +32,16 @@
   return !!r&&r.slot===p.slot&&(p.base!==undefined?r.base===p.base:r.source===p.source);
  }
  function tell(s){$('#toast').textContent=s;$('#toast').hidden=false;clearTimeout(tell.timer);tell.timer=setTimeout(()=>$('#toast').hidden=true,3500);}
+ function baseRef(slot,index=0){const native=slot==='eye'?'face':slot,opts=data.baseParts?.[native]?.items;if(!opts)return {base:index,slot};const p=opts.find(p=>p.idx===index)||opts[0];return p?{base:p.idx,slot}:null;}
  function selectionFromDoll(d){
   const next={};
   for(const [sl,native] of [['front','front'],['back','back'],['cloth','cloth'],['eye','face'],['brow','brow'],['pet','pet'],['seat','seat']]){
    const source=d.uiBaseSlots?.includes(sl)?null:(d.ps?.[sl]||d.set);
-   const custom=source&&data.catalog.some(o=>o.id===source&&!o.drink&&o.parts.some(p=>p.slot===sl));
-   next[sl]=custom?{source,slot:sl}:['pet','seat'].includes(sl)?null:{base:d[native]||0,slot:sl};
+   const custom=source&&data.catalog.some(o=>o.id===source&&!o.retired&&!o.drink&&o.parts.some(p=>p.slot===sl));
+   next[sl]=custom?{source,slot:sl}:['pet','seat'].includes(sl)?null:baseRef(sl,d[native]||0);
   }
   const accessories=d.uiAccessories||data.catalog.find(o=>o.id===d.set)?.parts.filter(p=>p.category==='acc')||Object.entries(d.ps||{}).filter(([k])=>/^acc\d*$/.test(k)).map(([slot,source])=>({source,slot}));
-  (api.expandAccessories?.(accessories,d)||accessories).forEach(r=>{const p=data.catalog.find(o=>o.id===r.source)?.parts.find(p=>p.slot===r.slot);if(p)next[key(p)]=ref(p);});
+  (api.expandAccessories?.(accessories,d)||accessories).forEach(r=>{const p=data.catalog.find(o=>o.id===r.source&&!o.retired)?.parts.find(p=>p.slot===r.slot);if(p)next[key(p)]=ref(p);});
   return api.normalizeSelection?.(next)||next;
  }
  function init(){
@@ -52,7 +53,7 @@
   color=saved?{savedId:d.dyedHairSet}:{hair:d.hair||0,keepOriginal:true};selected=null;page=0;
  }
  function outfitSelection(o){const next=selectionFromDoll(o.doll||{});o.parts.filter(p=>p.defaultEquipped!==false).forEach(p=>next[key(p)]=ref(p));return next;}
- function products(){return data.catalog.filter(o=>area==='bag'?o.owned:o.sale);}
+ function products(){return data.catalog.filter(o=>!o.retired&&(area==='bag'?o.owned:o.sale));}
  function entries(){
   const out=[];
   for(const o of products()){
@@ -82,7 +83,7 @@
   if(p.product?.drink){selected=p.id;drinkQuantity=1;render();return;}
   let next={...selection};const nextColor=p.category==='hair'?{hair:data.doll.hair||0}:color;
   const removing=(area==='bag'||['acc','pet','seat','other'].includes(p.category))&&isTrying(p);
-  if(removing)next[key(p)]=['front','back','cloth','eye','brow'].includes(p.slot)?{base:0,slot:p.slot}:null;
+  if(removing)next[key(p)]=['front','back','cloth','eye','brow'].includes(p.slot)?baseRef(p.slot):null;
   else if(p.parts)p.parts.forEach(q=>next[key(q)]=ref(q));else next[key(p)]=ref(p);
   const normalized=p.category==='hair'?(api.normalizeSelection?.(next)||next):next;
   const removedDependency=Object.keys(next).some(k=>next[k]&&normalized[k]===null);next=normalized;

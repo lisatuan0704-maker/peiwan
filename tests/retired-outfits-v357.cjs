@@ -1,0 +1,14 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const c={};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync('lobby-ui/retired-outfits.js','utf8'),c);const p=c.TTRetiredOutfits;
+assert(p.retired('cloth0',{name:'改名測試'}));assert(p.retired('cloth1',{}));assert(p.retired('alias',{parts:{acc:{n:'露亞頭飾'}}}));assert(!p.retired('cloth2',{name:'星夜吟遊裝'}));
+for(const [sl,indices]of Object.entries({front:[0,1],back:[0,1],cloth:[0,1,2],eye:[0,1],acc:[1,2,3,4,5,6]}))for(const i of indices)assert(p.baseRetired(sl,i));
+assert(!p.baseRetired('cloth',3));assert(!p.baseRetired('acc',0));
+const old={set:'cloth0',front:0,back:1,cloth:2,face:0,acc:5,ps:{pet:'pet_guigui'},uiAccessories:[{source:'cloth0',slot:'acc1'},{source:'cloth2',slot:'acc'}]};const before=JSON.stringify(old),safe=p.sanitize(old);assert.equal(JSON.stringify(old),before);assert.equal(safe.front,3);assert.equal(safe.cloth,3);assert.equal(safe.ps.pet,'pet_guigui');assert.equal(safe.uiAccessories.length,1);
+const configured={set:'cloth2',front:0,cloth:0};assert.equal(p.sanitize(configured).set,'cloth2');
+const bridge=fs.readFileSync('tavern-ui-bridge.js','utf8');Object.assign(c,{__shopCfg:{cloth0:{active:true,parts:{front:{d:'x'}}},cloth1:{active:true,parts:{cloth:{d:'y'}}},cloth2:{active:true,parts:{cloth:{d:'z'}}}},__owned:{cloth0:true,cloth1:true},__outfitList:()=>['cloth0','cloth1','cloth2'].map(id=>({id,nm:id,pr:120})),isDrink:()=>false,drinkCompanions:{},companionPets:{},partsFor:id=>c.__shopCfg[id].parts,category:k=>k,slotLabel:{}});
+vm.runInContext(bridge.match(/  function catalog\(\)\{[^]*?\n  }/)[0],c);const items=c.catalog();assert(!items.find(o=>o.id==='cloth0').sale);assert(!items.find(o=>o.id==='cloth1').sale);assert(items.find(o=>o.id==='cloth2').sale);
+c.data={catalog:items};c.area='bag';vm.runInContext(fs.readFileSync('tavern-ui/live-wardrobe.js','utf8').match(/function products\(\)[^\n]+/)[0],c);assert.equal(c.products().length,0,'retired owned parts are hidden from wardrobe');c.area='store';assert.equal(c.products().length,1);
+vm.runInContext(bridge.match(/  function validPart[^\n]+/)[0],c);assert(!c.validPart({source:'cloth0',slot:'front'},true));
+const html=fs.readFileSync('lobby.html','utf8');let blocked=0;Object.assign(c,{curKind:'shop',curPlan:{itemId:'cloth0'},toast:()=>blocked++,document:{getElementById(){throw Error('retired checkout reached payment fields')}}});
+vm.runInContext(html.match(/^function submitOrder\(\)\{[^]*?^}/m)[0],c);vm.runInContext(html.match(/^async function payWithCoins\(\)\{[^]*?^}/m)[0],c);
+(async()=>{c.submitOrder();await c.payWithCoins();assert.equal(blocked,2);console.log('PASS: retired sets and parts hidden, native test art disabled, owned data preserved, safe replacement draft, both checkout paths blocked');})();

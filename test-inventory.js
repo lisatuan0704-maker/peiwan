@@ -5,7 +5,7 @@
  const firebaseConfig={apiKey:'AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc',authDomain:'my-shop-0520.firebaseapp.com',databaseURL:'https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app',projectId:'my-shop-0520',appId:'1:430482271005:web:967059c91a9b7970bdcff4'};
  firebase.initializeApp(firebaseConfig);
  const db=firebase.database(),auth=firebase.auth(),root='peiwan';let draft=null;
- const builtins={cloth0:'露亞經典裝',cloth1:'小莓甜心裝',cloth2:'星夜吟遊裝',cloth3:'貓耳限定裝'};
+ const builtins={cloth2:'星夜吟遊裝',cloth3:'貓耳限定裝'};
  try{$('target').value=localStorage.getItem('tt_me')||'';}catch{}
  const read=async path=>(await db.ref(root+'/'+path).once('value')).val();
  async function owner(){const u=auth.currentUser;if(!u||u.uid!==await read('config/adminUid'))throw new Error('請先在掌櫃台帳登入，再重開此頁。');return u.uid;}
@@ -20,7 +20,7 @@
    if(!Number.isInteger(tickets)||tickets<0||tickets>9999)throw new Error('券數需為 0 至 9999 的整數。');
    const [card,lobby,cfg,owned]=await Promise.all([read('cards/'+key),read('lobby/'+key),read('shopConfig'),read('owned/'+key)]);
    if(!card&&!lobby)throw new Error('找不到這個角色，尚未修改任何資料。');
-   const items={...builtins};for(const [id,c] of Object.entries(cfg||{})){if(id in items)items[id]=c.name||items[id];else if(c.custom&&(!c.type||c.type==='時裝'))items[id]=c.name||'新時裝';}
+   const items={...builtins};for(const [id,c] of Object.entries(cfg||{})){if(['cloth0','cloth1'].includes(id)||/露亞|小莓/.test(c.name||''))continue;if(id in items)items[id]=c.name||items[id];else if(c.custom&&(!c.type||c.type==='時裝'))items[id]=c.name||'新時裝';}
    draft={uid,key,tickets,items,owned:owned||{},name:lobby?.name||card?.name||'未命名角色'};
    $('summary').textContent=JSON.stringify({角色ID:key,角色名稱:draft.name,時裝總數:Object.keys(items).length,目前已擁有:Object.keys(items).filter(id=>owned?.[id]).length,染髮券目前:Number(owned?.dyeTickets)||0,染髮券設定為:tickets,時裝清單:items},null,2);
    $('grant').disabled=false;$('status').textContent='只會補齊缺少的時裝並設定券數；保留既有收藏及染色組合。';
