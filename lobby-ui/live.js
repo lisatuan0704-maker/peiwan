@@ -140,7 +140,11 @@
     const content=shells.achM.content;
     content.innerHTML='<div class="collection-layout"><aside class="collection-cover framed-motion"><span class="issue-label">VOL. 01 / 酒館日常</span><div class="cup-scene" aria-hidden="true"><i class="steam steam-a"></i><i class="steam steam-b"></i><img src="'+asset('mug')+'" alt=""><span class="mini-flower">✿</span></div><h2>每一次來，<br>都有小收穫。</h2><p>一杯飲料、一聲招呼，<br>都是值得收藏的片刻。</p><span class="cover-stamp">'+total+' / '+states.length+'<br><small>已收藏</small></span>'+motion(3)+'</aside><div id="achList" class="ach-grid">'+states.map(({a,value,done},i)=>'<button type="button" class="ach framed-motion '+(!a.k?'locked':'')+'" aria-pressed="false" data-ach="'+attr(a.n)+'"><span class="collect-no">0'+(i+1)+'</span><span class="badge-art"><img src="'+attr(AICON[a.ic])+'" alt=""></span><h2>'+text(a.n)+'</h2><p>'+text(a.d)+'</p><span class="collect-state">'+(done?'收藏完成':a.k?value+' / '+a.need:'敬請期待')+'</span><span class="collection-spine" aria-hidden="true"><span class="spine-seal">'+(done?'✦':'◇')+'</span><span class="spine-word">'+(['COFFEE','CAT','CHAT','VIP'][i]||'COLLECT')+'</span><span class="spine-track"></span><span class="spine-edition">'+(done?'COLLECTED':'VOL. 0'+(i+1))+'</span></span>'+motion(i)+'</button>').join('')+'</div></div>';
     content.querySelectorAll('[data-ach]').forEach(b=>b.onclick=()=>{content.querySelectorAll('[data-ach]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
+    TTCompanionAchievements.mount(content,window.TTCompanionRewards,myKey);
+
   };
+
+  window.addEventListener('tt-companion-rewards',()=>{if(document.getElementById('achM')?.classList.contains('on'))TTCompanionAchievements.mount(shells.achM.content,window.TTCompanionRewards,myKey);});
 
   // 金額、方案與付款按鈕均沿用既有函式提供的真實設定。
   renderTopup=function(){

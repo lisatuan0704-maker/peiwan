@@ -93,6 +93,8 @@ body{font-family:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW','Huninn
 .npc .led.g::before{content:'●';color:#5AE07C;margin-right:4px}
 .npc .led.r{display:block;color:#FFC9C9}
 .npc .led.r::before{content:'●';color:#FF5A5A;margin-right:4px}
+.npc .led.off{display:block;color:#D5D5DC}
+.npc .led.off::before{content:'●';color:#999AA6;margin-right:4px}
 .npc .bub{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 26px);
   background:rgba(255,247,250,.97);color:#4A3540;font-size:13px;padding:6px 11px;
   white-space:pre-wrap;max-width:190px;text-align:center;line-height:1.5;
@@ -1440,10 +1442,11 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/contacts.css?v=341">
 <script src="lobby-ui/contacts.js?v=341"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=339">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=347">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=255">
 <script src="lobby-ui/scene.js?v=279"></script>
 <script src="lobby-ui/hair-motion.js?v=272"></script>
+<script src="lobby-ui/dm-log.js?v=347"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
 <script src="lobby-ui/presence.js?v=231"></script>
 <script src="lobby-ui/payment-safety.js?v=273"></script>
@@ -1680,7 +1683,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v345</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v349</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="location.href='card.html'">✦ 我也要做闆卡</button>
 
@@ -3225,8 +3228,8 @@ function tick(now){
     a._renderVisible=actorMap===curMap&&(a.staff||a.slime||a.cloak||a.isMe||!!posMap[a.key]);
     const tt=now/1000;
     a._staffWalking=!!(a._staffGif&&walking&&!_hairMotionPreference.matches);
-    const hairOn=TEST_MODE&&!a.slime&&!a._staffGif&&a._renderVisible&&!_hairMotionPreference.matches;
-    a._hairMotion=hairOn?{mode:walking?'walk':'idle',phase:Math.floor(now/(walking?140:230)+a.seed)%(walking?8:4)}:null;
+    // Preserve the original hair silhouette; animate the whole character instead.
+    a._hairMotion=null;
     let bob=0, hopRot=0, sqx=1, sqy=1;
     if(walking){
       /* 走路手感(純程式,零美術成本):
@@ -3243,7 +3246,8 @@ function tick(now){
       /* 落地那一瞬往支撐腳那側微傾,離地時回正 */
       const lean=(stepIdx?1:-1)*(landing?1.9:0.7);
       hopRot=Math.sin(tt*11+a.seed)*0.75+lean;
-      setFrame(a,a._hairMotion?WALK_CYCLE[a._hairMotion.phase%WALK_CYCLE.length]:WALK_CYCLE[Math.floor(tt*7.5+a.seed)%WALK_CYCLE.length]);   // 有分幀圖時才會有差異
+      // Hop as one standing sprite; do not alternate the feet or swing the arms.
+      setFrame(a,'idle');
     }else{
       // B.整體呼吸壓扁(D 實測定案:速度2.3、幅度2.2%)
       const ph=Math.sin(tt*(a.slime?4.5:2.3)*Math.PI+a.seed);
@@ -3251,8 +3255,7 @@ function tick(now){
       sqx=1+Math.max(0,ph)*(a.slime?0.08:0.031);
       setFrame(a,'idle');
     }
-    // 試做頁已逐層處理呼吸與腳步，避免再疊加另一套縮放、跳動或傾斜。
-    if(a._hairMotion){bob=0;hopRot=0;sqx=1;sqy=1;}
+    if(_hairMotionPreference.matches){bob=0;hopRot=0;sqx=1;sqy=1;}
     if(a._staffGif){hopRot=0;sqx=1;sqy=1;bob=walking&&!_hairMotionPreference.matches?Math.round(bob):0;}
     if(a.slime && a.bopT>0){ sqy*=1-0.35*a.bopT; sqx*=1+0.30*a.bopT; }
     const vm = a.slime ? 'forest' : (a.isMe ? curMap : (a.mapLoc||'hall'));
@@ -3468,13 +3471,13 @@ function makeStaff(cid, st, idx){
   el.appendChild(sh);el.appendChild(led);el.appendChild(cv);el.appendChild(tag);
   world.appendChild(el);
   const look=STAFF_LOOKS[hash(cid)%STAFF_LOOKS.length];
-  const post=randomStaffPost(cid),entrance=TTScene.spawn(hash(cid));
+  const post=randomStaffPost(cid);
   const a={key:'staff_'+cid,cid,el,cv,tag,sh:sh,led,
-    x:entrance[0]/1600,y:entrance[1]/900,tx:post[0],ty:post[1],
+    x:post[0],y:post[1],tx:post[0],ty:post[1],
     post, serveSpot:SERVE[idx%SERVE.length], mapLoc:'hall',
-    state:'enter',timer:0,seed:hash(cid)%10,
+    state:'post',timer:0,seed:hash(cid)%10,
     faceLeft:true,flipT:-1,flipping:false,sitting:false,
-    staff:true,busy:false,cloakA:null,b:{name:st.name||'店員',doll:look}};
+    staff:true,on:!!st.on,busy:false,cloakA:null,b:{name:st.name||'店員',doll:look}};
   a.frames={};
   POSES.forEach(p=>{
     const f=document.createElement('canvas');f.width=64;f.height=64;
@@ -3529,31 +3532,32 @@ function makeCloak(staffA){
   agents.set(a.key,a);
   return a;
 }
-if(db) db.ref(ROOT+'/staffStatus').on('value',snap=>{
-  const all=snap.val()||{};
-  realStaffOn = Object.values(all).some(st=>st&&st.on);   // 有真店員上班
-  if(realStaffOn) stopDemo();                             // 就讓示範店員退場
+function syncResidentStaff(all){
+  all=all||{};
+  realStaffOn = Object.values(all).some(st=>!!st);
+  if(realStaffOn) stopDemo();
+  // A deleted record removes the actor; off-duty records remain in the tavern.
+  agents.forEach((a,key)=>{if(a.staff&&!all[a.cid]&&!/^demo[123]$/.test(a.cid)){
+    if(a.cloakA){a.cloakA.el.remove();agents.delete(a.cloakA.key);}
+    a.el.remove();agents.delete(key);
+  }});
   let idx=0;
   Object.entries(all).forEach(([cid,st])=>{
+    if(!st)return;
     const key='staff_'+cid;
     let a=agents.get(key);
-    if(st.on){
-      if(!a){ a=makeStaff(cid,st,idx); a.led.className='led g'; a.led.textContent='待接單'; }
-      a.b.name=STAFF_GIF[cid]?.name||st.name||'店員'; a.tag.textContent='☆ '+a.b.name;
-      if(st.busy!==undefined) setStaffServe(a, !!st.busy);
-    }else if(a){
-      a.led.className='led'; a.state='exit'; a.sitting=false; a.busy=false;
-      { const dd=MAPS[a.mapLoc||'hall'].door;
-        const c3=clampIn(MAPS[a.mapLoc||'hall'].floor, dd.x, dd.y+0.04);
-        a.tx=c3[0]; a.ty=c3[1]; }
-      if(a.cloakA){ const c=a.cloakA; c.state='leave'; c.follow=null;
-        const dd=MAPS[c.mapLoc||'hall'].door;
-        const cc=clampIn(MAPS[c.mapLoc||'hall'].floor, dd.x, dd.y+0.05);
-        c.tx=cc[0]; c.ty=cc[1]; a.cloakA=null; }
-    }
+    if(!a)a=makeStaff(cid,st,idx);
+    a.on=!!st.on;
+    a.b.name=STAFF_GIF[cid]?.name||st.name||'店員';a.tag.textContent='☆ '+a.b.name;
+    setStaffServe(a,a.on&&!!st.busy);
+    a.state='post';a.mapLoc='hall';a.sitting=false;a.chase=false;
+    a.x=a.tx=a.post[0];a.y=a.ty=a.post[1];
+    a.led.className='led '+(!a.on?'off':a.busy?'r':'g');
+    a.led.textContent=!a.on?'離線中':a.busy?'接單中':'待接單';
     idx++;
   });
-});
+}
+if(db) db.ref(ROOT+'/staffStatus').on('value',snap=>syncResidentStaff(snap.val()));
 
 /* ====== 聊天泡泡 + 紀錄 ====== */
 /* v238:小人圖最上面一排有顏色的位置(0~1),泡泡才能貼著頭頂 */
@@ -5122,7 +5126,7 @@ if(DEMO_MODE){
     if(!DEMO_MODE||realStaffOn) return;                 // 有真店員時不放示範
     demos.forEach((cid,i)=>{
       if(!agents.has('staff_'+cid)){
-        const a=makeStaff(cid,{name:'測試店員'+(i+1)},i);
+        const a=makeStaff(cid,{name:'測試店員'+(i+1),on:true},i);
         a.led.className='led g'; a.led.textContent='待接單';
       }
     });
@@ -5918,11 +5922,11 @@ const SFX=(function(){
     body.appendChild(acc(false,'✦','活動公告','', '<p>'+esc(evt)+'</p>'));
     const staff=[...agents.entries()].filter(([k])=>k.indexOf('staff_')===0);
     body.appendChild(acc(false,'✦','現在在店', staff.length+' 位', null, bd=>{
-      if(!staff.length){ bd.innerHTML='<p class="lite">目前店員都下班了,晚點再來看看</p>'; return; }
-      staff.forEach(([k,a])=>{ const busy=!!a.busy; const r=document.createElement('div'); r.className='staffRow';
-        r.innerHTML='<span class="dot" style="background:'+(busy?'#E14E6B':'#5AE07C')+'"></span>'+
+      if(!staff.length){ bd.innerHTML='<p class="lite">目前沒有陪玩名單</p>'; return; }
+      staff.forEach(([k,a])=>{ const busy=!!a.busy,offline=!a.on; const r=document.createElement('div'); r.className='staffRow';
+        r.innerHTML='<span class="dot" style="background:'+(offline?'#999AA6':busy?'#E14E6B':'#5AE07C')+'"></span>'+
           '<span class="nm">'+esc((a.b&&a.b.name)||'店員')+'</span>'+
-          '<span class="st" style="background:'+(busy?'#FBE0E6;color:#C0392B':'#DFF5E6;color:#2E8B57')+'">'+(busy?'接單中':'待接單')+'</span>';
+          '<span class="st" style="background:'+(offline?'#E9E9ED;color:#686875':busy?'#FBE0E6;color:#C0392B':'#DFF5E6;color:#2E8B57')+'">'+(offline?'離線中':busy?'接單中':'待接單')+'</span>';
         bd.appendChild(r); });
     }));
     if(typeof shopClose==='function') shopClose();
@@ -6413,7 +6417,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
    安全設計:私訊只開放互為好友(陌生人不能私訊);封鎖後對方送邀請看起來成功但不會送達;
    全部訊息掌櫃後台可調閱,檢舉會帶最後 20 句上下文 */
 (function(){
-  let FR={}, FRQ={}, BLK={}, DMM={}, _frBound=false, _dmRef=null, _dmWith=null;
+  let FR={}, FRQ={}, BLK={}, DMM={}, _frBound=false, _dmRef=null, _dmWith=null, _dmSending=false;
   window.ttPlayerSuppressed=k=>!!(k&&k!==myKey&&(Object.hasOwn(window.__ttHidden||{},k)||Object.hasOwn(BLK,k)));
   function myName(){ try{ return (agents.get(myKey).b.name)||'？'; }catch(e){ return '？'; } }
   function pairKey(a,b){ return [a,b].sort().join('~'); }
@@ -6520,17 +6524,13 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     ensureWins(); dmClose(true);
     _dmWith=k;
     document.getElementById('dmTitle').textContent='私訊・'+((FR[k]&&FR[k].name)||'？');
-    document.getElementById('dmLog').innerHTML='';
+    TTDirectMessageLog.reset(document.getElementById('dmLog'));
     try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
     _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
     _dmRef.on('value',s=>{
       const v=s.val()||{}; const log=document.getElementById('dmLog'); if(!log) return;
-      log.innerHTML=Object.values(v).sort((a,b)=>(a.at||0)-(b.at||0)).map(m=>{
-        const mine=m.f===myKey;
-        return '<div style="display:flex;'+(mine?'justify-content:flex-end':'')+';margin:4px 0">'
-          +'<span style="max-width:78%;background:'+(mine?'#E8DAF6':'#FFFFFF')+';border-radius:11px;padding:6px 10px;word-break:break-word">'+esc(m.x||'')+'</span></div>';
-      }).join('');
-      log.scrollTop=log.scrollHeight;
+      if(_dmWith!==k)return;
+      TTDirectMessageLog.render(log,v,myKey);
       try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
     });
     gOpen('dmM');
@@ -6541,7 +6541,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     _dmWith=null;
     if(silent!==true){ const m=document.getElementById('dmM'); if(m) m.classList.remove('on'); }
   };
-  window.dmSend=async function(stickerCode){if(window.TTLegacySocial?.isolated)return false;
+  window.dmSend=async function(stickerCode){if(window.TTLegacySocial?.isolated||_dmSending)return false;
     const i=document.getElementById('dmIn');if(!i||!_dmWith||!myKey)return false;
     const sticker=typeof stickerCode==='string'&&window.TTChatStickers?.decode(stickerCode);
     if(stickerCode!==undefined&&!sticker)return false;
@@ -6549,6 +6549,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     if(window.__mute){toast('你目前被禁言中,暫時無法傳私訊');return false;}
     if(!FR[_dmWith]){toast('你們已不是好友');return false;}
     const k=_dmWith,sender=myKey,senderName=myName(),recipientName=FR[_dmWith]?.name||'';
+    _dmSending=true;const sendButton=i.parentElement.querySelector('button:not(.dm-sticker-toggle)');if(sendButton){sendButton.disabled=true;sendButton.setAttribute('aria-busy','true');}
     try{const s=await db.ref(ROOT+'/blocks/'+k+'/'+sender).once('value');
       if(window.TTLegacySocial?.isolated||myKey!==sender||_dmWith!==k||!FR[k]||window.__mute)return false;
       if(s.val())return false;
@@ -6558,6 +6559,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
       await Promise.allSettled([db.ref(ROOT+'/dmMeta/'+sender+'/'+k).update({last,lastAt:at,name:recipientName}),db.ref(ROOT+'/dmMeta/'+k+'/'+sender).update({last,lastAt:at,name:senderName}),db.ref(ROOT+'/dmMeta/'+k+'/'+sender+'/unread').transaction(c=>(c||0)+1)]);
       try{SFX.tap&&SFX.tap();}catch{}return true;
     }catch{toast('訊息未送出，請稍後再試。');return false;}
+    finally{_dmSending=false;if(sendButton){sendButton.disabled=false;sendButton.removeAttribute('aria-busy');}}
   };
   window.dmBlockCur=function(){ if(_dmWith){ const k=_dmWith; frBlock(k); dmClose(); } };
   window.dmReport=function(){
@@ -7670,12 +7672,13 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=291"></script>
-<script src="tavern-ui-bridge.js?v=345"></script>
-<script src="lobby-ui/live.js?v=339"></script>
+<script src="tavern-ui-bridge.js?v=349"></script>
+<script src="lobby-ui/companion-achievements.js?v=347"></script>
+<script src="lobby-ui/live.js?v=347"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
-<link rel="stylesheet" href="lobby-ui/social-design.css?v=337">
-<script src="lobby-ui/social-design.js?v=321"></script>
+<link rel="stylesheet" href="lobby-ui/social-design.css?v=347">
+<script src="lobby-ui/social-design.js?v=347"></script>
 <script src="lobby-ui/membership.js?v=273"></script>
 <script src="lobby-ui/order-flow.js?v=305"></script>
 <script type="module">
@@ -7685,9 +7688,9 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=343">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346">
 <script src="lobby-ui/rooms/world-bridge.js?v=343"></script>
-<script type="module" src="lobby-ui/rooms/entry.mjs?v=343"></script>
+<script type="module" src="lobby-ui/rooms/entry.mjs?v=346"></script>
 </body>
 </html>
 

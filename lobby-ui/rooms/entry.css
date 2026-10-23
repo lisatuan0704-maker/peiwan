@@ -1,6 +1,6 @@
 @import url('./room-selector.css');
 #roomEntry,#roomDialog,#roomDialog *{box-sizing:border-box}
-#roomEntry{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:72;padding:10px 17px;border:1px solid #fff9;border-radius:12px;background:linear-gradient(120deg,#fff4edee,#e6d6e9ee);color:#624c6d;font:700 13px/1.3 'TT Huninn',sans-serif;box-shadow:0 4px 15px #402b4724;cursor:pointer;backdrop-filter:blur(12px)}
+#roomEntry{position:relative;display:block;width:max-content;max-width:100%;margin:8px auto 0;z-index:1;padding:10px 17px;border:1px solid #fff9;border-radius:12px;background:linear-gradient(120deg,#fff4edee,#e6d6e9ee);color:#624c6d;font:700 13px/1.3 'TT Huninn',sans-serif;box-shadow:0 4px 15px #402b4724;cursor:pointer;backdrop-filter:blur(12px)}
 #roomEntry:hover{background:#fff5ef}
 #roomDialog{margin:auto;inset:0;width:min(660px,calc(100% - 28px));max-height:calc(100dvh - 32px);padding:0;border:2px solid #fff8;border-radius:24px;background:#f6eee9;color:#66516e;box-shadow:0 24px 80px #211a3690;overflow:auto;font:14px/1.6 'TT Huninn',sans-serif}
 #roomDialog::backdrop{background:#281d3b8c;backdrop-filter:blur(5px)}
@@ -39,7 +39,7 @@
 #roomDialog .room-rules{border-top:1px solid #d9c8dc;padding-top:15px;margin:15px 0 0;color:#9a839d;font-size:11px;line-height:1.8}
 #roomDialog :focus-visible,#roomEntry:focus-visible{outline:3px solid #b791bd;outline-offset:3px}
 .tt-private-room .npc:has(.staff-sprite){display:none!important}
-@media(max-width:680px) and (orientation:portrait){#roomEntry{position:static;transform:none;display:block;align-self:stretch;margin:12px 18px;z-index:auto;text-align:center}#roomDialog .room-top{padding:22px 20px}#roomDialog h2{font-size:21px}#roomDialog .room-body{padding:18px}#roomDialog .room-original{padding:14px}#roomDialog .room-grid{gap:9px}#roomDialog .room-choice{padding:13px}#roomDialog .private-actions form>div{flex-wrap:wrap}#roomDialog .private-actions input{flex:1;min-width:150px;font-size:16px}#roomDialog .private-actions button{min-height:42px}}
-@media(max-height:500px) and (orientation:landscape){#roomEntry{top:10px;padding:7px 12px}#roomDialog .room-top{padding:18px 24px}}
+@media(max-width:680px) and (orientation:portrait){body.mhome-on #roomEntry{position:static;transform:none;display:block;align-self:stretch;margin:12px 18px;z-index:auto;text-align:center}#roomDialog .room-top{padding:22px 20px}#roomDialog h2{font-size:21px}#roomDialog .room-body{padding:18px}#roomDialog .room-original{padding:14px}#roomDialog .room-grid{gap:9px}#roomDialog .room-choice{padding:13px}#roomDialog .private-actions form>div{flex-wrap:wrap}#roomDialog .private-actions input{flex:1;min-width:150px;font-size:16px}#roomDialog .private-actions button{min-height:42px}}
+@media(max-height:500px) and (orientation:landscape){#roomEntry{margin-top:5px;padding:7px 12px}#roomDialog .room-top{padding:18px 24px}}
 
 #roomDialog,#roomDialog *{font-family:"Tavern Numerals","TT Latin","TT Huninn","LINE Seed TW","Huninn","Noto Sans TC",sans-serif!important}

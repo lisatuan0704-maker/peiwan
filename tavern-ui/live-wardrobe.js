@@ -157,21 +157,11 @@
   if(actions)orderDialog.querySelector('.order-controls').append(actions);
   orderDialog.querySelector('.order-close').onclick=closeDrinkOrder;orderDialog.querySelector('.order-return').onclick=closeDrinkOrder;
   if(!orderDialog.open)orderDialog.showModal();
-  if(focused&&orderDialog.querySelector('#'+focused))orderDialog.querySelector('#'+focused).focus({preventScroll:true});else orderDialog.querySelector('.order-close')?.focus({preventScroll:true});orderDialog.scrollTop=wasOpen?oldScroll:0;requestAnimationFrame(()=>fitDrinkArt(orderDialog));
+  if(focused&&orderDialog.querySelector('#'+focused))orderDialog.querySelector('#'+focused).focus({preventScroll:true});else orderDialog.querySelector('.order-close')?.focus({preventScroll:true});orderDialog.scrollTop=wasOpen?oldScroll:0;
  }
 
- function fitDrinkArt(root){
-  root.querySelectorAll('.drink-scene').forEach(scene=>{
-   scene.style.transform='none';const box=scene.getBoundingClientRect();if(!box.width||!box.height)return;
-   const rects=[...scene.querySelectorAll('.drink-watermark,.drink-center,.drink-friend')].map(e=>e.getBoundingClientRect());
-   const left=Math.min(...rects.map(r=>r.left)),right=Math.max(...rects.map(r=>r.right)),top=Math.min(...rects.map(r=>r.top)),bottom=Math.max(...rects.map(r=>r.bottom));
-   const scale=Math.min(1,(box.width-12)/(right-left),(box.height-12)/(bottom-top)),ratio=box.width/scene.offsetWidth;
-   const x=((box.left+box.right-left-right)/2)*scale/ratio,y=((box.top+box.bottom-top-bottom)/2)*scale/ratio;
-   scene.style.transformOrigin='50% 50%';scene.style.transform='translate('+x+'px,'+y+'px) scale('+scale+')';
-  });
- }
- const drinkFitObserver=new ResizeObserver(()=>requestAnimationFrame(()=>fitDrinkArt(document)));
- document.fonts?.ready.then(()=>requestAnimationFrame(()=>fitDrinkArt(document)));
+ // Preserve the approved design coordinates. Container units scale the card;
+ // fitting the artwork bounds again would move and shrink the saved composition.
  function drinkCarousel(list,p){
   const wrap=document.createElement('section');wrap.className='drink-carousel';wrap.setAttribute('aria-label','選擇飲料');
   const index=Math.max(0,list.findIndex(x=>x.id===p.id));
@@ -189,7 +179,7 @@
   const endDrag=()=>{if(touching){touching=false;track.onscroll();return;}if(!drag)return;drag=null;track.classList.remove('dragging');track.scrollTo({left:offset(nearest()),behavior:'smooth'});track.onscroll();};
   track.onpointerup=endDrag;track.onpointercancel=endDrag;
   slides.forEach((slide,i)=>{slide.tabIndex=0;slide.setAttribute('role','button');slide.setAttribute('aria-label',list[i].name+'，選擇杯數');const open=()=>{if(drinkBusy||track.suppressClick)return;selected=list[i].id;drinkQuantity=1;drinkDialogOpen=true;render()};slide.onclick=open;slide.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();open()}};});
-  drinkFitObserver.disconnect();requestAnimationFrame(()=>{drinkFitObserver.observe(track);fitDrinkArt(wrap);track.scrollLeft=offset(index);requestAnimationFrame(()=>ready=true);});return wrap;
+  requestAnimationFrame(()=>{track.scrollLeft=offset(index);requestAnimationFrame(()=>ready=true);});return wrap;
  }
  const drinkDesign=document.createElement('link');drinkDesign.rel='stylesheet';drinkDesign.href='drink-cards.css?v=339';document.head.append(drinkDesign);
  function showDrinkDialogue(result,product){

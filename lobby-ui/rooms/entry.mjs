@@ -21,8 +21,9 @@ const picker=mountRoomSelector(dialog.querySelector('#roomPicker'),{
  joinPrivate:async code=>{await bootstrap();return client.joinPrivate(code)},onEntered:()=>dialog.close()
 });
 picker.update(availableRooms,null);
-function place(){const home=document.getElementById('mhEnter');if(innerWidth<=680&&innerHeight>innerWidth&&home)home.before(entry);else document.body.append(entry)}
+function place(){const home=document.getElementById('mhEnter'),sign=document.getElementById('sign');if(document.body.classList.contains('mhome-on')&&home)home.before(entry);else (sign||document.body).append(entry)}
 place();addEventListener('resize',place);
+new MutationObserver(place).observe(document.body,{attributes:true,attributeFilter:['class']});
 function authReady(auth){return new Promise((resolve,reject)=>{let stop=()=>{};stop=auth.onAuthStateChanged(u=>{queueMicrotask(stop);resolve(u)},reject)})}
 async function bootstrap(){
  if(bootstrapPending)return bootstrapPending;if(client)return client;

@@ -233,3 +233,22 @@ body.tt214 #hint2.is-visible{opacity:1;visibility:visible}
 
 /* v339: slightly larger lobby chat text. */
 body.tt214 #chatlog{font-size:14px;line-height:1.7}body.tt214 #chatin{font-size:16px}
+.companion-achievements{margin:0 0 30px;color:#695173}
+.companion-ach-heading small{font-size:10px;letter-spacing:2px;color:#9b799d}
+.companion-ach-heading h2{font-size:27px;margin:7px 0 8px}
+.companion-ach-heading p,.companion-ach-note{font-size:13px;line-height:1.7;color:#8e7793}
+.companion-ach-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}
+.companion-ach-card{min-width:0;padding:18px;border:1px solid #c5adc9;border-radius:15px;background:linear-gradient(145deg,#fff7e9,#eadff0);box-shadow:0 4px 0 #bfa4c32b}
+.companion-ach-card:nth-child(2){background:linear-gradient(145deg,#f5f0ff,#dce8ed)}
+.companion-ach-card:nth-child(3){background:linear-gradient(145deg,#fff3eb,#efdce3)}
+.companion-ach-art{display:flex;align-items:center;justify-content:center;gap:12px;height:140px}
+.companion-ach-doll{width:100px;height:118px;object-fit:contain;image-rendering:pixelated}
+.companion-ach-frame{width:100px;height:100px;object-fit:contain}
+.companion-ach-card h3{font-size:20px;margin:14px 0 7px}
+.companion-ach-card p{font-size:12px;color:#8f7893;margin:0 0 12px}
+.companion-ach-status{display:block;font-size:12px;font-weight:700;color:#8c7795}
+.companion-ach-card.is-unlocked .companion-ach-status{color:#547c58}
+.companion-ach-card button{display:block;margin-top:14px;padding:9px 12px;border:1px solid #baa0bf;border-radius:8px;background:#fff9;color:#745a7e;font:inherit;font-size:12px;cursor:pointer}
+.companion-ach-card button:focus-visible{outline:3px solid #9c7ca8;outline-offset:3px}
+@media(max-width:900px){.companion-ach-art{gap:4px}.companion-ach-doll{width:80px}.companion-ach-frame{width:75px;height:75px}}
+@media(max-width:620px){.companion-ach-grid{grid-template-columns:1fr}.companion-ach-card{padding:16px}.companion-ach-art{float:left;width:145px;height:140px;margin-right:12px}.companion-ach-card:after{content:'';display:block;clear:both}.companion-ach-card h3{font-size:19px}.companion-ach-card button{clear:both;width:100%}.companion-ach-heading h2{font-size:24px}}
