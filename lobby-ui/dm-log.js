@@ -20,14 +20,14 @@
    let item=state.rows.get(id);
    if(!item){const row=document.createElement('div');row.className='dm-message'+(mine?' is-mine':'')+(!first?' dm-new':'');row.dataset.messageId=id;row.style.display='flex';row.style.justifyContent=mine?'flex-end':'flex-start';item={row,signature:null};state.rows.set(id,item);if(mine)ownAdded=true;}
    if(item.signature!==signature){
-    const row=item.row,bubble=document.createElement('span'),content=document.createElement('span');content.className='dm-text';
+    const row=item.row,group=document.createElement('div'),bubble=document.createElement('span'),content=document.createElement('span');group.className='dm-message-content';bubble.className='dm-bubble';content.className='dm-text';
     const sticker=root.TTChatStickers?.decode(m.x||'');
     row.classList.toggle('is-mine',mine);row.classList.toggle('dm-is-sticker',!!sticker);
     if(sticker)content.append(root.TTChatStickers.logImage(sticker));else content.textContent=m.x||'';
-    bubble.append(content);
+    bubble.append(content);group.append(bubble);
     const label=timeText(m.at);
-    if(label){const time=document.createElement('time');time.className='dm-time';time.dateTime=new Date(m.at).toISOString();time.textContent=label;time.title='台灣時間 '+date.format(new Date(m.at));bubble.append(time);}
-    row.replaceChildren(bubble);item.signature=signature;
+    if(label){const time=document.createElement('time');time.className='dm-time';time.dateTime=new Date(m.at).toISOString();time.textContent=label;time.title='台灣時間 '+date.format(new Date(m.at));group.append(time);}
+    row.replaceChildren(group);item.signature=signature;
    }
    if(item.row!==cursor)log.insertBefore(item.row,cursor);cursor=item.row.nextSibling;
   }
