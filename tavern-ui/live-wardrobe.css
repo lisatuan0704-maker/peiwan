@@ -5,9 +5,10 @@
 .grid{overflow:auto}.pager small{color:#a78bab;font-size:10px}.thumb canvas{image-rendering:pixelated}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.detail h2{font-size:12px}.detail p{font-size:9px}.detail .primary{font-size:10px}.bundle-grid{grid-template-columns:1fr}}
 
-/* Leave room for the companion while keeping the whole outfit visible. */
-.preview .stage.has-following-pet #avatar{width:60%!important;max-width:176px!important;max-height:65%!important;height:auto!important;left:30%!important;top:62%!important;transform:translate(-50%,-44%)!important}
-.preview .stage #wardrobePet{position:absolute;right:0;bottom:8%;width:52%;max-width:130px;max-height:65%;height:auto;aspect-ratio:96/112;z-index:4;image-rendering:pixelated;object-fit:contain;pointer-events:none}
+/* One transform fits the complete group; individual members never resize separately. */
+.preview .stage #wardrobeParty{position:absolute;left:0;top:0;width:0;height:0;z-index:3;transform-origin:0 0;pointer-events:none}
+body .preview .stage #wardrobeParty #avatar{position:absolute;width:160px!important;height:160px!important;max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;transform:none!important;image-rendering:pixelated}
+.preview .stage #wardrobePet{position:absolute;max-width:none;max-height:none;z-index:4;image-rendering:pixelated;object-fit:contain;pointer-events:none}
 @media(max-width:600px){
  body .preview:has(.has-following-pet){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto 285px auto auto auto!important}
  body .preview:has(.has-following-pet) .paneltitle{grid-column:1;grid-row:1}

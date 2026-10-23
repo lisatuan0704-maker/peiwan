@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=344';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=345';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -34,9 +34,10 @@
     if(/尾巴|背|翅膀|披風/.test(n))return 'back';
     return 'hand';
   }
-  const companionPets={pet_bubu:{name:'布布',asset:'kabuki'},pet_guigui:{name:'鬼鬼',asset:'rira'},pet_dengdeng:{name:'燈燈',asset:'momo'}};
-  function followingPet(d){if(d?.uiBaseSlots?.includes('pet'))return null;const id=d?.ps?.pet||d?.set;return companionPets[id]?{...companionPets[id],id,src:'img/companions-v315/'+companionPets[id].asset+'-pet.gif'}:null;}
+  // Visible bounds cover all 16 original GIF frames, including the floating effects.
+  const companionPets={pet_bubu:{name:'布布',asset:'kabuki',bounds:[6,44,68,90]},pet_guigui:{name:'鬼鬼',asset:'rira',bounds:[14,10,78,88]},pet_dengdeng:{name:'燈燈',asset:'momo',bounds:[6,16,78,104]}};
   const staffPetLayout={kabuki:{size:123,x:86,y:22},rira:{size:133,x:-93,y:-4},momo:{size:125,x:-89,y:-51}};
+  function followingPet(d){if(d?.uiBaseSlots?.includes('pet'))return null;const id=d?.ps?.pet||d?.set,pet=companionPets[id];return pet?{...pet,id,layout:{reference:160,...staffPetLayout[pet.asset]},src:'img/companions-v315/'+pet.asset+'-pet.gif'}:null;}
   const staffPets={'-OxY7C4vDkgsr1zcyWbk':'pet_guigui','-OxY46ezlpnRt64hUIw9':'pet_bubu','-OzbfbQcF6J6fIR6YYGh':'pet_dengdeng'};
   const previousSetFrame=setFrame;setFrame=function(a,p){
     const staffPet=a.staff&&staffPets[a.cid];
@@ -199,7 +200,7 @@
   }
   const previewJobs=new WeakMap(),imageJobs=new Map();
   function afterPreviewImages(cv,sources,draw){const token={};previewJobs.set(cv,token);const pending=[...new Set(sources.filter(Boolean))].map(src=>{const image=csImg(src);if(image.complete&&image.naturalWidth)return null;if(!imageJobs.has(src))imageJobs.set(src,new Promise(resolve=>{image.addEventListener('load',resolve,{once:true});image.addEventListener('error',resolve,{once:true});}));return imageJobs.get(src);}).filter(Boolean);if(pending.length)Promise.all(pending).then(()=>{if(previewJobs.get(cv)===token&&cv.isConnected)draw();});}
-  function drawPreview(cv,d){const sources=[];for(const source of new Set([d.set,...Object.values(d.ps||{}),...(d.uiAccessories||[]).map(p=>p.source)])){for(const p of Object.values(partsFor(source)))if(p?.d){sources.push(p.d);if(p.highlight?.d)sources.push(p.highlight.d);}}const draw=()=>drawDollTo(cv,d,'idle');draw();afterPreviewImages(cv,sources,draw);}
+  function drawPreview(cv,d,onDraw){const sources=[];for(const source of new Set([d.set,...Object.values(d.ps||{}),...(d.uiAccessories||[]).map(p=>p.source)])){for(const p of Object.values(partsFor(source)))if(p?.d){sources.push(p.d);if(p.highlight?.d)sources.push(p.highlight.d);}}const draw=()=>{drawDollTo(cv,d,'idle');onDraw?.();};draw();afterPreviewImages(cv,sources,draw);}
   window.TinyTavernUI={followingPet,async refreshDrinks(){const uid=window.TTVoiceOrders?.userId?.();if(!uid){drinkCounts={};drinkUid=null;return;}const r=await window.TTVoiceOrders.drinks({action:'list'});if(uid!==window.TTVoiceOrders.userId())return;drinkUid=uid;drinkCounts=r.inventory;},
     async drinkAction(action,itemId,quantity){if(!isDrink(itemId)||!Number.isSafeInteger(quantity)||quantity<1||quantity>99)throw Error('杯數有誤');const uid=window.TTVoiceOrders?.userId?.();if(!uid)throw Error('請先登入 Discord');const storageKey='tt_drink_pending_'+uid;let pending;try{pending=JSON.parse(localStorage.getItem(storageKey)||'null')}catch{}if(pending&&(pending.action!==action||pending.itemId!==itemId||pending.quantity!==quantity))throw Error('上一筆結果尚未確認，請先以原杯數重試。');pending??={action,itemId,quantity,requestId:crypto.randomUUID()};localStorage.setItem(storageKey,JSON.stringify(pending));try{const result=await window.TTVoiceOrders.drinks(pending);localStorage.removeItem(storageKey);drinkUid=uid;drinkCounts[itemId]=result.remaining;if(action==='feed'&&uid===window.TTVoiceOrders.userId()&&result.message){const petId={pet_drink_ghost:'pet_guigui',pet_drink_blue:'pet_bubu',pet_drink_sakura:'pet_dengdeng'}[itemId];const cid=Object.keys(staffPets).find(id=>staffPets[id]===petId);if(cid)showNpcDrinkThanks(cid,result.message);}return result;}catch(e){if(['INSUFFICIENT_DRINKS','INSUFFICIENT_BALANCE','INVALID_REQUEST','PRODUCT_UNAVAILABLE','ACCOUNT_REQUIRED'].includes(e.code))localStorage.removeItem(storageKey);throw e;}},
     drinkName:()=>String(me()?.b?.name||'老闆').slice(0,60),open,close,isActive:()=>active,staff,state,group,makeDoll,wear,saveDye,accessoryKey,expandAccessories,compatible,normalizeSelection,

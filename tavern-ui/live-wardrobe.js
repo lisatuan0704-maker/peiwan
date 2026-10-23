@@ -97,9 +97,42 @@
  }
  let paintFrame=0;
  function requestPaint(){if(paintFrame)return;paintFrame=requestAnimationFrame(()=>{paintFrame=0;paint();});}
+ let previewPet=null;
+ const previewStage=$('#avatar').parentElement;
+ function fitPreviewParty(){
+  const party=$('#wardrobeParty'),avatar=$('#avatar'),img=$('#wardrobePet'),pet=previewPet;
+  if(!party||!pet||!img?.naturalWidth||!previewStage.clientWidth||!previewStage.clientHeight)return;
+  const {reference,size,x,y}=pet.layout,unit=reference/avatar.width;
+  const pixels=avatar.getContext('2d').getImageData(0,0,avatar.width,avatar.height).data;
+  let left=avatar.width,top=avatar.height,right=0,bottom=0;
+  for(let cy=0;cy<avatar.height;cy++)for(let cx=0;cx<avatar.width;cx++)if(pixels[(cy*avatar.width+cx)*4+3]>0){left=Math.min(left,cx);top=Math.min(top,cy);right=Math.max(right,cx+1);bottom=Math.max(bottom,cy+1);}
+  if(!bottom)return;
+  const foot=bottom*unit,petHeight=size*112/96;
+  // Keep the same 160px reference and foot-relative placement as the adjustment page.
+  Object.assign(avatar.style,{left:-reference/2+'px',top:-foot+'px'});
+  Object.assign(img.style,{width:size+'px',height:petHeight+'px',left:x-size/2+'px',top:y-petHeight+'px'});
+  const imageScale=Math.min(size/img.naturalWidth,petHeight/img.naturalHeight);
+  const imageX=x-img.naturalWidth*imageScale/2,imageY=y-petHeight+(petHeight-img.naturalHeight*imageScale)/2;
+  const bounds=pet.bounds||[0,0,img.naturalWidth,img.naturalHeight];
+  const minX=Math.min((left-avatar.width/2)*unit,imageX+bounds[0]*imageScale),maxX=Math.max((right-avatar.width/2)*unit,imageX+bounds[2]*imageScale);
+  const minY=Math.min(top*unit-foot,imageY+bounds[1]*imageScale),maxY=Math.max(0,imageY+bounds[3]*imageScale);
+  const width=previewStage.clientWidth,height=previewStage.clientHeight;
+  const availableWidth=Math.max(1,width-28),availableHeight=Math.max(1,height-76);
+  const scale=Math.min(1.25,availableWidth/(maxX-minX),availableHeight/(maxY-minY));
+  const originX=(width-(maxX-minX)*scale)/2-minX*scale,originY=height-36-maxY*scale;
+  party.style.transform='translate('+originX+'px,'+originY+'px) scale('+scale+')';
+ }
+ function setPreviewPet(pet){
+  const avatar=$('#avatar');let party=$('#wardrobeParty');previewPet=pet;
+  previewStage.classList.toggle('has-following-pet',!!pet);
+  if(!pet){if(party){party.before(avatar);party.remove();avatar.style.removeProperty('left');avatar.style.removeProperty('top');}return;}
+  if(!party){party=document.createElement('div');party.id='wardrobeParty';avatar.before(party);party.append(avatar);const img=document.createElement('img');img.id='wardrobePet';img.onload=fitPreviewParty;party.append(img);}
+  const img=$('#wardrobePet');if(img.dataset.pet!==pet.id){img.src='../'+pet.src;img.alt=pet.name;img.dataset.pet=pet.id;}
+ }
+ const previewFitObserver=new ResizeObserver(fitPreviewParty);previewFitObserver.observe(previewStage);
  function paint(){
   const dyeVisible=!!dyeDraft&&!$('#dyeDialog').hidden;
-  try{const d=api.makeDoll(selection,color);if(dyeVisible){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;if(dyeDraft.highlight)d.hairHighlight=dyeDraft.highlight;}api.draw($(dyeVisible?'#dyePreview':'#avatar'),d);const pet=api.followingPet?.(d),holder=$('#avatar').parentElement;let img=document.getElementById('wardrobePet');holder.classList.toggle('has-following-pet',!!pet);if(!pet){img?.remove();}else{if(!img){img=document.createElement('img');img.id='wardrobePet';holder.append(img);}if(img.dataset.pet!==pet.id){img.src='../'+pet.src;img.alt=pet.name;img.dataset.pet=pet.id;}}}catch(e){tell(e.message);}
+  try{const d=api.makeDoll(selection,color);if(dyeVisible){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;if(dyeDraft.highlight)d.hairHighlight=dyeDraft.highlight;api.draw($('#dyePreview'),d);}else{setPreviewPet(api.followingPet?.(d));api.draw($('#avatar'),d,fitPreviewParty);}}catch(e){tell(e.message);}
   // 染髮彈窗遮住的商品與主舞臺不跟著每一次色票事件重畫。
   if(dyeVisible)return;
   const list=entries();$$('#singles:not([hidden]) [data-preview]').forEach(cv=>{const p=list.find(p=>p.id===cv.dataset.preview);if(p)drawPart(cv,p);});
