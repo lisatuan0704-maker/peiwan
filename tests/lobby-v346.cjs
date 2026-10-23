@@ -2,7 +2,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const html=fs.readFileSync('lobby.html','utf8');
 const section=(start,end)=>html.slice(html.indexOf(start),html.indexOf(end,html.indexOf(start)));
 const agents=new Map();let created=0;
-const ctx={agents,STAFF_LAYOUT:{},STAFF_GIF:{},stopDemo(){},realStaffOn:false,makeStaff(cid,st){created++;const a={key:'staff_'+cid,cid,staff:true,on:!!st.on,busy:false,post:[.4,.7],b:{},tag:{},led:{},el:{remove(){this.removed=true}}};agents.set(a.key,a);return a;}};
+const ctx={agents,TTSeats:{remove(){}},STAFF_LAYOUT:{},STAFF_GIF:{},stopDemo(){},realStaffOn:false,makeStaff(cid,st){created++;const a={key:'staff_'+cid,cid,staff:true,on:!!st.on,busy:false,post:[.4,.7],b:{},tag:{},led:{},el:{remove(){this.removed=true}}};agents.set(a.key,a);return a;}};
 vm.createContext(ctx);
 vm.runInContext(section('function setStaffServe(', 'function makeCloak(')+section('function syncResidentStaff(',"if(db) db.ref(ROOT+'/staffStatus').on"),ctx);
 ctx.syncResidentStaff({a:{name:'A',on:false,busy:true},b:{name:'B',on:true,busy:true},c:{name:'C',on:true}});

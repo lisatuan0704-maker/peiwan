@@ -196,6 +196,20 @@
   $('#dyePanel').innerHTML='<div class="dye-head"><strong>主色</strong><span>'+(color.savedId?'已保存髮色':'即時試色')+'</span></div><div class="swatches">'+preset.map(i=>'<button data-color="'+i+'" aria-label="試穿髮色 '+(i+1)+'" style="--swatch:'+data.colors[i]+'" aria-pressed="'+(color.hair===i)+'" '+(color.savedId?'disabled':'')+'></button>').join('')+'</div>';
   $$('[data-color]').forEach(b=>b.onclick=()=>{const nextColor={hair:Number(b.dataset.color)};if(area==='bag')return saveBag(selection,nextColor,'已保存髮色。');color=nextColor;swatches();requestPaint();});
  }
+ function renderSeats(){
+  const list=products().filter(o=>o.seat),choice=api.seatChoice();
+  if(!list.some(o=>o.id===selected))selected=list.find(o=>o.id===choice)?.id||list[0]?.id||null;
+  const current=list.find(o=>o.id===selected);
+  $('#catalog .catalog-head h2').textContent=area==='bag'?'我的座椅':'座椅';
+  $('#subtabs').textContent='設為我的座椅後，回到大廳按 X 使用；移動即收起。';
+  $('#pager').replaceChildren();$('#bundlePager').replaceChildren();
+  $('#grid').innerHTML=list.map(o=>'<button class="item" data-seat-item="'+esc(o.id)+'" aria-pressed="'+(o.id===selected)+'"><span class="itemtop"><span class="status">'+(o.id===choice?'已選用':o.owned?'已擁有':'')+'</span></span><span class="thumb"><canvas width="160" height="160" data-seat-thumb="'+esc(o.id)+'"></canvas></span><span class="item-caption"><strong>'+esc(o.name)+'</strong><small>'+(o.owned?'已收藏':'NT$'+esc(o.price))+'</small></span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'目前還沒有已取得的座椅。':'目前沒有上架座椅。')+'</p>';
+  $$('[data-seat-item]').forEach(b=>b.onclick=()=>{selected=b.dataset.seatItem;render();});
+  $$('[data-seat-thumb]').forEach(cv=>api.seatThumb(cv.dataset.seatThumb,cv));
+  $('#detail').hidden=false;
+  $('#detail').innerHTML=current?'<div><small class="overline">TAVERN SEATS</small><h2>'+esc(current.name)+'</h2><p>按 X 使用／收起，移動時自動收起。</p></div><div class="actions"><button class="primary" id="seatAction">'+(current.owned?(current.id===choice?'已設為我的座椅':'設為我的座椅'):'選購座椅 · NT$'+esc(current.price))+'</button></div>':'';
+  if(current){$('#seatAction').disabled=current.owned&&current.id===choice;$('#seatAction').onclick=()=>{if(current.owned){if(api.selectSeat(current.id)){tell('已設為我的座椅，回到大廳按 X 使用。');render();}}else buy(current.id);};}
+ }
  function render(){
   document.body.dataset.shopCategory=category;document.body.dataset.area=area;document.body.dataset.section=bagSection;
   bagNav.hidden=area!=='bag';bagNav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.archive===bagSection)));
@@ -219,6 +233,7 @@
   const cats=[...(area==='store'?[['bundles','當季套組']]:[]),...categories,...(area==='store'?[['dye','染髮券']]:[])];
   $('#categories').innerHTML=cats.map(([id,name])=>'<button data-category="'+id+'" aria-pressed="'+(id===category)+'"'+(id==='dye'?' class="cat-dye"':'')+'><span>'+name+'</span></button>').join('');
   $$('[data-category]').forEach(b=>b.onclick=()=>{category=b.dataset.category;page=0;selected=null;render();});
+  if(category==='seat'){renderSeats();return;}
   if(dyeShop){$('#grid').replaceChildren();$('#subtabs').replaceChildren();$('#pager').replaceChildren();$('#bundlePager').replaceChildren();$('#detail').replaceChildren();renderDyeShop();dyeCta();swatches();paint();return;}
   $('#singles').classList.toggle('has-accessory-filter',category==='acc');
   $('#subtabs').innerHTML=category==='acc'?'<nav class="accessory-filter" aria-label="配件部位">'+[['all','全部'],...Object.entries(groupNames)].map(([id,n])=>'<button data-group="'+id+'" aria-pressed="'+(id===filter)+'">'+n+'</button>').join('')+'</nav>':category==='hair'?(area==='bag'?'瀏海與後髮可分別搭配':'完整髮型 · 整組試穿'):'點圖片，即時試穿';
@@ -292,7 +307,7 @@
    $$('[data-saved]').forEach(b=>{const id=b.dataset.saved,active=color.savedId===id;b.textContent=active?'已穿戴 · 點一下卸下':'點一下穿戴';b.onclick=()=>{if(saving)return;const saved=data.dyed[id];const next=api.normalizeSelection({...selection,front:active?{base:0,slot:'front'}:saved.front,back:active?{base:0,slot:'back'}:saved.back});return saveBag(next,active?{hair:data.doll.hair||0}:{savedId:id},active?'已卸下染髮組合，恢復原有髮型。':'已穿上染髮組合。');}});
    $('#detail').innerHTML='<p>選一款我的染髮，即可試穿；再次穿戴不扣券。</p>';
   }else{
-   const available=products().filter(o=>!['寵物','其他'].includes(o.type)&&o.parts.length),featured=available.filter(o=>o.featured),all=(featured.length?featured:available).sort((a,b)=>b.featured-a.featured);const pages=Math.max(1,Math.ceil(all.length/2));seasonPage=Math.min(seasonPage,pages-1);const show=all.slice(seasonPage*2,seasonPage*2+2);
+   const available=products().filter(o=>!['寵物','其他','座椅'].includes(o.type)&&o.parts.length),featured=available.filter(o=>o.featured),all=(featured.length?featured:available).sort((a,b)=>b.featured-a.featured);const pages=Math.max(1,Math.ceil(all.length/2));seasonPage=Math.min(seasonPage,pages-1);const show=all.slice(seasonPage*2,seasonPage*2+2);
    if(pages>1){$('#bundlePager').innerHTML='<button id=seasonPrev '+(!seasonPage?'disabled':'')+'>←</button><span>'+(seasonPage+1)+' / '+pages+'</span><button id=seasonNext '+(seasonPage+1>=pages?'disabled':'')+'>→</button>';$('#seasonPrev').onclick=()=>{seasonPage--;renderBundles();paint();};$('#seasonNext').onclick=()=>{seasonPage++;renderBundles();paint();};}
    $('#bundlegrid').innerHTML=show.map((o,i)=>'<article class="season-card" data-season="'+esc(o.id)+'"><div class="season-visual"><span class="season-kicker">TAVERN / SEASON COLLECTION</span><span class="season-number">0'+(i+1)+'</span>'+(o.img?'<img src="'+esc(o.img)+'" alt="'+esc(o.name)+'完整套裝展示" width="240" height="240">':'<canvas width="64" height="64" data-outfit-preview="'+esc(o.id)+'"></canvas>')+'</div><div class="season-info"><h2>'+esc(o.name)+'</h2><p>'+(o.id==='season283_devil'?'暖金與紫色交織，藏一點小惡魔的俏皮。':o.id==='season283_valentine'?'粉色漸入深紫，把心動穿成今天的模樣。':'收藏完整造型，也能自由搭配喜歡的部件。')+'</p><div class="season-price"><strong>'+(o.previewOnly?'即將登場':esc(o.price))+(o.previewOnly?'':'<small>金幣／整套</small>')+'</strong><span>'+(o.owned?'已收藏':'當季完整套組')+'</span></div><div class="season-actions"><button class="ghost" data-try-outfit="'+esc(o.id)+'">試穿整套</button><button class="primary" data-buy-outfit="'+esc(o.id)+'" '+(o.owned||o.previewOnly?'disabled':'')+'>'+(o.owned?'已擁有':o.previewOnly?'敬請期待':'選購整套')+'</button></div></div></article>').join('')||'<p class="live-empty">目前沒有上架組合。</p>';
    $$('[data-try-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.tryOutfit);const next=outfitSelection(o),nextColor={hair:o.doll?.hair||0};try{api.makeDoll(next,nextColor);}catch(e){tell(e.message);return;}selection=next;color=nextColor;swatches();paint();tell('已試穿「'+o.name+'」');});

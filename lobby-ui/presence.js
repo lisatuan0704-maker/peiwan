@@ -17,7 +17,7 @@
     let point=[Math.max(0,Math.min(1,p.x)),Math.max(0,Math.min(1,p.y))];
     // 舊版可能回報門牆內的位置；新版已在本人端完成碰撞，不再由觀看者重算。
     if(p.v!==1&&legacyClamp)point=legacyClamp(point,map);
-    const signature=[point[0],point[1],map,p.f,p.s,p.w,p.t].join('|');
+    const signature=[point[0],point[1],map,p.f,p.s,p.w,p.t,p.st,p.sa].join('|');
     let state=a._remotePosition;
     if(state)advance(a,state,now);
     if(!state||state.signature!==signature){
@@ -40,9 +40,10 @@
     return true;
   }
   function packet(a,map,now){
+    const st=root.TTSeats?.current(a)||null;
     return {x:+a.x.toFixed(6),y:+a.y.toFixed(6),f:a.faceLeft?1:0,s:a.sitting?1:0,m:map,
-      w:['walk','walkKey'].includes(a.state)?1:0,v:1,t:now};
+      w:['walk','walkKey'].includes(a.state)?1:0,v:1,t:now,st,sa:st?a._seatAt:null};
   }
-  function changed(a,b){return !b||['x','y','f','s','m','w'].some(k=>a[k]!==b[k]);}
+  function changed(a,b){return !b||['x','y','f','s','m','w','st','sa'].some(k=>a[k]!==b[k]);}
   root.TTPresence={receive,packet,changed};
 })(typeof window!=='undefined'?window:globalThis);

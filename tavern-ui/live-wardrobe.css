@@ -17,3 +17,12 @@ body .preview .stage #wardrobeParty #avatar{position:absolute;width:160px!import
  body .preview:has(.has-following-pet) .dye-ticket{grid-column:1;grid-row:4}
  body .preview:has(.has-following-pet) .previewbar{grid-column:1;grid-row:5}
 }
+
+/* Seats are selected independently of clothing. */
+body[data-shop-category=seat] .preview{display:none!important}
+body[data-shop-category=seat] .workspace{grid-template-columns:minmax(0,1fr)!important}
+body[data-shop-category=seat] #catalog{grid-column:1/-1}
+body[data-shop-category=seat] #grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(190px,1fr)}
+body[data-shop-category=seat] .thumb canvas{width:160px;max-width:100%;height:160px;object-fit:contain;image-rendering:pixelated}
+body[data-area=bag][data-shop-category=seat] #catalog #detail{display:flex!important}
+body[data-area=bag][data-shop-category=seat] .workspace{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"catalog"!important}

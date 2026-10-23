@@ -16,6 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="js/tt-seats.js?v=1"></script><script src="lobby-ui/seats.js?v=361"></script>
 <style>
 :root{
   --void:#160C06; --outline:#241407;
@@ -765,7 +766,8 @@ const SHOP_CAT=[
   {id:'pet2',type:'寵物',name:'醬料小雞',price:180},
   {id:'seat0',type:'座椅',name:'蘑菇凳',price:120},
   {id:'seat1',type:'座椅',name:'絨布沙發椅',price:260},
-  {id:'seat2',type:'座椅',name:'吧檯高腳椅',price:160}
+  {id:'seat2',type:'座椅',name:'吧檯高腳椅',price:160},
+  ...Object.entries(TTSeats.CATALOG).map(([id,c])=>({id,type:'座椅',name:c.name,price:null}))
 ];
 /* 自訂商品:掌櫃可自行新增/改名/刪除,存在 shopConfig/<id> 裡(帶 custom:1) */
 function shopList(){
@@ -1003,7 +1005,9 @@ function removeShopImg(id){ shopImgTmp[id]='';
 }
 function saveShopItem(id){
   const g=v=>document.getElementById(v+'_'+id);
-  const price=parseInt(g('sp').value,10)||0;
+  const rawPrice=g('sp').value;
+  if(TTSeats.isSeat(id)&&(rawPrice.trim()===''||!Number.isInteger(Number(rawPrice))||Number(rawPrice)<0)){alert('請先填寫有效的座椅價格');return;}
+  const price=parseInt(rawPrice,10)||0;
   const active=g('sa').checked;
   const start=g('ss').value? new Date(g('ss').value).getTime():null;
   const end=g('se').value? new Date(g('se').value).getTime():null;
@@ -1027,13 +1031,14 @@ function quickToggleShop(id,ev){
   const active=c.active!==undefined?c.active:(it.type==='時裝');
   const rec=Object.assign({},c);
   rec.active=!active;
-  if(rec.price==null) rec.price=it.price;
+  if(TTSeats.isSeat(id)&&rec.active&&(!Number.isInteger(c.price)||c.price<0)){shopOpenId=id;renderShop();alert('請先設定價格並儲存，再上架座椅');return;}
+  if(rec.price==null&&it.price!=null) rec.price=it.price;
   rec.updatedAt=Date.now();
   db.ref(ROOT+'/shopConfig/'+id).set(rec);
 }
 function shopZoom(id,ev){
   if(ev) ev.stopPropagation();
-  const c=shopConfig[id]||{}; if(!c.img){ alert('這件還沒有商品圖'); return; }
+  const c=shopConfig[id]||{}; if(TTSeats.isSeat(id)){let dialog=document.getElementById('seatThumbDialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='seatThumbDialog';dialog.style.cssText='border:0;border-radius:18px;padding:24px;text-align:center';dialog.onclick=()=>dialog.close();document.body.append(dialog);}dialog.innerHTML='<h3>'+TTSeats.CATALOG[id].name+'</h3><div style="width:320px;height:320px">'+TTSeatUI.markup(id)+'</div><p>點一下關閉</p>';dialog.showModal();return;} if(!c.img){ alert('這件還沒有商品圖'); return; }
   const it=shopList().find(x=>x.id===id)||{};
   let m=document.getElementById('shopZoomM');
   if(!m){ m=document.createElement('div'); m.id='shopZoomM';
@@ -1053,7 +1058,7 @@ function renderShop(){
   let html='<div class="card"><h2>🛍️ 商城上架管理</h2>'
     +'<p style="font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:4px">點<b>圖片</b>放大驗收、點<b>綠色/灰色按鈕</b>直接上下架、點<b>卡片其他地方</b>展開細部設定(價格、限時)。</p>';
   ['時裝','寵物','座椅'].forEach(type=>{
-    html+='<h3 style="color:var(--grape);font-size:14px;margin:14px 0 8px">'+type+(type!=='時裝'?'（大廳效果製作中）':'')+'</h3>';
+    html+='<h3 style="color:var(--grape);font-size:14px;margin:14px 0 8px">'+type+(type==='寵物'?'（大廳效果製作中）':'')+'</h3>';
     html+='<div class="shopGrid">';
     (groups[type]||[]).forEach(it=>{
       const c=shopConfig[it.id]||{};
@@ -1064,11 +1069,11 @@ function renderShop(){
       const lim=(c.end&&Date.now()<c.end);
       html+='<div class="shopCell'+(open?' on':'')+'" onclick="toggleShopItem(\''+it.id+'\')">'
         +'<div class="shopThumb" onclick="shopZoom(\''+it.id+'\',event)">'
-        +(hasImg?'<img src="'+c.img+'" alt="">':'<span class="noimg">無圖<br>待繪師</span>')
+        +(TTSeats.isSeat(it.id)?TTSeatUI.markup(it.id):(hasImg?'<img src="'+c.img+'" alt="">':'<span class="noimg">無圖<br>待繪師</span>'))
         +(lim?'<span class="shopTag">限時</span>':'')
         +'</div>'
         +'<div class="shopNm">'+esc(it.name)+'</div>'
-        +'<div class="shopPr">NT$'+price+'</div>'
+        +'<div class="shopPr">'+(price==null?'尚未設定價格':'NT$'+price)+'</div>'
         +'<button class="shopSw'+(active?' on':'')+'" onclick="quickToggleShop(\''+it.id+'\',event)">'+(active?'上架中':'未上架')+'</button>'
         +(it.custom?'<div class="shopOps"><button onclick="renameShopItem(\''+it.id+'\',event)">改名</button><button class="del" onclick="delShopItem(\''+it.id+'\',event)">刪除</button></div>':'<div class="shopOps"><span class="built">內建款</span></div>')
         +'</div>';
@@ -1092,7 +1097,7 @@ function renderShop(){
         +'<div style="font-size:11px;color:#B29AD0;margin-top:5px;max-width:170px;line-height:1.5">封面圖(選填)。若有上傳部件,可按下方「用合成圖當封面」自動產生</div>'
         +'</div>'
         +'<div style="flex:1;min-width:230px;display:flex;flex-direction:column;gap:9px">'
-        +'<label style="font-size:12.5px">價格 NT$ <input id="sp_'+it.id+'" type="number" value="'+price+'" style="width:90px;padding:5px 7px;font-size:13px"></label>'
+        +'<label style="font-size:12.5px">價格 NT$ <input id="sp_'+it.id+'" type="number" value="'+(price??'')+'" style="width:90px;padding:5px 7px;font-size:13px"></label>'
         +'<label style="font-size:12.5px;display:flex;align-items:center;gap:8px;width:fit-content"><input id="sa_'+it.id+'" type="checkbox" '+(active?'checked':'')+' style="width:auto;flex:0 0 auto;margin:0;transform:scale(1.2)"> 上架販售</label>'
         +'<label style="font-size:12.5px;display:flex;align-items:center;gap:6px">限時開始 <input id="ss_'+it.id+'" type="datetime-local" value="'+dtLocal(c.start)+'" style="font-size:12px;padding:4px;width:auto;max-width:210px"></label>'
         +'<label style="font-size:12.5px;display:flex;align-items:center;gap:6px">限時結束 <input id="se_'+it.id+'" type="datetime-local" value="'+dtLocal(c.end)+'" style="font-size:12px;padding:4px;width:auto;max-width:210px"></label>'

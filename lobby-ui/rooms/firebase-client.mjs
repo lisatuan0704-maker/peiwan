@@ -1,4 +1,4 @@
-import {encodePresence,decodePresence} from './presence-codec.mjs';
+import {encodePresence,decodePresence} from './presence-codec.mjs?v=361';
 const roomPattern=/^(public-0[123]|private-[a-f0-9]{32})$/;
 export function createFirebaseAdapter({database,getUid,serverTimestamp,now=Date.now,setTimer=setInterval,clearTimer=clearInterval,createPositionTransport}){
  const transports=new Map();

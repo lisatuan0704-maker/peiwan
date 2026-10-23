@@ -1,4 +1,4 @@
-import {encodePresence} from './presence-codec.mjs';
+import {encodePresence} from './presence-codec.mjs?v=361';
 // Create one publisher per room. Disposing it prevents queued writes from
 // being sent after a room switch. A write already sent is enforced by rules.
 export function createPresencePublisher({publish,onError=()=>{},now=()=>performance.now(),setTimer=setTimeout,clearTimer=clearTimeout,minInterval=100,idleInterval=10000,retryInterval=2000}){
@@ -19,7 +19,7 @@ export function createPresencePublisher({publish,onError=()=>{},now=()=>performa
   finally{busy=false;plan()}
  }
  return {
-  offer(packet){if(disposed)return;encodePresence(packet,0);latest={x:packet.x,y:packet.y,f:packet.f,s:packet.s,w:packet.w,m:packet.m,v:1};plan()},
+  offer(packet){if(disposed)return;encodePresence(packet,0);latest={x:packet.x,y:packet.y,f:packet.f,s:packet.s,w:packet.w,m:packet.m,v:1,...(packet.st?{st:packet.st,sa:packet.sa}:{})};plan()},
   setConnected(connected){if(disposed)return;paused=!connected;if(!paused){lastSent=null;retryAt=-Infinity}plan()},
   dispose(){disposed=true;latest=null;cancel()}
  };

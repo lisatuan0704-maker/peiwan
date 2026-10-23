@@ -1,0 +1,26 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+assert.equal(crypto.createHash('sha256').update(fs.readFileSync('js/tt-seats.js')).digest('hex'),'8086a7902dc0e6edbdefc21db3ac21276935b0fa349944eb0c36ec7f1b291754','approved effect file must remain byte-identical');
+const storage=new Map(),events={},actor={x:.4,y:.8,state:'walk',sitting:true,goDoor:true},calls=[];
+const seat={CATALOG:{seat3:{name:'我生日推車'},seat4:{name:'蘋果傳說的鏡子'}},init:async()=>{},current:a=>a?.seat||null,use(a,id){a.seat=id;a._seatAt=12345;calls.push(['use',id]);},clear(a){if(a)a.seat=null;calls.push(['clear']);},thumb(){},remove(){}};
+const c={TTSeats:seat,myKey:'a',me:()=>actor,__owned:{},__shopCfg:{},toast(){},console,MutationObserver:class{observe(){}},document:{documentElement:{},querySelectorAll:()=>[],getElementById:()=>null,addEventListener:(n,f)=>events[n]=f},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)}};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync('lobby-ui/seats.js','utf8'),c);
+(async()=>{
+ await c.TTSeatUI.ready;const UI=c.TTSeatUI;
+ assert.equal(UI.select('seat3'),false);UI.toggle();assert.equal(seat.current(actor),null);
+ c.__owned={seat3:{name:'purchase'},seat4:true};assert.equal(UI.select('seat4'),true);assert.equal(UI.choice(),'seat4');UI.toggle();assert.equal(actor.seat,'seat4');assert.equal(actor.state,'idle');assert.equal(actor.sitting,false);assert.equal(actor.tx,actor.x);assert.equal(actor.goDoor,false);
+ const event={code:'KeyX',target:{closest:()=>true},preventDefault(){}};events.keydown(event);assert.equal(actor.seat,'seat4','typing X must not toggle seat');events.keydown({...event,target:null,repeat:true});assert.equal(actor.seat,'seat4');events.keydown({...event,target:null});assert.equal(actor.seat,null);
+ c.myKey='b';assert.equal(UI.choice(),'seat3','account choices are isolated');c.myKey='a';assert.equal(UI.choice(),'seat4');delete c.__owned.seat4;assert.equal(UI.choice(),'seat3','revoked item cannot remain selected');assert.equal(UI.select('__proto__'),false);
+ for(const cfg of [{},{active:true},{active:true,price:-1},{active:true,price:1.5},{active:true,price:1,start:Date.now()+10000},{active:true,price:1,end:1}]){c.__shopCfg.seat3=cfg;assert.equal(UI.state('seat3').onSale,false);}
+ c.__shopCfg.seat3={active:true,price:0};assert.equal(UI.state('seat3').onSale,true,'explicit zero price is allowed');
+ vm.runInContext(fs.readFileSync('lobby-ui/presence.js','utf8'),c);UI.toggle();const p=c.TTPresence.packet(actor,'hall',20000);assert.equal(p.st,'seat3');assert.equal(p.sa,12345);assert(c.TTPresence.changed({...p,st:null,sa:null},p));assert(c.TTPresence.changed({...p,sa:12346},p));
+ const {encodePresence,decodePresence}=await import('../lobby-ui/rooms/presence-codec.mjs');const encoded=encodePresence(p,20000),decoded=decodePresence(encoded);assert.equal(decoded.st,'seat3');assert.equal(decoded.sa,12345);assert.throws(()=>encodePresence({...p,st:'__proto__'},0));assert.equal(decodePresence({...encoded,sa:-1}),null);assert(!('st' in encodePresence({...p,st:null,sa:null},0)),'standing removes seat fields');
+ const remote={x:.4,y:.8,mapLoc:'hall'};c.TTPresence.receive(remote,p,20000);c.TTPresence.receive(remote,{...p,t:19000,st:null,sa:null},20001);assert.equal(remote._remotePosition.packet.st,'seat3','stale packet must not remove a current seat');
+ const {createPresencePublisher}=await import('../lobby-ui/rooms/presence-publisher.mjs');let pending,written;const publisher=createPresencePublisher({publish:async p=>written=p,setTimer:f=>(pending=f,1),clearTimer(){},now:()=>10000});publisher.offer(p);pending();await new Promise(r=>setImmediate(r));assert.equal(written.st,p.st);assert.equal(written.sa,p.sa);publisher.dispose();
+ const bridge=fs.readFileSync('tavern-ui-bridge.js','utf8');
+ const catalogCode=bridge.slice(bridge.indexOf('  function catalog(){'),bridge.indexOf('  function state(){'));
+ vm.runInContext(catalogCode,c);c.__outfitList=()=>[];c.__owned={seat3:true};c.__shopCfg={seat3:{active:false,price:123},seat4:{active:true,price:456}};
+ const catalog=c.catalog();assert.equal(catalog.find(o=>o.id==='seat3').owned,true);assert.equal(catalog.find(o=>o.id==='seat3').sale,false);assert.equal(catalog.find(o=>o.id==='seat4').price,456);assert.equal(catalog.find(o=>o.id==='seat4').sale,true);assert.equal(catalog.find(o=>o.id==='seat4').parts[0].slot,'seat');
+ for(const file of ['tavern-ui-bridge.js','tavern-ui/live-wardrobe.js','lobby-ui/seats.js'])new vm.Script(fs.readFileSync(file,'utf8'));
+ const html=fs.readFileSync('lobby.html','utf8');assert(html.includes('TTSeats.sync(a,size,sqy,sqx)'));assert(html.includes('keyMoved=true; TTSeats.clear(a)'));assert(html.includes('if(a.sitting&&!TTSeats.current(a))'));assert(html.includes('!TTSeats.current(a)&&'));assert(html.includes("TTSeatUI.state(curPlan.itemId)"));
+ for(const file of ['lobby.html','admin.html'])for(const m of fs.readFileSync(file,'utf8').matchAll(/<script(?![^>]*type="module")[^>]*>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);
+ console.log('PASS: approved file hash, ownership, account selection, input guards, idle pose, sale windows/pricing, seat timestamps, stale packets, room codec/publisher and page syntax');
+})().catch(e=>{console.error(e);process.exitCode=1});
