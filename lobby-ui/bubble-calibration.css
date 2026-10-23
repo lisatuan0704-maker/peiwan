@@ -7,3 +7,8 @@ body.artBub.bub3s .npc .tt-calibrated-bubble .bubT>span{flex-shrink:0;width:100%
 .tt-bubble-measure{position:absolute;left:-10000px;top:0;visibility:hidden}
 @keyframes ttBubbleAppear{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){body.artBub.bub3s .npc .bub.tt-calibrated-bubble{animation:none}}
+/* v359: chat readability is independent of the compact HUD. */
+body.artBub.bub3s .npc .bub .bubT{font-size:22px;line-height:30px;font-weight:600}
+body.artBub.bub3s .npc .bub .bubT>span{-webkit-line-clamp:unset;max-height:none;font-weight:600}
+body.artBub.bub3s .npc .bub.tt-plain-bubble{left:50%!important;transform:translateX(-50%)!important;width:max-content!important;min-width:0!important;max-width:330px!important;height:auto!important;aspect-ratio:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;display:block!important;font:700 22px/1.4 'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',sans-serif;color:#fffaf4!important;text-shadow:0 1px 3px #35212c,1px 0 2px #35212c,-1px 0 2px #35212c;white-space:pre-wrap;overflow-wrap:anywhere;text-align:center;overflow:visible}
+body.artBub.bub3s .npc .bub.tt-plain-bubble::before,body.artBub.bub3s .npc .bub.tt-plain-bubble::after{display:none!important}

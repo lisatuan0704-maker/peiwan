@@ -3,9 +3,9 @@
 'use strict';
 const common={maxChars:18,textOffsetX:0,textOffsetY:0,textWidthPercent:100,textHeightPercent:100};
 const anchors=[
- {count:2,offsetX:.5,offsetY:24.5,widthPercent:97,heightPercent:108,fontSize:13.5,lineHeight:1.15,maxWidth:109},
- {count:8,offsetX:.5,offsetY:24.5,widthPercent:129,heightPercent:154.05,fontSize:13,lineHeight:1.15,maxWidth:167.12},
- {count:18,offsetX:4.01,offsetY:26.05,widthPercent:158.71,heightPercent:132.49,fontSize:10,lineHeight:1.3,maxWidth:141.26}
+ {count:2,offsetX:.5,offsetY:24.5,widthPercent:97,heightPercent:108,fontSize:22,lineHeight:1.35,maxWidth:330},
+ {count:8,offsetX:.5,offsetY:24.5,widthPercent:129,heightPercent:154.05,fontSize:22,lineHeight:1.35,maxWidth:330},
+ {count:18,offsetX:4.01,offsetY:26.05,widthPercent:158.71,heightPercent:132.49,fontSize:22,lineHeight:1.35,maxWidth:330}
 ];
 const segmenter=typeof Intl.Segmenter==='function'?new Intl.Segmenter('zh-Hant',{granularity:'grapheme'}):null;
 const characters=text=>segmenter?[...segmenter.segment(String(text||''))].map(x=>x.segment):Array.from(String(text||''));
