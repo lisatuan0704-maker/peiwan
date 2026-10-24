@@ -16,7 +16,7 @@
         "y": 0,
         "g": 1,
         "highlight": {
-          "n": "偵探前髮-挑染",
+          "n": "前髮挑染",
           "d": "img/season-v291/bear/8.偵探前髮-挑染.png",
           "x": 0,
           "y": 0,
@@ -24,13 +24,13 @@
         }
       },
       "back": {
-        "n": "後髮",
+        "n": "偵探後髮",
         "d": "img/season-v291/bear/2.後髮.png",
         "x": 0,
         "y": 0,
         "g": 1,
         "highlight": {
-          "n": "後髮上挑染",
+          "n": "後髮挑染",
           "d": "img/season-v291/bear/2.後髮上挑染.png",
           "x": 0,
           "y": 0,
@@ -59,7 +59,7 @@
         "g": 0
       },
       "acc1": {
-        "n": "身體後-發現腳印",
+        "n": "偵探腳印",
         "d": "img/season-v291/bear/0.身體後-發現腳印.png",
         "x": 0,
         "y": 0,
@@ -70,7 +70,7 @@
         "defaultEquipped": true
       },
       "acc2": {
-        "n": "身體後-熊尾",
+        "n": "熊尾巴",
         "d": "img/season-v291/bear/1.身體後-熊尾.png",
         "x": 0,
         "y": 0,
@@ -81,7 +81,7 @@
         "defaultEquipped": true
       },
       "acc3": {
-        "n": "辮子上的花",
+        "n": "花朵髮飾",
         "d": "img/season-v291/bear/3.辮子上的花.png",
         "x": 0,
         "y": 0,
@@ -92,7 +92,7 @@
         "defaultEquipped": true
       },
       "acc4": {
-        "n": "前髮後-熊耳朵",
+        "n": "熊耳朵",
         "d": "img/season-v291/bear/7.前髮後-熊耳朵.png",
         "x": 0,
         "y": 0,
@@ -103,7 +103,7 @@
         "defaultEquipped": true
       },
       "acc5": {
-        "n": "帽子後-偵探鼠",
+        "n": "偵探鼠",
         "d": "img/season-v291/bear/9.帽子後-偵探鼠.png",
         "x": 0,
         "y": 0,
@@ -114,7 +114,7 @@
         "defaultEquipped": true
       },
       "acc6": {
-        "n": "帽子",
+        "n": "偵探帽",
         "d": "img/season-v291/bear/10.帽子.png",
         "x": 0,
         "y": 0,
@@ -125,7 +125,7 @@
         "defaultEquipped": true
       },
       "acc7": {
-        "n": "帽子上-花蝶結",
+        "n": "蝴蝶結",
         "d": "img/season-v291/bear/11.帽子上-花蝶結.png",
         "x": 0,
         "y": 0,
@@ -136,7 +136,7 @@
         "defaultEquipped": true
       },
       "acc8": {
-        "n": "手上道具-放大鏡",
+        "n": "放大鏡",
         "d": "img/season-v291/bear/12.手上道具-放大鏡.png",
         "x": 0,
         "y": 0,
@@ -160,13 +160,13 @@
     },
     "parts": {
       "front": {
-        "n": "狼前髮(灰階)",
+        "n": "狼前髮",
         "d": "img/season-v291/wolf/5.狼前髮(灰階).png",
         "x": 0,
         "y": 0,
         "g": 1,
         "highlight": {
-          "n": "前髮上-挑染(灰階)",
+          "n": "前髮挑染",
           "d": "img/season-v291/wolf/5.前髮上-挑染(灰階).png",
           "x": 0,
           "y": 0,
@@ -174,13 +174,13 @@
         }
       },
       "back": {
-        "n": "後髮(灰階)",
+        "n": "狼後髮",
         "d": "img/season-v291/wolf/2.後髮(灰階).png",
         "x": 0,
         "y": 0,
         "g": 1,
         "highlight": {
-          "n": "後髮上-挑染(灰階)",
+          "n": "後髮挑染",
           "d": "img/season-v291/wolf/2.後髮上-挑染(灰階).png",
           "x": 0,
           "y": 0,
@@ -209,7 +209,7 @@
         "g": 0
       },
       "acc1": {
-        "n": "身體後-項圈",
+        "n": "項圈",
         "d": "img/season-v291/wolf/0.身體後-項圈.png",
         "x": 0,
         "y": 0,
@@ -220,29 +220,29 @@
         "defaultEquipped": true
       },
       "acc2": {
-        "n": "身體後-尾巴(灰階)",
+        "n": "狼尾巴",
         "d": "img/season-v291/wolf/1.身體後-尾巴(灰階).png",
         "x": 0,
         "y": 0,
-        "g": 0,
+        "g": 1,
         "group": "back",
         "z": "back",
         "independent": true,
         "defaultEquipped": true
       },
       "acc3": {
-        "n": "前髮後-狼耳朵(灰階)",
+        "n": "狼耳朵",
         "d": "img/season-v291/wolf/4.前髮後-狼耳朵(灰階).png",
         "x": 0,
         "y": 0,
-        "g": 0,
+        "g": 1,
         "group": "head",
         "z": "mid",
         "independent": true,
         "defaultEquipped": true
       },
       "acc4": {
-        "n": "手上道具-吉他",
+        "n": "吉他",
         "d": "img/season-v291/wolf/9.手上道具-吉他.png",
         "x": 0,
         "y": 0,
@@ -253,11 +253,11 @@
         "defaultEquipped": true
       },
       "acc5": {
-        "n": "手上道具-爪子(灰階)",
+        "n": "狼爪",
         "d": "img/season-v291/wolf/9.手上道具-爪子(灰階).png",
         "x": 0,
         "y": 0,
-        "g": 0,
+        "g": 1,
         "group": "hand",
         "z": "top",
         "independent": false,
@@ -272,7 +272,12 @@
         "group": "ear",
         "z": "top",
         "independent": true,
-        "defaultEquipped": true
+        "defaultEquipped": true,
+        "requiresPart": {
+          "source": "season291_wolf",
+          "slot": "acc3"
+        },
+        "requirement": "需先穿戴狼耳朵"
       }
     },
     "sourceLayerCount": 16

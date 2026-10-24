@@ -67,7 +67,7 @@
    for(const p of v.items||[]){
     // 露亞原有髮型、眼睛、衣服與露亞組合重複，保留組合中的命名；舊穿搭編號仍相容。
     if(p.idx===0&&['back','front','eye','cloth'].includes(sl)&&out.some(q=>q.source==='cloth0'&&q.slot===sl))continue;
-    out.push({id:'base::'+sl+'::'+p.idx,slot:sl,base:p.idx,name:p.n,category:cat,product:{owned:true,name:'原有部件'}});
+    out.push({id:'base::'+sl+'::'+p.idx,slot:sl,base:p.idx,name:api.displayPartName?.(p.n)||p.n,category:cat,product:{owned:true,name:'原有部件'}});
    }
   }
   return out;
@@ -85,14 +85,15 @@
   const removing=(area==='bag'||['acc','pet','seat','other'].includes(p.category))&&isTrying(p);
   if(removing)next[key(p)]=['front','back','cloth','eye','brow'].includes(p.slot)?baseRef(p.slot):null;
   else if(p.parts)p.parts.forEach(q=>next[key(q)]=ref(q));else next[key(p)]=ref(p);
-  const normalized=p.category==='hair'?(api.normalizeSelection?.(next)||next):next;
+  if(!removing&&p.category==='acc'&&api.compatible?.(p,next)===false){tell(p.requirement||'請先穿戴對應部件');return;}
+  const normalized=api.normalizeSelection?.(next)||next;
   const removedDependency=Object.keys(next).some(k=>next[k]&&normalized[k]===null);next=normalized;
   try{api.makeDoll(next,nextColor);}catch(e){tell(e.message);return;}
   if(area==='bag'){selected=p.id;if(p.category==='hair')dyeDraft=null;return saveBag(next,nextColor,removing?'已卸下「'+p.name+'」'+(['front','back','cloth','eye','brow'].includes(p.slot)?'，恢復原有部件。':'。'):'已穿上「'+p.name+'」。');}
   selection=next;color=nextColor;if(p.category==='hair')dyeDraft=null;
   selected=p.id;render();
   if(removing)tell('已卸下「'+p.name+'」；完成後按「穿上搭配」保存。');
-  else if(removedDependency)tell('已更換髮型，並卸下不適用的紅寶石髮飾。');
+  else if(removedDependency)tell('已卸下不適用於目前搭配的配件。');
  }
  function drawPart(cv,p){
   if(p.parts){const c=cv.getContext('2d');c.clearRect(0,0,64,64);for(const slot of ['back','front']){const q=p.parts.find(x=>x.slot===slot);if(!q)continue;const tmp=document.createElement('canvas');tmp.width=tmp.height=64;api.drawPart(tmp,ref(q),color);c.drawImage(tmp,0,0);}}
