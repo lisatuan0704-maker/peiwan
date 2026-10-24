@@ -81,7 +81,7 @@
         "defaultEquipped": true
       },
       "acc3": {
-        "n": "花朵髮飾",
+        "n": "飄散花朵",
         "d": "img/season-v291/bear/3.辮子上的花.png",
         "x": 0,
         "y": 0,
@@ -89,7 +89,8 @@
         "group": "head",
         "z": "mid",
         "independent": true,
-        "defaultEquipped": true
+        "defaultEquipped": true,
+        "note": "推薦搭配熊熊偵探髮型使用"
       },
       "acc4": {
         "n": "熊耳朵",

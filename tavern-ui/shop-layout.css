@@ -111,3 +111,7 @@ body[data-area] #grid{scrollbar-width:thin;scrollbar-color:#bfa09c #f6e9e1;overs
 }
 
 body[data-area][data-shop-category=other] #categories{position:sticky;top:0;z-index:10;background:#403047;padding:6px 0}
+
+/* 配件搭配建議獨立於名稱與穿戴狀態。 */
+body[data-area] #grid .item:has(.accessory-note) .item-caption{height:auto;gap:3px}
+body[data-area] #grid .item .accessory-note{display:block;white-space:normal;overflow-wrap:anywhere;line-height:1.4;font-weight:400}
