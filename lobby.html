@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=373"></script>
-<script src="lobby-ui/fixed-view.js?v=376"></script>
+<script src="lobby-ui/fixed-view.js?v=377"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -4141,7 +4141,12 @@ let payMethod='transfer', curTier=null, _coinCoupon=false;
 let _submitting=false;   // 防連點:送出中不接受第二次
 function _selStaff(){ return (typeof selStaff!=='undefined'&&selStaff)?selStaff:null; }
 /* Formal display names are independent of the names retained in order records. */
-function ttStaffDisplayName(cid,fallback){return ({'-OxY46ezlpnRt64hUIw9':'蕪','-OxY7C4vDkgsr1zcyWbk':'縭','-OzbfbQcF6J6fIR6YYGh':'桃'})[cid]||fallback||'冒險者';}
+function ttStaffDisplayName(cid,fallback){
+  const names=new Map([['-OxY46ezlpnRt64hUIw9','蕪'],['-OxY7C4vDkgsr1zcyWbk','縭'],['-OzbfbQcF6J6fIR6YYGh','桃']]);
+  const legacy=new Map([['Caboo','蕪'],['大卡','縭'],['小mo','桃']]);
+  return names.get(cid)||legacy.get(fallback)||fallback||'冒險者';
+}
+function ttOrderStaffDisplayName(o){return ttStaffDisplayName(o.staffCid,o.staffName||'陪陪');}
 function ttSelectedStaffDisplayName(){const s=_selStaff();return s?(s.members||[s]).map(p=>ttStaffDisplayName(p.cid,p.name)).join('、'):'不指定';}
 function coinsAvailable(){
   if(!((curKind==='play'||curKind==='shop') && !!myKey)) return false;
@@ -4522,7 +4527,7 @@ function renderMyOrders(){
       const head='<div onclick="toggleOrd(\''+id+'\')" style="cursor:pointer;display:flex;align-items:center;gap:8px">'
         +'<span style="width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:'+(cancelled?'#C9B6C0':'#8FD3AE')+'"></span>'
         +'<b style="color:'+(cancelled?'#8E7AB0':'#5A4880')+';font-size:13.5px">'+esc(o.planName||'')+'</b>'
-        +(o.staffName?'<span style="font-size:12px;color:#8E68C8">・'+esc(o.staffName)+'</span>':'')
+        +((o.staffCid||o.staffName)?'<span style="font-size:12px;color:#8E68C8">・'+esc(ttOrderStaffDisplayName(o))+'</span>':'')
         +'<span style="margin-left:auto;font-size:11px;color:#C9B6D8">#'+id.slice(-5).toUpperCase()+'</span>'
         +'<span style="font-size:12px;color:#A5798D">'+new Date(o.createdAt).toLocaleDateString('zh-TW')+'</span>'
         +'<b style="color:'+(cancelled?'#9E8AA8':'#D96A8B')+';font-size:13px">NT$'+o.amount+'</b>'
@@ -4571,7 +4576,7 @@ function renderMyOrders(){
       else if(o.accepted) resv+='<div style="font-size:12px;color:#3E9E6B;font-weight:700;margin-top:2px">陪陪已確認,準時赴約 ✦</div>';
       else resv+='<div style="font-size:12px;color:#C97B2B;margin-top:2px">等待陪陪確認時段…</div>';
     }
-    const who=o.staffName?'<span style="color:#8E68C8">・'+esc(o.staffName)+'</span>':'';
+    const who=(o.staffCid||o.staffName)?'<span style="color:#8E68C8">・'+esc(ttOrderStaffDisplayName(o))+'</span>':'';
     return '<div style="border:2px solid #EDE4F7;border-radius:13px;padding:12px 13px;margin-bottom:10px;background:#fff">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="color:#5A4880">'+esc(o.planName)+'</b>'+who+'<span style="margin-left:auto;font-weight:700;color:#D96A8B">NT$'+o.amount+' '+disc+'</span></div>'
       +resv
@@ -4705,7 +4710,7 @@ function renewCardHtml(){
   const req=(__renewRes||{})[id];
   const pending=req&&!req.done;
   return '<div id="playCard" class="'+(soon?'soon':'')+'">'
-    +'<div class="pcHead"><span class="pcDot"></span>正在跟 <b>'+esc(o.staffName||'陪陪')+'</b> 玩</div>'
+    +'<div class="pcHead"><span class="pcDot"></span>正在跟 <b>'+esc(ttOrderStaffDisplayName(o))+'</b> 玩</div>'
     +'<div class="pcTime">預計 <b>'+hhmm(end)+'</b> 結束'+(left>=0?'<span class="pcLeft">還有 '+left+' 分</span>':'<span class="pcLeft">時間到囉</span>')+'</div>'
     +(o.extraMins?'<div class="pcExt">已續 +'+o.extraMins+' 分 ✦</div>':'')
     +(pending
@@ -4762,16 +4767,16 @@ function openRenew(){
   }
   const b=m.querySelector('#renewBody');
   let h='<h3 style="margin:0 0 4px;font-size:17px;color:#C2537D">想再玩久一點?</h3>'
-    +'<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:12px">跟 <b style="color:#5A4880">'+esc(o.staffName||'陪陪')+'</b> 的這筆單<br>目前預計 <b>'+hhmm(opt.end)+'</b> 結束</div>';
+    +'<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:12px">跟 <b style="color:#5A4880">'+esc(ttOrderStaffDisplayName(o))+'</b> 的這筆單<br>目前預計 <b>'+hhmm(opt.end)+'</b> 結束</div>';
   if(!opt.list.length){
     h+='<div style="background:#FFF0DA;border-radius:12px;padding:12px 13px;font-size:13px;color:#8A5A2B;line-height:1.8">'
       +(opt.nb!==Infinity
-        ? '<b>'+esc(o.staffName||'陪陪')+' '+hhmm(opt.nb)+' 有別的安排</b><br>這次沒辦法再續了,不然會耽誤到下一位老闆 (´・ω・`)'
+        ? '<b>'+esc(ttOrderStaffDisplayName(o))+' '+hhmm(opt.nb)+' 有別的安排</b><br>這次沒辦法再續了,不然會耽誤到下一位老闆 (´・ω・`)'
         : '目前沒辦法續單,晚點再試試看')+'</div>';
   }else{
     if(opt.nb!==Infinity)
       h+='<div style="background:#FFF0DA;border-radius:10px;padding:8px 11px;font-size:12px;color:#8A5A2B;line-height:1.7;margin-bottom:11px">'
-        +esc(o.staffName||'陪陪')+' '+hhmm(opt.nb)+' 有別的預約,最多只能續到 <b>'+hhmm(opt.nb-RENEW_BUFFER)+'</b></div>';
+        +esc(ttOrderStaffDisplayName(o))+' '+hhmm(opt.nb)+' 有別的預約,最多只能續到 <b>'+hhmm(opt.nb-RENEW_BUFFER)+'</b></div>';
     h+='<div style="display:flex;flex-direction:column;gap:9px">'
       +opt.list.map(x=>{
         const afford=bal>=x.price;
@@ -4800,7 +4805,7 @@ function doRenew(id,mins,price){
     .then(()=>{
       _renewing=false;
       const m=document.getElementById('renewM'); if(m) m.style.display='none';
-      if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'續單送出囉!',sub:'正在跟 '+((o.staffName)||'陪陪')+' 確認時間,一下下就好 ✦',hold:6000});
+      if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'續單送出囉!',sub:'正在跟 '+ttOrderStaffDisplayName(o)+' 確認時間,一下下就好 ✦',hold:6000});
       paintPlayCard();
     })
     .catch(()=>{ _renewing=false; toast('送出失敗,請再試一次'); });
@@ -4850,7 +4855,7 @@ function openIssue(id){
   const o=myOrdersCache[id]; if(!o) return;
   _issueId=id;
   const el=document.getElementById('issueOrd');
-  if(el) el.innerHTML='這筆訂單:<b>'+esc(o.planName||'')+'</b>・NT$'+(o.amount||0)+(o.staffName?'・'+esc(o.staffName):'')+'<br>'+new Date(o.createdAt||0).toLocaleString('zh-TW');
+  if(el) el.innerHTML='這筆訂單:<b>'+esc(o.planName||'')+'</b>・NT$'+(o.amount||0)+((o.staffCid||o.staffName)?'・'+esc(ttOrderStaffDisplayName(o)):'')+'<br>'+new Date(o.createdAt||0).toLocaleString('zh-TW');
   const tx=document.getElementById('issueTx'); if(tx) tx.value='';
   shopClose(); if(window.gOpen) gOpen('issueM');
 }
@@ -7068,7 +7073,7 @@ function bkOrdLine(o){
   if(k==='topup') return {ic:'coin', txt:'儲值 '+(o.coinAmount||o.amount||0)+' 金幣'+(o.credited||o.status==='done'?'・已入帳':'・核帳中'), cls:(o.credited||o.status==='done')?'ok':''};
   if(k==='shop') return {ic:'gift', txt:'入手了「'+esc(o.itemName||o.planName||'')+'」', cls:'ok'};
   if(k==='member') return {ic:'crown', txt:esc(o.planName||'會員'), cls:'ok'};
-  const who=o.staffName?('・'+esc(o.staffName)):'';
+  const who=(o.staffCid||o.staffName)?('・'+esc(ttOrderStaffDisplayName(o))):'';
   if(o.status==='cancelled') return {ic:'coupon', txt:esc(o.planName||'')+who+'・已取消'+(o.refunded?'(金幣已退回)':''), cls:'no'};
   if(o.status==='done') return {ic:'mug', txt:esc(o.planName||'')+who+'・已完成', cls:'ok'};
   if(o.accepted) return {ic:'mug', txt:esc(o.planName||'')+who+'・進行中'+(o.extraMins?'・已續 +'+o.extraMins+' 分':''), cls:''};
@@ -7556,7 +7561,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/season-v291.js?v=373"></script>
 <script src="tavern-ui-bridge.js?v=375"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
-<script src="lobby-ui/live.js?v=358"></script>
+<script src="lobby-ui/live.js?v=377"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
@@ -7564,11 +7569,11 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/membership.js?v=273"></script>
 <script src="lobby-ui/order-flow.js?v=373"></script>
 <script type="module">
-import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=353';
+import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=377';
 import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=353';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
-const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
+const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
 </script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
