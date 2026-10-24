@@ -161,22 +161,25 @@
  function requestPaint(){if(paintFrame)return;paintFrame=requestAnimationFrame(()=>{paintFrame=0;paint();});}
  let previewPet=null;
  const previewStage=$('#avatar').parentElement;
+ let previewSource=null,previewFoot=1;
+ const previewTexture=document.createElement('canvas');
+ $('#avatar').dataset.fixedPixelPreview='1';
  function fitPreviewParty(){
   const party=$('#wardrobeParty'),avatar=$('#avatar'),img=$('#wardrobePet'),pet=previewPet;
-  if(!party||!pet||!img?.naturalWidth||!previewStage.clientWidth||!previewStage.clientHeight)return;
-  const {reference,size,x,y}=pet.layout,unit=reference/avatar.width;
-  const pixels=avatar.getContext('2d').getImageData(0,0,avatar.width,avatar.height).data;
-  let left=avatar.width,top=avatar.height,right=0,bottom=0;
-  for(let cy=0;cy<avatar.height;cy++)for(let cx=0;cx<avatar.width;cx++)if(pixels[(cy*avatar.width+cx)*4+3]>0){left=Math.min(left,cx);top=Math.min(top,cy);right=Math.max(right,cx+1);bottom=Math.max(bottom,cy+1);}
+  if(!party||!pet||!previewSource||!img?.naturalWidth||!previewStage.clientWidth||!previewStage.clientHeight)return;
+  const {reference,size,x,y}=pet.layout,unit=reference/previewSource.width;
+  const pixels=previewSource.getContext('2d').getImageData(0,0,previewSource.width,previewSource.height).data;
+  let left=previewSource.width,top=previewSource.height,right=0,bottom=0;
+  for(let cy=0;cy<previewSource.height;cy++)for(let cx=0;cx<previewSource.width;cx++)if(pixels[(cy*previewSource.width+cx)*4+3]>0){left=Math.min(left,cx);top=Math.min(top,cy);right=Math.max(right,cx+1);bottom=Math.max(bottom,cy+1);}
   if(!bottom)return;
-  const foot=bottom*unit,petHeight=size*112/96;
+  const foot=previewFoot*reference,petHeight=size*112/96;
   // Keep the same 160px reference and foot-relative placement as the adjustment page.
   Object.assign(avatar.style,{left:-reference/2+'px',top:-foot+'px'});
   Object.assign(img.style,{width:size+'px',height:petHeight+'px',left:x-size/2+'px',top:y-petHeight+'px'});
   const imageScale=Math.min(size/img.naturalWidth,petHeight/img.naturalHeight);
   const imageX=x-img.naturalWidth*imageScale/2,imageY=y-petHeight+(petHeight-img.naturalHeight*imageScale)/2;
   const bounds=pet.bounds||[0,0,img.naturalWidth,img.naturalHeight];
-  const minX=Math.min((left-avatar.width/2)*unit,imageX+bounds[0]*imageScale),maxX=Math.max((right-avatar.width/2)*unit,imageX+bounds[2]*imageScale);
+  const minX=Math.min((left-previewSource.width/2)*unit,imageX+bounds[0]*imageScale),maxX=Math.max((right-previewSource.width/2)*unit,imageX+bounds[2]*imageScale);
   const minY=Math.min(top*unit-foot,imageY+bounds[1]*imageScale),maxY=Math.max(0,imageY+bounds[3]*imageScale);
   const width=previewStage.clientWidth,height=previewStage.clientHeight;
   const compact=height<190,footMargin=compact?16:36;
@@ -193,11 +196,30 @@
   const img=$('#wardrobePet');if(img.dataset.pet!==pet.id){img.src='../'+pet.src;img.alt=pet.name;img.dataset.pet=pet.id;}
  }
  const previewFitObserver=new ResizeObserver(fitPreviewParty);previewFitObserver.observe(previewStage);
- function groundPreview(){
-  const cv=$('#avatar'),pixels=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
-  let bottom=0;for(let y=0;y<cv.height;y++)for(let x=0;x<cv.width;x++)if(pixels[(y*cv.width+x)*4+3])bottom=y+1;
-  cv.style.setProperty('--preview-foot',(100*(bottom||cv.height)/cv.height)+'%');fitPreviewParty();
+ function groundPreview(source){
+  previewSource=source;previewFoot=api.previewFoot(source);const cv=$('#avatar');cv.style.setProperty('--preview-foot',(100*previewFoot)+'%');previewTexture.width=0;fitPreviewParty();drawPreviewIdle();
  }
+ function drawPreviewIdle(){
+  if(!previewSource)return;
+  const cv=$('#avatar'),box=cv.getBoundingClientRect(),dpr=window.top.devicePixelRatio||1;
+  // The outer desktop viewport also scales its iframe. Use physical screen pixels
+  // for the fixed surface; nearest-neighbour expansion happens only once.
+  let parentScale=1;for(let win=window;win!==win.parent;win=win.parent){const frame=win.frameElement;if(frame?.offsetWidth)parentScale*=frame.getBoundingClientRect().width/frame.offsetWidth;}
+  const width=Math.max(1,Math.round(box.width*parentScale*dpr)),height=Math.max(1,Math.round(box.height*parentScale*dpr));
+  if(cv.width!==width||cv.height!==height){cv.width=width;cv.height=height;}
+  const textureScale=Math.max(8,Math.ceil(Math.max(width,height)*1.031/64)),textureSize=64*textureScale;
+  if(previewTexture.width!==textureSize){previewTexture.width=previewTexture.height=textureSize;const t=previewTexture.getContext('2d');t.imageSmoothingEnabled=false;t.drawImage(previewSource,0,0,textureSize,textureSize);}
+  const motionOff=document.body.classList.contains('motion-off')||parent.document.body.classList.contains('motion-off');
+  const pose=motionOff?{sqx:1,sqy:1}:api.idlePose(),g=cv.getContext('2d'),foot=height*previewFoot;
+  g.clearRect(0,0,width,height);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='low';
+  g.drawImage(previewTexture,width*(1-pose.sqx)/2,foot*(1-pose.sqy),width*pose.sqx,height*pose.sqy);
+  cv.dataset.idleScale=pose.sqx+' '+pose.sqy;
+ }
+ function animatePreviewIdle(){
+  if(!document.hidden&&api.isActive())drawPreviewIdle();
+  requestAnimationFrame(animatePreviewIdle);
+ }
+ requestAnimationFrame(animatePreviewIdle);
  function paint(){
   renderLook();
   const dyeVisible=!!dyeDraft&&!$('#dyeDialog').hidden;
@@ -250,7 +272,7 @@
   slides.forEach((slide,i)=>{slide.tabIndex=0;slide.setAttribute('role','button');slide.setAttribute('aria-label',list[i].name+'，選擇杯數');const open=()=>{if(drinkBusy||track.suppressClick)return;selected=list[i].id;drinkQuantity=1;drinkDialogOpen=true;render()};slide.onclick=open;slide.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();open()}};});
   requestAnimationFrame(()=>{track.scrollLeft=offset(index);requestAnimationFrame(()=>ready=true);});return wrap;
  }
- const drinkDesign=document.createElement('link');drinkDesign.rel='stylesheet';drinkDesign.href='drink-cards.css?v=339';document.head.append(drinkDesign);
+ const drinkDesign=document.createElement('link');drinkDesign.rel='stylesheet';drinkDesign.href='drink-cards.css?v=374';document.head.append(drinkDesign);
  function showDrinkDialogue(result,product){
   let dialog=document.getElementById('drinkDialogue');if(!dialog){dialog=document.createElement('dialog');dialog.id='drinkDialogue';dialog.style.cssText='max-width:420px;width:calc(100% - 48px);border:2px solid #cab5d9;border-radius:18px;background:#fff8fb;color:#614461;padding:24px;box-shadow:0 12px 48px #55334c55';document.body.append(dialog);}
   dialog.replaceChildren();const msg=document.createElement('p');msg.style.cssText='font-size:18px;line-height:1.8;white-space:pre-wrap';msg.textContent=result.message;const done=document.createElement('button');done.className='primary';done.textContent='關閉';done.onclick=()=>dialog.close();dialog.append(companionArt(product),msg,done);dialog.showModal();

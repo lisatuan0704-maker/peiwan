@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=373"></script>
-<script src="lobby-ui/fixed-view.js?v=373"></script>
+<script src="lobby-ui/fixed-view.js?v=374"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1692,7 +1692,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v373</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v374</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3017,6 +3017,10 @@ function fsOverlayOpen(){
   }
   return _fsOpen;
 }
+function ttIdlePose(now,seed=0,slime=false){
+  const pulse=Math.max(0,Math.sin(now/1000*(slime?4.5:2.3)*Math.PI+seed));
+  return {sqx:1+pulse*(slime?0.08:0.031),sqy:1-pulse*(slime?0.10:0.044)};
+}
 function tick(now){
   if(window.TTMobile){last=now;requestAnimationFrame(tick);return;}
   if(document.hidden){last=now;requestAnimationFrame(tick);return;}
@@ -3250,9 +3254,7 @@ function tick(now){
       setFrame(a,'idle');
     }else{
       // B.整體呼吸壓扁(D 實測定案:速度2.3、幅度2.2%)
-      const ph=Math.sin(tt*(a.slime?4.5:2.3)*Math.PI+a.seed);
-      sqy=1-Math.max(0,ph)*(a.slime?0.10:0.044);
-      sqx=1+Math.max(0,ph)*(a.slime?0.08:0.031);
+      ({sqx,sqy}=ttIdlePose(now,a.seed,a.slime));
       setFrame(a,'idle');
     }
     if(_hairMotionPreference.matches){bob=0;hopRot=0;sqx=1;sqy=1;}
@@ -7552,7 +7554,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui-bridge.js?v=373"></script>
+<script src="tavern-ui-bridge.js?v=374"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
 <script src="lobby-ui/live.js?v=358"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">

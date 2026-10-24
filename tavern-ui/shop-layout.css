@@ -136,6 +136,8 @@ body[data-shop-category=eye] #subtabs{display:block!important}
 body[data-area][data-shop-category=pet] #grid{grid-auto-rows:178px!important}
 body[data-area][data-shop-category=pet] #grid .item{height:178px!important}
 body[data-area][data-shop-category=pet] #grid .thumb canvas{width:112px!important;height:112px!important;max-height:100%;object-fit:contain}
+body[data-area][data-shop-category=pet] #grid .item[data-item="pet_bubu::pet"] .thumb canvas,
+body[data-area][data-shop-category=pet] #grid .item[data-item="pet_guigui::pet"] .thumb canvas{width:82px!important;height:82px!important}
 /* Reserve enough space for the highlight toggle and swatches before the dye link. */
 @media(min-width:601px){
  body[data-area]:not([data-shop-category=other]):not([data-section=collection]) .preview{grid-template-rows:26px minmax(140px,1fr) 62px 62px 30px!important;row-gap:12px!important}
