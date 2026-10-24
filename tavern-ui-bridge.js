@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=366';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=367';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -66,6 +66,7 @@
     if(isDrink(source)){const c=window.__shopCfg?.[source];return c?.img?{drink:{n:drinkCompanions[source].name+'的飲料',d:c.img}}:{};}
 
     const parts=window.TTSeasonDrafts?.[source]?.parts||window.__shopCfg?.[source]?.parts||{};
+    if(source==='cloth2'&&parts.acc)return {...parts,acc:{...parts.acc,n:'黑珠耳環',group:'ear'}};
     if(source!=='season283_devil')return parts;
     const root='img/outfit-studio-v280/時裝-中華風小惡魔/';
     const part=(n,file,group,z)=>({n,d:root+file,x:0,y:0,g:0,group,z,independent:true});
@@ -150,7 +151,7 @@
     if(!Array.isArray(d?.uiAccessories))return oldAcc(d);
     const refs=expandAccessories(d.uiAccessories,d),hair=d.uiBaseSlots?.includes('back')?{base:d.back||0,slot:'back'}:{source:d.ps?.back||d.set,base:!d.ps?.back&&!d.set?d.back||0:undefined,slot:'back'};
     const worn={back:hair,...Object.fromEntries(refs.map(r=>{const p=partsFor(r.source)[r.slot];return [accessoryKey({...p,source:r.source,slot:r.slot}),r];}))};
-    return refs.map(r=>{const p=partsFor(r.source)[r.slot];return p&&compatible(p,worn)?{...p,z:group(p,r.source,r.slot)==='head'&&!window.TTSeasonDrafts?.[r.source]?'headTop':p.z}:null;}).filter(Boolean);
+    return refs.map(r=>{const p=partsFor(r.source)[r.slot];return p&&compatible(p,worn)?{...p,z:group(p,r.source,r.slot)==='head'&&!window.TTSeasonDrafts?.[r.source]?'headTop':p.z}:null;}).filter(Boolean).sort((a,b)=>(a.drawOrder||0)-(b.drawOrder||0));
   };
   csAccZ=function(p){return p?.z==='headTop'?'headTop':oldZ(p);};
   // 保留所有繪製參數，包含身體／頭髮動畫；不能只轉傳姿勢而畫成靜態。

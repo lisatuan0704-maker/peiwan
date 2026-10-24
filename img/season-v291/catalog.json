@@ -260,8 +260,9 @@
         "g": 1,
         "group": "hand",
         "z": "top",
-        "independent": false,
-        "defaultEquipped": false
+        "independent": true,
+        "defaultEquipped": false,
+        "drawOrder": -1
       },
       "acc6": {
         "n": "狼耳環",
