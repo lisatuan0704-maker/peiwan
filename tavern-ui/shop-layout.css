@@ -131,3 +131,30 @@ body[data-area] #grid .item .accessory-note{display:block;white-space:normal;ove
 /* 臉部子分類在窄螢幕也維持可見，物品區獨立捲動。 */
 body[data-shop-category=eye] #singles .browsehead{display:block!important;min-height:0;height:auto}
 body[data-shop-category=eye] #subtabs{display:block!important}
+
+/* Pet product thumbnails fit the visible artwork, separately from follower scale. */
+body[data-area][data-shop-category=pet] #grid{grid-auto-rows:178px!important}
+body[data-area][data-shop-category=pet] #grid .item{height:178px!important}
+body[data-area][data-shop-category=pet] #grid .thumb canvas{width:112px!important;height:112px!important;max-height:100%;object-fit:contain}
+/* Reserve enough space for the highlight toggle and swatches before the dye link. */
+@media(min-width:601px){
+ body[data-area]:not([data-shop-category=other]):not([data-section=collection]) .preview{grid-template-rows:26px minmax(140px,1fr) 62px 62px 30px!important;row-gap:12px!important}
+}
+body[data-area] .preview #dyePanel{align-self:start}
+body[data-area] .preview #dyeTicket{margin-top:4px}
+
+/* Keep restricted accessories in the same grid row; notes never steal the art track. */
+body[data-area] #grid .itemtop{position:static;min-height:14px;align-self:start}
+body[data-area][data-shop-category=acc] #grid{grid-auto-rows:170px!important}
+body[data-area][data-shop-category=acc] #grid .item{height:170px!important;grid-template-rows:14px minmax(0,1fr) 62px!important}
+body[data-area][data-shop-category=acc] #grid .item .item-caption{min-height:0!important;height:62px!important;justify-content:flex-start;gap:2px}
+body[data-area] #grid .item-caption .accessory-requirement,body[data-area] #grid .item-caption .accessory-note{font-size:9px!important;font-weight:400;line-height:1.35!important;color:var(--muted);white-space:normal;overflow-wrap:anywhere}
+@media(max-width:600px){
+ body[data-area] #grid .item{grid-template-rows:14px minmax(0,1fr) auto!important}
+ body[data-area][data-shop-category=acc] #grid .item{grid-template-rows:14px minmax(0,1fr) 62px!important}
+ body[data-area] .preview:has(.has-following-pet){grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+ body[data-area] .preview:has(.has-following-pet) .paneltitle{grid-column:1/-1;grid-row:1}
+ body[data-area] .preview .stage.has-following-pet{grid-column:1;grid-row:2/4;min-height:0!important}
+ body[data-area] .preview:has(.has-following-pet) .dye{grid-column:2;grid-row:2}
+ body[data-area] .preview:has(.has-following-pet) .previewbar{grid-column:2;grid-row:3}
+}

@@ -2,8 +2,8 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<script src="lobby-ui/retired-outfits.js?v=357"></script>
-<script src="lobby-ui/fixed-view.js?v=372"></script>
+<script src="lobby-ui/retired-outfits.js?v=373"></script>
+<script src="lobby-ui/fixed-view.js?v=373"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1053,6 +1053,9 @@ body.liteFX .gcard{animation:none!important}
 .bkSlot span{position:absolute;left:0;right:0;bottom:-1px;font-size:.74em;color:#7E5E6E;background:rgba(255,250,240,.92);padding:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW','Huninn',sans-serif}
 .bkSlot.lk{filter:saturate(.25) brightness(1.02)}
 .bkSlot.lk img{filter:grayscale(1);opacity:.4}
+.bkSlot .bkPetArt,.bkSlot .bkPetStill{position:relative;display:block;width:112px;height:112px;max-width:100%;margin:0 auto 8px;image-rendering:pixelated}
+.bkSlot .bkPetArt{overflow:hidden}.bkSlot .bkPetArt img{position:absolute;max-width:none;margin:0;object-fit:fill;image-rendering:pixelated!important}
+.bkSlot.lk .bkPetStill{filter:grayscale(1);opacity:.5}
 .bkTl{position:relative;padding-left:18px}
 .bkTl::before{content:'';position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:#E4CBD6}
 .bkTi{position:relative;margin-bottom:.75em;font-size:.95em}
@@ -1451,16 +1454,16 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/dm-log.js?v=350"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
 <script src="js/tt-seats.js?v=1"></script>
-<script src="lobby-ui/seats.js?v=372"></script>
-<script src="lobby-ui/presence.js?v=372"></script>
+<script src="lobby-ui/seats.js?v=373"></script>
+<script src="lobby-ui/presence.js?v=373"></script>
 <script src="lobby-ui/payment-safety.js?v=273"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=274">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
 <script src="card-ui/tavern-scene.js?v=265" defer></script>
 <link rel="stylesheet" href="lobby-ui/membership.css?v=256">
-<link rel="stylesheet" href="lobby-ui/chat-skins.css?v=372">
-<script src="lobby-ui/chat-skins.js?v=372"></script>
+<link rel="stylesheet" href="lobby-ui/chat-skins.css?v=373">
+<script src="lobby-ui/chat-skins.js?v=373"></script>
 <link rel="stylesheet" href="lobby-ui/stickers.css?v=256">
 <link rel="stylesheet" href="lobby-ui/profile-card.css?v=310">
 <script src="tavern-ui/sticker-catalog.js?v=249"></script>
@@ -1547,7 +1550,7 @@ body.artBub.bub3s .npc .bub{
     </div>
     <div class="dsStage">
       <div class="dsStageInner">
-        <div class="dsStageName" id="stageName">露亞經典裝</div>
+        <div class="dsStageName" id="stageName">試穿預覽</div>
         <div class="dsSpark" style="left:24%;top:30%;animation-delay:0s"></div>
         <div class="dsSpark" style="right:22%;top:24%;animation-delay:.8s"></div>
         <div class="dsSpark" style="left:40%;top:16%;animation-delay:1.5s"></div>
@@ -1689,7 +1692,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v372</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v373</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2557,7 +2560,7 @@ window.avSave=function(){
   try{
     if(typeof db!=='undefined'&&db&&myKey){
       try{ if(agents.has(myKey)){ const bb=agents.get(myKey).b; bb.pub=bb.pub||{}; bb.pub.pic=data; delete bb.pub.nopic; } }catch(e){}
-      _noPicLocal=false;
+      _noPicLocal=false;_avatarChoice=null;
       db.ref(ROOT+'/lobby/'+myKey+'/pub/nopic').remove();
       db.ref(ROOT+'/lobby/'+myKey+'/pub/pic').set(data)
         .then(function(){ avRefresh(); toast('頭貼換好了 ✦'); })
@@ -2567,7 +2570,7 @@ window.avSave=function(){
   const nt=document.getElementById('avNote'); if(nt) nt.textContent='已壓縮到 '+kb+' KB';
   gClose('avM');
 };
-let _noPicLocal=false;
+let _noPicLocal=false,_avatarChoice=null;
 window.avUseDc=function(){
   let has=false;
   try{ const dc=JSON.parse(localStorage.getItem('tt_dc')||'null'); has=!!(dc&&dc.id&&dc.avatar);
@@ -2575,7 +2578,7 @@ window.avUseDc=function(){
       b.pub.dcav=dc.id+'/'+dc.avatar; delete b.pub.pic; delete b.pub.nopic; }
   }catch(e){}
   if(!has){ toast('你的 Discord 沒有設定頭貼,或還沒綁定'); return; }
-  _noPicLocal=false;
+  _noPicLocal=false;_avatarChoice={key:myKey,source:'discord'};
   try{ if(typeof db!=='undefined'&&db&&myKey){
     db.ref(ROOT+'/lobby/'+myKey+'/pub/nopic').remove();
     db.ref(ROOT+'/lobby/'+myKey+'/pub/pic').remove();
@@ -2584,7 +2587,7 @@ window.avUseDc=function(){
   avRefresh(); toast('已改用 Discord 頭貼 ✦');
 };
 window.avClear=function(){
-  _noPicLocal=true;
+  _noPicLocal=true;_avatarChoice={key:myKey,source:'pixel'};
   try{ if(myKey&&agents.has(myKey)){ const b=agents.get(myKey).b; b.pub=b.pub||{}; b.pub.nopic=1; delete b.pub.pic; } }catch(e){}
   try{ if(typeof db!=='undefined'&&db&&myKey){
     db.ref(ROOT+'/lobby/'+myKey+'/pub/pic').remove();
@@ -2610,6 +2613,11 @@ function ttPhotoOf(b){
 }
 function ttMyPhoto(){
   try{
+    if(_avatarChoice?.key===myKey){
+      if(_avatarChoice.source==='pixel')return '';
+      const dc=JSON.parse(localStorage.getItem('tt_dc')||'null');
+      if(dc?.id&&dc.avatar)return 'https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=256';
+    }
     if(myKey&&typeof agents!=='undefined'&&agents.has(myKey)){
       const b=agents.get(myKey).b;
       if(b&&b.pub&&b.pub.nopic) return '';
@@ -2627,7 +2635,7 @@ function ttFill(inner,doll,photo,cvId){
   if(photo){
     const im=document.createElement('img'); im.src=photo; im.alt='';
     im.style.cssText='width:100%;height:100%;object-fit:cover;image-rendering:auto;transform:none';
-    im.onerror=function(){ im.remove(); ttFill(inner,doll,'',cvId); };
+    im.onerror=function(){ im.remove(); ttFill(inner,doll,'',cvId);if(_avatarChoice?.key===myKey&&_avatarChoice.source==='discord'&&cvId==='bkDoll')toast('Discord 頭貼載入失敗，請重新綁定 Discord 後再試'); };
     inner.appendChild(im); return;
   }
   const c=document.createElement('canvas'); c.width=64; c.height=64; if(cvId) c.id=cvId;
@@ -3775,7 +3783,7 @@ function shopOpen(step, kind){
     const label = curKind==='shop'?'商品':(curKind==='table'?'桌次':'方案');
     document.getElementById('payInfo').innerHTML=
       `${label}:<b>${curPlan.n}</b><br>`+
-      (curKind==='play'?`指定陪玩:<b>${(typeof selStaff!=='undefined'&&selStaff)?selStaff.name:'不指定'}</b><br>`:'')+
+      (curKind==='play'?`指定陪玩:<b>${esc(ttSelectedStaffDisplayName())}</b><br>`:'')+
       (curBooking&&curReserveAt?`預約時段:<b style="color:#8E68C8">${fmtRes(curReserveAt)}</b><br>`:'')+
       `金額:<b style="color:#D96A8B" id="payAmt">NT$${curPlan.p}</b><br>`+
       (curKind==='table'?`<div style="font-size:12px;color:#8E7AB0;margin:2px 0 4px">席位以「掌櫃確認付款」的順序為準,確認後就是你的位子</div>`:'')+
@@ -4130,6 +4138,9 @@ function submitOrder(){
 let payMethod='transfer', curTier=null, _coinCoupon=false;
 let _submitting=false;   // 防連點:送出中不接受第二次
 function _selStaff(){ return (typeof selStaff!=='undefined'&&selStaff)?selStaff:null; }
+/* Formal display names are independent of the names retained in order records. */
+function ttStaffDisplayName(cid,fallback){return ({'-OxY46ezlpnRt64hUIw9':'蕪','-OxY7C4vDkgsr1zcyWbk':'縭','-OzbfbQcF6J6fIR6YYGh':'桃'})[cid]||fallback||'冒險者';}
+function ttSelectedStaffDisplayName(){const s=_selStaff();return s?(s.members||[s]).map(p=>ttStaffDisplayName(p.cid,p.name)).join('、'):'不指定';}
 function coinsAvailable(){
   if(!((curKind==='play'||curKind==='shop') && !!myKey)) return false;
   /* 防呆:掌櫃還沒設任何儲值方案時,金幣買不到 → 自動退回轉帳流程,店才不會整個付不了錢 */
@@ -4184,7 +4195,7 @@ function renderCoinInfo(){
   const ss=_selStaff();
   box.innerHTML=
     (curKind==='shop'?'商品:<b>'+esc(curPlan.n)+'</b><br>':'方案:<b>'+esc(curPlan.n)+'</b><br>')+
-    (curKind==='play'?'指定陪玩:<b>'+esc(ss?ss.name:'不指定')+'</b><br>':'')+
+    (curKind==='play'?'指定陪玩:<b>'+esc(ttSelectedStaffDisplayName())+'</b><br>':'')+
     (curBooking&&curReserveAt?'預約時段:<b style="color:#8E68C8">'+fmtRes(curReserveAt)+'</b><br>':'')+
     (canCoupon?'<label style="display:flex;align-items:center;gap:6px;margin:6px 0;font-size:13px;color:#8E68C8;cursor:pointer"><input type="checkbox" id="useCouponCoin" '+(_coinCoupon?'checked':'')+' style="transform:scale(1.2)"> 使用 VIP'+vi.lv+' 優惠券(折 $'+vi.cur.disc+'・剩 '+cLeft+' 張)</label>':'')+
     '應付:<b style="color:#D96A8B">'+amt+' 金幣</b><br>'+
@@ -5088,8 +5099,8 @@ function tryServeNudge(staff){
   const OUTFITS=[
     {nm:'露亞經典裝', pr:120, de:'酒館招牌款,俐落好搭', doll:{back:0,front:0,cloth:0,face:0,acc:0}},
     {nm:'小莓甜心裝', pr:120, de:'甜甜的短髮少女風',   doll:{back:1,front:1,cloth:2,face:1,acc:2}},
-    {nm:'星夜吟遊裝', pr:150, de:'吧檯駐唱的浪漫款',   doll:{back:2,front:2,cloth:1,face:0,acc:0}},
-    {nm:'貓耳限定裝', pr:180, de:'期間限定,戴上貓耳',  doll:{back:0,front:0,cloth:0,face:0,acc:2}},
+    {nm:'啟程旅人', pr:150, de:'酒館日常套・啟程旅人',   doll:{back:2,front:2,cloth:1,face:0,acc:0}},
+    {nm:'微風日常', pr:180, de:'酒館日常套・微風日常',  doll:{back:0,front:0,cloth:0,face:0,acc:2}},
   ];
   // 寵物 / 座椅:占位像素圖,標「即將開賣」
   function drawPetCat(cv){const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,64,64);
@@ -5110,7 +5121,7 @@ function tryServeNudge(staff){
     P(c,22,20,20,6,'#C96A80');P(c,24,26,16,3,'#8A4A5A');P(c,28,29,3,22,'#8A6A4A');P(c,33,29,3,22,'#8A6A4A');
     P(c,24,40,16,3,'#8A6A4A');P(c,24,51,16,3,'#6A4A2A');}
   const PETS=[{nm:'小史萊姆',pr:'NT$150',dr:cv=>drawSlime(cv,'pink')},{nm:'圓滾貓',pr:'NT$220',dr:drawPetCat},{nm:'醬料小雞',pr:'NT$180',dr:drawPetChick}];
-  const SEATS=[{id:'seat0',nm:'蘑菇凳',pr:'NT$120',dr:drawSeatMush},{id:'seat1',nm:'絨布沙發椅',pr:'NT$260',dr:drawSeatSofa},{id:'seat2',nm:'吧檯高腳椅',pr:'NT$160',dr:drawSeatBar},...Object.entries(TTSeats.CATALOG).map(([id,c])=>({id,nm:c.name,dr:cv=>TTSeatUI.thumb(id,cv)}))];
+  const SEATS=Object.entries(TTSeats.CATALOG).map(([id,c])=>({id,nm:c.name,dr:cv=>TTSeatUI.thumb(id,cv)}));
 
   let cat='cloth', selCloth='cloth0', selPet=0, selSeat=0, selColor=0;
   let stageDoll=Object.assign({},OUTFITS[0].doll,{hair:0});
@@ -5789,7 +5800,7 @@ const SFX=(function(){
   function openBoard(){
     const d=BOARD||{};
     const today = d.today || '首次點單的闆闆,招待一杯店員特調飲品';
-    const outfit = d.outfit || '星夜吟遊裝 —— 吧檯駐唱的浪漫款,還能換 11 色髮色。';
+    const outfit = d.outfit || '啟程旅人 —— 酒館日常套,還能換 11 色髮色。';
     const evt = d.event || '開幕籌備中,敬請期待第一場酒館之夜';
     const body=document.getElementById('boardBody'); body.innerHTML='';
     body.appendChild(acc(true,'✦','今日特典','', '<p>'+esc(today)+'</p>'));
@@ -5931,6 +5942,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
     }
     try{ publishProfile(); }catch(e){}
   }
+  window.applyFrame=applyFrame;
   applyFrame();
   /* VIP 資料晚到時補套一次 */
   setTimeout(function(){ try{ if(curFrame!=='wr1') applyFrame(); }catch(e){} },5000);
@@ -7026,17 +7038,15 @@ Object.assign(BKA,{"tabV": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD0AAA
 let _bkTab='me', _bkMailOpen=new Set(), _bkTx=null;
 const BK_TABS=[['me','個人','icStar','tabO','stabP'],['bag','圖鑑','icHeart','tabP','stabY'],['log','紀錄','icSpark','tabB','stabG'],['ach','成就','icCloud','tabG','stabP']];
 const BK_ITEMS={
-  cloth:{label:'時裝', ids:['cloth0','cloth1','cloth2','cloth3'], names:['露亞經典裝','小莓甜心裝','星夜吟遊裝','貓耳限定裝']},
-  pet:{label:'寵物', ids:['pet0','pet1','pet2'], names:['小史萊姆','圓滾貓','醬料小雞']},
-  seat:{label:'座椅', ids:['seat0','seat1','seat2',...Object.keys(TTSeats.CATALOG)], names:['蘑菇凳','絨布沙發椅','吧檯高腳椅',...Object.values(TTSeats.CATALOG).map(c=>c.name)]}
+  cloth:{label:'時裝', ids:['cloth0','cloth1','cloth2','cloth3'], names:['露亞經典裝','小莓甜心裝','啟程旅人','微風日常']},
+  pet:{label:'寵物', ids:['pet_bubu','pet_dengdeng','pet_guigui'], names:['布布','燈燈','鬼鬼']},
+  seat:{label:'座椅', ids:Object.keys(TTSeats.CATALOG), names:Object.values(TTSeats.CATALOG).map(c=>c.name)}
 };
 function bkCat(k){
-  if(k!=='cloth') return BK_ITEMS[k];
-  try{
-    const L=window.__outfitList?window.__outfitList():null;
-    if(L&&L.length) return {label:'時裝', ids:L.map(o=>o.id), names:L.map(o=>o.nm)};
-  }catch(e){}
-  return BK_ITEMS.cloth;
+  let cat=BK_ITEMS[k];
+  if(k==='cloth')try{const list=window.__outfitList?.();if(list?.length)cat={label:'時裝',ids:list.map(o=>o.id),names:list.map(o=>o.nm)};}catch(e){}
+  const indices=cat.ids.map((id,i)=>i).filter(i=>!window.TTRetiredOutfits?.retired(cat.ids[i],window.__shopCfg?.[cat.ids[i]]));
+  return {...cat,ids:indices.map(i=>cat.ids[i]),names:indices.map(i=>cat.names[i])};
 }
 function bkOwnedCount(){ let n=0,t=0; Object.keys(BK_ITEMS).forEach(k=>{ const c=bkCat(k); c.ids.forEach(id=>{ t++; if((window.__owned||{})[id]) n++; }); }); return {n,t}; }
 function bkAchState(){
@@ -7086,7 +7096,7 @@ function bkSale(id){
 /* ---- 各頁 ---- */
 function bkFavRow(){
   const P=window.PACKI||{};
-  const ids=[]; Object.values(BK_ITEMS).forEach(c=>c.ids.forEach(id=>{ if((window.__owned||{})[id]) ids.push(id); }));
+  const ids=[]; Object.keys(BK_ITEMS).map(bkCat).forEach(c=>c.ids.forEach(id=>{ if((window.__owned||{})[id]) ids.push(id); }));
   const cells=[];
   for(let i=0;i<5;i++){
     const id=ids[i];
@@ -7142,16 +7152,24 @@ function bkPageMe(){
     +'<div class="bkSec">最近動態</div>'+acts;
   return {l,r};
 }
+const BK_PETS={pet_bubu:{asset:'kabuki',bounds:[6,44,68,90],size:[88,105]},pet_dengdeng:{asset:'momo',bounds:[8,16,88,112],size:[96,120]},pet_guigui:{asset:'rira',bounds:[14,10,78,88],size:[92,120]}};
+function bkPetArt(id,owned){
+ const p=BK_PETS[id];if(!p)return '';const [l,t,r,b]=p.bounds,scale=100/Math.max(r-l,b-t),x=(112-(r-l)*scale)/2-l*scale,y=(112-(b-t)*scale)/2-t*scale;
+ return owned?'<div class="bkPetArt"><img alt="'+({pet_bubu:'布布',pet_dengdeng:'燈燈',pet_guigui:'鬼鬼'}[id])+'" src="img/companions-v352/'+p.asset+'-pet.gif?v=356" style="width:'+p.size[0]*scale+'px;height:'+p.size[1]*scale+'px;left:'+x+'px;top:'+y+'px"></div>':'<canvas class="bkPetStill" width="112" height="112" data-book-pet="'+id+'" aria-label="未解鎖寵物靜態預覽"></canvas>';
+}
+function bkPaintPets(){document.querySelectorAll('canvas[data-book-pet]').forEach(cv=>{const p=BK_PETS[cv.dataset.bookPet];if(!p||cv.dataset.painted)return;cv.dataset.painted='1';const img=new Image();img.onload=()=>{const [l,t,r,b]=p.bounds,scale=100/Math.max(r-l,b-t),w=(r-l)*scale,h=(b-t)*scale,g=cv.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(img,l,t,r-l,b-t,(112-w)/2,(112-h)/2,w,h);};img.src='img/companions-v352/'+p.asset+'-pet.gif?v=356';});}
 function bkSlotHtml(id,name){
+  if(window.TTRetiredOutfits?.retired(id,window.__shopCfg?.[id]))return '';
   const own=!!((window.__owned||{})[id]);
   const img=((window.__shopCfg||{})[id]||{}).img||'';
   const P=window.PACKI||{};
   const fb=id.startsWith('cloth')?P.dress:(id.startsWith('pet')?P.cat:P.gift);
-  const inner=(TTSeats.isSeat(id)?TTSeatUI.markup(id):(img?'<img src="'+img+'" alt="">':'<img src="'+fb+'" alt="">'))
+  const inner=(BK_PETS[id]?bkPetArt(id,own):TTSeats.isSeat(id)?TTSeatUI.markup(id):(img?'<img src="'+img+'" alt="">':'<img src="'+fb+'" alt="">'))
     +'<span>'+esc(name)+'</span>';
   return '<button class="bkSlot'+(own?'':' lk')+'" onclick="bkSlotTap(\''+id+'\',\''+esc(name)+'\','+(own?1:0)+')">'+inner+'</button>';
 }
 function bkSlotTap(id,name,own){
+  if(window.TTRetiredOutfits?.retired(id,window.__shopCfg?.[id])){toast('這項商品已下架');return;}
   if(TTSeats.isSeat(id)&&TTSeatUI.owned(id)){TTSeatUI.select(id);return;}
   if(own){ toast('「'+name+'」已擁有・到背包可以穿上 ✦'); }
   else toast('「'+name+'」還沒入手・'+bkSale(id));
@@ -7352,6 +7370,7 @@ function bkPaint(){
     +'<img src="'+(BKA[ic]||'')+'" alt=""></button>').join('');
   const p=BK_PAGES[_bkTab]();
   sp.innerHTML='<div class="bkPage l">'+p.l+'</div><div class="bkPage r"><span class="bkTag"></span>'+p.r+'</div><img id="bkFlipOv" alt="">';
+  bkPaintPets();
   /* 頁名標籤 + 圓點 */
   const lb=document.getElementById('bkLabel');
   if(lb){ const t=BK_TABS.find(t=>t[0]===_bkTab); lb.textContent=t?t[1]:(BK_XTABS[_bkTab]||''); }
@@ -7532,8 +7551,8 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui/season-v291.js?v=372"></script>
-<script src="tavern-ui-bridge.js?v=372"></script>
+<script src="tavern-ui/season-v291.js?v=373"></script>
+<script src="tavern-ui-bridge.js?v=373"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
 <script src="lobby-ui/live.js?v=358"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
@@ -7541,7 +7560,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=347"></script>
 <script src="lobby-ui/membership.js?v=273"></script>
-<script src="lobby-ui/order-flow.js?v=305"></script>
+<script src="lobby-ui/order-flow.js?v=373"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=353';
 import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=353';
@@ -7550,8 +7569,8 @@ let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmi
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
 </script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358">
-<script src="lobby-ui/rooms/world-bridge.js?v=372-343"></script>
-<script type="module" src="lobby-ui/rooms/entry.mjs?v=372"></script>
+<script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
+<script type="module" src="lobby-ui/rooms/entry.mjs?v=373"></script>
 </body>
 </html>
 

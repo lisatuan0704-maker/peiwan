@@ -47,6 +47,7 @@
   if(current&&document.body.dataset.view==='profile'){const updated=people.find(p=>p.cid===current.cid);if(updated)updateInfo(updated);}
  }
  function updateInfo(p){
+  p={...p,name:CAST.find(c=>c.id===p.theme)?.name||p.name};
   current=p;document.querySelector('.portrait-label')?.remove();
   document.querySelector('.status').textContent=p.card.noBooking?'暫停接受預約':p.on?(p.busy?'接單中':'可即時接單'):'目前下班，可預約';
   document.querySelector('.profile-tagline').textContent='Tiny Tavern・'+p.name;

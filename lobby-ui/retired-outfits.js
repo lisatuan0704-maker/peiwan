@@ -1,7 +1,7 @@
 /* Retired copyright-test outfits: retain legacy render data, never offer for sale. */
 (function(root){
  'use strict';
- const ids=new Set(['cloth0','cloth1']),names=/露亞|小莓/;
+ const ids=new Set(['cloth0','cloth1','cloth_mslu9a8o','seat0','seat1','seat2']),names=/露亞|小莓|星夜漫遊裝/;
  function retired(id,item){return ids.has(id)||!!item&&(names.test(item.name||item.nm||'')||Object.values(item.parts||{}).some(p=>names.test(p?.n||''))||(!Object.keys(item.parts||{}).length&&Object.entries(item.doll||{}).some(([sl,i])=>baseRetired(sl,i))));}
  function baseRetired(slot,index){return ({back:[0,1],front:[0,1],cloth:[0,1,2],face:[0,1],eye:[0,1],acc:[1,2,3,4,5,6]}[slot]||[]).includes(index);}
  function refRetired(ref,cfg){return !!ref&&(ref.base!==undefined?baseRetired(ref.slot,ref.base):retired(ref.source,cfg?.[ref.source]));}

@@ -5,6 +5,7 @@
  const previous={open:shopOpen,pick:pickPlan,reserve:openReserve,coin:payWithCoins,transfer:submitOrder,coinInfo:renderCoinInfo};
  let submitting=false,reserveToken=0;
  function members(){if(curKind!=='play'||!selStaff)return [];return selStaff.members||[selStaff];}
+ const displayName=p=>window.ttStaffDisplayName?.(p.cid,p.name)||p.name;
  function count(){return Math.max(1,members().length);}
  function duration(plan){const n=plan?.n||plan?.planName||'';let m=n.match(/(\d+(?:\.\d+)?)\s*小時/);if(m)return Math.round(+m[1]*60);m=n.match(/(\d+)\s*分/);if(m)return +m[1];if(/一日|一天|全日/.test(n))return 1440;return 60;}
  function pricing(unit,quantity,discount=0){
@@ -41,7 +42,7 @@
    }
    if(curKind!=='play')return;heading('shopM3','CHECK YOUR ORDER / 點單確認','這次，就一起玩吧。',3);context('shopM3');const card=$('shopM3').querySelector('.shopCard');let receipt=card.querySelector('.of-checkout-summary');if(!receipt){receipt=document.createElement('div');receipt.className='of-checkout-summary';card.querySelector('.of-context').after(receipt);}receipt.innerHTML=summary();}
  function validate(list=members(),booking=pkMode==='book'){
-   for(const p of list){const s=STAFF_ALL[p.cid],c=STAFF_CARDS[p.cid]||{};if(!s||(!booking&&(!s.on||s.busy))||(booking&&c.noBooking))throw Error(p.name+' 的接單狀態已變更，請返回名簿重新選擇');}
+   for(const p of list){const s=STAFF_ALL[p.cid],c=STAFF_CARDS[p.cid]||{};if(!s||(!booking&&(!s.on||s.busy))||(booking&&c.noBooking))throw Error(displayName(p)+' 的接單狀態已變更，請返回名簿重新選擇');}
  }
  function validPlan(){const p=playItems().find(x=>x.id===curPlan?.id);if(!p||p.p!==(curPlan.unitPrice??curPlan.p))throw Error('方案價格已更新，請返回重新選擇');return p;}
  shopOpen=function(step,kind){
@@ -127,7 +128,7 @@
      try{statInc('orders');watchMyOrders();}catch(_){}
      records.forEach(({order})=>{try{notifyOrder(order);}catch(_){}});
      const title=method==='coin'?'已完成這組付款':'這組預約已送出';
-     if(window.lobbyNotify)lobbyNotify({ok:true,icon:'receipt',title,sub:snap.list.map(p=>p.name).join('、')+' · '+snap.plan.n+' · 合計 '+money(snap.price.amount),onclick:()=>shopOpen(4),hold:8000});else toast(title);
+     if(window.lobbyNotify)lobbyNotify({ok:true,icon:'receipt',title,sub:snap.list.map(displayName).join('、')+' · '+snap.plan.n+' · 合計 '+money(snap.price.amount),onclick:()=>shopOpen(4),hold:8000});else toast(title);
    }catch(e){
      if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'這組點單未成立，請重試');
    }finally{stopWait();submitting=_submitting=false;btn.disabled=false;btn.textContent=method==='coin'?'用金幣支付':'送出訂單';}

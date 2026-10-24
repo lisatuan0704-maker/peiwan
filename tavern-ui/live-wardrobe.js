@@ -179,9 +179,10 @@
   const minX=Math.min((left-avatar.width/2)*unit,imageX+bounds[0]*imageScale),maxX=Math.max((right-avatar.width/2)*unit,imageX+bounds[2]*imageScale);
   const minY=Math.min(top*unit-foot,imageY+bounds[1]*imageScale),maxY=Math.max(0,imageY+bounds[3]*imageScale);
   const width=previewStage.clientWidth,height=previewStage.clientHeight;
-  const availableWidth=Math.max(1,width-28),availableHeight=Math.max(1,height-76);
+  const compact=height<190,footMargin=compact?16:36;
+  const availableWidth=Math.max(1,width-28),availableHeight=Math.max(1,height-(compact?30:76));
   const scale=Math.min(1.25,availableWidth/(maxX-minX),availableHeight/(maxY-minY));
-  const originX=(width-(maxX-minX)*scale)/2-minX*scale,originY=height-36-maxY*scale;
+  const originX=(width-(maxX-minX)*scale)/2-minX*scale,originY=height-footMargin-maxY*scale;
   party.style.transform='translate('+originX+'px,'+originY+'px) scale('+scale+')';
  }
  function setPreviewPet(pet){
@@ -192,10 +193,15 @@
   const img=$('#wardrobePet');if(img.dataset.pet!==pet.id){img.src='../'+pet.src;img.alt=pet.name;img.dataset.pet=pet.id;}
  }
  const previewFitObserver=new ResizeObserver(fitPreviewParty);previewFitObserver.observe(previewStage);
+ function groundPreview(){
+  const cv=$('#avatar'),pixels=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
+  let bottom=0;for(let y=0;y<cv.height;y++)for(let x=0;x<cv.width;x++)if(pixels[(y*cv.width+x)*4+3])bottom=y+1;
+  cv.style.setProperty('--preview-foot',(100*(bottom||cv.height)/cv.height)+'%');fitPreviewParty();
+ }
  function paint(){
   renderLook();
   const dyeVisible=!!dyeDraft&&!$('#dyeDialog').hidden;
-  try{const d=api.makeDoll(selection,color);if(dyeVisible){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;if(dyeDraft.highlight)d.hairHighlight=dyeDraft.highlight;api.draw($('#dyePreview'),d);}setPreviewPet(api.followingPet?.(d));api.draw($('#avatar'),d,fitPreviewParty);}catch(e){tell(e.message);}
+  try{const d=api.makeDoll(selection,color);if(dyeVisible){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;if(dyeDraft.highlight)d.hairHighlight=dyeDraft.highlight;api.draw($('#dyePreview'),d);}setPreviewPet(api.followingPet?.(d));api.draw($('#avatar'),d,groundPreview);}catch(e){tell(e.message);}
   // 訂製試色同時更新固定試穿區，商品縮圖不需每次重畫。
   if(dyeVisible)return;
   const list=entries();$$('#singles:not([hidden]) [data-preview]').forEach(cv=>{const p=list.find(p=>p.id===cv.dataset.preview);if(p)drawPart(cv,p);});
@@ -314,7 +320,7 @@
   $$('[data-group]').forEach(b=>b.onclick=()=>{filter=b.dataset.group;selected=null;render();});
   const list=entries();
   if(!list.some(p=>p.id===selected))selected=list.find(isTrying)?.id||null;
-  $('#grid').innerHTML=list.map((p,i)=>'<button class="item" data-item="'+esc(p.id)+'" aria-label="'+(p.product.drink?'查看':isTrying(p)&&(area==='bag'||['acc','pet','seat','other'].includes(p.category))?'卸下':area==='bag'?'穿戴':'試穿')+esc(p.name)+'" aria-pressed="'+isTrying(p)+'"><span class="itemtop"><span class="item-number">'+String(i+1).padStart(2,'0')+'</span><span class="status">'+(p.product.owned?'已擁有':'')+'</span></span><span class="thumb">'+((p.product.drink||p.product.pet)?'<img class="drink-product-image" src="'+esc(p.product.img)+'" alt="'+esc(p.name)+'" decoding="async">':'<canvas width="64" height="64" data-preview="'+esc(p.id)+'"></canvas>')+'</span><span class="item-caption"><strong>'+esc(p.name)+'</strong>'+(p.note?'<small class="accessory-note">'+esc(p.note)+'</small>':'')+'<small>'+esc(p.product.drink?(p.product.owned?'已擁有':'每杯 '+p.product.price+' 金幣'):isTrying(p)?(area==='bag'||['acc','pet','seat','other'].includes(p.category)?'已搭配 · 再點卸下':'已搭配'):area==='bag'?'已收藏 · 點選搭配':p.product.owned?'已收藏':p.product.previewOnly?'新品試穿 · 敬請期待':(p.product.drink?'每杯 ':p.product.pet?'單隻 ':'整組 ')+p.product.price+' 金幣')+'</small>'+(p.requirement?'<small class="accessory-requirement">'+esc(p.requirement)+'</small>':'')+'</span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'這個分類還沒有已取得的部件。':'目前沒有上架商品。')+'</p>';
+  $('#grid').innerHTML=list.map((p,i)=>'<button class="item" data-item="'+esc(p.id)+'" aria-label="'+(p.product.drink?'查看':isTrying(p)&&(area==='bag'||['acc','pet','seat','other'].includes(p.category))?'卸下':area==='bag'?'穿戴':'試穿')+esc(p.name)+'" aria-pressed="'+isTrying(p)+'"><span class="itemtop"><span class="item-number">'+String(i+1).padStart(2,'0')+'</span><span class="status">'+(p.product.owned?'已擁有':'')+'</span></span><span class="thumb">'+(p.product.drink?'<img class="drink-product-image" src="'+esc(p.product.img)+'" alt="'+esc(p.name)+'" decoding="async">':'<canvas width="64" height="64" data-preview="'+esc(p.id)+'"></canvas>')+'</span><span class="item-caption"><strong>'+esc(p.name)+'</strong>'+(p.note?'<small class="accessory-note">'+esc(p.note)+'</small>':'')+'<small>'+esc(p.product.drink?(p.product.owned?'已擁有':'每杯 '+p.product.price+' 金幣'):isTrying(p)?(area==='bag'||['acc','pet','seat','other'].includes(p.category)?'已搭配 · 再點卸下':'已搭配'):area==='bag'?'已收藏 · 點選搭配':p.product.owned?'已收藏':p.product.previewOnly?'新品試穿 · 敬請期待':(p.product.drink?'每杯 ':p.product.pet?'單隻 ':'整組 ')+p.product.price+' 金幣')+'</small>'+(p.requirement?'<small class="accessory-requirement">'+esc(p.requirement)+'</small>':'')+'</span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'這個分類還沒有已取得的部件。':'目前沒有上架商品。')+'</p>';
   $$('[data-item]').forEach(b=>b.onclick=()=>tryItem(list.find(p=>p.id===b.dataset.item)));
   $('#pager').replaceChildren();
   if(category==='other'&&list.length&&!list.some(p=>p.id===selected))selected=list[0].id;

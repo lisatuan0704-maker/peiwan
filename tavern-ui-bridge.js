@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=372';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=373';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -22,7 +22,7 @@
     document.getElementById('dressM').style.display='none';overlay.hidden=false;
     frame.contentWindow.ttLiveOpen?.(pending);frame.focus();
   }
-  function staff(){return Object.entries(STAFF_ALL).filter(([,s])=>s).map(([cid,s])=>({cid,theme:THEMES[cid]||null,name:s.name||'冒險者',on:!!s.on,busy:!!s.busy,card:clone(STAFF_CARDS[cid]||{})}));}
+  function staff(){return Object.entries(STAFF_ALL).filter(([,s])=>s).map(([cid,s])=>({cid,theme:THEMES[cid]||null,name:({KABUKI:'蕪',RIRA:'縭',MOMO:'桃'}[THEMES[cid]])||s.name||'冒險者',on:!!s.on,busy:!!s.busy,card:clone(STAFF_CARDS[cid]||{})}));}
   function group(part,source,key){
     if(['head','ear','face','hand','back'].includes(part?.group))return part.group;
     const known={'cloth0:acc1':'hand','cloth0:acc2':'head','cloth0:acc3':'head','cloth3:acc1':'hand','cloth3:acc2':'ear','cloth3:acc3':'head','cloth2:acc2':'face','cloth2:acc3':'hand'};
@@ -92,7 +92,8 @@
     for(const [key,r] of Object.entries(next))if(key.startsWith('accessory:')&&r){const p=validPart(r);if(p&&!compatible(p,next))next[key]=null;}
     return next;
   }
-  const displayPartName=name=>String(name||'').replace(/[（(]\s*灰階\s*[）)]/g,'').replace(/灰階/g,'').trim();
+  const initialOutfitNames={cloth2:'啟程旅人',cloth3:'微風日常'};
+  const displayPartName=name=>String(name||'').replace(/星夜吟遊裝/g,'啟程旅人').replace(/貓耳限定裝/g,'微風日常').replace(/[（(]\s*灰階\s*[）)]/g,'').replace(/灰階/g,'').trim();
   function catalog(){
     const cfg={...(window.__shopCfg||{}),...(window.TTSeasonDrafts||{})},own=window.__owned||{},now=Date.now();
     const base=(window.__outfitList?.()||[]).filter(o=>!window.TTSeasonDrafts?.[o.id]);
@@ -101,7 +102,7 @@
     const seats=Object.entries(window.TTSeats?.CATALOG||{}).map(([id,c])=>{const s=TTSeatUI.state(id);return {id,name:c.name,type:'座椅',seat:true,owned:s.owned,sale:s.onSale,price:s.price,parts:[{id:id+'::seat',source:id,slot:'seat',category:'seat',name:c.name}]};});
     return [...base,...pets,...Object.keys(window.TTSeasonDrafts||{}).map(id=>({id}))].map(o=>{
       const c=cfg[o.id]||{},retired=!!window.TTRetiredOutfits?.retired(o.id,{...o,...c}),sale=!retired&&(c.active===undefined?true:!!c.active)&&(!c.start||now>=c.start)&&(!c.end||now<c.end);
-      return {id:o.id,name:isDrink(o.id)?drinkCompanions[o.id].name+'的飲料':c.name||o.nm,companion:drinkCompanions[o.id]||null,type:isDrink(o.id)?'其他':c.type||'時裝',drink:isDrink(o.id),pet:!!companionPets[o.id],price:c.price??o.pr,quantity:isDrink(o.id)&&drinkUid===window.TTVoiceOrders?.userId?.()?(drinkCounts[o.id]||0):0,owned:isDrink(o.id)?(drinkUid===window.TTVoiceOrders?.userId?.()&&(drinkCounts[o.id]||0)>0):o.id==='cloth0'||!!own[o.id],sale,retired,previewOnly:!!c.previewOnly,highlightHair:!!c.highlightHair,
+      return {id:o.id,name:isDrink(o.id)?drinkCompanions[o.id].name+'的飲料':initialOutfitNames[o.id]||c.name||o.nm,companion:drinkCompanions[o.id]||null,type:isDrink(o.id)?'其他':c.type||'時裝',drink:isDrink(o.id),pet:!!companionPets[o.id],price:c.price??o.pr,quantity:isDrink(o.id)&&drinkUid===window.TTVoiceOrders?.userId?.()?(drinkCounts[o.id]||0):0,owned:isDrink(o.id)?(drinkUid===window.TTVoiceOrders?.userId?.()&&(drinkCounts[o.id]||0)>0):o.id==='cloth0'||!!own[o.id],sale,retired,previewOnly:!!c.previewOnly,highlightHair:!!c.highlightHair,
         doll:c.doll||o.doll||null,img:c.img||null,featured:c.seasonFeatured||0,sourceLayerCount:c.sourceLayerCount||0,parts:Object.entries(partsFor(o.id)).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:displayPartName(p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件'))),category:isDrink(o.id)||c.type==='其他'?'other':category(k),group:category(k)==='acc'?group(p,o.id,k):null,independent:!!p.independent,requiresHair:p.requiresHair,requiresPart:p.requiresPart,requirement:p.requirement,note:p.note,defaultEquipped:p.defaultEquipped}))};
     }).concat(seats);
   }
@@ -218,6 +219,7 @@
     calendar:cid=>calWeekHtml(cid),booked:cid=>new Promise(resolve=>staffBookedTimes(cid,resolve)),
     draw:drawPreview,seatChoice:()=>window.TTSeatUI?.choice(),selectSeat:id=>window.TTSeatUI?.select(id),seatThumb:(id,cv)=>window.TTSeatUI?.thumb(id,cv),
     drawPart(cv,ref,color){if(ref.slot==='seat'&&Object.hasOwn(window.TTSeats?.CATALOG||{},ref.source)){TTSeatUI.thumb(ref.source,cv);return;}const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
+      if(ref.slot==='pet'&&companionPets[ref.source]){const pet=companionPets[ref.source],src='img/companions-v352/'+pet.asset+'-pet.gif?v=356',img=csImg(src),[left,top,right,bottom]=pet.bounds;const draw=()=>{g.clearRect(0,0,cv.width,cv.height);if(!img.complete||!img.naturalWidth)return;const scale=Math.min((cv.width-8)/(right-left),(cv.height-8)/(bottom-top)),w=(right-left)*scale,h=(bottom-top)*scale;g.drawImage(img,left,top,right-left,bottom-top,(cv.width-w)/2,(cv.height-h)/2,w,h);};draw();afterPreviewImages(cv,[src],draw);return;}
       if(ref.base!==undefined){const key={front:'前髮',back:'後髮',cloth:'衣服',eye:'眼睛',brow:'眉毛'}[ref.slot];const p=TP.parts[key]?.[ref.base];if(p)tpDraw(g,p,color?.hair||0);}
       else{const p=partsFor(ref.source)[ref.slot];if(p){const preview=ref.slot==='pet'&&p.preview?{...p,d:p.preview,x:0,y:0}:p;const draw=()=>{g.clearRect(0,0,64,64);const previousHighlight=activeHighlight;activeHighlight=Number.isInteger(color?.highlight)?HAIRS[color.highlight]?.[0]:color?.keepOriginal?me()?.b?.doll?.hairHighlight:null;try{csDrawV(g,preview,color?.hair||0,color?.hairHex,color?.hairHex2);}finally{activeHighlight=previousHighlight;}};draw();afterPreviewImages(cv,[preview.d,...(p.highlight?.d?[p.highlight.d]:[])],draw);}}
     },
