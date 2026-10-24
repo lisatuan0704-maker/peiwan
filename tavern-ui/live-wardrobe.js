@@ -281,13 +281,13 @@
   $('#dyeTicket').innerHTML='<span class="dye-cta-art" aria-hidden="true"><i></i><i></i><i></i></span><span class="dye-cta-text"><strong>'+(t?('染髮券 · 剩餘 '+t+' 張'):'漸層染髮 · 先免費試色')+'</strong><small>'+(t?'保存專屬漸層只扣 1 張':'喜歡再買券，一張 NT$'+price)+'</small></span><b>↗</b>';
  }
  function renderDyeShop(){
-  const demos=[['#f5a3c7','#b7a6f2','蜜桃薰衣草'],['#8fd6c8','#7fb4ef','薄荷晴空'],['#f6cf6b','#f28d8d','蜂蜜夕陽']];
+  const demos=[['#f5a3c7','#b7a6f2','蜜桃薰衣草','PEACH','柔霧粉紫'],['#8fd6c8','#7fb4ef','薄荷晴空','MINT','清透藍綠'],['#f6cf6b','#f28d8d','蜂蜜夕陽','HONEY','暖金珊瑚']];
   const editor=$('#dyeDialog');editor.remove();
-  $('#dyeShop').innerHTML='<div class="dye-shop-head"><small>HAIR COLOR TICKET</small><h2>染一款，只屬於你的髮色。</h2><p>先用你現在試穿的髮型免費試色，滿意再用一張券把整組保存起來。</p></div>'
-   +'<div class="dye-demos">'+demos.map((d,i)=>'<button class="dye-demo" data-demo="'+i+'" style="--a:'+d[0]+';--b:'+d[1]+'"><canvas width="64" height="64" data-dye-demo="'+i+'"></canvas><span>'+d[2]+'</span></button>').join('')+'</div>'
+  $('#dyeShop').innerHTML='<header class="dye-shop-head"><div><small>TAVERN / COLOR STUDIO</small><h2>今天的髮色<span class="studio-dot" aria-hidden="true"></span></h2></div><span class="studio-stamp">FREE<br><b>免費試色</b></span></header>'
+   +'<div class="dye-demos" aria-label="三款預設髮色">'+demos.map((d,i)=>'<button class="dye-demo" data-demo="'+i+'" data-main="'+d[0]+'" data-tail="'+d[1]+'" aria-pressed="false" aria-label="試穿'+d[2]+'" style="--a:'+d[0]+';--b:'+d[1]+'"><span class="preset-index">0'+(i+1)+'</span><span class="preset-check" aria-hidden="true">✓</span><span class="preset-word" aria-hidden="true">'+d[3]+'</span><span class="preset-art"><canvas width="64" height="64" data-dye-demo="'+i+'"></canvas></span><span class="preset-caption"><strong>'+d[2]+'</strong><small>'+d[4]+'</small><i class="preset-colors" aria-hidden="true"><i></i><i></i></i><b aria-hidden="true">↗</b></span></button>').join('')+'</div>'
    +'<div class="dye-custom-host"></div>';
   $('#dyeShop .dye-custom-host').append(editor);editor.classList.add('dye-inline');editor.removeAttribute('aria-modal');editor.setAttribute('role','region');
-  if(!dyeDraft)openDye();else{editor.hidden=false;dyeStatus();}
+  if(!dyeDraft)openDye();else{editor.hidden=false;dyeStatus();}syncDyeDesign();
   $$('[data-dye-demo]').forEach(cv=>{const d=demos[cv.dataset.dyeDemo];try{const doll=api.makeDoll(selection,{hair:data.doll.hair||0});doll.hairHex=d[0];doll.hairHex2=d[1];api.draw(cv,doll);}catch(e){}});
   $$('[data-demo]').forEach(b=>b.onclick=()=>{const d=demos[b.dataset.demo];openDye({main:d[0],tail:d[1]});});
 
@@ -325,11 +325,12 @@
  $('#reset').onclick=()=>{init();render();tell('已還原目前穿搭');};
  $('#showWear').textContent='穿上搭配';$('#showWear').onclick=wear;
 
- $('#dyeDialog .dialog-card').innerHTML='<div class="dialog-head"><span class="eyebrow">YOUR HAIR COLOR</span></div><h2 id="dyeTitle">訂製你的專屬髮色</h2><p>使用目前試穿的瀏海與後髮。預覽免費，保存組合才扣 1 張券。</p><div class="dye-workspace"><div class="dye-avatar"><canvas id="dyePreview" width="64" height="64" aria-label="染髮即時預覽"></canvas><span>即時預覽</span></div><div class="dye-controls"><label>組合名稱<input id="dyeName" maxlength="24" placeholder="專屬染髮"></label><label>主色<input id="dyeMain" type="color" aria-label="染髮主色"></label><label class="dye-gradient"><input id="dyeGradient" type="checkbox">加入髮尾漸層</label><label id="dyeTailLabel">髮尾色<input id="dyeTail" type="color" aria-label="染髮髮尾色"></label><label id="dyeHighlightLabel" hidden>挑染色<input id="dyeHighlight" type="color" aria-label="獨立挑染色"><small>只調整挑染髮絲，與主色、髮尾漸層分開。</small></label></div></div><div class="ticket-state" role="status"></div><p id="dyeError" role="alert" hidden></p><div class="dye-actions"><button id="cancelDye" class="ghost">重設試色</button><button id="buyDyeInDialog" class="primary buy" hidden>買一張染髮券</button><button id="saveDye" class="primary">使用 1 張並保存</button></div><p class="dye-note">主色、髮尾漸層與挑染一起保存只扣 1 張券。保存後可在「頭髮 → 我的染髮」重複穿戴，不再扣券。</p>';
+ $('#dyeDialog .dialog-card').innerHTML='<div class="studio-custom-heading"><div><span class="eyebrow">MAKE IT YOURS / 04</span><h2 id="dyeTitle">調一款，你的顏色。</h2></div><span class="studio-custom-symbol" aria-hidden="true">✳</span></div><div class="dye-workspace"><div class="dye-avatar"><span class="studio-live">LIVE PREVIEW</span><div class="studio-color-orbit" aria-hidden="true"></div><canvas id="dyePreview" width="64" height="64" aria-label="染髮即時預覽"></canvas><span>你的髮型 × 你的配色</span></div><div class="dye-controls"><div class="studio-gradient-strip" aria-hidden="true"></div><div class="studio-pickers"><label class="studio-color-control"><span>01 主色</span><input id="dyeMain" type="color" aria-label="染髮主色"><output id="dyeMainCode"></output></label><label id="dyeTailLabel" class="studio-color-control"><span>02 髮尾</span><input id="dyeTail" type="color" aria-label="染髮髮尾色"><output id="dyeTailCode"></output></label><label id="dyeHighlightLabel" class="studio-color-control" hidden><span>03 挑染</span><input id="dyeHighlight" type="color" aria-label="獨立挑染色"><output id="dyeHighlightCode"></output></label></div><label class="dye-gradient"><input id="dyeGradient" type="checkbox"><span>髮尾漸層</span><i aria-hidden="true"></i></label><label class="studio-name">為髮色取個名字<input id="dyeName" maxlength="24" placeholder="我的專屬髮色"></label></div></div><footer class="studio-checkout"><div><div class="ticket-state" role="status"></div><span class="studio-save-note">保存 1 張券 · 之後可重複穿戴</span></div><div class="dye-actions"><button id="cancelDye" class="ghost">重設</button><button id="buyDyeInDialog" class="primary buy" hidden>買一張染髮券</button><button id="saveDye" class="primary">使用 1 張並保存</button></div></footer><p id="dyeError" role="alert" hidden></p>';
+
  function resetDye(){if(dyeSaving)return;dyeDraft=null;openDye();}
 
  function dyeStatus(){
-  $('#dyeDialog .ticket-state').textContent='持有 '+data.tickets+' 張染髮券'+(data.tickets<1?' · 券不足，仍可免費預覽':' · 保存使用 1 張');
+  $('#dyeDialog .ticket-state').textContent='我的染髮券　'+data.tickets+' 張';
   $('#saveDye').disabled=dyeSaving||data.tickets<1;$('#saveDye').textContent=dyeSaving?'保存中…':'使用 1 張並保存';
   $('#saveDye').hidden=data.tickets<1;$('#buyDyeInDialog').hidden=data.tickets>=1;$('#buyDyeInDialog').textContent='買一張染髮券 NT$'+(api.dyePrice?.()||299)+' →';
   $$('#dyeDialog input, #cancelDye').forEach(el=>el.disabled=dyeSaving);
@@ -338,7 +339,13 @@
  function updateDye(){
   const previous=dyeDraft;
   dyeDraft={name:$('#dyeName').value,main:$('#dyeMain').value,tail:$('#dyeGradient').checked?$('#dyeTail').value:$('#dyeMain').value,...(!$('#dyeHighlightLabel').hidden?{highlight:$('#dyeHighlight').value}:{})};
-  $('#dyeTailLabel').hidden=!$('#dyeGradient').checked;dyeStatus();if(!previous||previous.main!==dyeDraft.main||previous.tail!==dyeDraft.tail||previous.highlight!==dyeDraft.highlight)requestPaint();
+  $('#dyeTailLabel').hidden=!$('#dyeGradient').checked;syncDyeDesign();dyeStatus();if(!previous||previous.main!==dyeDraft.main||previous.tail!==dyeDraft.tail||previous.highlight!==dyeDraft.highlight)requestPaint();
+ }
+ function syncDyeDesign(){
+  if(!dyeDraft)return;
+  const card=$('#dyeDialog .dye-card');card.style.setProperty('--dye-main',dyeDraft.main);card.style.setProperty('--dye-tail',dyeDraft.tail);
+  for(const name of ['Main','Tail','Highlight'])$('#dye'+name+'Code').textContent=$('#dye'+name).value.toUpperCase();
+  $$('#dyeShop [data-demo]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.main===dyeDraft.main&&b.dataset.tail===dyeDraft.tail)));
  }
  function openDye(preset){
   try{
