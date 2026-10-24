@@ -5,7 +5,7 @@ const people=[{cid:'-OxY46ezlpnRt64hUIw9',old:'Caboo',name:'蕪'},{cid:'-OxY7C4v
 const fixtures={};
 for(const status of ['confirmed','done'])for(const [i,p] of [...people].reverse().entries())fixtures['qa-'+status+'-'+p.name]={type:'play',planName:'遊戲陪伴・2 小時',staffCid:p.cid,staffName:p.old,status,createdAt:Date.UTC(2026,9,25,4,0),amount:320,paidBy:'wallet',accepted:true,groupId:'qa-group-'+status,groupSize:2,groupAmount:640,groupStaffNames:['Caboo','大卡'],no:'QA-'+(status==='done'?'H':'A')+'0'+i};
 const fixtureSnapshot=JSON.stringify(fixtures);
-const contentType=p=>({'.js':'application/javascript','.css':'text/css','.png':'image/png','.gif':'image/gif','.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2','.json':'application/json'})[path.extname(p)]||'text/html; charset=utf-8';
+const contentType=p=>({'.js':'application/javascript','.mjs':'application/javascript','.css':'text/css','.png':'image/png','.gif':'image/gif','.webp':'image/webp','.svg':'image/svg+xml','.woff2':'font/woff2','.json':'application/json'})[path.extname(p)]||'text/html; charset=utf-8';
 fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const server=http.createServer((req,res)=>{const p=path.join(root,decodeURIComponent(new URL(req.url,'http://local').pathname));fs.readFile(p,(e,b)=>{if(e){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',contentType(p));res.end(b);});});
@@ -17,7 +17,7 @@ fs.mkdirSync(out,{recursive:true});
    await page.route('**/*',async route=>{const req=route.request(),url=new URL(req.url());if(!['GET','HEAD'].includes(req.method())||/(firebaseio\.com|firebasedatabase\.app|api\.tinytavern\.tw|discord\.com\/api\/webhooks)/.test(req.url())||url.pathname.startsWith('/api/')){blocked.push({method:req.method(),url:url.origin+url.pathname});return route.abort();}if(url.hostname==='tinytavern.tw'){const p=path.join(root,decodeURIComponent(url.pathname));if(fs.existsSync(p)&&fs.statSync(p).isFile())return route.fulfill({body:fs.readFileSync(p),contentType:contentType(p)});return route.abort();}return route.continue();});
    await page.goto(origin+(mobile?'/lobby.html?preview=1&mobile=1':'/lobby-view.html?preview=1'));
    let lobby;for(let n=0;n<80;n++){lobby=page.frames().find(f=>{try{return new URL(f.url()).pathname==='/lobby.html';}catch{return false;}});if(lobby)break;await page.waitForTimeout(50);}assert(lobby,'actual lobby frame exists');
-   await lobby.waitForFunction(()=>window.TTLivePresentation&&typeof ttOrderStaffDisplayName==='function');
+   await lobby.waitForFunction(()=>window.TTLivePresentation&&window.TTVoiceOrders&&typeof ttOrderStaffDisplayName==='function');
    await lobby.evaluate(()=>document.fonts.ready);await lobby.addStyleTag({content:'#dcGate,#intro,#loadscr,#signinTip,#emptyMsg{display:none!important}'});
    await lobby.evaluate(data=>{try{firebase.database().goOffline();}catch{}db=null;myKey=null;const freeze=o=>{Object.values(o).filter(v=>v&&typeof v==='object').forEach(freeze);return Object.freeze(o);};window.qaOriginalOrderSnapshot=JSON.stringify(data);myOrdersCache=freeze(data);localStorage.setItem('tt_orders',JSON.stringify(Object.keys(data)));_ordTab='active';_ordPage=0;shopOpen(4);},fixtures);
    const states=[];
