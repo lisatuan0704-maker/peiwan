@@ -20,3 +20,13 @@ body[data-view=shop]{background:transparent!important}
 #shopWindow .window-head:before{display:block!important}
 
 #shopWindow .window-head:before{inset:22px 65px auto auto!important;width:auto!important;height:auto!important;transform:none!important;background:none!important;border:0!important;pointer-events:none}
+
+/* Reserve space for the merchandise instead of growing the header with its contents. */
+@media(min-width:601px){
+ #shopWindow:not([hidden]){display:grid!important;grid-template-rows:88px minmax(0,1fr)!important}
+ #shopWindow .window-head{min-height:0!important;padding:12px 22px!important}
+ #shopWindow .window-head small{font-size:9px;letter-spacing:1.8px;margin-bottom:5px}
+ #shopWindow .title{font-size:26px;padding:3px 24px 5px 14px}
+ #shopWindow .window-head:before{font-size:54px;inset:14px 65px auto auto!important}
+ #shopWindow .close{align-self:center}
+}
