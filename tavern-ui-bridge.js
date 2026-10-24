@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=368';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=369';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -135,6 +135,7 @@
     if(changed||Object.keys(selection).some(k=>k.startsWith('accessory:'))){delete d.set;d.ps=ps;d.uiBaseSlots=baseKeys;d.acc=0;d.uiAccessoryVersion=287;d.uiAccessories=Object.entries(selection).filter(([s,r])=>s.startsWith('accessory:')&&r).map(([,r])=>({source:r.source,slot:r.slot}));}
     if(color){
       if(Number.isInteger(color.hair)&&color.hair>=0&&color.hair<HAIRS.length){d.hair=color.hair;if(!color.keepOriginal){delete d.hairHex;delete d.hairHex2;delete d.hairHighlight;}}
+      if(color.highlight!==undefined){if(!Number.isInteger(color.highlight)||color.highlight<0||color.highlight>=HAIRS.length)throw Error('請選擇有效的挑染色');d.hairHighlight=HAIRS[color.highlight][0];}
       if(color.savedId){const saved=(window.__owned||{}).dyedHairSets?.[color.savedId];if(!saved)throw Error('找不到染色組合');
         const sameRef=(a,b)=>!!a&&!!b&&a.slot===b.slot&&(a.base!==undefined||b.base!==undefined?a.base===b.base:a.source===b.source);if(!sameRef(selection.front,saved.front)||!sameRef(selection.back,saved.back))throw Error('染色組合必須整組穿戴');d.hairHex=saved.main;d.hairHex2=saved.tail;d.dyedHairSet=color.savedId;if(saved.highlight)d.hairHighlight=saved.highlight;else delete d.hairHighlight;
       }else delete d.dyedHairSet;
@@ -218,7 +219,7 @@
     draw:drawPreview,seatChoice:()=>window.TTSeatUI?.choice(),selectSeat:id=>window.TTSeatUI?.select(id),seatThumb:(id,cv)=>window.TTSeatUI?.thumb(id,cv),
     drawPart(cv,ref,color){if(ref.slot==='seat'&&Object.hasOwn(window.TTSeats?.CATALOG||{},ref.source)){TTSeatUI.thumb(ref.source,cv);return;}const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
       if(ref.base!==undefined){const key={front:'前髮',back:'後髮',cloth:'衣服',eye:'眼睛',brow:'眉毛'}[ref.slot];const p=TP.parts[key]?.[ref.base];if(p)tpDraw(g,p,color?.hair||0);}
-      else{const p=partsFor(ref.source)[ref.slot];if(p){const preview=ref.slot==='pet'&&p.preview?{...p,d:p.preview,x:0,y:0}:p;const draw=()=>{g.clearRect(0,0,64,64);csDrawV(g,preview,color?.hair||0,color?.hairHex,color?.hairHex2);};draw();afterPreviewImages(cv,[preview.d,...(p.highlight?.d?[p.highlight.d]:[])],draw);}}
+      else{const p=partsFor(ref.source)[ref.slot];if(p){const preview=ref.slot==='pet'&&p.preview?{...p,d:p.preview,x:0,y:0}:p;const draw=()=>{g.clearRect(0,0,64,64);const previousHighlight=activeHighlight;activeHighlight=Number.isInteger(color?.highlight)?HAIRS[color.highlight]?.[0]:color?.keepOriginal?me()?.b?.doll?.hairHighlight:null;try{csDrawV(g,preview,color?.hair||0,color?.hairHex,color?.hairHex2);}finally{activeHighlight=previousHighlight;}};draw();afterPreviewImages(cv,[preview.d,...(p.highlight?.d?[p.highlight.d]:[])],draw);}}
     },
     choose(ids,mode){
       const keys=[...new Set((Array.isArray(ids)?ids:[ids]).filter(Boolean))];

@@ -10,7 +10,7 @@
  const groupNames={head:'頭飾',ear:'耳環',face:'面部配件',hand:'手持物',back:'背飾／尾巴'};
  let data,selection={},color={},area='store',category='bundles',mode='singles',filter='all',selected=null,saving=false;
  let drinkQuantity=1,drinkBusy=false,drinkDialogOpen=false;
- let hairSection='original';
+ let hairSection='original',colorTarget='main';
  let dyeDraft=null,bagSection='wear',dyeSaving=false,dyeRequest=null;
  const bagNav=document.createElement('nav');bagNav.className='archive-nav';bagNav.setAttribute('aria-label','背包收納');
  bagNav.innerHTML='<button data-archive="wear" aria-pressed="true"><small>01 / DRESSING</small><b>我的穿搭</b><span>時裝與染色組合</span></button><button data-archive="collection" aria-pressed="false"><small>02 / KEEPSAKES</small><b>紀念收藏</b><span>小物與成就紀錄</span></button>';
@@ -50,7 +50,8 @@
   data=api.state();const d=data.doll;selection=selectionFromDoll(d);
   const saved=d.dyedHairSet&&data.dyed[d.dyedHairSet];
   if(saved){selection.front={...saved.front};selection.back={...saved.back};}
-  color=saved?{savedId:d.dyedHairSet}:{hair:d.hair||0,keepOriginal:true};selected=null;
+  const highlight=data.colors.findIndex(c=>c.toLowerCase()===d.hairHighlight?.toLowerCase());
+  color=saved?{savedId:d.dyedHairSet}:{hair:d.hair||0,keepOriginal:true,...(highlight>=0?{highlight}:{})};colorTarget='main';selected=null;
  }
  function outfitSelection(o){const next=selectionFromDoll(o.doll||{});o.parts.filter(p=>p.defaultEquipped!==false).forEach(p=>next[key(p)]=ref(p));return next;}
  function products(){return data.catalog.filter(o=>!o.retired&&(area==='bag'?o.owned:o.sale));}
@@ -81,7 +82,7 @@
  function tryItem(p){
   if(!p||saving)return;
   if(p.product?.drink){selected=p.id;drinkQuantity=1;render();return;}
-  let next={...selection};const nextColor=p.category==='hair'?{hair:data.doll.hair||0}:color;
+  let next={...selection};const nextColor=p.category==='hair'?{hair:color.hair??data.doll.hair??0,...(Number.isInteger(color.highlight)?{highlight:color.highlight}:{})}:color;
   const removing=(area==='bag'||['acc','pet','seat','other'].includes(p.category))&&isTrying(p);
   if(removing)next[key(p)]=['front','back','cloth','eye','brow'].includes(p.slot)?baseRef(p.slot):null;
   else if(p.parts)p.parts.forEach(q=>next[key(q)]=ref(q));else next[key(p)]=ref(p);
@@ -194,8 +195,13 @@
  window.ttDyeShop=()=>{if(area!=='store'){init();setArea('store');syncOuter('store');}category='dye';render();};
  function swatches(){
   const preset=[0,2,3,4,5,6,7,1,9].filter(i=>data.colors[i]);
-  $('#dyePanel').innerHTML='<div class="dye-head"><strong>主色</strong><span>'+(color.savedId?'已保存髮色':'即時試色')+'</span></div><div class="swatches">'+preset.map(i=>'<button data-color="'+i+'" aria-label="試穿髮色 '+(i+1)+'" style="--swatch:'+data.colors[i]+'" aria-pressed="'+(color.hair===i)+'" '+(color.savedId?'disabled':'')+'></button>').join('')+'</div>';
-  $$('[data-color]').forEach(b=>b.onclick=()=>{const nextColor={hair:Number(b.dataset.color)};if(area==='bag')return saveBag(selection,nextColor,'已保存髮色。');color=nextColor;swatches();requestPaint();});
+  const hasHighlight=[selection.front,selection.back].some(r=>data.catalog.find(o=>o.id===r?.source)?.highlightHair);
+  if(!hasHighlight)colorTarget='main';
+  const highlight=colorTarget==='highlight',label=highlight?'挑染':'主色',selectedColor=highlight?color.highlight:color.hair;
+  const targets=hasHighlight?'<div class="hair-color-targets" role="group" aria-label="換色部位">'+[['main','主色'],['highlight','挑染']].map(([id,name])=>'<button type="button" data-color-target="'+id+'" aria-pressed="'+(colorTarget===id)+'">'+name+'</button>').join('')+'</div>':'<strong>主色</strong>';
+  $('#dyePanel').innerHTML='<div class="dye-head">'+targets+'<span>'+(color.savedId?'已保存髮色':'即時試色')+'</span></div><div class="swatches">'+preset.map(i=>'<button data-color="'+i+'" aria-label="試穿'+label+' '+(i+1)+'" style="--swatch:'+data.colors[i]+'" aria-pressed="'+(selectedColor===i)+'" '+(color.savedId?'disabled':'')+'></button>').join('')+'</div>';
+  $$('[data-color-target]').forEach(b=>b.onclick=()=>{colorTarget=b.dataset.colorTarget;swatches();});
+  $$('[data-color]').forEach(b=>b.onclick=()=>{const index=Number(b.dataset.color),nextColor=highlight?{...color,highlight:index}:{...color,hair:index,keepOriginal:false};if(area==='bag')return saveBag(selection,nextColor,highlight?'已保存挑染色。':'已保存主色。');color=nextColor;swatches();requestPaint();});
  }
  function renderSeats(){
   const list=products().filter(o=>o.seat),choice=api.seatChoice();
