@@ -1,4 +1,10 @@
 /* Fit the shop to its actual iframe height, including the scaled desktop lobby. */
+body[data-area] .shophead,body[data-area] #pager,body[data-area] #bundlePager{display:none!important}
+#dyeDialog.dye-inline{position:static;inset:auto;z-index:auto;display:block;padding:0;background:none;overflow:visible}
+#dyeDialog.dye-inline .dye-card{width:100%;max-height:none;overflow:visible;box-shadow:none;background:linear-gradient(135deg,#fff8f6,#f2e8f2 60%,#e5f3f4);border-radius:20px;padding:20px}
+.dye-custom-host{min-width:0}
+#dyeDialog.dye-inline .dye-actions{flex-wrap:wrap}
+body[data-area] #grid{scrollbar-width:thin;scrollbar-color:#bfa09c #f6e9e1;overscroll-behavior:contain}
 @media (min-width:601px){
  body[data-area] .shophead{flex:0 0 48px!important;height:48px!important;min-height:48px!important;padding:4px 18px!important}
  body[data-area] .area-tabs{padding:3px;border-radius:13px}
@@ -50,3 +56,58 @@
  body[data-area=store][data-shop-category=bundles] .season-price strong{font-size:20px}
  body[data-area=store][data-shop-category=bundles] .season-actions button{min-height:32px!important;font-size:12px!important;padding:5px!important}
 }
+/* Keep the stage and categories outside each independently scrolling list. */
+@media(min-width:601px){
+ body[data-area]:not([data-shop-category=other]):not([data-section=collection]) .shop{height:100dvh!important;overflow:hidden!important}
+ body[data-area]:not([data-shop-category=other]):not([data-section=collection]) .workspace{flex:1 1 0!important;min-height:0!important;height:0!important;grid-template-columns:minmax(0,1fr) 280px!important;gap:18px!important;padding:12px 18px!important;align-items:stretch!important;overflow:hidden!important}
+ body[data-area=bag]:not([data-shop-category=other]):not([data-section=collection]) .workspace{grid-template-columns:280px minmax(0,1fr)!important}
+ body[data-area]:not([data-shop-category=other]):not([data-section=collection]) #catalog{display:flex!important;flex-direction:column;min-height:0!important;height:100%!important;overflow:hidden;gap:8px!important}
+ body[data-area]:not([data-shop-category=other]):not([data-section=collection]) .preview{position:static!important;align-self:stretch;min-height:0!important;height:100%!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:26px minmax(140px,1fr) 48px 62px 30px!important;gap:9px!important;padding:12px!important;overflow:auto}
+ body[data-area]:not([data-shop-category=other]) #singles:not([hidden]){flex:1;min-height:0!important;display:flex;flex-direction:column;gap:7px;overflow:hidden!important}
+ body[data-area]:not([data-shop-category=other]) #grid{flex:1;min-height:0!important;overflow:auto!important;grid-template-columns:repeat(auto-fill,minmax(145px,1fr))!important;grid-auto-rows:138px!important;grid-template-rows:none!important;gap:10px!important;align-content:start;padding:2px 5px 5px 2px}
+ body[data-area]:not([data-shop-category=other]) #grid .item{min-height:0!important;height:138px!important;padding:8px!important;grid-template-rows:14px minmax(0,1fr) auto!important;gap:3px!important;border-radius:15px}
+ body[data-area]:not([data-shop-category=other]) #grid .thumb{min-height:0!important;height:auto!important}
+ body[data-area]:not([data-shop-category=other]) #grid .thumb canvas{width:74px!important;height:74px!important;max-height:100%;object-fit:contain}
+ body[data-area] #grid .item-caption strong{font-size:12px!important;line-height:1.4}
+ body[data-area] #grid .item-caption small{font-size:10px!important;line-height:1.4}
+ body[data-area] #bundles:not([hidden]){flex:1;min-height:0!important;overflow:auto!important}
+ body[data-area=store][data-shop-category=bundles] #bundlegrid{height:auto!important;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none!important;grid-auto-rows:370px;overflow:visible!important;gap:14px!important;padding:2px 5px 5px 2px}
+ body[data-area=store][data-shop-category=bundles] .season-card{min-height:0!important;grid-template-rows:minmax(190px,1fr) auto}
+ body[data-area] #singles.showing-bundles:not(.has-hair-sections){display:none!important}
+ body[data-area] #singles.showing-my-hair{flex:0 0 auto!important}
+ body[data-area=store][data-shop-category=dye] #dyeShop{flex:1;min-height:0;overflow:auto!important;gap:16px;padding:4px 6px 14px 0;overscroll-behavior:contain}
+ body[data-area=store][data-shop-category=dye] #singles{display:none!important}
+ body[data-area] .dye-demo{padding:12px 8px}
+ body[data-area] .dye-demo canvas{width:90px;height:90px}
+}
+@media(max-width:600px){
+ body[data-area]:not([data-shop-category=other]):not([data-section=collection]) .shop{height:100dvh!important;overflow:hidden!important}
+ body[data-area]:not([data-shop-category=other]):not([data-section=collection]) .workspace{flex:1 1 0!important;height:0!important;min-height:0!important;overflow:hidden!important;padding:8px 12px!important;gap:10px!important}
+ body[data-area]:not([data-shop-category=other]):not([data-section=collection]) #catalog{flex:1 1 0!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column;gap:6px}
+ body[data-area] .archive-nav{flex:none;padding:8px 12px 0;gap:6px}
+ body[data-area] .archive-nav button{padding:7px 10px}
+ body[data-area] .archive-nav b{font-size:14px}
+ body[data-area] .archive-nav small,body[data-area] .archive-nav span{display:none}
+ body[data-area]:not([data-section=collection]) .preview{flex:0 0 188px!important;height:188px!important;min-height:0!important;grid-template-rows:22px minmax(0,1fr) 30px!important;padding:8px!important;gap:5px 8px!important}
+ body[data-area] .preview .stage{grid-row:2/4;min-height:0!important;height:100%!important}
+ body[data-area] .preview .stage:not(.has-following-pet) #avatar{height:110px!important;width:110px!important;object-fit:contain}
+ body[data-area] .preview .stage-note{display:none}
+ body[data-area] .previewbar{grid-row:3;gap:4px;flex-wrap:nowrap}
+ body[data-area] .previewbar .ghost{height:28px;font-size:11px}
+ body[data-area] .catalog-head{flex:0 0 29px;min-height:29px!important}
+ body[data-area] .catalog-head h2{font-size:19px}
+ body[data-area] #categories{flex:none;display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;gap:5px;margin:0!important;padding-bottom:3px}
+ body[data-area] #categories button{flex:none;min-height:32px;padding:5px 12px}
+ body[data-area] .hair-sections button{min-height:30px;padding:5px 10px;font-size:12px}
+ body[data-area] .hair-section-hint{margin:4px 0;font-size:10px}
+ body[data-area] .browsehead{flex:0 0 auto!important}
+ body[data-area]:not([data-shop-category=other]) #singles:not([hidden]){min-height:0!important;flex:1;overflow:hidden!important}
+ body[data-area]:not([data-shop-category=other]) #grid{min-height:0!important;overflow:auto!important;grid-auto-rows:130px!important;grid-template-rows:none!important;align-content:start}
+ body[data-area] #grid .item{min-height:0!important;height:130px!important}
+ body[data-area] #bundles:not([hidden]){overflow:auto!important;min-height:0}
+ body[data-area] #singles.showing-my-hair{flex:0 0 auto!important}
+ body[data-area] #bundles:not([hidden]){flex:1 1 0}
+ body[data-area] #dyeShop:not([hidden]){overflow:auto;min-height:0}
+}
+
+body[data-area][data-shop-category=other] #categories{position:sticky;top:0;z-index:10;background:#403047;padding:6px 0}
