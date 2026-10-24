@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const src=fs.readFileSync('lobby-ui/fixed-view.js','utf8');
 function run({framed=false,desktop=true,preview=false}={}){const calls=[],handlers={},location={pathname:'/lobby.html',search:preview?'?preview=1':'?v=352',hash:'#room',replace:url=>calls.push(['replace',url]),assign:url=>calls.push(['self',url])},window={location};window.top=framed?{}:window;window.self=window;window.parent=framed?{location:{pathname:'/lobby-view.html',assign:url=>calls.push(['parent',url])}}:window;const c={window,location,document:{documentElement:{classList:{add(){}}},addEventListener:(type,fn)=>handlers[type]=fn},matchMedia:()=>({matches:desktop}),URLSearchParams};vm.runInNewContext(src,c);return {calls,window,handlers};}
-assert.deepEqual(run().calls,[['replace','lobby-view.html?v=370#room']]);
+assert.deepEqual(run().calls,[['replace','lobby-view.html?v=371#room']]);
 assert.equal(run({desktop:false}).calls.length,0,'touch/mobile keeps the responsive lobby');
 assert.equal(run({preview:true}).calls.length,0,'local fixture remains isolated');
 const framed=run({framed:true});assert.equal(framed.calls.length,0,'no recursive frame');

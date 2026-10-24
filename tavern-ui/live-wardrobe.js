@@ -22,6 +22,61 @@
   keepsakes.innerHTML='<div class="keepsake-intro"><small>KEEPSAKES & MEMORIES</small><h2>一起度過的日子，有跡可循。</h2><p>紀念小物、解鎖的成就，收進專屬於你的收藏冊。</p></div><div class="memory-grid">'+records.map((r,i)=>'<article class="memory-card"><span class="memory-no">'+String(i+1).padStart(2,'0')+'</span><img src="'+esc(r.image)+'" alt=""><small>'+esc(r.kind)+'</small><h3>'+esc(r.name)+'</h3><p>'+esc(r.description)+'</p><footer>取得來源 · '+esc(r.source)+'</footer><span class="memory-word" aria-hidden="true">MEMORY</span></article>').join('')+'</div><div class="souvenir-empty"><span aria-hidden="true">◇</span><div><h3>替下一份紀念，留一個位置。</h3><p>目前還沒有已發放的紀念小物。'+(!records.length?'解鎖的成就紀錄也會收在這裡。':'')+'</p></div></div>';
  }
 
+ const lookPanel=document.createElement('aside');lookPanel.id='lookSummary';lookPanel.hidden=true;lookPanel.setAttribute('aria-label','目前搭配清單');document.querySelector('.workspace').append(lookPanel);
+ const lookDialog=document.createElement('dialog');lookDialog.className='look-checkout-dialog';lookDialog.setAttribute('aria-label','確認選購清單');document.body.append(lookDialog);
+ let lookExpanded=false,pendingLook=null;
+ const lookSlots={front:'瀏海',back:'後髮',cloth:'衣服',eye:'眼型',brow:'眉毛',pet:'寵物'};
+ function lookItems(state=data){
+  return Object.entries(selection).flatMap(([slot,r])=>{
+   if(!r||slot==='seat')return [];
+   if(r.base!==undefined){const native=slot==='eye'?'face':slot,p=state.baseParts?.[native]?.items?.find(p=>p.idx===r.base);return p&&p.n!=='無'?[{slot,ref:r,name:api.displayPartName?.(p.n)||p.n||lookSlots[slot],owned:true,base:true,removable:r.base!==baseRef(slot)?.base}]:[];}
+   const product=state.catalog.find(o=>o.id===r.source),part=product?.parts.find(p=>p.slot===r.slot);if(!part||product.drink)return [];
+   return [{slot,ref:r,name:part.name,product,owned:product.owned,removable:true}];
+  });
+ }
+ function lookQuote(items){
+  const unique=[...new Map(items.filter(p=>p.product&&!p.owned).map(p=>[p.product.id,p.product])).values()];
+  const ready=unique.filter(o=>o.sale&&!o.previewOnly&&Number.isSafeInteger(Number(o.price))&&Number(o.price)>=0),unavailable=unique.filter(o=>!ready.includes(o));
+  return {ready,unavailable,total:ready.reduce((sum,o)=>sum+Number(o.price),0)};
+ }
+ function removeLook(slot){
+  if(saving)return;
+  const item=lookItems().find(p=>p.slot===slot);if(!item?.removable)return;
+  let next={...selection,[slot]:['front','back','cloth','eye','brow'].includes(slot)?baseRef(slot):null};
+  next=api.normalizeSelection?.(next)||next;
+  const nextColor=['front','back'].includes(slot)&&color.savedId?{hair:data.doll.hair||0}:color;
+  try{api.makeDoll(next,nextColor);}catch(e){tell(e.message);return;}
+  selected=null;
+  if(area==='bag')return saveBag(next,nextColor,'已卸下「'+item.name+'」。');
+  selection=next;color=nextColor;render();
+ }
+ function paintLook(){
+  const items=lookItems();lookPanel.querySelectorAll('[data-look-thumb]').forEach(cv=>{const p=items.find(p=>p.slot===cv.dataset.lookThumb);if(p)api.drawPart(cv,p.ref,color);});
+ }
+ function renderLook(){
+  const visible=bagSection!=='collection'&&!['other','seat','dye','bubbles'].includes(category);
+  lookPanel.hidden=!visible;document.body.classList.toggle('has-look-summary',visible);
+  if(!visible)return;
+  const items=lookItems(),q=lookQuote(items),scroll=lookPanel.querySelector('.look-items')?.scrollTop||0;
+  lookPanel.classList.toggle('is-expanded',lookExpanded);
+  lookPanel.innerHTML='<header><div><small>YOUR LOOK</small><h3>目前搭配 <span>'+items.length+'</span></h3></div><button class="look-expand" type="button" aria-expanded="'+lookExpanded+'" aria-label="展開或收合目前搭配">'+(lookExpanded?'收合':'展開')+'</button></header><div class="look-items">'+items.map(p=>'<article class="look-item"><canvas width="64" height="64" data-look-thumb="'+esc(p.slot)+'" aria-label="'+esc(p.name)+'"></canvas><div><strong>'+esc(p.name)+'</strong><small>'+(p.base?'基本款':p.owned?'已擁有':q.unavailable.includes(p.product)?'尚未開賣':(p.product.pet?'單隻 ':'整套 ')+esc(p.product.price)+' 金幣')+'</small></div><button type="button" class="look-remove" data-look-remove="'+esc(p.slot)+'" aria-label="移除'+esc(p.name)+'" '+(!p.removable||saving?'disabled':'')+' title="'+(p.removable?'移除此部件':'目前為基本款')+'">−</button></article>').join('')+'</div><footer><div class="look-total"><span>'+(area==='bag'?'需購買金額':q.unavailable.length?'可購買部分小計':'需購買金額')+'</span><strong>'+q.total.toLocaleString()+'<small> 金幣</small></strong></div><p class="look-pricing">'+(q.ready.length?'同一套裝只計一次 · 已擁有不計價':'目前搭配的已擁有部件不計價')+'</p>'+(q.unavailable.length?'<p class="look-unavailable">另有 '+q.unavailable.length+' 套尚未開賣，未計入金額</p>':'')+(area==='store'?'<button type="button" class="primary look-checkout" '+(!q.ready.length?'disabled':'')+'>'+(q.ready.length?'確認選購 · '+q.ready.length+' 項':q.unavailable.length?'等待開賣':'已全部擁有')+'</button>':'')+'</footer>';
+  lookPanel.querySelector('.look-expand').onclick=()=>{lookExpanded=!lookExpanded;renderLook();};
+  lookPanel.querySelectorAll('[data-look-remove]').forEach(b=>b.onclick=()=>removeLook(b.dataset.lookRemove));
+  lookPanel.querySelector('.look-checkout')?.addEventListener('click',openLookCheckout);
+  lookPanel.querySelector('.look-items').scrollTop=scroll;paintLook();
+ }
+ function openLookCheckout(){
+  data=api.state();const q=lookQuote(lookItems());renderLook();
+  lookDialog.innerHTML='<header><div><small>YOUR SELECTION</small><h2>確認選購</h2></div><button type="button" class="look-close" aria-label="關閉選購清單">×</button></header><p>時裝以整套販售，同套部件只計價一次。每項會分別進入結帳確認。</p><div class="look-purchases">'+q.ready.map(o=>'<article><div><strong>'+esc(o.name)+'</strong><span>'+Number(o.price).toLocaleString()+' 金幣'+(o.pet?'／隻':'／整套')+'</span></div><button class="primary" type="button" data-look-buy="'+esc(o.id)+'">前往結帳</button></article>').join('')+'</div>'+(q.unavailable.length?'<p class="look-unavailable">尚未開賣：'+q.unavailable.map(o=>esc(o.name)).join('、')+'</p>':'')+'<footer><span>需購買金額</span><strong>'+q.total.toLocaleString()+' 金幣</strong></footer>';
+  lookDialog.querySelector('.look-close').onclick=()=>lookDialog.close();
+  lookDialog.querySelectorAll('[data-look-buy]').forEach(b=>b.onclick=()=>{
+   const id=b.dataset.lookBuy,fresh=api.state(),current=lookQuote(lookItems(fresh)).ready.find(o=>o.id===id),shown=q.ready.find(o=>o.id===id);
+   if(!current||current.price!==shown.price){data=fresh;openLookCheckout();tell('商品資訊已更新，請重新確認。');return;}
+   pendingLook=JSON.parse(JSON.stringify({selection,color}));
+   try{api.buy(id);lookDialog.close();}catch(e){pendingLook=null;tell(e.message);}
+  });
+  if(!lookDialog.open)lookDialog.showModal();
+ }
  const ref=p=>p.base!==undefined?{base:p.base,slot:p.slot}:{source:p.source,slot:p.slot};
  const key=p=>p.category==='acc'?(api.accessoryKey?.(p)||'accessory:'+p.group):p.slot;
  function isTrying(p){
@@ -52,6 +107,7 @@
   if(saved){selection.front={...saved.front};selection.back={...saved.back};}
   const highlight=data.colors.findIndex(c=>c.toLowerCase()===d.hairHighlight?.toLowerCase());
   color=saved?{savedId:d.dyedHairSet}:{hair:d.hair||0,keepOriginal:true,...(highlight>=0?{highlight}:{})};colorTarget='main';selected=null;
+  if(pendingLook){const savedLook=pendingLook;pendingLook=null;try{api.makeDoll(savedLook.selection,savedLook.color);selection=savedLook.selection;color=savedLook.color;}catch{}}
  }
  function outfitSelection(o){const next=selectionFromDoll(o.doll||{});o.parts.filter(p=>p.defaultEquipped!==false).forEach(p=>next[key(p)]=ref(p));return next;}
  function products(){return data.catalog.filter(o=>!o.retired&&(area==='bag'?o.owned:o.sale));}
@@ -136,6 +192,7 @@
  }
  const previewFitObserver=new ResizeObserver(fitPreviewParty);previewFitObserver.observe(previewStage);
  function paint(){
+  renderLook();
   const dyeVisible=!!dyeDraft&&!$('#dyeDialog').hidden;
   try{const d=api.makeDoll(selection,color);if(dyeVisible){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;if(dyeDraft.highlight)d.hairHighlight=dyeDraft.highlight;api.draw($('#dyePreview'),d);}setPreviewPet(api.followingPet?.(d));api.draw($('#avatar'),d,fitPreviewParty);}catch(e){tell(e.message);}
   // 訂製試色同時更新固定試穿區，商品縮圖不需每次重畫。
@@ -227,6 +284,7 @@
   document.querySelector('.paneltitle strong').textContent=area==='bag'?'今天的我':'試穿看看';
   document.querySelector('.stage-label').textContent=area==='bag'?'MY OUTFIT':'FITTING ROOM';
   $('#showWear').hidden=area!=='bag'||category==='other';$('#dyeTicket').hidden=false;
+  renderLook();
   if(collecting){renderCollection();return;}
   // 商城與背包由各自的大廳入口開啟，不交叉切換。
   $('#catalog .catalog-head h2').textContent=area==='store'?'本日選物':'我的衣櫥';
@@ -260,8 +318,7 @@
   $('#pager').replaceChildren();
   if(category==='other'&&list.length&&!list.some(p=>p.id===selected))selected=list[0].id;
   const p=list.find(p=>p.id===selected);
-  $('#detail').innerHTML=p?'<div><small class="overline">'+(p.category==='acc'?'ACCESSORY / '+groupNames[p.group]:'YOUR STYLE')+'</small><h2>'+esc(p.name)+'</h2><p>'+esc(p.requirement||p.note||(p.product.owned?'已取得，可自由搭配。':p.product.pet?'購買後可從背包裝備，跟隨在你身邊。':p.product.drink?'給寵物的飲料。':'包含於「'+p.product.name+'」，購買整組後可拆件搭配。'))+'</p></div><div class="actions">'+(['acc','pet','seat','other'].includes(p.category)?'<span class="accessory-toggle-hint">點選配件搭配，再點一次卸下</span>':'')+'<button class="primary" id="itemAction">'+(area==='bag'?'穿上目前搭配 →':p.product.owned?'已擁有':p.product.previewOnly?'敬請期待':p.product.pet?'選購寵物 →':p.product.drink?'選購飲料 →':'選購整組 →')+'</button></div>':'<p>挑選另一個分類，繼續找喜歡的造型。</p>';
-  if(p){$('#itemAction').disabled=area==='store'&&(p.product.owned||p.product.previewOnly);$('#itemAction').onclick=()=>area==='bag'?wear():!p.product.owned&&buy(p.product.id);}
+  $('#detail').replaceChildren();
   if(category==='other'){
    $('#catalog .catalog-head h2').textContent=area==='bag'?'我的飲料':'飲料';if(!list.length)$('#grid').innerHTML='<p class="live-empty">'+(area==='bag'?'目前沒有持有的飲料。':'目前沒有上架飲料。')+'</p>';if(!p)$('#detail').textContent='選擇飲料與杯數';
    $('#subtabs').textContent='左右滑動，挑一杯送給喜歡的夥伴';document.querySelector('.preview').hidden=true;
@@ -282,7 +339,7 @@
    }
   }
   if(mode==='bundles')renderBundles();
-  if(area==='bag'&&category!=='other'){$('#detail').replaceChildren();$('#detail').hidden=true;}else $('#detail').hidden=false;
+  if(category!=='other'){$('#detail').replaceChildren();$('#detail').hidden=true;}else $('#detail').hidden=false;
   dyeCta();swatches();paint();clearTimeout(render.imageTimer);render.imageTimer=setTimeout(paint,450);
  }
  /* v258:試衣間旁的染髮入口改成會動的邀請卡:先免費試色,喜歡再買券 */
@@ -316,13 +373,13 @@
    $('#bundlegrid').innerHTML=saved.map(([id,s])=>'<article class="bundle saved-dye-bundle"><div class="bundlebody"><small>MY HAIR</small><h2>'+esc(s.name||'專屬染髮')+'</h2><canvas class="dyed-preview" width="64" height="64" data-dyed-preview="'+esc(id)+'"></canvas><p>已固定瀏海、後髮與髮色。再次穿戴不扣券。</p><button class="primary" data-saved="'+esc(id)+'">試穿這組</button></div></article>').join('')||'<div class="live-empty"><p>還沒有保存的染髮。</p><button class="primary" id="emptyDye">開始染髮</button><p>先選好瀏海與後髮，再調整專屬髮色。</p></div>';
    if($('#emptyDye'))$('#emptyDye').onclick=openDye;
    $$('[data-saved]').forEach(b=>{const id=b.dataset.saved,active=color.savedId===id;b.textContent=active?'已穿戴 · 點一下卸下':'點一下穿戴';b.onclick=()=>{if(saving)return;const saved=data.dyed[id];const next=api.normalizeSelection({...selection,front:active?{base:0,slot:'front'}:saved.front,back:active?{base:0,slot:'back'}:saved.back});return saveBag(next,active?{hair:data.doll.hair||0}:{savedId:id},active?'已卸下染髮組合，恢復原有髮型。':'已穿上染髮組合。');}});
-   $('#detail').innerHTML='<p>選一款我的染髮，即可試穿；再次穿戴不扣券。</p>';
+   $('#detail').replaceChildren();
   }else{
    const available=products().filter(o=>!['寵物','其他','座椅'].includes(o.type)&&o.parts.length),featured=available.filter(o=>o.featured),all=(featured.length?featured:available).sort((a,b)=>b.featured-a.featured);const show=all;
    $('#bundlegrid').innerHTML=show.map((o,i)=>'<article class="season-card" data-season="'+esc(o.id)+'"><div class="season-visual"><span class="season-kicker">TAVERN / SEASON COLLECTION</span><span class="season-number">0'+(i+1)+'</span>'+(o.img?'<img src="'+esc(o.img)+'" alt="'+esc(o.name)+'完整套裝展示" width="240" height="240">':'<canvas width="64" height="64" data-outfit-preview="'+esc(o.id)+'"></canvas>')+'</div><div class="season-info"><h2>'+esc(o.name)+'</h2><p>'+(o.id==='season283_devil'?'暖金與紫色交織，藏一點小惡魔的俏皮。':o.id==='season283_valentine'?'粉色漸入深紫，把心動穿成今天的模樣。':'收藏完整造型，也能自由搭配喜歡的部件。')+'</p><div class="season-price"><strong>'+(o.previewOnly?'即將登場':esc(o.price))+(o.previewOnly?'':'<small>金幣／整套</small>')+'</strong><span>'+(o.owned?'已收藏':'當季完整套組')+'</span></div><div class="season-actions"><button class="ghost" data-try-outfit="'+esc(o.id)+'">試穿整套</button><button class="primary" data-buy-outfit="'+esc(o.id)+'" '+(o.owned||o.previewOnly?'disabled':'')+'>'+(o.owned?'已擁有':o.previewOnly?'敬請期待':'選購整套')+'</button></div></div></article>').join('')||'<p class="live-empty">目前沒有上架組合。</p>';
    $$('[data-try-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.tryOutfit);const next=outfitSelection(o),nextColor={hair:o.doll?.hair||0};try{api.makeDoll(next,nextColor);}catch(e){tell(e.message);return;}selection=next;color=nextColor;swatches();paint();tell('已試穿「'+o.name+'」');});
    $$('[data-buy-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.buyOutfit);if(!o.owned&&!o.previewOnly)buy(o.id);});
-   $('#detail').innerHTML='<p>整套收藏，隨心搭配。購買後可在「我的背包」找到各部件；展示髮色可作為你的配色靈感。</p>';
+   $('#detail').replaceChildren();
   }
  }
  function buy(id){try{api.buy(id);}catch(e){tell(e.message);}}
