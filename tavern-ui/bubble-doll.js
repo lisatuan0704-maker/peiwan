@@ -226,6 +226,6 @@ if(TEST_MODE){
   tpImg(TP.body); tpImg(TP.closed);
 }
 
-function refresh(){const cv=document.getElementById('doll');if(cv)drawDoll(cv.getContext('2d'));}
+function refresh(){const cv=document.getElementById('doll');if(cv){drawDoll(cv.getContext('2d'));window.dispatchEvent(new Event('tt-preview-doll-drawn'));}}
 refresh();
 })();

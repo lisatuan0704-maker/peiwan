@@ -1,0 +1,55 @@
+.tt-skin.cream{--surface:radial-gradient(ellipse at 18% 0%,#fffefa 0%,transparent 65%),linear-gradient(125deg,#fff4dfef,#f1e2c9f5 55%,#fff7e8f5);--rim:linear-gradient(115deg,#fff9e3 4%,#c49d60 23%,#fef4d9 44%,#d4b283 66%,#fff9eb 86%);--text:#62503c;--tail:#f3e5ce;--edge:#d3b788;--halo:#f3dca02e}
+.tt-skin.rose{--surface:radial-gradient(ellipse at 15% 0%,#fff9efd9,transparent 70%),linear-gradient(125deg,#fce7dedf,#f0d9e9f5 60%,#f7e6edf5);--rim:linear-gradient(115deg,#fff5d7 2%,#d49caa 22%,#fff3ec 42%,#b59cc9 65%,#f8d7b3 88%);--text:#694c60;--tail:#f1dce8;--edge:#cca7ba;--halo:#f1b7cf42}
+.tt-skin.lavender{--surface:radial-gradient(ellipse at 18% 0%,#fff7e9e8,transparent 62%),linear-gradient(120deg,#e4ddf4ef,#d2c8e6f5 58%,#eeddeaf5);--rim:linear-gradient(115deg,#fff2d5 5%,#a597c5 24%,#f8eef8 46%,#c092b4 67%,#eee1b8 89%);--text:#594968;--tail:#dcd0e8;--edge:#b5a3cb;--halo:#ccbbe34d}
+.tt-skin.night{--surface:radial-gradient(ellipse at 16% 0%,#9d738342,transparent 70%),linear-gradient(130deg,#544654f7,#372d40fa 58%,#55404ff7);--rim:linear-gradient(115deg,#f8e6bc 3%,#ac7d77 24%,#ebcbaa 47%,#89779d 68%,#eed6b2 90%);--text:#fff0db;--tail:#413445;--edge:#b99a86;--halo:#e6b88f29}
+.tt-skin.mint{--surface:radial-gradient(ellipse at 15% 0%,#fffce9f2,transparent 67%),linear-gradient(125deg,#edf0daef,#d7e2d5f5 58%,#edf0dff5);--rim:linear-gradient(115deg,#fff4ce 4%,#9fae86 24%,#f5f2db 46%,#9dbaa8 68%,#ead3ac 89%);--text:#50634f;--tail:#e0e8d9;--edge:#afbd9f;--halo:#d9e9bf3d}
+.tt-skin.blossom{--surface:radial-gradient(ellipse at 18% 0%,#fff5e6ed,transparent 65%),linear-gradient(130deg,#f8e3d7ef,#e6c8cef5 55%,#f5e0dcf5);--rim:linear-gradient(115deg,#fff1d3 5%,#bf8d8b 25%,#fbe6d3 45%,#b794ab 68%,#f5d6b6 90%);--text:#754f55;--tail:#edd4d4;--edge:#c79d9e;--halo:#e9b6a838}
+.tt-skin{position:relative;isolation:isolate;display:inline-block;max-width:min(232px,100%);min-width:0;border:1px solid transparent;border-radius:13px;padding:9px 12px;background:var(--surface);background-clip:padding-box;color:var(--text);box-shadow:inset 0 1px 1px #fff7,0 3px 8px #402a3026,0 0 11px var(--halo);font-size:16px;font-weight:500;line-height:1.5;text-align:center;flex-shrink:0;backdrop-filter:blur(5px)}
+.tt-skin::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;background:var(--rim);background-size:240% 100%;background-position:25% 0;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none}
+.tt-skin::after{content:'';position:absolute;bottom:-5px;left:calc(50% - 5px);width:9px;height:9px;background:var(--tail);border-right:1px solid var(--edge);border-bottom:1px solid var(--edge);transform:rotate(45deg);z-index:-1}
+.tt-skin-text{position:relative;z-index:1;display:block;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
+.tt-skin.cream{border-radius:10px;box-shadow:inset 0 0 0 3px #fff8e73b,inset 0 1px 1px #fff9,0 3px 7px #47302524}
+.tt-skin.rose{box-shadow:inset 0 2px 3px #fff9,0 3px 8px #62415127,0 0 12px var(--halo)}
+.tt-skin.lavender{border-radius:15px 7px 15px 7px;box-shadow:inset 0 1px 2px #fff9,0 3px 8px #49364d29,0 0 12px var(--halo)}
+.tt-skin.night{border-radius:9px;box-shadow:inset 0 0 0 3px #ead0ad10,inset 0 1px 1px #f0caa83b,0 3px 8px #271a343d}
+.tt-skin.mint{border-radius:15px;box-shadow:inset 0 2px 3px #ffffed99,0 3px 8px #38483225,0 0 10px var(--halo)}
+.tt-skin.blossom{border-radius:8px;box-shadow:inset 0 0 0 3px #fff0de42,inset 0 1px 1px #fff8,0 3px 8px #563b3f29}
+.tt-skin.tt-effects:not(.tt-skin.cream)::before{animation:pearl-rim 9s ease-in-out infinite alternate}@keyframes pearl-rim{from{background-position:15% 0}to{background-position:85% 0}}@media(prefers-reduced-motion:reduce){.tt-skin::before{animation:none!important}}
+.tt-skin.ribbon{--surface:radial-gradient(ellipse at 10% 0%,#fff9eaf2,transparent 66%),linear-gradient(120deg,#f6dfccf2,#edd2ddf5 52%,#d8c8e6f5);--rim:linear-gradient(110deg,#f8e3b5,#c38b9b 26%,#fff1d7 48%,#b5a0c9 70%,#f3d6bd);--text:#684d60;--tail:#e8d1de;--edge:#c4a1b8;--halo:#ebc1d53b}
+.tt-skin.lattice{--surface:radial-gradient(ellipse at 50% 0%,#8d687c73,transparent 85%),linear-gradient(120deg,#514052f7,#3d3043fa 60%,#5a4253f7);--rim:linear-gradient(110deg,#cfb085,#f7e3ba 24%,#a77d85 50%,#e6ca9d 76%,#b88a8f);--text:#fff1db;--tail:#4c394d;--edge:#c7a47e;--halo:#e2b99424}
+.tt-skin.glass{--surface:radial-gradient(ellipse at 6% 0%,#fffbe8f5,transparent 62%),radial-gradient(ellipse at 90% 110%,#f7cddcbd,transparent 72%),linear-gradient(120deg,#e9e1f0ed,#cfc6e3f0 52%,#e6d3e8f5);--rim:linear-gradient(120deg,#fff5cf,#b4a8d1 26%,#fdf2ee 52%,#c397bb 74%,#f4e6c8);--text:#594767;--tail:#d8cee7;--edge:#baaaca;--halo:#d8c4ec55}
+.tt-skin.ribbon{border-radius:18px 6px 18px 6px;box-shadow:inset 0 2px 3px #fff8,0 3px 8px #5f384c29,0 0 12px var(--halo)}
+.tt-skin.lattice{border-radius:6px 14px 6px 14px;box-shadow:inset 0 0 0 3px #edcba91c,inset 0 0 0 4px #e6ba841f,0 3px 9px #2e183b45}
+.tt-skin.glass{border-radius:19px 19px 8px 19px;box-shadow:inset 0 3px 4px #fff9,inset 0 -4px 7px #f8e2f080,0 3px 8px #59436026,0 0 13px var(--halo)}
+
+/* Original illustrated companions; all art stays on the edge, outside the reading area. */
+.tt-skin.ribbon{--surface:radial-gradient(ellipse at 15% 0%,#fff9ec,transparent 70%),linear-gradient(130deg,#fff2df,#f4dbe7);--rim:linear-gradient(115deg,#b68b9f,#e7bcc5 48%,#b996b7);--text:#70535e;--tail:#f8e6e7;--edge:#ba94a5;--halo:#f0cbd72b}
+.tt-skin.lattice{--surface:radial-gradient(ellipse at 10% 0%,#fff5e8,transparent 65%),linear-gradient(125deg,#ede6f7,#ddd7ef);--rim:linear-gradient(110deg,#a69bbd,#c4b6df 50%,#a89ac5);--text:#635575;--tail:#e4ddf2;--edge:#afa1c7;--halo:#d3c8e62e}
+.tt-skin.glass{--surface:radial-gradient(ellipse at 10% 0%,#fff4dc,transparent 65%),linear-gradient(125deg,#f9decb,#f1c8ca);--rim:linear-gradient(115deg,#c99585,#e2ae9d 50%,#c59495);--text:#79574f;--tail:#f6d5cf;--edge:#cf9c92;--halo:#f4ccb82e}
+.tt-skin.ribbon,.tt-skin.lattice,.tt-skin.glass{border-radius:16px 16px 11px 16px;box-shadow:inset 0 2px 0 #fff8,0 3px 6px #684c3d20;min-width:62px}
+.tt-skin.ribbon::before,.tt-skin.lattice::before,.tt-skin.glass::before{padding:2px;background-size:100% 100%;animation:none}
+.tt-skin.lattice{border-radius:14px 15px 15px 7px}.tt-skin.glass{border-radius:18px 12px 17px 12px}
+.tt-skin-art{position:absolute;pointer-events:none;display:block;z-index:2;line-height:0;filter:drop-shadow(0 1px 0 #fff6)}.tt-skin-art svg{width:100%;height:100%;overflow:visible;stroke-linecap:round;stroke-linejoin:round}
+.tt-skin.ribbon .tt-skin-art.left{width:27px;height:27px;left:-14px;top:-15px;transform:rotate(-15deg)}.tt-skin.ribbon .tt-skin-art.right{width:45px;height:40px;right:-21px;bottom:-25px}
+.tt-skin.lattice .tt-skin-art.left{width:40px;height:52px;left:-25px;top:-29px;transform:rotate(-7deg)}.tt-skin.lattice .tt-skin-art.right{width:29px;height:31px;right:-17px;bottom:-17px;transform:rotate(10deg)}
+.tt-skin.glass .tt-skin-art.left{width:28px;height:26px;left:-13px;bottom:-15px;transform:rotate(-9deg)}.tt-skin.glass .tt-skin-art.right{width:36px;height:36px;right:-20px;top:-26px;transform:rotate(10deg)}
+.tt-skin.tt-effects:is(.tt-skin.ribbon,.tt-skin.lattice,.tt-skin.glass)::before{background-size:200% 100%;animation:pearl-rim 12s ease-in-out infinite alternate}
+@media(prefers-reduced-motion:reduce){.tt-skin.tt-effects::before{animation:none!important}}
+
+
+.tt-skin-edge{position:absolute;inset:-7px;pointer-events:none;z-index:0;line-height:0}.tt-skin-edge svg{display:block;width:100%;height:100%;overflow:visible}.tt-skin>.tt-skin-text{z-index:1}.tt-skin-art{z-index:2}
+
+/* User palette: warm peach, smaller outline cat, rounded Chinese lettering. */
+.tt-skin.ribbon{--surface:radial-gradient(ellipse at 15% 0%,#fff9eb66,transparent 70%),linear-gradient(142deg,#f0d5d5,#fdd19b,#ea844d);--rim:linear-gradient(135deg,#ffffff,#b45646);--text:#8a7b80;--tail:#edac91;--edge:#daa39b}
+.tt-skin.ribbon>.tt-skin-text{font-family:'TT Huninn','LINE Seed TW',sans-serif;font-weight:400}
+.tt-skin.ribbon .tt-skin-art.right{width:28px;height:24px;right:-11px;bottom:-14px;filter:drop-shadow(0 1px 0 #fff8)}
+
+/* Isolated from old image bubble selectors and page UI. */
+.tt-skin{box-sizing:border-box;--halo:transparent;font-family:'TT Huninn','LINE Seed TW',sans-serif;font-weight:400;overflow:visible}
+.tt-skin.none{--surface:#fffdf9;--rim:linear-gradient(135deg,#fff,#d9c7ba);--text:#574b50;--tail:#fffdf9;--edge:#d9c7ba;border-radius:13px}
+.tt-skin.tt-overhead{position:absolute;left:50%;top:auto;bottom:calc(100% + 10px);transform:translateX(-50%);width:max-content;max-width:232px;z-index:10;pointer-events:none}
+.tt-skin-preview{display:flex;align-items:center;justify-content:center;min-width:110px;min-height:85px;padding:24px 18px;flex:none}
+.tt-bubble-card{display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:12px;border:1px solid #e5d9df;border-radius:14px;background:#fffaf8}
+.tt-bubble-card>div{flex:1;min-width:0}.tt-bubble-card strong{display:block;font-size:14px}.tt-bubble-card small{display:block;margin-top:5px;color:#846b82}.tt-bubble-card button{border:1px solid #b797ae;border-radius:9px;background:#f2e7ef;color:#69546c;padding:8px 10px;font:inherit;cursor:pointer}.tt-bubble-card button:disabled{opacity:.6;cursor:default}
+@media(max-width:500px){.tt-bubble-card{flex-wrap:wrap;gap:7px}.tt-skin-preview{min-width:100px;padding:24px 14px}}
+body.liteFX .tt-skin::before{animation:none!important}

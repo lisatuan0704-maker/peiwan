@@ -6,7 +6,7 @@
  if(mobile){const style=document.createElement('style');style.textContent='.area-tabs,#dyeTicket{display:none!important}';document.head.append(style);}
  const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const categories=[['hair','頭髮'],['cloth','衣服'],['acc','配件'],['eye','臉'],['pet','寵物'],['seat','座椅'],['other','其他']];
+ const categories=[['hair','頭髮'],['cloth','衣服'],['acc','配件'],['eye','臉'],['pet','寵物'],['seat','座椅'],['other','其他'],['bubbles','聊天氣泡']];
  const groupNames={head:'頭飾',ear:'耳環',face:'面部配件',hand:'手持物',back:'背飾／尾巴'};
  let data,selection={},color={},area='store',category='bundles',mode='singles',filter='all',selected=null,saving=false;
  let drinkQuantity=1,drinkBusy=false,drinkDialogOpen=false;
@@ -232,7 +232,7 @@
   $('#singles').hidden=dyeShop;$('#singles').classList.toggle('showing-bundles',mode==='bundles');$('#bundles').hidden=mode!=='bundles';$('#dyeShop').hidden=!dyeShop;$('#detail').hidden=dyeShop;
   const cats=[...(area==='store'?[['bundles','當季套組']]:[]),...categories,...(area==='store'?[['dye','染髮券']]:[])];
   $('#categories').innerHTML=cats.map(([id,name])=>'<button data-category="'+id+'" aria-pressed="'+(id===category)+'"'+(id==='dye'?' class="cat-dye"':'')+'><span>'+name+'</span></button>').join('');
-  $$('[data-category]').forEach(b=>b.onclick=()=>{category=b.dataset.category;selected=null;render();});
+  $$('[data-category]').forEach(b=>b.onclick=()=>{if(b.dataset.category==='bubbles'){api.openChatSkins();return;}category=b.dataset.category;selected=null;render();});
   if(category==='seat'){renderSeats();return;}
   if(dyeShop){$('#grid').replaceChildren();$('#subtabs').replaceChildren();$('#pager').replaceChildren();$('#bundlePager').replaceChildren();$('#detail').replaceChildren();renderDyeShop();dyeCta();swatches();paint();return;}
   $('#singles').classList.toggle('has-accessory-filter',category==='acc');

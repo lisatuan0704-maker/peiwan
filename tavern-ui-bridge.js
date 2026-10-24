@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=364';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=365';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -219,6 +219,7 @@
       close();shopOpen(2,'play');
     },
     originalInfo(cid){const s=staff().find(s=>s.cid===cid);if(s){close();oldInfo(cid,{name:s.name,st:s.on?(s.busy?'busy':'free'):'off'},0);}},
+    openChatSkins(){close();window.openChatSkins();},
     buy(source){if(isDrink(source))throw Error('請在其他分類選擇飲料杯數');const o=catalog().find(x=>x.id===source);if(o?.retired)throw Error('這套測試時裝已下架');if(!o||!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(o.owned)throw Error('這件商品已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:o.id,n:(['寵物','其他','座椅'].includes(o.type)?o.type+'・':'時裝・')+o.name,p:o.price,itemId:o.id,itemName:o.name};shopClose();shopOpen(3);},
     /* v258:染髮券商品(一張全包主色+漸層;價格可由掌櫃在商城新增 id 為 dyeTicket 的商品覆蓋,預設 299) */
     dyePrice(){return Number(window.__shopCfg?.dyeTicket?.price)||299;},
