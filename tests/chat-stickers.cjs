@@ -7,10 +7,11 @@ for(let n=1;n<=10;n++){const id='sticker-'+String(n).padStart(2,'0'),code=api.en
 for(const text of ['[貼圖:sticker-11]','[貼圖:https://example.com/a.png]','[貼圖:sticker-01]x','安安','<img src=x>'])assert.equal(api.decode(text),null);
 assert.equal(api.encode('unknown'),null);assert.equal(api.durationMs,5000);
 const html=fs.readFileSync(path.join(root,'lobby.html'),'utf8');
-const start=html.indexOf('function sendChat(stickerCode)'),end=html.indexOf('window.TTBubbleCalibration.bindInput',start);
+const start=html.indexOf('function sendChat(stickerCode)'),end=html.indexOf('window.TTChatSkins.bindInput',start);
+assert(start>=0&&end>start,'current sendChat function and its input-binding boundary are present');
 const input={value:'保留草稿'},writes=[],logs=[];let mode='member';
 Object.assign(context,{TTWorldScope:{isolated:false,write:fn=>fn()},document:{getElementById:()=>input},me:()=>mode==='guest'?null:{b:{name:'測試'}},myKey:'local-test',curMap:'hall',ROOT:'local-only',showBubble:()=>{},statInc:()=>{},pushLog:(...args)=>logs.push(args),db:{ref:()=>({push:()=>({key:'message',set:msg=>{writes.push(msg);return Promise.resolve();}})})}});
-context.window.TTBubbleCalibration={clip:s=>Array.from(s).slice(0,18).join('')};
+context.window.TTChatSkins={clip:s=>Array.from(s).slice(0,18).join('')};
 vm.runInContext(html.slice(start,end),context);
 assert.equal(context.sendChat(api.encode('sticker-01')),true);assert.equal(writes.length,1);assert.equal(input.value,'保留草稿');assert.equal(writes[0].text,'[貼圖:sticker-01]');
 mode='guest';assert.equal(context.sendChat(api.encode('sticker-02')),false);assert.equal(writes.length,1);
