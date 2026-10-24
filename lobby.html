@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=373"></script>
-<script src="lobby-ui/fixed-view.js?v=377"></script>
+<script src="lobby-ui/fixed-view.js?v=379"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
-<script src="lobby-ui/discord-auth.js?v=298"></script>
+<script src="lobby-ui/discord-auth.js?v=379"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>酒館大廳｜Tiny Tavern 小小酒館</title>
@@ -2424,7 +2424,13 @@ function publishProfile(){
     try{ const vi=window.__vipInfo&&window.__vipInfo(); if(vi&&vi.lv) pub.vip=vi.lv; }catch(e){}
     try{ if(typeof TT_STATS==='object'&&Array.isArray(TT_STATS.u)&&TT_STATS.u.length) pub.ach=TT_STATS.u.slice(0,20); }catch(e){}
     try{ const dc=JSON.parse(localStorage.getItem('tt_dc')||'null');
-      if(dc){ pub.dc=(dc.global_name||dc.username||''); if(dc.id&&dc.avatar) pub.dcav=dc.id+'/'+dc.avatar; } }catch(e){}
+      if(dc){ pub.dc=(dc.global_name||dc.username||'');
+        const choice=ttAvatarChoice();
+        if(!_avatarBusy){
+          if(choice?.source==='discord'&&choice.dcav)pub.dcav=choice.dcav;
+          else if(dc.id&&dc.avatar)pub.dcav=dc.id+'/'+dc.avatar;
+        }
+      } }catch(e){}
     try{ if(typeof curFrame!=='undefined'&&curFrame) pub.frm=curFrame; }catch(e){}
     try{ if(typeof curBub!=='undefined'&&curBub) pub.bub=bubActiveKey(); }catch(e){}
     if(!Object.keys(pub).length) return;
@@ -2475,11 +2481,13 @@ window.avMenu=function(anchor){
   const m=document.createElement('div'); m.id='avMenu'; m.className='avMenu';
   m.innerHTML='<button type="button">選一張照片</button>'
     +'<button type="button">使用 Discord 頭貼</button>'
+    +'<button type="button">重新讀取 Discord 頭貼</button>'
     +'<button type="button">改回像素小人</button>';
   const bs=m.querySelectorAll('button');
   bs[0].onclick=function(e){ e.stopPropagation(); m.remove(); avPick(); };
   bs[1].onclick=function(e){ e.stopPropagation(); m.remove(); avUseDc(); };
-  bs[2].onclick=function(e){ e.stopPropagation(); m.remove(); avClear(); };
+  bs[2].onclick=function(e){ e.stopPropagation(); m.remove(); avRefreshDc(); };
+  bs[3].onclick=function(e){ e.stopPropagation(); m.remove(); avClear(); };
   (anchor.parentElement||document.body).appendChild(m);
   const close=function(e){ if(m.contains(e.target)||e.target===anchor) return;
     m.remove(); document.removeEventListener('pointerdown',close,true); };
@@ -2541,7 +2549,8 @@ function avDraw(){
   _avX=Math.max(-maxX,Math.min(maxX,_avX)); _avY=Math.max(-maxY,Math.min(maxY,_avY));
   g.drawImage(_avImg,(S-w)/2+_avX,(S-h)/2+_avY,w,h);
 }
-window.avSave=function(){
+window.avSave=async function(){
+  if(_avatarBusy){ toast('頭貼正在儲存，請稍候'); return false; }
   const cv=document.getElementById('avCv'); if(!cv||!_avImg) return;
   const o=document.createElement('canvas'); o.width=AV_OUT; o.height=AV_OUT;
   o.getContext('2d').drawImage(cv,0,0,AV_OUT,AV_OUT);
@@ -2557,44 +2566,101 @@ window.avSave=function(){
   }
   const kb=Math.round(data.length/1024);
   if(kb>90){ toast('這張圖壓不下來,換一張試試'); return; }
+  _avatarBusy=true;
   try{
-    if(typeof db!=='undefined'&&db&&myKey){
-      try{ if(agents.has(myKey)){ const bb=agents.get(myKey).b; bb.pub=bb.pub||{}; bb.pub.pic=data; delete bb.pub.nopic; } }catch(e){}
-      _noPicLocal=false;_avatarChoice=null;
-      db.ref(ROOT+'/lobby/'+myKey+'/pub/nopic').remove();
-      db.ref(ROOT+'/lobby/'+myKey+'/pub/pic').set(data)
-        .then(function(){ avRefresh(); toast('頭貼換好了 ✦'); })
-        .catch(function(){ toast('頭貼沒能存起來,請再試一次'); });
-    }
+    await ttCommitAvatar({pic:data,nopic:null},null,myKey);
+    const nt=document.getElementById('avNote'); if(nt) nt.textContent='已壓縮到 '+kb+' KB';
+    gClose('avM'); avRefresh(); toast('頭貼換好了 ✦'); return true;
+  }catch(e){ toast('頭貼沒能存起來，請再試一次'); return false; }
+  finally{ _avatarBusy=false; }
+};
+/* v379: commit one source only after the image and database acknowledge it. */
+let _noPicLocal=false,_avatarChoice=null,_avatarBusy=false;
+function ttAvatarDc(){
+  try{ return JSON.parse(localStorage.getItem('tt_dc')||'null'); }catch(e){ return null; }
+}
+function ttDiscordAvatarUrl(dc){
+  return dc&&/^[0-9]{16,22}$/.test(dc.id||'')&&/^(a_)?[a-f0-9]{32}$/.test(dc.avatar||'')
+    ?'https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=256':'';
+}
+function ttAvatarChoice(){
+  let choice=_avatarChoice;
+  if(!choice){ try{ choice=JSON.parse(localStorage.getItem('tt_avatar_choice_v379')||'null'); }catch(e){} }
+  if(!choice||choice.key!==myKey)return null;
+  if(choice.source==='pixel')return choice;
+  if(choice.source==='discord'&&choice.dcId===ttAvatarDc()?.id)return choice;
+  return null;
+}
+function ttAvatarPreload(url){
+  return new Promise((resolve,reject)=>{
+    const im=new Image();
+    const timer=setTimeout(()=>done(false),10000);
+    function done(ok){ clearTimeout(timer);im.onload=im.onerror=null;ok?resolve():reject(Error('AVATAR_IMAGE')); }
+    im.onload=()=>done(im.naturalWidth>0);im.onerror=()=>done(false);im.src=url;
+  });
+}
+function ttAvatarSessionMatches(key,dcId){
+  try{return !!key&&key===myKey&&localStorage.getItem('tt_me')===key&&(ttAvatarDc()?.id||null)===dcId;}catch(e){return false;}
+}
+async function ttCommitAvatar(patch,choice,key){
+  const dcId=ttAvatarDc()?.id||null;
+  if(!ttAvatarSessionMatches(key,dcId)||typeof db==='undefined'||!db)throw Error('AVATAR_SESSION');
+  if(!agents.has(key)){
+    const snapshot=await db.ref(ROOT+'/lobby/'+key+'/name').once('value');
+    if(!snapshot.val())throw Error('AVATAR_CHARACTER');
+  }
+  if(!ttAvatarSessionMatches(key,dcId))throw Error('AVATAR_SESSION');
+  await db.ref(ROOT+'/lobby/'+key+'/pub').update(patch);
+  if(!ttAvatarSessionMatches(key,dcId))throw Error('AVATAR_SESSION');
+  const b=agents.get(key)?.b;
+  if(b){ b.pub=b.pub||{};Object.entries(patch).forEach(([name,value])=>{if(value===null)delete b.pub[name];else b.pub[name]=value;}); }
+  _avatarChoice=choice;_noPicLocal=choice?.source==='pixel';
+  try{ if(choice)localStorage.setItem('tt_avatar_choice_v379',JSON.stringify(choice));else localStorage.removeItem('tt_avatar_choice_v379'); }catch(e){}
+}
+window.avUseDc=async function(profile){
+  if(_avatarBusy){ toast('頭貼正在儲存，請稍候'); return false; }
+  const cached=ttAvatarDc(),dc=profile||cached,url=ttDiscordAvatarUrl(dc),key=myKey;
+  if(!url){ toast('目前沒有可用的 Discord 頭貼，請在相機選單選「重新讀取 Discord 頭貼」'); return false; }
+  if(dc.id!==cached?.id){ toast('Discord 帳號已變更，請重新讀取頭貼');return false; }
+  _avatarBusy=true;
+  try{
+    toast('正在讀取 Discord 頭貼…');
+    await ttAvatarPreload(url);
+    if(!ttAvatarSessionMatches(key,cached.id)||(!profile&&url!==ttDiscordAvatarUrl(ttAvatarDc())))throw Error('AVATAR_SESSION');
+    const dcav=dc.id+'/'+dc.avatar;
+    await ttCommitAvatar({dcav,pic:null,nopic:null},{key,source:'discord',dcId:dc.id,dcav},key);
+    if(!ttAvatarSessionMatches(key,cached.id))throw Error('AVATAR_SESSION');
+    if(profile){ try{localStorage.setItem('tt_dc',JSON.stringify(dc));}catch(e){} }
+    avRefresh();toast('已改用 Discord 頭貼 ✦');return true;
+  }catch(e){
+    toast(e.message==='AVATAR_IMAGE'?'Discord 頭貼載入失敗，請在相機選單選「重新讀取 Discord 頭貼」':'頭貼沒能存起來，請再試一次');return false;
+  }finally{ _avatarBusy=false; }
+};
+window.avClear=async function(){
+  if(_avatarBusy){ toast('頭貼正在儲存，請稍候'); return false; }
+  _avatarBusy=true;
+  try{ await ttCommitAvatar({pic:null,nopic:1},{key:myKey,source:'pixel'},myKey);avRefresh();toast('已改回像素小人');return true; }
+  catch(e){ toast('頭貼沒能存起來，請再試一次');return false; }
+  finally{ _avatarBusy=false; }
+};
+window.avRefreshDc=function(){
+  const dc=ttAvatarDc();
+  if(!dc?.id||!myKey){ toast('請先綁定 Discord 並建立闆卡');return false; }
+  if(!ttAvatarSessionMatches(myKey,dc.id)){ toast('帳號已變更，請重新整理後再更新頭貼');return false; }
+  try{
+    const url=TTDiscordAuth.begin('1527394621368303636','https://tinytavern.tw/dc.html');
+    sessionStorage.removeItem('tt_dc_avatar_resume_v379');
+    sessionStorage.setItem('tt_dc_avatar_refresh_v379',JSON.stringify({id:dc.id,key:myKey,state:new URL(url).searchParams.get('state'),at:Date.now()}));
+    ttNavigate(url);return true;
+  }catch(e){ toast('無法開始更新，請確認瀏覽器允許儲存資料後再試');return false; }
+};
+window.addEventListener('load',function(){
+  try{
+    const pending=JSON.parse(sessionStorage.getItem('tt_dc_avatar_resume_v379')||'null');
+    sessionStorage.removeItem('tt_dc_avatar_resume_v379');
+    if(pending&&pending.key===myKey&&pending.id===ttAvatarDc()?.id&&pending.profile?.id===pending.id&&Number.isFinite(pending.at)&&Date.now()-pending.at>=0&&Date.now()-pending.at<600000)void avUseDc(pending.profile);
   }catch(e){}
-  const nt=document.getElementById('avNote'); if(nt) nt.textContent='已壓縮到 '+kb+' KB';
-  gClose('avM');
-};
-let _noPicLocal=false,_avatarChoice=null;
-window.avUseDc=function(){
-  let has=false;
-  try{ const dc=JSON.parse(localStorage.getItem('tt_dc')||'null'); has=!!(dc&&dc.id&&dc.avatar);
-    if(has&&myKey&&agents.has(myKey)){ const b=agents.get(myKey).b; b.pub=b.pub||{};
-      b.pub.dcav=dc.id+'/'+dc.avatar; delete b.pub.pic; delete b.pub.nopic; }
-  }catch(e){}
-  if(!has){ toast('你的 Discord 沒有設定頭貼,或還沒綁定'); return; }
-  _noPicLocal=false;_avatarChoice={key:myKey,source:'discord'};
-  try{ if(typeof db!=='undefined'&&db&&myKey){
-    db.ref(ROOT+'/lobby/'+myKey+'/pub/nopic').remove();
-    db.ref(ROOT+'/lobby/'+myKey+'/pub/pic').remove();
-    db.ref(ROOT+'/lobby/'+myKey+'/pub/dcav').set(agents.get(myKey).b.pub.dcav);
-  } }catch(e){}
-  avRefresh(); toast('已改用 Discord 頭貼 ✦');
-};
-window.avClear=function(){
-  _noPicLocal=true;_avatarChoice={key:myKey,source:'pixel'};
-  try{ if(myKey&&agents.has(myKey)){ const b=agents.get(myKey).b; b.pub=b.pub||{}; b.pub.nopic=1; delete b.pub.pic; } }catch(e){}
-  try{ if(typeof db!=='undefined'&&db&&myKey){
-    db.ref(ROOT+'/lobby/'+myKey+'/pub/pic').remove();
-    db.ref(ROOT+'/lobby/'+myKey+'/pub/nopic').set(1);
-  } }catch(e){}
-  avRefresh(); toast('已改回像素小人');
-};
+});
 /* 換完頭貼/清掉頭貼後,HUD、手帳、闆卡都要立刻換掉 */
 function avRefresh(){
   try{ if(typeof applyFrame==='function') applyFrame(); }catch(e){}
@@ -2613,10 +2679,10 @@ function ttPhotoOf(b){
 }
 function ttMyPhoto(){
   try{
-    if(_avatarChoice?.key===myKey){
-      if(_avatarChoice.source==='pixel')return '';
-      const dc=JSON.parse(localStorage.getItem('tt_dc')||'null');
-      if(dc?.id&&dc.avatar)return 'https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=256';
+    const choice=ttAvatarChoice();
+    if(choice){
+      if(choice.source==='pixel')return '';
+      const url=ttDiscordAvatarUrl({id:choice.dcId,avatar:choice.dcav?.split('/')[1]});if(url)return url;
     }
     if(myKey&&typeof agents!=='undefined'&&agents.has(myKey)){
       const b=agents.get(myKey).b;
@@ -2635,7 +2701,7 @@ function ttFill(inner,doll,photo,cvId){
   if(photo){
     const im=document.createElement('img'); im.src=photo; im.alt='';
     im.style.cssText='width:100%;height:100%;object-fit:cover;image-rendering:auto;transform:none';
-    im.onerror=function(){ im.remove(); ttFill(inner,doll,'',cvId);if(_avatarChoice?.key===myKey&&_avatarChoice.source==='discord'&&cvId==='bkDoll')toast('Discord 頭貼載入失敗，請重新綁定 Discord 後再試'); };
+    im.onerror=function(){ im.remove(); ttFill(inner,doll,'',cvId);if(ttAvatarChoice()?.source==='discord'&&cvId==='bkDoll')toast('Discord 頭貼載入失敗，請在相機選單選「重新讀取 Discord 頭貼」'); };
     inner.appendChild(im); return;
   }
   const c=document.createElement('canvas'); c.width=64; c.height=64; if(cvId) c.id=cvId;
@@ -2749,7 +2815,7 @@ function drawFullCard(b){
     const stage=document.getElementById('pcStage');
     const side=stage.querySelector('.pcBeside');
     const isMe=!!(myKey&&popTarget&&popTarget.myKey===myKey);
-    const photo=ttPhotoOf(b);
+    const photo=isMe?ttMyPhoto():ttPhotoOf(b);
     const fid=ttFrameId(pub.frm);
     if(fid==='wr1'){ const inner=ttFrame(stage,{anim:isMe,box:(photo?TTF_CARDPIC:TTF_CARD)}); ttFill(inner,b.doll,photo); }
     else{ const inner=ttFrame(stage,{art:fid,photo:!!photo}); ttFill(inner,b.doll,photo); }

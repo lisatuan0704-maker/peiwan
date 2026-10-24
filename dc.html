@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<script src="lobby-ui/discord-auth.js?v=298"></script>
+<script src="lobby-ui/discord-auth.js?v=379"></script>
 <script>window.__ttDiscordCallback=TTDiscordAuth.consume();</script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,11 +56,28 @@ function restoreAccount(dcid){
 }
 (function(){
   const card=document.getElementById('card');
-  if(sessionStorage.getItem('tt_voice_login_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=306').then(m=>m.finishVoiceLogin(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
-  if(sessionStorage.getItem('tt_voice_rehearsal_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=306').then(m=>m.finishRehearsal(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
-  if(sessionStorage.getItem('tt_partner_discord_bind_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/partner-binding.mjs?v=300').then(m=>m.finishBinding(callback,firebase.auth(),card)).catch(()=>{card.textContent='無法載入綁定功能，請返回陪玩工作頁重試。'});return;}
+  /* v379: a profile refresh is restricted to the already linked account and card. */
+  let avatarRefresh=null;
+  try{
+    const pending=sessionStorage.getItem('tt_dc_avatar_refresh_v379');
+    sessionStorage.removeItem('tt_dc_avatar_refresh_v379');
+    if(pending){
+      avatarRefresh=JSON.parse(pending);
+      if(!avatarRefresh?.state||avatarRefresh.state!==window.__ttDiscordCallback?.state){
+        fail(window.__ttDiscordCallback?.error||'頭貼更新授權不符，請回大廳重新開始。');return;
+      }
+    }
+    if(avatarRefresh){
+      const current=JSON.parse(localStorage.getItem('tt_dc')||'null');
+      if(!avatarRefresh||!avatarRefresh.id||!avatarRefresh.key||avatarRefresh.id!==current?.id||avatarRefresh.key!==localStorage.getItem('tt_me')||!Number.isFinite(avatarRefresh.at)||Date.now()-avatarRefresh.at<0||Date.now()-avatarRefresh.at>600000)throw Error('expired refresh');
+    }
+  }catch(e){ fail('頭貼更新已過期，請回大廳重新開始。');return; }
+  if(!avatarRefresh&&sessionStorage.getItem('tt_voice_login_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=306').then(m=>m.finishVoiceLogin(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
+  if(!avatarRefresh&&sessionStorage.getItem('tt_voice_rehearsal_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=306').then(m=>m.finishRehearsal(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
+  if(!avatarRefresh&&sessionStorage.getItem('tt_partner_discord_bind_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/partner-binding.mjs?v=300').then(m=>m.finishBinding(callback,firebase.auth(),card)).catch(()=>{card.textContent='無法載入綁定功能，請返回陪玩工作頁重試。'});return;}
   function fail(msg){
-    card.innerHTML='<h1>綁定沒有成功</h1><p>'+msg+'</p><a class="btn" href="lobby.html">回酒館大廳</a>';
+    delete window.__ttDiscordCallback;
+    card.innerHTML='<h1>'+(avatarRefresh?'頭貼更新沒有完成':'綁定沒有成功')+'</h1><p>'+msg+'</p><a class="btn" href="lobby.html">回酒館大廳</a>';
   }
   const callback=window.__ttDiscordCallback||{}; delete window.__ttDiscordCallback;
   const tok=callback.token;
@@ -70,6 +87,17 @@ function restoreAccount(dcid){
     .then(u=>{
       if(!/^[0-9]{16,22}$/.test(u.id||'')||(u.avatar&&!/^(a_)?[a-f0-9]{32}$/.test(u.avatar)))throw Error('invalid user');
       const dc={id:u.id,username:u.username,global_name:u.global_name||'',avatar:u.avatar||''};
+      if(avatarRefresh){
+        const current=JSON.parse(localStorage.getItem('tt_dc')||'null');
+        if(dc.id!==avatarRefresh.id||current?.id!==avatarRefresh.id||localStorage.getItem('tt_me')!==avatarRefresh.key){
+          fail('請使用原本綁定的 Discord 帳號更新頭貼。這次沒有變更你的酒館帳號。');return;
+        }
+        if(!dc.avatar){ fail('這個 Discord 帳號目前沒有自訂頭貼。請先在 Discord 設定頭貼，再回大廳更新。');return; }
+        sessionStorage.setItem('tt_dc_avatar_resume_v379',JSON.stringify({id:dc.id,key:avatarRefresh.key,profile:dc,at:Date.now()}));
+        history.replaceState(null,'',location.pathname);
+        card.innerHTML='<h1>已重新讀取 Discord 頭貼</h1><p>返回大廳後會載入並儲存頭貼設定。</p><a class="btn" href="lobby.html">回酒館大廳</a>';
+        setTimeout(()=>{location.href='lobby.html';},2600);return;
+      }
       try{ localStorage.setItem('tt_dc',JSON.stringify(dc)); }catch(e){}
       try{ history.replaceState(null,'',location.pathname); }catch(e){}
       const av=dc.avatar?('https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=128'):'';

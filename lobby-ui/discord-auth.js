@@ -20,7 +20,7 @@
   if(p.has('error'))return {error:'你已取消 Discord 授權，可以回大廳重新開始。'};
   const token=p.get('access_token');
   if(p.getAll('access_token').length!==1||!token||token.length<10||token.length>4096||p.get('token_type')?.toLowerCase()!=='bearer')return {error:'沒有取得有效授權，請回大廳重新綁定。'};
-  return {token};
+  return {token,state:pending.state};
  }
  function escapeText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
  root.TTDiscordAuth={begin,consume,escapeText};
