@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=369';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=370';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -60,7 +60,7 @@
   const drinkCompanions={pet_drink_ghost:{name:'縭',asset:'rira'},pet_drink_blue:{name:'蕪',asset:'kabuki'},pet_drink_sakura:{name:'桃',asset:'momo'}};
   const isDrink=id=>['pet_drink_blue','pet_drink_sakura','pet_drink_ghost'].includes(id);
   const category=k=>({front:'hair',back:'hair',cloth:'cloth',eye:'eye',brow:'eye',pet:'pet',seat:'seat',drink:'other'}[k]||(/^acc\d*$/.test(k)?'acc':null));
-  const slotLabel={front:'瀏海',back:'後髮',cloth:'衣服',eye:'眼神',pet:'寵物',seat:'座椅'};
+  const slotLabel={front:'瀏海',back:'後髮',cloth:'衣服',eye:'眼型',brow:'眉毛',pet:'寵物',seat:'座椅'};
   // 拆件使用繪師原圖；不修改商城商品、持有紀錄或舊穿搭。
   function partsFor(source){
     if(isDrink(source)){const c=window.__shopCfg?.[source];return c?.img?{drink:{n:drinkCompanions[source].name+'的飲料',d:c.img}}:{};}

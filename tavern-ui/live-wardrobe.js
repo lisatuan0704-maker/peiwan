@@ -10,7 +10,7 @@
  const groupNames={head:'頭飾',ear:'耳環',face:'面部配件',hand:'手持物',back:'背飾／尾巴'};
  let data,selection={},color={},area='store',category='bundles',mode='singles',filter='all',selected=null,saving=false;
  let drinkQuantity=1,drinkBusy=false,drinkDialogOpen=false;
- let hairSection='original',colorTarget='main';
+ let hairSection='original',colorTarget='main',faceSection='brow';
  let dyeDraft=null,bagSection='wear',dyeSaving=false,dyeRequest=null;
  const bagNav=document.createElement('nav');bagNav.className='archive-nav';bagNav.setAttribute('aria-label','背包收納');
  bagNav.innerHTML='<button data-archive="wear" aria-pressed="true"><small>01 / DRESSING</small><b>我的穿搭</b><span>時裝與染色組合</span></button><button data-archive="collection" aria-pressed="false"><small>02 / KEEPSAKES</small><b>紀念收藏</b><span>小物與成就紀錄</span></button>';
@@ -58,13 +58,13 @@
  function entries(){
   const out=[];
   for(const o of products()){
-   const parts=o.parts.filter(p=>p.category===category);
+   const parts=o.parts.filter(p=>p.category===category&&(category!=='eye'||p.slot===faceSection));
    if(category==='hair'&&area==='store'){
     if(parts.length)out.push({id:o.id+'::hair',name:o.name+'・髮型',category:'hair',parts,product:o});
    }else for(const p of parts)if(category!=='acc'||filter==='all'||filter===p.group)out.push({...p,product:o});
   }
   if(area==='bag')for(const [native,v] of Object.entries(data.baseParts)){
-   const sl=({face:'eye'}[native]||native),cat=({front:'hair',back:'hair',cloth:'cloth',eye:'eye'}[sl]);if(cat!==category)continue;
+   const sl=({face:'eye'}[native]||native),cat=({front:'hair',back:'hair',cloth:'cloth',eye:'eye',brow:'eye'}[sl]);if(cat!==category||(cat==='eye'&&sl!==faceSection))continue;
    for(const p of v.items||[]){
     // 露亞原有髮型、眼睛、衣服與露亞組合重複，保留組合中的命名；舊穿搭編號仍相容。
     if(p.idx===0&&['back','front','eye','cloth'].includes(sl)&&out.some(q=>q.source==='cloth0'&&q.slot===sl))continue;
@@ -247,6 +247,10 @@
   if(area==='bag'&&category==='hair'){
    $('#subtabs').innerHTML='<nav class="hair-sections" aria-label="頭髮分類"><button type="button" data-hair-section="original" aria-pressed="'+(hairSection==='original')+'">原有髮型</button><button type="button" data-hair-section="saved" aria-pressed="'+(hairSection==='saved')+'">我的染髮 <span>'+Object.keys(data.dyed).length+'</span></button></nav><p class="hair-section-hint">'+(myHair?'已保存的專屬髮色，點一下試穿；再次穿戴不扣券。':'瀏海與後髮可分別搭配。')+'</p>';
    $$('[data-hair-section]').forEach(b=>b.onclick=()=>{hairSection=b.dataset.hairSection;selected=null;render();});
+  }
+  if(category==='eye'){
+   $('#subtabs').innerHTML='<nav class="hair-sections face-sections" aria-label="臉部分類">'+[['brow','眉毛'],['eye','眼型']].map(([id,name])=>'<button type="button" data-face-section="'+id+'" aria-pressed="'+(faceSection===id)+'">'+name+'</button>').join('')+'</nav>';
+   $$('[data-face-section]').forEach(b=>b.onclick=()=>{faceSection=b.dataset.faceSection;selected=null;render();$('#grid').scrollTop=0;});
   }
   $$('[data-group]').forEach(b=>b.onclick=()=>{filter=b.dataset.group;selected=null;render();});
   const list=entries();

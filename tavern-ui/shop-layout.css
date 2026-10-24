@@ -128,3 +128,6 @@ body[data-area] #grid .item .accessory-note{display:block;white-space:normal;ove
  body[data-area] #dyePanel:has(.hair-color-targets) .swatches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px 3px}
  body[data-area] #dyePanel:has(.hair-color-targets) .swatches button{width:19px!important;height:19px!important;min-width:0;padding:0;justify-self:center}
 }
+/* 臉部子分類在窄螢幕也維持可見，物品區獨立捲動。 */
+body[data-shop-category=eye] #singles .browsehead{display:block!important;min-height:0;height:auto}
+body[data-shop-category=eye] #subtabs{display:block!important}
