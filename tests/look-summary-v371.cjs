@@ -120,6 +120,13 @@ function rects(){return {w:innerWidth,h:innerHeight,wide:document.documentElemen
     await ward.locator('.look-checkout').click();await lobby.evaluate(()=>__owned.season283_valentine=true);await ward.locator('[data-look-buy]').click();assert.equal(await ward.locator('[data-look-buy]').count(),0,'ownership refreshed before handoff');await ward.locator('.look-close').click();
    }
   }
+  if(!mobile){
+   for(const view of ['shop','bag']){
+    await lobby.evaluate(view=>TinyTavernUI.open(view),view);await ward.locator('[data-category=hair]').click();
+    const layout=await ward.evaluate(()=>{const rect=s=>document.querySelector(s).getBoundingClientRect(),w=rect('#wardrobeWorkspace'),l=rect('#lookSummary'),p=rect('.preview'),c=rect('#catalog');return {rail:l.width,preview:p.width,ratio:l.width/w.width,ordered:c.right<=l.left&&l.right<=p.left,columns:getComputedStyle(document.querySelector('#grid')).gridTemplateColumns.split(' ').length};});
+    assert.equal(layout.rail,132);assert.equal(layout.preview,280);assert(layout.ratio<.15&&layout.ordered,'narrow summary and right preview in '+view);assert(layout.columns>=3);assert.equal(await ward.locator('[data-category=other]').textContent(),'飲品');
+   }
+  }
   assert.deepEqual(await lobby.evaluate(()=>qaWrites),[]);assert.deepEqual(errors,[]);
   console.log('PASS '+width+'x'+height+(mobile?' mobile bag':' scaled desktop shop')+(before?' baseline':''));await page.close();
  }}finally{await browser.close();await new Promise(r=>server.close(r));fs.writeFileSync(path.join(out,before?'before.json':'report.json'),JSON.stringify(report,null,2));}

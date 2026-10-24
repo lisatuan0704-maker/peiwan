@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=357"></script>
-<script src="lobby-ui/fixed-view.js?v=371"></script>
+<script src="lobby-ui/fixed-view.js?v=372"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script>
@@ -1451,16 +1451,16 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/dm-log.js?v=350"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
 <script src="js/tt-seats.js?v=1"></script>
-<script src="lobby-ui/seats.js?v=371"></script>
-<script src="lobby-ui/presence.js?v=371"></script>
+<script src="lobby-ui/seats.js?v=372"></script>
+<script src="lobby-ui/presence.js?v=372"></script>
 <script src="lobby-ui/payment-safety.js?v=273"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=274">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
 <script src="card-ui/tavern-scene.js?v=265" defer></script>
 <link rel="stylesheet" href="lobby-ui/membership.css?v=256">
-<link rel="stylesheet" href="lobby-ui/chat-skins.css?v=371">
-<script src="lobby-ui/chat-skins.js?v=371"></script>
+<link rel="stylesheet" href="lobby-ui/chat-skins.css?v=372">
+<script src="lobby-ui/chat-skins.js?v=372"></script>
 <link rel="stylesheet" href="lobby-ui/stickers.css?v=256">
 <link rel="stylesheet" href="lobby-ui/profile-card.css?v=310">
 <script src="tavern-ui/sticker-catalog.js?v=249"></script>
@@ -1689,7 +1689,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v371</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v372</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -7532,8 +7532,8 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   tW.addEventListener('click',()=>{ const w=document.getElementById('h2wd'); if(w) w.click(); setTimeout(syncSettings,50); });
 })();
 </script>
-<script src="tavern-ui/season-v291.js?v=371"></script>
-<script src="tavern-ui-bridge.js?v=371"></script>
+<script src="tavern-ui/season-v291.js?v=372"></script>
+<script src="tavern-ui-bridge.js?v=372"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
 <script src="lobby-ui/live.js?v=358"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
@@ -7550,8 +7550,8 @@ let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmi
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
 </script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358">
-<script src="lobby-ui/rooms/world-bridge.js?v=371-343"></script>
-<script type="module" src="lobby-ui/rooms/entry.mjs?v=371"></script>
+<script src="lobby-ui/rooms/world-bridge.js?v=372-343"></script>
+<script type="module" src="lobby-ui/rooms/entry.mjs?v=372"></script>
 </body>
 </html>
 

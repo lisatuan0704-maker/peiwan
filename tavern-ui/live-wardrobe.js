@@ -6,7 +6,7 @@
  if(mobile){const style=document.createElement('style');style.textContent='.area-tabs,#dyeTicket{display:none!important}';document.head.append(style);}
  const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const categories=[['hair','頭髮'],['cloth','衣服'],['acc','配件'],['eye','臉'],['pet','寵物'],['seat','座椅'],['other','其他'],['bubbles','聊天氣泡']];
+ const categories=[['hair','頭髮'],['cloth','衣服'],['acc','配件'],['eye','臉'],['pet','寵物'],['seat','座椅'],['other','飲品'],['bubbles','聊天氣泡']];
  const groupNames={head:'頭飾',ear:'耳環',face:'面部配件',hand:'手持物',back:'背飾／尾巴'};
  let data,selection={},color={},area='store',category='bundles',mode='singles',filter='all',selected=null,saving=false;
  let drinkQuantity=1,drinkBusy=false,drinkDialogOpen=false;
@@ -22,6 +22,7 @@
   keepsakes.innerHTML='<div class="keepsake-intro"><small>KEEPSAKES & MEMORIES</small><h2>一起度過的日子，有跡可循。</h2><p>紀念小物、解鎖的成就，收進專屬於你的收藏冊。</p></div><div class="memory-grid">'+records.map((r,i)=>'<article class="memory-card"><span class="memory-no">'+String(i+1).padStart(2,'0')+'</span><img src="'+esc(r.image)+'" alt=""><small>'+esc(r.kind)+'</small><h3>'+esc(r.name)+'</h3><p>'+esc(r.description)+'</p><footer>取得來源 · '+esc(r.source)+'</footer><span class="memory-word" aria-hidden="true">MEMORY</span></article>').join('')+'</div><div class="souvenir-empty"><span aria-hidden="true">◇</span><div><h3>替下一份紀念，留一個位置。</h3><p>目前還沒有已發放的紀念小物。'+(!records.length?'解鎖的成就紀錄也會收在這裡。':'')+'</p></div></div>';
  }
 
+ document.querySelector('.workspace').id='wardrobeWorkspace';
  const lookPanel=document.createElement('aside');lookPanel.id='lookSummary';lookPanel.hidden=true;lookPanel.setAttribute('aria-label','目前搭配清單');document.querySelector('.workspace').append(lookPanel);
  const lookDialog=document.createElement('dialog');lookDialog.className='look-checkout-dialog';lookDialog.setAttribute('aria-label','確認選購清單');document.body.append(lookDialog);
  let lookExpanded=false,pendingLook=null;
@@ -334,7 +335,7 @@
     quantityInput.onblur=normalizeQuantity;
     quantityInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();normalizeQuantity();$('#drinkSubmit').focus();}};
     $('#drinkMinus').onclick=()=>{drinkQuantity--;render()};$('#drinkPlus').onclick=()=>{drinkQuantity++;render()};
-    $('#drinkSubmit').onclick=async()=>{if(drinkBusy)return;const action=area==='bag'?'feed':'buy',qty=drinkQuantity;drinkBusy=true;render();try{const result=await api.drinkAction(action,p.product.id,qty);data=api.state();drinkDialogOpen=false;orderDialog.close();if(action==='feed')showDrinkDialogue(result,p.product);else tell('已購買 '+qty+' 杯，可到背包 → 其他餵食。');}catch(e){tell(e.message);orderDialog.dataset.error=e.message}finally{drinkBusy=false;render();if(orderDialog.open)orderDialog.querySelector('.order-feedback').textContent=orderDialog.dataset.error||''}};
+    $('#drinkSubmit').onclick=async()=>{if(drinkBusy)return;const action=area==='bag'?'feed':'buy',qty=drinkQuantity;drinkBusy=true;render();try{const result=await api.drinkAction(action,p.product.id,qty);data=api.state();drinkDialogOpen=false;orderDialog.close();if(action==='feed')showDrinkDialogue(result,p.product);else tell('已購買 '+qty+' 杯，可到背包 → 飲品餵食。');}catch(e){tell(e.message);orderDialog.dataset.error=e.message}finally{drinkBusy=false;render();if(orderDialog.open)orderDialog.querySelector('.order-feedback').textContent=orderDialog.dataset.error||''}};
     updateDrinkOrder(p);
    }
   }
