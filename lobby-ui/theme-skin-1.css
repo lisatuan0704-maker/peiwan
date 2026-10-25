@@ -1,0 +1,336 @@
+/* v382 整站視窗主題（試做第二版：想來點什麼、我的酒館＋通訊錄＋設定、單開的面板）
+   參考：使用者提供的 GPT 參考圖（深藍粗外框、白紙底、水藍／粉紫斜色塊、網點、四角星、軌道環、貼紙星、迴紋針）。
+   範圍：只換視窗與面板本身。不碰飲料卡、商城比例、試穿區、氣泡、貼圖、座椅、NPC、HUD 縮放。
+   吉祥物圖來自繪師的「吉祥物設定」PSD（線稿層＋白底），不使用 AI 圖。 */
+:root{
+  --sk-ink:#1C2156;
+  --sk-ink2:#3A3F78;
+  --sk-pink:#FF4F8B;
+  --sk-pink2:#FF8DB5;
+  --sk-paper:#FDFDFF;
+  --sk-dot-sky:radial-gradient(circle,rgba(94,196,240,.55) 1.25px,transparent 1.6px);
+  --sk-dot-pink:radial-gradient(circle,rgba(255,120,170,.5) 1.25px,transparent 1.6px);
+  --sk-dot-lilac:radial-gradient(circle,rgba(170,140,255,.5) 1.25px,transparent 1.6px);
+  --sk-dot-white:radial-gradient(circle,rgba(255,255,255,.8) 1.25px,transparent 1.6px);
+  --st-pink:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23FF4F8B'/%3E%3C/svg%3E");
+  --st-blue:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%233CB9EC'/%3E%3C/svg%3E");
+  --st-purple:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23C46CF2'/%3E%3C/svg%3E");
+  --st-softpink:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23FFA9C9'/%3E%3C/svg%3E");
+  --st-white:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23fff'/%3E%3C/svg%3E");
+  --st-sticker:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cpath d='M22 3C23.6 15 29 20.4 41 22 29 23.6 23.6 29 22 41 20.4 29 15 23.6 3 22 15 20.4 20.4 15 22 3Z' fill='%23fff' stroke='%231C2156' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --st-sticker-sky:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4 29.5 16.5 43 18 33 27.5 36 41 24 34 12 41 15 27.5 5 18 18.5 16.5Z' fill='%23A9DDF7' stroke='%231C2156' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --sk-orbit:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23FF6FA3'/%3E%3Cstop offset='.55' stop-color='%23C08CFF'/%3E%3Cstop offset='1' stop-color='%236FD0F5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cellipse cx='90' cy='40' rx='84' ry='24' fill='none' stroke='url(%23g)' stroke-width='3.2' transform='rotate(-14 90 40)'/%3E%3Cpath d='M74 6C75.2 14.6 79.4 18.8 88 20 79.4 21.2 75.2 25.4 74 34 72.8 25.4 68.6 21.2 60 20 68.6 18.8 72.8 14.6 74 6Z' fill='%23E86CE8'/%3E%3C/svg%3E");
+  --sk-diamond:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='9' y='9' width='22' height='22' fill='none' stroke='%2337B6E3' stroke-width='2.4' transform='rotate(45 20 20)'/%3E%3C/svg%3E");
+  --sk-clip:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 64'%3E%3Cpath d='M20 8V46a7 7 0 0 1-14 0V12a5 5 0 0 1 10 0V42' fill='none' stroke='%231C2156' stroke-width='7' stroke-linecap='round'/%3E%3Cpath d='M20 8V46a7 7 0 0 1-14 0V12a5 5 0 0 1 10 0V42' fill='none' stroke='%23D8D2FF' stroke-width='3.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  --sk-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M2 2l8 8-8 8' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --sk-search:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5' fill='none' stroke='%233A3F78' stroke-width='2.4'/%3E%3Cpath d='M15.5 15.5 21 21' stroke='%233A3F78' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  --sk-mascot:url('assets/theme/mascot-line.png');
+}
+@keyframes skTw{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes skFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-6deg)}}
+
+/* =====================================================================
+   A. 單開面板 .tt-live-ui .panel（想來點什麼、設定、錢包、信箱、訂單、成就）
+   ===================================================================== */
+html body .tt-live-ui .panel{
+  background:transparent!important;
+  border:3px solid var(--sk-ink)!important;
+  border-radius:18px!important;
+  box-shadow:0 26px 60px rgba(18,14,48,.42)!important;
+  overflow:visible!important;isolation:isolate!important;
+  color:var(--sk-ink);
+}
+/* 紙面（畫在 ::after，避免被底下那張紙蓋過） */
+html body .tt-live-ui .panel::after{content:""!important;display:block!important;padding:0!important;position:absolute!important;inset:0!important;z-index:-1!important;border-radius:15px!important;pointer-events:none;
+  opacity:1!important;animation:none!important;transform:none!important;-webkit-mask:none!important;mask:none!important;filter:none!important;mix-blend-mode:normal!important;width:auto!important;height:auto!important;
+  background:
+    linear-gradient(118deg,transparent 0 64%,rgba(111,208,245,.2) 64% 71%,transparent 71% 73%,rgba(255,141,181,.18) 73% 84%,transparent 84%),
+    linear-gradient(118deg,rgba(111,208,245,.18) 0 6%,transparent 6%),
+    var(--sk-paper)!important}
+/* 底下那張錯開的紙（粉藍斜紋） */
+html body .tt-live-ui .panel::before{content:""!important;display:block!important;position:absolute!important;inset:4px -12px -12px 6px!important;width:auto!important;height:auto!important;z-index:-2!important;border:3px solid var(--sk-ink)!important;border-radius:18px!important;pointer-events:none;opacity:1!important;animation:none!important;-webkit-mask:none!important;mask:none!important;filter:none!important;
+  background:repeating-linear-gradient(125deg,#FFD0E2 0 12px,#D4F0FF 12px 24px,#fff 24px 27px)!important;transform:rotate(.6deg)!important}
+html body .tt-live-ui .panel>.geometry{overflow:visible!important;-webkit-mask:none!important;mask:none!important;background:none!important;opacity:1!important}
+html body .tt-live-ui .panel .geometry>*{display:none!important}
+html body .tt-live-ui .panel>.geometry::before{content:"";position:absolute;left:-22px;top:20px;width:42px;height:42px;z-index:9;pointer-events:none;
+  background:var(--st-sticker-sky) center/contain no-repeat;animation:skFloat 4s ease-in-out infinite}
+html body .tt-live-ui .panel>.geometry::after{content:"";position:absolute;inset:0;border-radius:15px;pointer-events:none;
+  background:var(--sk-dot-pink) 0 0/9px 9px;-webkit-mask:linear-gradient(200deg,transparent 0 80%,#000 100%);mask:linear-gradient(200deg,transparent 0 80%,#000 100%);opacity:.8}
+
+html body .tt-live-ui .panel .panel-head{
+  border-radius:15px 15px 0 0;isolation:isolate;
+  background:
+    linear-gradient(112deg,#fff 0 40%,transparent 40%),
+    var(--sk-dot-sky) 0 0/9px 9px,
+    linear-gradient(112deg,transparent 0 40%,#D6F2FF 40% 50%,#F2FBFF 50% 52%,#BFE7FF 52% 60%,#FFE3EF 60% 76%,#E9DCFF 76%)!important;
+  box-shadow:inset 0 -3px 0 var(--sk-ink)!important;
+  border-bottom:0!important;
+}
+html body .tt-live-ui .panel .panel-head::before{content:""!important;display:block!important;position:absolute!important;inset:0!important;width:auto!important;height:auto!important;z-index:-1!important;pointer-events:none;
+  border:0!important;transform:none!important;opacity:1;-webkit-mask:none!important;mask:none!important;
+  background:
+    var(--sk-orbit) 52% 30%/150px 66px no-repeat,
+    var(--st-pink) 46% 22%/24px 24px no-repeat,
+    var(--st-blue) 64% 68%/24px 24px no-repeat,
+    var(--st-purple) 58% 42%/14px 14px no-repeat,
+    var(--st-white) 70% 30%/18px 18px no-repeat,
+    var(--sk-diamond) 84% 84%/42px 42px no-repeat!important;
+  animation:skTw 3.4s ease-in-out infinite}
+html body .tt-live-ui .panel .eyebrow{color:var(--sk-pink)!important;font-weight:900!important;letter-spacing:3px!important;opacity:1!important}
+html body .tt-live-ui .panel .outline-word{color:transparent!important;-webkit-text-stroke:2px rgba(176,150,255,.8)!important;opacity:1!important;z-index:-1!important}
+html body .tt-live-ui .panel .title-chip{
+  padding:5px 30px 7px 16px!important;
+  background:linear-gradient(100deg,#fff 0 62%,#FFDCEA)!important;
+  border:3px solid var(--sk-ink)!important;border-radius:3px!important;
+  box-shadow:4px 5px 0 var(--sk-pink2)!important;
+  transform:skewX(-10deg)!important;
+}
+html body .tt-live-ui .panel .title-chip>*{transform:skewX(10deg)}
+html body .tt-live-ui .panel .title-chip::after{content:"";position:absolute;right:7px;top:50%;width:15px;height:15px;margin-top:-7px;transform:skewX(10deg);
+  background:var(--st-pink) center/contain no-repeat;animation:skTw 2.4s ease-in-out infinite}
+html body .tt-live-ui .panel .title-chip>i{display:inline-block!important;flex:none;width:14px!important;height:14px!important;margin-right:6px!important;border:0!important;box-shadow:none!important;
+  background:var(--st-purple) center/contain no-repeat!important;transform:skewX(10deg)!important;animation:skTw 2.8s ease-in-out infinite .4s}
+html body .tt-live-ui .panel .title-chip h1{color:var(--sk-ink)!important;-webkit-text-fill-color:var(--sk-ink)!important;background:none!important;font-weight:900!important;letter-spacing:2px!important;text-shadow:none!important}
+html body .tt-live-ui .panel .panel-head p{color:var(--sk-ink)!important;font-weight:700!important;opacity:1!important}
+html body .tt-live-ui .panel .close{
+  width:34px!important;height:34px!important;border:3px solid var(--sk-ink)!important;border-radius:9px!important;
+  background:#fff!important;color:var(--sk-ink)!important;font:900 24px/24px Arial,sans-serif!important;
+  box-shadow:3px 3px 0 var(--sk-pink2)!important;z-index:5}
+html body .tt-live-ui .panel .close:hover{transform:translate(-1px,-1px) rotate(-5deg)}
+
+/* 想來點什麼：緞帶 */
+html body .tt-live-ui .panel .menu-ribbon{position:relative;overflow:visible;
+  background:var(--sk-dot-sky) 0 0/9px 9px,linear-gradient(90deg,#fff 0 30%,#EAF6FF 62%,#FFEAF3)!important;
+  color:var(--sk-ink)!important;border-top:3px solid var(--sk-ink);border-bottom:3px solid var(--sk-ink);padding-left:0!important}
+html body .tt-live-ui .panel .menu-ribbon b{position:relative;color:#fff!important;font-weight:900!important;letter-spacing:3px;padding:9px 34px 9px 24px;margin:-9px 0;
+  background:linear-gradient(100deg,#FF4F8B,#FF80B0)!important;clip-path:polygon(0 0,100% 0,86% 100%,0 100%)}
+html body .tt-live-ui .panel .menu-ribbon span{color:#8C70F0!important;font-weight:900;letter-spacing:3px;padding-left:16px;border-left:2px solid var(--sk-ink2)}
+html body .tt-live-ui .panel .menu-ribbon::after{content:"";position:absolute;right:-18px;top:-18px;width:36px;height:36px;background:var(--st-sticker) center/contain no-repeat;animation:skFloat 3.6s ease-in-out infinite}
+
+/* 想來點什麼：三張卡 */
+html body .tt-live-ui .panel .feature-tile{
+  border:3px solid var(--sk-ink)!important;border-radius:12px!important;
+  box-shadow:0 4px 0 rgba(28,33,86,.25)!important;
+  background:
+    var(--st-blue) 68% 36%/18px 18px no-repeat,
+    linear-gradient(130deg,transparent 0 52%,rgba(255,255,255,.6) 52% 60%,transparent 60%),
+    var(--sk-dot-white) 0 0/9px 9px,
+    linear-gradient(160deg,#EAF9FF 0%,#C6EDFF 46%,#E4E2FF 100%)!important;
+}
+html body .tt-live-ui .panel .feature-tile:nth-child(2){background:
+    var(--st-pink) 64% 36%/18px 18px no-repeat,var(--st-softpink) 58% 50%/12px 12px no-repeat,
+    linear-gradient(130deg,transparent 0 52%,rgba(255,255,255,.6) 52% 60%,transparent 60%),
+    var(--sk-dot-white) 0 0/9px 9px,
+    linear-gradient(160deg,#FFF1F8 0%,#FFDCEC 50%,#F1E5FF 100%)!important}
+html body .tt-live-ui .panel .feature-tile:disabled{opacity:1!important;filter:none!important;background:
+    var(--st-white) 74% 46%/16px 16px no-repeat,
+    linear-gradient(130deg,transparent 0 52%,rgba(255,255,255,.1) 52% 60%,transparent 60%),
+    radial-gradient(circle,rgba(255,255,255,.22) 1.25px,transparent 1.6px) 0 0/9px 9px,
+    linear-gradient(160deg,#9096B4,#6B7291)!important}
+html body .tt-live-ui .panel .feature-tile::after{content:"";position:absolute;right:-6px;bottom:-6px;width:52%;height:48%;z-index:-1;pointer-events:none;
+  background:linear-gradient(140deg,rgba(111,208,245,0),rgba(111,208,245,.45));clip-path:polygon(55% 0,100% 100%,0 100%)}
+html body .tt-live-ui .panel .feature-tile:nth-child(2)::after{background:linear-gradient(140deg,rgba(255,141,181,0),rgba(255,141,181,.38))}
+html body .tt-live-ui .panel .feature-tile:disabled::after{background:linear-gradient(140deg,rgba(255,255,255,0),rgba(255,255,255,.22))}
+html body .tt-live-ui .panel .feature-tile:not(:disabled):hover{transform:translateY(-4px)!important;box-shadow:0 8px 0 rgba(28,33,86,.25)!important}
+html body .tt-live-ui .panel .feature-tile .tile-number{color:var(--sk-pink)!important;font-weight:900!important}
+html body .tt-live-ui .panel .feature-tile:nth-child(2) .tile-number{color:#C9961A!important}
+html body .tt-live-ui .panel .feature-tile:disabled .tile-number{color:#EEF0FA!important}
+html body .tt-live-ui .panel .feature-tile .vertical-word{color:transparent!important;-webkit-text-stroke:2px rgba(100,200,240,.95)!important;opacity:1!important}
+html body .tt-live-ui .panel .feature-tile:nth-child(2) .vertical-word{-webkit-text-stroke-color:rgba(255,141,181,.9)!important}
+html body .tt-live-ui .panel .feature-tile:disabled .vertical-word{-webkit-text-stroke-color:rgba(235,238,250,.5)!important}
+html body .tt-live-ui .panel .feature-tile img{filter:drop-shadow(2px 2px 0 rgba(28,33,86,.18))!important;opacity:1!important}
+html body .tt-live-ui .panel .feature-tile h2{color:var(--sk-ink)!important;font-weight:900!important;letter-spacing:1px}
+html body .tt-live-ui .panel .feature-tile p{color:var(--sk-ink2)!important;font-weight:700!important}
+html body .tt-live-ui .panel .feature-tile:disabled h2,html body .tt-live-ui .panel .feature-tile:disabled p{color:#F2F3FA!important}
+html body .tt-live-ui .panel .feature-tile .tile-cta{
+  background:#fff!important;color:var(--sk-ink)!important;border:2.5px solid var(--sk-ink)!important;border-radius:999px!important;
+  font-weight:900!important;box-shadow:3px 3px 0 var(--sk-pink2)!important;opacity:1!important}
+html body .tt-live-ui .panel .feature-tile:disabled .tile-cta{background:rgba(255,255,255,.2)!important;color:#EEF0FA!important;border-color:rgba(255,255,255,.55)!important;box-shadow:none!important}
+html body .tt-live-ui .panel .feature-tile .frame-decoration{display:none!important}
+
+/* 底部 */
+html body .tt-live-ui .panel .panel-footer{border-radius:0 0 15px 15px;border-top:0!important;position:relative;
+  background:linear-gradient(90deg,rgba(255,255,255,.92),rgba(240,236,255,.75))!important;
+  box-shadow:inset 0 2px 0 rgba(28,33,86,.1)!important}
+html body .tt-live-ui .panel .panel-footer::after{content:"";position:absolute;right:16px;top:50%;width:70px;height:34px;margin-top:-17px;pointer-events:none;
+  background:var(--sk-diamond) 0 50%/30px 30px no-repeat,var(--st-purple) 100% 50%/16px 16px no-repeat}
+html body .tt-live-ui .panel .back-menu{color:var(--sk-ink)!important;font-weight:900!important;border-bottom:2.5px solid var(--sk-ink)!important;padding-bottom:3px!important;opacity:1!important}
+html body .tt-live-ui .panel .footer-mark{display:none!important}
+
+/* =====================================================================
+   B. 我的酒館 #ttHub
+   ===================================================================== */
+html body #ttHub>.hub-card,html body #ttHub::before{grid-area:1/1}
+html body #ttHub::before{content:"";width:min(1050px,96vw);height:min(860px,94dvh);border:3px solid var(--sk-ink);border-radius:24px;pointer-events:none;
+  background:repeating-linear-gradient(125deg,#FFD0E2 0 12px,#D4F0FF 12px 24px,#fff 24px 27px);transform:translate(9px,11px) rotate(.4deg);box-shadow:0 26px 70px rgba(18,14,48,.4)}
+html body #ttHub .hub-card{position:relative;z-index:1;overflow:visible;
+  background:var(--sk-paper);border:3px solid var(--sk-ink);border-radius:24px;box-shadow:none;color:var(--sk-ink)}
+html body #ttHub .hub-card::after{content:"";position:absolute;left:-23px;top:236px;width:46px;height:46px;z-index:8;pointer-events:none;
+  background:var(--st-sticker-sky) center/contain no-repeat;animation:skFloat 4s ease-in-out infinite}
+html body #ttHub .hub-card::before{content:"";position:absolute;right:-20px;top:42%;width:40px;height:40px;z-index:8;pointer-events:none;
+  background:var(--st-sticker) center/contain no-repeat;animation:skFloat 3.4s ease-in-out infinite .6s}
+html body #ttHub .hub-header{position:relative;isolation:isolate;overflow:hidden;padding:20px 30px 18px;border-radius:21px 21px 0 0;
+  background:
+    linear-gradient(112deg,#fff 0 36%,transparent 36%),
+    var(--sk-dot-sky) 0 0/9px 9px,
+    linear-gradient(112deg,transparent 0 36%,#D6F2FF 36% 47%,#F2FBFF 47% 49%,#BCE6FF 49% 60%,#FFE3EF 60% 76%,#E7DAFF 76%);
+  box-shadow:inset 0 -3px 0 var(--sk-ink)}
+html body #ttHub .hub-header::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:
+    var(--sk-orbit) 30% 34%/170px 76px no-repeat,
+    var(--st-pink) 26% 22%/26px 26px no-repeat,
+    var(--st-blue) 64% 64%/30px 30px no-repeat,
+    var(--st-purple) 55% 34%/16px 16px no-repeat,
+    var(--st-blue) 58% 54%/12px 12px no-repeat,
+    var(--st-white) 50% 74%/22px 22px no-repeat,
+    var(--st-purple) 88% 22%/14px 14px no-repeat;
+  animation:skTw 3.6s ease-in-out infinite}
+html body #ttHub .hub-header::after{content:"";position:absolute;right:96px;bottom:-12px;width:156px;height:104px;z-index:-1;pointer-events:none;
+  background:var(--sk-mascot) center bottom/contain no-repeat}
+html body #ttHub .hub-header small{color:var(--sk-pink);font-weight:900;letter-spacing:3px}
+html body #ttHub h1{color:var(--sk-ink);font-weight:900;font-size:34px;letter-spacing:2px;margin-top:6px}
+html body #ttHub .hub-close{width:46px;height:46px;border:3px solid var(--sk-ink);border-radius:11px;background:#fff;color:var(--sk-ink);
+  font:900 30px/36px Arial,sans-serif;box-shadow:3px 4px 0 var(--sk-pink2);transition:transform .12s}
+html body #ttHub .hub-close:hover{transform:translate(-1px,-1px) rotate(-5deg)}
+html body #ttHub .hub-tabs{gap:10px;padding:14px 26px;background:linear-gradient(90deg,#fff,#F3F8FF 60%,#FFF3F8);box-shadow:inset 0 -3px 0 var(--sk-ink)}
+html body #ttHub .hub-tabs button{position:relative;border:2.5px solid var(--sk-ink);border-radius:9px;padding:10px 14px;color:var(--sk-ink);font-weight:900;font-size:15px;
+  background:radial-gradient(circle,rgba(130,190,240,.35) 1px,transparent 1.4px) 0 0/8px 8px,#fff;
+  box-shadow:0 3px 0 rgba(28,33,86,.18);transition:transform .12s,box-shadow .12s}
+html body #ttHub .hub-tabs button:hover{transform:translateY(-1px)}
+html body #ttHub .hub-tabs button[aria-selected=true]{color:#fff;border-color:var(--sk-ink);
+  background:var(--st-white) 14px 50%/18px 18px no-repeat,var(--sk-chev) calc(100% - 14px) 50%/9px 15px no-repeat,radial-gradient(circle,rgba(255,255,255,.3) 1px,transparent 1.4px) 0 0/8px 8px,linear-gradient(100deg,#FF3F80,#FF78A8);
+  box-shadow:0 3px 0 var(--sk-ink)}
+html body #ttHub .hub-mount{position:relative;border-radius:0 0 21px 21px;
+  background:
+    var(--sk-dot-pink) 0 100%/9px 9px no-repeat,
+    linear-gradient(128deg,rgba(255,170,205,.26) 0 5%,transparent 5%),
+    linear-gradient(128deg,transparent 0 86%,rgba(111,208,245,.24) 86% 91%,transparent 91% 93%,rgba(180,156,255,.24) 93%),
+    #FCFCFF}
+html body #ttHub .hub-embedded>.panel{background:transparent!important;box-shadow:none!important;border:0!important;overflow:visible!important}
+html body #ttHub .hub-embedded>.panel::before,html body #ttHub .hub-embedded>.panel::after{display:none!important}
+html body #ttHub .hub-embedded .panel-content{position:relative}
+html body #ttHub .hub-embedded .panel-content::after{content:"";position:absolute;right:14px;top:4px;width:24px;height:52px;z-index:5;pointer-events:none;
+  background:var(--sk-clip) center/contain no-repeat;transform:rotate(-20deg)}
+
+/* ---------- 通訊錄內容 ---------- */
+html body #ttHub .friend-cover{display:none!important}
+html body #ttHub .friends-layout{display:block!important}
+html body #ttHub #frM #frBody.tt-contacts{position:relative;background:#fff!important;border:2.5px solid #8C88C8!important;border-radius:16px!important;padding:26px 30px!important;
+  box-shadow:0 4px 0 rgba(28,33,86,.08)!important}
+html body #ttHub #frM #frBody.tt-contacts::before{content:"";position:absolute;inset:0;border-radius:14px;pointer-events:none;z-index:0;
+  background:
+    var(--sk-orbit) 94% 10%/200px 88px no-repeat,
+    var(--st-purple) 86% 8%/30px 30px no-repeat,
+    var(--st-blue) 95% 20%/14px 14px no-repeat,
+    linear-gradient(128deg,transparent 0 72%,rgba(111,208,245,.16) 72% 78%,transparent 78% 80%,rgba(255,141,181,.14) 80% 90%,transparent 90%)}
+html body #ttHub #frM #frBody.tt-contacts>*{position:relative;z-index:1}
+html body #ttHub #frM #frBody.tt-contacts>.contacts-heading{background:none!important;border:0!important;padding:0 0 4px 50px!important;box-shadow:none!important}
+html body #ttHub .contacts-heading::before{content:"";position:absolute;left:0;top:-4px;width:44px;height:44px;
+  background:var(--st-pink) 70% 20%/30px 30px no-repeat,var(--st-softpink) 0 100%/16px 16px no-repeat;animation:skTw 2.8s ease-in-out infinite}
+html body #ttHub .contacts-heading small{display:none!important}
+html body #ttHub .contacts-heading h2{display:inline-block;color:var(--sk-ink)!important;font-weight:900!important;font-size:30px!important;letter-spacing:2px;margin:0 0 8px!important;padding-bottom:12px!important;
+  background:radial-gradient(circle,var(--sk-ink) 1.5px,transparent 1.9px) 0 100%/9px 5px repeat-x!important;-webkit-text-fill-color:var(--sk-ink)!important}
+html body #ttHub .contacts-heading p{color:var(--sk-ink2)!important;font-weight:700;margin:0!important}
+html body #ttHub .contacts-stamp{display:none!important}
+html body #ttHub .contacts-my-status{position:relative;margin:20px 0 18px!important;padding:18px 22px 16px!important;border-radius:14px!important;
+  background:linear-gradient(110deg,#F2FAFF,#FFF4FA 60%,#F7F1FF)!important;
+  border:2.5px solid #9C8FE0!important;box-shadow:none!important;color:var(--sk-ink)!important}
+html body #ttHub .contacts-my-status::after{content:"";position:absolute;right:0;top:0;width:34%;height:100%;border-radius:0 12px 12px 0;pointer-events:none;z-index:0;
+  background:var(--sk-dot-pink) 0 0/9px 9px;-webkit-mask:linear-gradient(110deg,transparent 20%,#000);mask:linear-gradient(110deg,transparent 20%,#000)}
+html body #ttHub .contacts-my-status>*{position:relative;z-index:1}
+html body #ttHub .contacts-my-status strong{display:inline-block;color:var(--sk-ink)!important;font-weight:900;font-size:19px;padding-left:28px;margin-bottom:12px}
+html body #ttHub .contacts-my-status strong::before{content:"";position:absolute;left:0;top:50%;width:20px;height:24px;margin-top:-12px;
+  background:linear-gradient(135deg,#FF7DB0,#B07CFF);clip-path:polygon(45% 0,100% 0,55% 100%,0 100%)}
+html body #ttHub .contacts-status-buttons{gap:10px!important}
+html body #ttHub .contacts-status-buttons button{background:radial-gradient(circle,rgba(130,190,240,.3) 1px,transparent 1.4px) 0 0/8px 8px,#fff!important;
+  border:2.5px solid var(--sk-ink)!important;border-radius:9px!important;color:var(--sk-ink)!important;font-weight:900!important;opacity:1!important;box-shadow:0 3px 0 rgba(28,33,86,.15)!important}
+html body #ttHub .contacts-status-buttons button[aria-pressed=true]{background:radial-gradient(circle,rgba(255,255,255,.55) 1px,transparent 1.4px) 0 0/8px 8px,linear-gradient(100deg,#FFDCEA,#FFC3DA)!important;box-shadow:0 3px 0 var(--sk-pink)!important}
+html body #ttHub .contacts-status-note{color:var(--sk-ink2)!important;font-weight:700}
+html body #ttHub .contacts-search{background:var(--sk-search) 18px 50%/22px 22px no-repeat,#fff!important;border:2.5px solid #7C7FB8!important;border-radius:10px!important;
+  padding-left:52px!important;color:var(--sk-ink)!important;font-weight:700;box-shadow:none!important}
+html body #ttHub .contacts-search::placeholder{color:#7C7FA8}
+html body #ttHub .contacts-tabs{gap:10px!important}
+html body #ttHub .contacts-tabs button{background:#fff!important;border:2.5px solid #8C88C8!important;border-radius:999px!important;color:var(--sk-ink)!important;font-weight:900!important;padding:7px 18px!important}
+html body #ttHub .contacts-tabs button[aria-selected=true]{background:#4B2D6F!important;border-color:var(--sk-ink)!important;color:#fff!important;box-shadow:0 3px 0 rgba(28,33,86,.25)!important}
+html body #ttHub .contacts-result{color:var(--sk-ink2)!important;font-weight:700}
+html body #ttHub .contacts-empty{background:linear-gradient(110deg,#F7FBFF,#FFF6FA)!important;border:2px dashed #A9A3DD!important;border-radius:12px!important}
+html body #ttHub .contacts-empty h3{color:var(--sk-ink)!important}
+html body #ttHub .contacts-empty p{color:var(--sk-ink2)!important}
+
+/* ---------- 設定內容（我的酒館分頁與單開設定共用） ---------- */
+html body .tt-live-ui [data-view=settings] .record-player,
+html body .tt-live-ui [data-view=settings] .issue-label,
+html body .tt-live-ui [data-view=settings] .section-caption,
+html body .tt-live-ui [data-view=settings] .frame-decoration{display:none!important}
+html body .tt-live-ui [data-view=settings] .tuning-layout{display:block!important;background:#fff!important;border:2.5px solid #A9C6EE!important;border-radius:16px!important;padding:6px 22px!important;
+  box-shadow:inset 0 0 0 4px #F3F8FF!important}
+html body .tt-live-ui [data-view=settings] .music-card,html body .tt-live-ui [data-view=settings] .tuning-controls{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;min-height:0!important}
+html body .tt-live-ui [data-view=settings] .music-card::before,html body .tt-live-ui [data-view=settings] .music-card::after,
+html body .tt-live-ui [data-view=settings] .tuning-controls::before,html body .tt-live-ui [data-view=settings] .tuning-controls::after{display:none!important}
+html body .tt-live-ui [data-view=settings] .setRow{position:relative;display:flex!important;align-items:center;justify-content:space-between;gap:16px;padding:14px 0 14px 40px!important;margin:0!important;
+  background:none!important;border:0!important;border-bottom:2px solid #D9ECFA!important;border-radius:0!important;box-shadow:none!important}
+html body .tt-live-ui [data-view=settings] .setRow::before{content:"";position:absolute;left:4px;top:50%;width:22px;height:22px;margin-top:-11px;background:var(--st-softpink) center/contain no-repeat}
+html body .tt-live-ui [data-view=settings] #volRow::before,html body .tt-live-ui [data-view=settings] #tglWander~*::before{background-image:var(--st-blue);opacity:.75}
+html body .tt-live-ui [data-view=settings] #volRow::before{top:28px}
+html body .tt-live-ui [data-view=settings] .setT{color:var(--sk-ink)!important;font-weight:900!important;font-size:19px!important}
+html body .tt-live-ui [data-view=settings] .setD{color:var(--sk-ink2)!important;font-weight:700!important;font-size:14px!important;opacity:1!important}
+html body .tt-live-ui [data-view=settings] #volRow{flex-wrap:wrap}
+html body .tt-live-ui [data-view=settings] #volRow .setL{flex:1 0 100%}
+html body .tt-live-ui [data-view=settings] input[type=range]{-webkit-appearance:none;appearance:none;flex:1 0 100%;width:100%;height:20px;margin:10px 0 2px;border-radius:999px;
+  background:linear-gradient(90deg,#FF86AE,#D79BF0 55%,#A99BF5)!important;box-shadow:inset 0 0 0 1.5px rgba(28,33,86,.12)!important;border:0!important;outline:0}
+html body .tt-live-ui [data-view=settings] input[type=range]::-webkit-slider-runnable-track{background:transparent;height:20px;border:0}
+html body .tt-live-ui [data-view=settings] input[type=range]::-webkit-slider-thumb,html body #volSl2::-webkit-slider-thumb{-webkit-appearance:none;width:34px!important;height:34px!important;margin-top:-7px;border-radius:50%!important;background:#fff!important;border:3.5px solid #FF6F9F!important;box-shadow:0 2px 6px rgba(255,79,139,.4)!important}
+html body .tt-live-ui [data-view=settings] input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:#fff;border:3.5px solid #FF6F9F}
+html body .tt-live-ui [data-view=settings] .tgl{width:64px!important;height:36px!important;min-width:64px!important;border-radius:999px!important;border:0!important;position:relative!important;flex:none;padding:0!important;
+  background:#E6E3F3!important;box-shadow:inset 0 0 0 2px #CFC9E6!important}
+html body .tt-live-ui [data-view=settings] .tgl::after{content:""!important;position:absolute!important;left:4px!important;top:4px!important;width:28px!important;height:28px!important;border-radius:50%!important;
+  background:#fff!important;box-shadow:0 1px 3px rgba(0,0,0,.25)!important;transition:left .18s!important;border:0!important;margin:0!important;transform:none!important}
+html body .tt-live-ui [data-view=settings] .tgl.on{background:linear-gradient(90deg,#FF5C93,#FF8BB4)!important;box-shadow:0 0 0 3px rgba(255,79,139,.18)!important}
+html body .tt-live-ui [data-view=settings] .tgl.on::after{left:32px!important}
+html body .tt-live-ui [data-view=settings] .tgl::before{display:none!important}
+html body .tt-live-ui [data-view=settings] #roomEntry{display:flex!important;justify-content:space-between;align-items:center;width:100%;margin:16px 0 14px!important;padding:16px 22px!important;
+  border:3px solid transparent!important;border-radius:14px!important;font-weight:900!important;font-size:19px!important;color:var(--sk-ink)!important;text-align:left;
+  background:linear-gradient(90deg,#FFF3FA,#F2F8FF) padding-box,linear-gradient(90deg,#E85BD8,#9A7BFF 50%,#5FC8F2) border-box!important;box-shadow:none!important}
+html body .tt-live-ui [data-view=settings] .actions{display:grid!important;grid-template-columns:1fr 1fr;gap:18px!important;margin-top:18px!important}
+html body .tt-live-ui [data-view=settings] .actions a{display:flex!important;align-items:center;justify-content:center;padding:16px 10px!important;border:3px solid var(--sk-ink)!important;border-radius:14px!important;
+  font-weight:900!important;font-size:21px!important;letter-spacing:2px;text-decoration:none!important;box-shadow:0 4px 0 var(--sk-ink)!important;
+  background:linear-gradient(180deg,#FFF6FC,#FFD2EA)!important;color:#7A33D6!important;-webkit-text-fill-color:#7A33D6!important}
+html body .tt-live-ui [data-view=settings] .actions a+a{background:linear-gradient(180deg,#9FD8FF,#5FAEF5)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:0 1px 0 rgba(28,33,86,.25)}
+html body .tt-live-ui [data-view=settings] .actions a:hover{transform:translateY(-2px)}
+html body #ttHub .hub-embedded>.panel>.geometry{display:none!important}
+html body .tt-live-ui .panel .menu-ribbon{border-radius:0!important}
+/* 單開的設定小視窗維持 v358 的精簡尺寸 */
+html body #setM:not(.hub-embedded) [data-view=settings] .tuning-layout{padding:2px 16px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .setRow{padding:9px 0 9px 30px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .setRow::before{width:16px;height:16px;margin-top:-8px;left:2px}
+html body #setM:not(.hub-embedded) [data-view=settings] #volRow::before{top:19px}
+html body #setM:not(.hub-embedded) [data-view=settings] .setT{font-size:15px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .setD{font-size:11.5px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] input[type=range]{height:14px;margin:6px 0 0}
+html body #setM:not(.hub-embedded) [data-view=settings] input[type=range]::-webkit-slider-runnable-track{height:14px}
+html body #setM:not(.hub-embedded) #volSl2::-webkit-slider-thumb{width:24px!important;height:24px!important;margin-top:-5px;border-width:3px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .tgl{width:50px!important;min-width:50px!important;height:28px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .tgl::after{width:22px!important;height:22px!important;left:3px!important;top:3px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .tgl.on::after{left:25px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] #roomEntry{margin:10px 0 10px!important;padding:10px 16px!important;font-size:15px!important;border-radius:11px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .actions{gap:12px!important;margin-top:12px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .actions a{padding:10px 8px!important;font-size:16px!important;border-radius:11px!important;box-shadow:0 3px 0 var(--sk-ink)!important}
+html body #ttHub{grid-template-columns:minmax(0,100%);grid-template-rows:minmax(0,100%)}
+@media(max-width:700px){
+  html body #ttHub::before{width:100%;height:96dvh;transform:translate(5px,6px)}
+  html body #ttHub .hub-header::after{right:58px;bottom:-8px;width:96px;height:64px;opacity:.9}
+  html body #ttHub h1{font-size:26px}
+  html body #ttHub .hub-card::after,html body #ttHub .hub-card::before{display:none}
+  html body #ttHub #frM #frBody.tt-contacts{padding:18px 16px!important}
+  html body #ttHub .contacts-heading h2{font-size:22px!important}
+}
+@media(max-width:700px){
+  html body #ttHub .hub-header::before{background:
+    var(--sk-orbit) 78% 20%/120px 54px no-repeat,var(--st-pink) 96% 82%/18px 18px no-repeat,var(--st-blue) 60% 84%/18px 18px no-repeat,var(--st-purple) 52% 18%/12px 12px no-repeat}
+}
+
+html body .tt-live-ui .panel[data-view=menu] .feature-tile h2{font-size:26px!important}
+html body .tt-live-ui .panel[data-view=menu] .feature-tile p{font-size:14.5px!important}
+html body .tt-live-ui .panel[data-view=menu] .feature-tile .tile-cta{padding:8px 20px!important;font-size:15px!important}
+html body .tt-live-ui .panel[data-view=menu] .feature-tile img{width:40px!important;height:40px!important}
+html body .tt-live-ui .panel[data-view=menu] .tile-number{font-size:17px!important}
