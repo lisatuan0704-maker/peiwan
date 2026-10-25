@@ -1,0 +1,25 @@
+/* Transfer of the approved drink showcase to the real wardrobe. */
+body[data-area][data-shop-category=other] #detail .drink-carousel{display:grid!important;grid-template-rows:minmax(0,1fr) 44px!important}
+body[data-area][data-shop-category=other] #detail .drink-track{--card-width:min(300px,calc((100cqh - 60px)*320/516),65cqw);display:flex!important;justify-content:flex-start!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x mandatory!important;gap:24px!important;padding:14px calc((100% - var(--card-width))/2) 24px!important;scrollbar-width:none;touch-action:pan-x pan-y;cursor:grab!important}
+body[data-area][data-shop-category=other] #detail .drink-slide{flex:0 0 var(--card-width)!important;width:var(--card-width)!important;aspect-ratio:320/516!important;height:auto!important;min-height:0!important;padding:0!important;border:0!important;border-radius:20px!important;background:none!important;box-shadow:none!important;opacity:.32!important;filter:saturate(.4);transform:scale(.82)!important;transition:opacity .3s,filter .3s,transform .3s;scroll-snap-align:center!important;overflow:visible!important}
+body[data-area][data-shop-category=other] #detail .drink-slide.is-current{opacity:1!important;filter:none;transform:scale(1)!important}
+body[data-area][data-shop-category=other] #detail .drink-navigation{display:flex!important;justify-content:center;align-items:center;gap:20px;padding:0!important}
+body[data-area][data-shop-category=other] #detail .drink-navigation>button{width:40px;height:40px;border:1px solid #c8bfed;background:#fff8fc;color:#293a70}
+#drinkOrderDialog .order-card:has(.dynamic-drink-card){padding:0!important;aspect-ratio:320/516!important;height:auto!important;background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important}
+#drinkOrderDialog .order-card .dynamic-drink-card{width:100%;height:auto}
+.drink-slide .dynamic-drink-card{font-family:Seed,'Microsoft JhengHei',sans-serif}
+.drink-slide:focus-visible{outline:3px solid #f779b6!important;outline-offset:6px}
+@media(max-width:600px){body[data-area][data-shop-category=other] #detail .drink-track{--card-width:min(280px,calc((100cqh - 60px)*320/516),75cqw);gap:16px!important}}
+@media(prefers-reduced-motion:reduce){body[data-area][data-shop-category=other] #detail .drink-slide{transition:none!important}}
+@media(max-width:640px){
+ #drinkOrderDialog .drink-order-shell{padding:34px 18px 14px;gap:10px}
+ #drinkOrderDialog .order-art .order-card{max-width:min(210px,calc(max(120px,100dvh - 390px)*320/516))!important;margin:auto!important}
+ #drinkOrderDialog .order-copy h2{font-size:21px;margin:7px 0;line-height:1.35}
+ #drinkOrderDialog .order-product{font-size:16px;margin:8px 0}
+ #drinkOrderDialog .order-note{font-size:12px;margin:5px 0}
+ #drinkOrderDialog .order-controls{margin:10px 0}
+ #drinkOrderDialog .order-controls .actions{gap:10px!important}
+ #drinkOrderDialog .order-controls [role=group]{padding:7px}
+ #drinkOrderDialog .order-controls .primary{padding:11px!important}
+ #drinkOrderDialog .order-feedback{min-height:0;margin:0}
+}

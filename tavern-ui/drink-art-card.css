@@ -1,0 +1,46 @@
+/* Original portrait composition, separated into quiet depth planes. Preview only. */
+.dynamic-drink-card{--ddc-scale:1;--ddc-rx:0deg;--ddc-ry:0deg;--ddc-px:0px;--ddc-py:0px;--ddc-a:#639fc9;--ddc-b:#243f66;--ddc-wash:#ffffffdd;--ddc-light:#effaff;position:relative;display:block;width:100%;aspect-ratio:320/516;perspective:950px;isolation:isolate;user-select:none;-webkit-user-select:none}
+.dynamic-drink-card[data-tone=rira]{--ddc-a:#8856ab;--ddc-b:#38204f;--ddc-wash:#ffae58bb;--ddc-light:#ffd0a0}
+.dynamic-drink-card[data-tone=momo]{--ddc-a:#b75e85;--ddc-b:#17131d;--ddc-wash:#ffc5de77;--ddc-light:#ffd5e9}
+.dynamic-drink-card .ddc-plane{position:absolute;inset:0;transform:rotateX(var(--ddc-rx)) rotateY(var(--ddc-ry));transform-style:preserve-3d;transition:transform .24s cubic-bezier(.2,.65,.3,1);will-change:transform;pointer-events:none}
+.dynamic-drink-card .ddc-design{position:absolute;left:0;top:0;width:320px;height:516px;transform:scale(var(--ddc-scale));transform-origin:0 0;transform-style:preserve-3d;pointer-events:none}
+.dynamic-drink-card .ddc-paper{position:absolute;inset:0;border:1px solid #ffffff65;border-radius:22px;background:radial-gradient(ellipse at 20% 5%,var(--ddc-wash),transparent 62%),linear-gradient(155deg,var(--ddc-a),var(--ddc-b) 86%);box-shadow:0 4px 0 -1px color-mix(in srgb,var(--ddc-b) 85%,#fff),0 14px 26px -7px #24172f55,inset 0 0 0 5px #ffffff08;transform:translateZ(0)}
+.dynamic-drink-card .ddc-paper:before{content:"";position:absolute;inset:9px;border:1px solid #ffffff28;border-radius:17px;background:repeating-linear-gradient(125deg,transparent 0 34px,#ffffff03 35px 36px)}
+.dynamic-drink-card .ddc-heading{position:absolute;left:25px;right:25px;top:24px;height:67px;border-bottom:1px solid #ffffff29;color:#fff4ed;text-align:left;transform:translateZ(8px);font-family:"Microsoft JhengHei",sans-serif}
+.dynamic-drink-card .ddc-heading small{display:block;font-size:8px;line-height:11px;letter-spacing:2px;font-weight:400;color:var(--ddc-light);white-space:nowrap}
+.dynamic-drink-card .ddc-heading strong{position:absolute;left:0;top:22px;font-family:Tavern,"Microsoft JhengHei",sans-serif;font-size:24px;line-height:1.3;font-weight:700;white-space:nowrap;text-shadow:0 2px 12px #0003}
+.dynamic-drink-card .ddc-heading>.ddc-price{position:absolute;right:1px;top:18px;display:flex;align-items:baseline;gap:3px;white-space:nowrap;color:#fff4ed;transform:skewX(-8deg);transform-origin:right center;font-family:Arial,"Microsoft JhengHei",sans-serif}
+.dynamic-drink-card .ddc-price b{font-size:34px;line-height:1;font-weight:800;letter-spacing:-1.5px;font-variant-numeric:lining-nums tabular-nums}
+.dynamic-drink-card .ddc-price i{font-size:21px;line-height:1;font-style:normal;font-weight:400}
+.dynamic-drink-card .ddc-price em{font-size:14px;line-height:1;font-style:normal;font-weight:700;letter-spacing:.5px}
+.dynamic-drink-card[data-tone=kabuki] .ddc-heading,.dynamic-drink-card[data-tone=kabuki] .ddc-heading small,.dynamic-drink-card[data-tone=kabuki] .ddc-heading>span{color:#213b59;text-shadow:none}
+.dynamic-drink-card .ddc-scene{position:absolute;left:15px;top:107px;width:290px;height:389.6875px;transform-style:preserve-3d}
+.dynamic-drink-card .ddc-depth{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .24s cubic-bezier(.2,.65,.3,1)}
+.dynamic-drink-card .ddc-title-depth{transform:translate3d(calc(var(--ddc-px) * -.25),calc(var(--ddc-py) * -.25),12px)}
+.dynamic-drink-card .ddc-watermark{position:absolute;display:block;width:max-content;max-width:none;white-space:pre;text-align:center;transform:translate(-50%,-50%) rotate(var(--ddc-text-rotation)) skewX(var(--ddc-text-skew)) scaleX(var(--ddc-text-stretch));pointer-events:none}
+.dynamic-drink-card .ddc-drink-depth{transform:translate3d(var(--ddc-px),var(--ddc-py),22px)}
+.dynamic-drink-card .ddc-staff-depth{transform:translate3d(calc(var(--ddc-px) * 1.7),calc(var(--ddc-py) * 1.7),36px)}
+.dynamic-drink-card .ddc-pet-depth{transform:translate3d(calc(var(--ddc-px) * 2),calc(var(--ddc-py) * 2),40px)}
+.dynamic-drink-card .ddc-drink,.dynamic-drink-card .ddc-companion{position:absolute;display:block;max-width:none;transform:translate(-50%,-100%)}
+.dynamic-drink-card .ddc-companion[data-role=pet]{transform:translate(-50%,-100%) scaleX(-1)}
+.dynamic-drink-card .ddc-drink img,.dynamic-drink-card .ddc-companion img,.dynamic-drink-card .ddc-companion canvas{display:block!important;position:absolute;inset:0;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;object-fit:contain!important;border:0!important;border-radius:0!important;padding:0!important;background:transparent!important;animation:none!important;transform:none!important;box-shadow:none!important}
+.dynamic-drink-card .ddc-drink img{image-rendering:auto;filter:drop-shadow(0 7px 7px #0e102c22)}
+.dynamic-drink-card .ddc-companion img,.dynamic-drink-card .ddc-companion canvas{image-rendering:pixelated;filter:drop-shadow(0 3px 3px #0d102b33)}
+.dynamic-drink-card .ddc-companion .ddc-live{visibility:hidden}
+.dynamic-drink-card .ddc-companion .ddc-frozen{visibility:visible}
+.dynamic-drink-card.ddc-is-active .ddc-companion .ddc-live{visibility:visible}
+.dynamic-drink-card.ddc-is-active .ddc-companion .ddc-frozen{visibility:hidden}
+.dynamic-drink-card .ddc-geometry{transform:translate3d(calc(var(--ddc-px) * -.55),calc(var(--ddc-py) * -.55),5px);overflow:hidden;border-radius:0 0 12px 12px}
+.dynamic-drink-card .ddc-geometry span{position:absolute;display:block;width:76px;height:76px;opacity:.7;animation:ddc-square-orbit 4.8s ease-in-out infinite alternate;animation-play-state:paused;will-change:transform}
+.dynamic-drink-card .ddc-geometry span:nth-child(1){left:-8px;top:13%;width:64px;height:64px;animation-delay:-1.4s}
+.dynamic-drink-card .ddc-geometry span:nth-child(2){right:-8px;top:34%;width:88px;height:88px;animation-delay:-3.2s}
+.dynamic-drink-card .ddc-geometry span:nth-child(3){left:2px;top:60%;width:54px;height:54px;animation-delay:-2.2s}
+.dynamic-drink-card .ddc-geometry span:nth-child(4){right:11px;top:80%;width:46px;height:46px;animation-delay:-.5s}
+.dynamic-drink-card .ddc-geometry svg{display:block;width:100%;height:100%;fill:none;stroke:var(--ddc-light);stroke-width:2.5;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--ddc-light) 30%,transparent))}
+.dynamic-drink-card[data-tone=rira] .ddc-geometry span{animation-name:ddc-triangle-orbit;animation-duration:4.4s}
+.dynamic-drink-card[data-tone=momo] .ddc-geometry span{animation-name:ddc-ring-orbit;animation-duration:5.4s}
+.dynamic-drink-card.ddc-is-active .ddc-geometry span{animation-play-state:running}
+@keyframes ddc-square-orbit{from{transform:translate(0,10px) rotate(-12deg)}to{transform:translate(10px,-18px) rotate(65deg)}}
+@keyframes ddc-triangle-orbit{from{transform:translate(-7px,10px) rotate(-18deg)}to{transform:translate(12px,-18px) rotate(42deg)}}
+@keyframes ddc-ring-orbit{from{transform:translate(-4px,12px) scale(.88) rotate(-15deg)}to{transform:translate(6px,-16px) scale(1.12) rotate(42deg)}}
+@media(prefers-reduced-motion:reduce){.dynamic-drink-card .ddc-plane,.dynamic-drink-card .ddc-depth{transition:none}.dynamic-drink-card .ddc-geometry span{animation:none}.dynamic-drink-card .ddc-companion .ddc-live{visibility:hidden!important}.dynamic-drink-card .ddc-companion .ddc-frozen{visibility:visible!important}}
