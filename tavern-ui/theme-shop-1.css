@@ -149,3 +149,28 @@ html body .paneltitle strong::before{left:-24px;width:34px;height:34px;margin-to
 /* v393：字落在正中線 */
 html body .paneltitle strong{padding:7px 32px 4px 22px!important}
 html body #categories button{padding-top:7px!important;padding-bottom:5px!important}
+/* v394：分類鈕／子分頁的框改畫在按鈕「內側」，不會被外層容器裁掉 */
+html body #categories button,html body .hair-sections button,html body .bag-tabs button,html body .catalog-mode button{
+  box-shadow:inset 0 0 0 2px var(--sk-ink),inset 0 0 0 4px #fff,inset 0 0 0 5.5px #DDF1FF,inset 0 -5px 0 0 rgba(28,33,86,.12)!important}
+html body #categories button[aria-pressed=true],html body .hair-sections button[aria-pressed=true],html body .bag-tabs button[aria-pressed=true],html body .catalog-mode button[aria-pressed=true]{
+  box-shadow:inset 0 0 0 2px var(--sk-ink),inset 0 0 0 4px rgba(255,255,255,.5),inset 0 -5px 0 0 rgba(28,33,86,.28)!important}
+html body #categories button:hover{transform:none}
+/* v394：拿掉「瀏海與後髮可分別搭配」提示 */
+html body .hair-section-hint{display:none!important}
+/* v394：迴紋針、邊緣星星移到不會被商城外框（iframe 邊界）裁切的位置，並放最上層 */
+html body aside.preview::after{top:-4px!important;right:22px!important;z-index:80!important}
+html body aside.preview::before{right:-6px!important;top:44%!important;width:30px!important;height:30px!important;z-index:80!important}
+html body #lookSummary::before{left:-6px!important;top:-6px!important;width:24px!important;height:24px!important;z-index:80!important}
+
+/* v396 商城整體縮小為 83%（外框 zoom），小字同步放大，縮小後仍看得清楚；版面比例不變 */
+@media(min-width:601px){
+html body[data-area] .preview .paneltitle>span,html body[data-area] #bundlegrid .season-kicker,html body[data-area] #lookSummary .look-item small,html body[data-area] .preview .stage-label,html body[data-area] .preview .stage-note,
+html body[data-area] #dyeTicket .dye-cta-text small,html body[data-area] #catalog .catalog-head small,html body[data-area] #lookSummary h3 span,html body[data-area] #lookSummary .look-total span,html body[data-area] #lookSummary .look-total strong small,
+html body[data-area] #grid .itemtop .item-number,html body[data-area] #grid .itemtop .status,html body[data-area] main .archive-nav small,html body[data-area] #subtabs .hair-sections button>span{font-size:11px!important}
+html body[data-area] #bundlegrid .season-info p,html body[data-area] #lookSummary .look-item strong,html body[data-area] #grid .item-caption small,html body[data-area] #dyePanel .dye-head>span{font-size:12px!important}
+html body[data-area] #bundlegrid .season-price span,html body[data-area] #lookSummary footer button,html body[data-area] #lookSummary footer button.primary{font-size:13px!important}
+html body[data-area] #dyePanel .dye-head>strong,html body[data-area] #dyeTicket .dye-cta-text strong,html body[data-area] #categories button>span,html body[data-area][data-shop-category] #bundlegrid .season-actions button,html body[data-area] #subtabs .hair-sections button,html body[data-area] #grid .item-caption strong,html body[data-area] main .archive-nav button>span{font-size:14px!important}
+html body[data-area] #lookSummary h3{font-size:15px!important}
+html body[data-area] .preview .previewbar button{font-size:15px!important}
+}
+@media(min-width:601px){html body[data-area] .preview .paneltitle>span{font-size:10px!important;letter-spacing:.4px!important;white-space:nowrap}}
