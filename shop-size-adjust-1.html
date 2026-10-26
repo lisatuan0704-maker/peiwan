@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>商城視窗大小調整</title>
+<style>
+:root{--ink:#1C2156;--pink:#FF4F8B}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:'Microsoft JhengHei',system-ui,sans-serif;background:#2E1C26;color:var(--ink)}
+body{display:grid;grid-template-columns:1fr 300px;height:100vh}
+#wrap{position:relative;overflow:hidden;display:grid;place-items:center;background:#1E1218}
+#view{border:0;background:#000;transform-origin:50% 50%}
+aside{background:#fff;border-left:3px solid var(--ink);padding:14px 16px;overflow:auto}
+h1{font-size:18px;margin:0 0 6px}
+p.help{font-size:12px;color:#5C6196;margin:0 0 12px;line-height:1.6}
+.row{margin:0 0 14px}
+.row label{display:flex;justify-content:space-between;font-weight:700;font-size:14px;margin-bottom:4px}
+.row input[type=range]{width:100%}
+.row output{color:var(--pink);font-weight:900}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
+button{border:2px solid var(--ink);border-radius:8px;background:#fff;color:var(--ink);font-weight:700;padding:6px 10px;cursor:pointer}
+button.on,button.main{background:var(--pink);color:#fff}
+textarea{width:100%;height:96px;font:12px/1.4 Consolas,monospace;border:2px solid #C9CDF0;border-radius:8px;padding:6px}
+#status{font-size:12px;color:#5C6196;min-height:18px}
+</style>
+</head>
+<body>
+<div id="wrap"><iframe id="view" title="大廳預覽"></iframe></div>
+<aside>
+  <h1>商城視窗大小調整</h1>
+  <p class="help">右邊是真正的大廳（同你登入的帳號）。拉滑桿即時看商城縮小後字會不會太小、內容會不會被擠掉。這頁只在你的瀏覽器預覽，不會改到網站。調好按「複製數據」貼給我。</p>
+  <div class="btns" id="views"><button data-v="shop" class="on">商城</button><button data-v="bag">背包</button></div>
+  <div class="btns" id="screens"><button data-s="1366x768" class="on">1366×768</button><button data-s="1920x1080">1920×1080</button><button data-s="1280x720">1280×720</button><button data-s="fit">填滿</button></div>
+  <div class="row"><label>整體縮放（字也一起變小）<output id="zo">100%</output></label><input id="zoom" type="range" min="70" max="100" step="1" value="100"></div>
+  <div class="row"><label>視窗寬度上限<output id="wo">1160px</output></label><input id="w" type="range" min="900" max="1160" step="10" value="1160"></div>
+  <div class="row"><label>視窗高度上限（螢幕高度 %）<output id="ho">94%</output></label><input id="h" type="range" min="70" max="94" step="1" value="94"></div>
+  <div class="btns"><button id="reset">還原</button><button id="copy" class="main">複製數據</button></div>
+  <textarea id="out" readonly></textarea>
+  <div id="status">載入中…</div>
+</aside>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const view=$('view');let screen='1366x768',area='shop';
+function size(){const wrap=$('wrap').getBoundingClientRect();let W,H;if(screen==='fit'){W=wrap.width;H=wrap.height}else{[W,H]=screen.split('x').map(Number)}
+  view.style.width=W+'px';view.style.height=H+'px';const s=Math.min(1,(wrap.width-16)/W,(wrap.height-16)/H);view.style.transform='scale('+s+')';}
+addEventListener('resize',size);size();
+view.src='lobby-view.html?preview=1';
+function lobbyWin(){try{const d=view.contentDocument;const f=d&&d.getElementById('tavernView');return f&&f.contentWindow;}catch(e){return null}}
+function shopDoc(){const w=lobbyWin();try{const f=w&&w.document.querySelector('#ttApprovedUI iframe');return f&&f.contentDocument;}catch(e){return null}}
+function vals(){return {zoom:+$('zoom').value/100,maxWidth:+$('w').value,maxHeightVh:+$('h').value}}
+function apply(){const v=vals();$('zo').textContent=Math.round(v.zoom*100)+'%';$('wo').textContent=v.maxWidth+'px';$('ho').textContent=v.maxHeightVh+'%';
+  $('out').value=JSON.stringify({shopWindow:v});
+  const d=shopDoc();if(!d)return;let st=d.getElementById('ttAdjust');if(!st){st=d.createElement('style');st.id='ttAdjust';d.head.append(st);}
+  st.textContent='#shopWindow{width:min('+v.maxWidth+'px,96vw)!important;height:min('+Math.round(840)+'px,'+v.maxHeightVh+'dvh)!important;max-height:'+v.maxHeightVh+'dvh!important;zoom:'+v.zoom+'}';}
+function openArea(){const w=lobbyWin();if(!w||!w.TinyTavernUI){$('status').textContent='等大廳載入…';return false;}
+  try{w.TinyTavernUI.open(area);}catch(e){}setTimeout(()=>{apply();$('status').textContent='已開啟'+(area==='shop'?'商城':'背包')+'，拉滑桿看看。';},1600);return true;}
+let tries=0;const t=setInterval(()=>{if(openArea()||++tries>40)clearInterval(t);if(tries>40)$('status').textContent='大廳沒載入成功：請用 tinytavern.tw 上的這一頁開（本機直接開檔案瀏覽器會擋）。';},1000);
+['zoom','w','h'].forEach(id=>$(id).addEventListener('input',apply));
+$('views').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;area=b.dataset.v;[...$('views').children].forEach(x=>x.classList.toggle('on',x===b));const w=lobbyWin();try{w.TinyTavernUI.close();}catch(_){}setTimeout(openArea,400);});
+$('screens').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;screen=b.dataset.s;[...$('screens').children].forEach(x=>x.classList.toggle('on',x===b));size();});
+$('reset').onclick=()=>{$('zoom').value=100;$('w').value=1160;$('h').value=94;apply();};
+$('copy').onclick=async()=>{apply();try{await navigator.clipboard.writeText($('out').value);$('status').textContent='已複製，貼給我就好。';}catch(e){$('out').select();$('status').textContent='請手動複製下方框內文字。';}};
+apply();
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v396 新手指南、換頭貼視窗主題；商城整體 83%
+新增 lobby-ui/guide-theme.css（guide.html 於 guide.css 後載入），新手指南外框、標頭、側欄、章節卡、問答與結尾卡改用整站主題；不改排版與內容。theme-skin.css 新增相機選單 .avMenu 與裁切視窗 #avM 外觀，按鈕與流程不變。
+商城依使用者調整頁數據 {"zoom":0.83,"maxWidth":1160,"maxHeightVh":94}：theme-window.css 桌面 #shopWindow zoom .83，寬高上限沿用；theme-shop.css 桌面小字放大（8–13px → 10–15px）避免縮小後看不清，商城內部比例不變。gen/shop-body.css 同步保存此段，重新 build 不會遺失。
+
 ## v395 座椅交接包 v2、手帳寵物縮小
 js/tt-seats.js 以交接包 v2 原檔替換（SHA256 d25a96af5d12a1eae7e61c8999e0b795fb2dfdb859622541f7827cd17d25c286，-text），img/seats/mirror 換新十張素材；CFG／動畫未改、API 不變，沿用 v361 整合。掌櫃頁座椅價格欄預設 399（需掌櫃儲存並上架）。手帳寵物縮圖 70%。v382–v394 為整站視窗主題（lobby-ui/theme-skin.css、tavern-ui/theme-window.css、tavern-ui/theme-shop.css、theme-loading.css），只換外觀、不改商城比例。
 

@@ -136,3 +136,6 @@
 #shopWindow .heading::before,#shopWindow .heading::after{display:none!important;content:none!important}
 #shopWindow{border-top-left-radius:22px!important}
 #shopWindow .window-head{border-radius:21px 21px 0 0!important}
+
+/* v396 商城視窗：使用者以調整頁選定整體 83%；寬高上限沿用 1160px／94dvh */
+@media(min-width:601px){#shopWindow{zoom:.83}#shopWindow .window-head small{font-size:12px!important}}
