@@ -23,7 +23,7 @@
   function watermark(part) {
     const x = (160 + number(part.x)) / 320 * 100, y = (430 + number(part.y)) / 430 * 100;
     const size = number(part.size,69) * 290 / 320;
-    const style = `left:${x}%;top:${y}%;font-family:${fonts[part.font] || fonts.arial};font-weight:${number(part.weight,900)};font-size:${size}px;letter-spacing:${number(part.spacing) * 290 / 320}px;line-height:${number(part.lineHeight,1.05)};-webkit-text-stroke:${number(part.stroke,2)}px ${color(part.strokeColor,'#ffffff')};color:${part.filled ? color(part.fillColor,'#ffffff') : 'transparent'};opacity:${number(part.opacity,78)/100};--ddc-text-rotation:${number(part.rotation)}deg;--ddc-text-stretch:${number(part.stretch,100)/100};--ddc-text-skew:${number(part.skew)}deg;filter:drop-shadow(0 0 ${number(part.glow)}px ${color(part.strokeColor,'#ffffff')})`;
+    const style = `left:${x}%;top:${y}%;--ddc-font:${fonts[part.font] || fonts.arial};font-family:${fonts[part.font] || fonts.arial};font-weight:${number(part.weight,900)};font-size:${size}px;letter-spacing:${number(part.spacing) * 290 / 320}px;line-height:${number(part.lineHeight,1.05)};-webkit-text-stroke:${number(part.stroke,2)}px ${color(part.strokeColor,'#ffffff')};color:${part.filled ? color(part.fillColor,'#ffffff') : 'transparent'};opacity:${number(part.opacity,78)/100};--ddc-text-rotation:${number(part.rotation)}deg;--ddc-text-stretch:${number(part.stretch,100)/100};--ddc-text-skew:${number(part.skew)}deg;filter:drop-shadow(0 0 ${number(part.glow)}px ${color(part.strokeColor,'#ffffff')})`;
     return `<span class="ddc-watermark" style="${escape(style)}" aria-hidden="true">${escape(part.text)}</span>`;
   }
   function markup(asset, index = 0) {

@@ -34,7 +34,7 @@ textarea{width:100%;height:110px;font:12px/1.4 Consolas,monospace;border:2px sol
 <aside>
   <h1>當季套組配色調整</h1>
   <p class="help">右邊是真正的商城。調整只影響「當季套組」卡片上的展示人物髮色與卡片背景，不會改到試穿、穿搭、染髮券或價格。這頁只在你的瀏覽器預覽，不會改網站；調好按「複製數據」貼給我。</p>
-  <div class="btns" id="sets"><button data-id="season291_bear" class="on">熊熊偵探</button><button data-id="season291_wolf">龐克搖滾狼</button></div>
+  <div class="btns" id="sets"><button data-id="season291_bear" class="on">熊熊偵探</button><button data-id="season291_wolf">龐克搖滾狼</button><button data-id="season283_devil">中華小惡魔</button><button data-id="season283_valentine">心動情人</button></div>
   <fieldset><legend>展示髮色</legend>
     <div class="row"><span>主色</span><input type="color" id="main"></div>
     <div class="row"><label><input type="checkbox" id="useTail">髮尾漸層</label><input type="color" id="tail"></div>
@@ -52,12 +52,12 @@ textarea{width:100%;height:110px;font:12px/1.4 Consolas,monospace;border:2px sol
 <script>
 (()=>{
 const $=id=>document.getElementById(id);const view=$('view');
-const DEFAULTS={season291_bear:{main:'#C9973F',tail:'#8F6420',highlight:'#F2EAD8'},season291_wolf:{main:'#C6C6D0',tail:'#94949F',highlight:'#E8A0C6'}};
+const DEFAULTS={season291_bear:{main:'#5D72B1',tail:'#AECFDB',highlight:'#63C3CA',bg:['#95A5D6','#16ADE3','#096167']},season291_wolf:{main:'#D05F39',tail:'#824040',highlight:'#FF0A0A',bg:['#EAA690','#F20D0D','#610000']},season283_devil:{main:'#D79C65',tail:'#7B00A8',highlight:'#F2EAD8'},season283_valentine:{main:'#EDB6D5',tail:'#12032B',highlight:'#FFE0EC'}};
 const PRESETS=[['奶茶金','#E2B676','#9C6B3A','#FFF1D6'],['焦糖棕','#B97A4A','#6E3F25','#F2C28B'],['蜂蜜粉','#F3B3C8','#C46A8E','#FFF0F5'],['薰衣草','#B6A2F0','#6F58C9','#F4D8FF'],['冰河銀','#DDE3F0','#8E9AB8','#9FD8FF'],['龐克灰','#9A9AAE','#4C4C60','#FF5C8F'],['午夜藍','#5D72C8','#232E66','#8FE3FF'],['薄荷綠','#9FDCC0','#4E9A7E','#FFF6C9']];
 let current='season291_bear';
-let state=(()=>{try{return JSON.parse(localStorage.getItem('tt_season_color_v399')||'null')||{}}catch(e){return {}}})();
-function cfg(id){const d=DEFAULTS[id];return state[id]||{main:d.main,tail:d.tail,highlight:null,bg:null};}
-function save(){try{localStorage.setItem('tt_season_color_v399',JSON.stringify(state))}catch(e){}}
+let state=(()=>{try{return JSON.parse(localStorage.getItem('tt_season_color_v402')||'null')||{}}catch(e){return {}}})();
+function cfg(id){const d=DEFAULTS[id];return state[id]||{main:d.main,tail:d.tail,highlight:d.bg?d.highlight:null,bg:d.bg||null};}
+function save(){try{localStorage.setItem('tt_season_color_v402',JSON.stringify(state))}catch(e){}}
 function size(){const wrap=$('wrap').getBoundingClientRect(),W=1366,H=768;view.style.width=W+'px';view.style.height=H+'px';view.style.transform='scale('+Math.min(1,(wrap.width-16)/W,(wrap.height-16)/H)+')';}
 addEventListener('resize',size);size();
 const okHost=/(^|\.)tinytavern\.tw$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
@@ -70,7 +70,7 @@ function fill(){const c=cfg(current),d=DEFAULTS[current];$('main').value=c.main;
 function read(){const custom=document.querySelector('input[name=bgm]:checked').value==='custom';state[current]={main:$('main').value,tail:$('useTail').checked?$('tail').value:null,highlight:$('useHl').checked?$('hl').value:null,bg:custom?[$('bg0').value,$('bg1').value,$('bg2').value]:null};save();fill();apply();}
 function apply(){const all={};for(const id of Object.keys(DEFAULTS))all[id]=cfg(id);$('out').value=JSON.stringify({seasonDisplay:all});const w=shopWin();if(!w||!w.__ttSeasonRepaint){$('status').textContent='等商城載入…';return false;}w.TTSeasonDisplay=Object.assign(w.TTSeasonDisplay||{},all);w.__ttSeasonRepaint();$('status').textContent='已套用到商城預覽。';return true;}
 ['main','tail','hl','bg0','bg1','bg2'].forEach(id=>$(id).addEventListener('input',read));['useTail','useHl'].forEach(id=>$(id).addEventListener('change',read));document.querySelectorAll('input[name=bgm]').forEach(r=>r.addEventListener('change',read));
-$('sets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;current=b.dataset.id;[...$('sets').children].forEach(x=>x.classList.toggle('on',x===b));fill();});
+$('sets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;current=b.dataset.id;[...$('sets').children].forEach(x=>x.classList.toggle('on',x===b));fill();apply();try{shopWin().document.querySelector('[data-season="'+current+'"]')?.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}});
 $('presets').innerHTML=PRESETS.map((p,i)=>'<button data-p="'+i+'" title="'+p[0]+'" style="background:linear-gradient(135deg,'+p[1]+','+p[2]+' 70%,'+p[3]+')"></button>').join('');
 $('presets').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;const p=PRESETS[b.dataset.p];state[current]={main:p[1],tail:p[2],highlight:p[3],bg:null};save();fill();apply();});
 $('reset').onclick=()=>{delete state[current];save();fill();apply();};

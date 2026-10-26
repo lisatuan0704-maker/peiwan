@@ -1,5 +1,11 @@
 # 小小酒館修改紀錄
 
+## v402 當季展示配色定案（熊熊偵探／龐克搖滾狼）、中華小惡魔／心動情人可調
+season-display.js 寫入使用者匯出的兩套配色（含自訂背景三色）。有展示配色的套組改用即時繪製人物（不用固定展示圖），中華小惡魔、心動情人加入 season-color-adjust.html，預設值取自原 displayDye；未設定前仍顯示原展示圖。只影響展示，不影響試穿、保存、染髮券或價格。
+
+## v401 飲料卡英文字使用調整頁字型
+遊戲字體.css 的 body * { font-family:… !important } 蓋掉飲料卡英文字（KABUKI／RIRA／MOMO）的指定字型，換成較寬的介面字而超出卡片。drink-art-card.js 另帶 --ddc-font，drink-art-card.css 以 !important 指回調整頁字型（Georgia／Impact）。排版數值（drink-layout.js）與使用者飲料卡排版.json 相同，未改。
+
 ## v400 熊熊偵探／龐克搖滾狼上架準備、當季卡片配色
 tavern-ui-bridge.js：當季草稿（season-v291.js）保留原圖部件；掌櫃上架後 shopConfig 有同編號且售價有效時，改用掌櫃設定的售價、上架與期限，未上架維持「敬請期待」。網站不寫死價格。
 掌櫃頁當季匯入器支援 291 季：img/season-v291/products.json（每套 399 金幣、部件為網站原圖網址），沿用不覆寫既有商品、上架前下載備份、上架後驗證。座椅兩款 399 由掌櫃在既有座椅欄位儲存並上架。

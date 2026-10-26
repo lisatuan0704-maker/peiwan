@@ -3,4 +3,7 @@
    格式：{套組編號:{main:'#主色',tail:'#髮尾色'|null,highlight:'#挑染色'|null,bg:['#色1','#色2','#色3']|null}}
    bg 為 null 時，背景自動跟隨髮色。 */
 window.TTSeasonDisplay=Object.assign({
+ /* v402 使用者以 season-color-adjust.html 調整後匯出 */
+ "season291_bear":{"main": "#5d72b1", "tail": "#aecfdb", "highlight": "#63c3ca", "bg": ["#95a5d6", "#16ade3", "#096167"]},
+ "season291_wolf":{"main": "#d05f39", "tail": "#824040", "highlight": "#ff0a0a", "bg": ["#eaa690", "#f20d0d", "#610000"]}
 },window.TTSeasonDisplay||{});
