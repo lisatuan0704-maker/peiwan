@@ -52,11 +52,11 @@ textarea{width:100%;height:110px;font:12px/1.4 Consolas,monospace;border:2px sol
 <script>
 (()=>{
 const $=id=>document.getElementById(id);const view=$('view');
-const DEFAULTS={season291_bear:{main:'#5D72B1',tail:'#AECFDB',highlight:'#63C3CA',bg:['#95A5D6','#16ADE3','#096167']},season291_wolf:{main:'#D05F39',tail:'#824040',highlight:'#FF0A0A',bg:['#EAA690','#F20D0D','#610000']},season283_devil:{main:'#D79C65',tail:'#7B00A8',highlight:'#F2EAD8'},season283_valentine:{main:'#EDB6D5',tail:'#12032B',highlight:'#FFE0EC'}};
+const DEFAULTS={season291_bear:{main:'#5D72B1',tail:'#AECFDB',highlight:'#63C3CA',bg:['#95A5D6','#16ADE3','#096167']},season291_wolf:{main:'#120D1C',tail:'#812C5A',highlight:'#D2A1F2',bg:['#BBABD8','#B325DA','#9F3C5F']},season283_devil:{main:'#D2566F',tail:'#52192A',highlight:'#F2EAD8',bg:['#A08895','#E81756','#510B0B']},season283_valentine:{main:'#F7EFD4',tail:'#F0CCE5',highlight:'#FFE0EC',bg:['#FEF69F','#FECD62','#E70DA2']}};
 const PRESETS=[['奶茶金','#E2B676','#9C6B3A','#FFF1D6'],['焦糖棕','#B97A4A','#6E3F25','#F2C28B'],['蜂蜜粉','#F3B3C8','#C46A8E','#FFF0F5'],['薰衣草','#B6A2F0','#6F58C9','#F4D8FF'],['冰河銀','#DDE3F0','#8E9AB8','#9FD8FF'],['龐克灰','#9A9AAE','#4C4C60','#FF5C8F'],['午夜藍','#5D72C8','#232E66','#8FE3FF'],['薄荷綠','#9FDCC0','#4E9A7E','#FFF6C9']];
 let current='season291_bear';
 let state=(()=>{try{return JSON.parse(localStorage.getItem('tt_season_color_v402')||'null')||{}}catch(e){return {}}})();
-function cfg(id){const d=DEFAULTS[id];return state[id]||{main:d.main,tail:d.tail,highlight:d.bg?d.highlight:null,bg:d.bg||null};}
+function cfg(id){const d=DEFAULTS[id];return state[id]||{main:d.main,tail:d.tail,highlight:(d.bg&&!/^season283/.test(id))?d.highlight:null,bg:d.bg||null};}
 function save(){try{localStorage.setItem('tt_season_color_v402',JSON.stringify(state))}catch(e){}}
 function size(){const wrap=$('wrap').getBoundingClientRect(),W=1366,H=768;view.style.width=W+'px';view.style.height=H+'px';view.style.transform='scale('+Math.min(1,(wrap.width-16)/W,(wrap.height-16)/H)+')';}
 addEventListener('resize',size);size();

@@ -3,7 +3,9 @@
    格式：{套組編號:{main:'#主色',tail:'#髮尾色'|null,highlight:'#挑染色'|null,bg:['#色1','#色2','#色3']|null}}
    bg 為 null 時，背景自動跟隨髮色。 */
 window.TTSeasonDisplay=Object.assign({
- /* v402 使用者以 season-color-adjust.html 調整後匯出 */
- "season291_bear":{"main": "#5d72b1", "tail": "#aecfdb", "highlight": "#63c3ca", "bg": ["#95a5d6", "#16ade3", "#096167"]},
- "season291_wolf":{"main": "#d05f39", "tail": "#824040", "highlight": "#ff0a0a", "bg": ["#eaa690", "#f20d0d", "#610000"]}
+ /* v403 使用者以 season-color-adjust.html 調整後匯出（四套） */
+ "season291_bear":{"main": "#5D72B1", "tail": "#AECFDB", "highlight": "#63C3CA", "bg": ["#95A5D6", "#16ADE3", "#096167"]},
+ "season291_wolf":{"main": "#120d1c", "tail": "#812c5a", "highlight": "#d2a1f2", "bg": ["#bbabd8", "#b325da", "#9f3c5f"]},
+ "season283_devil":{"main": "#d2566f", "tail": "#52192a", "highlight": null, "bg": ["#a08895", "#e81756", "#510b0b"]},
+ "season283_valentine":{"main": "#f7efd4", "tail": "#f0cce5", "highlight": null, "bg": ["#fef69f", "#fecd62", "#e70da2"]}
 },window.TTSeasonDisplay||{});
