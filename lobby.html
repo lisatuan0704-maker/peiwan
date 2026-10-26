@@ -1453,7 +1453,7 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/hair-motion.js?v=272"></script>
 <script src="lobby-ui/dm-log.js?v=350"></script>
 <script src="lobby-ui/walk-parts.js?v=270"></script>
-<script src="js/tt-seats.js?v=1"></script>
+<script src="js/tt-seats.js?v=2"></script>
 <script src="lobby-ui/seats.js?v=373"></script>
 <script src="lobby-ui/presence.js?v=373"></script>
 <script src="lobby-ui/payment-safety.js?v=273"></script>
@@ -1692,7 +1692,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v393</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v395</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -7227,10 +7227,10 @@ function bkPageMe(){
 }
 const BK_PETS={pet_bubu:{asset:'kabuki',bounds:[6,44,68,90],size:[88,105]},pet_dengdeng:{asset:'momo',bounds:[8,16,88,112],size:[96,120]},pet_guigui:{asset:'rira',bounds:[14,10,78,88],size:[92,120]}};
 function bkPetArt(id,owned){
- const p=BK_PETS[id];if(!p)return '';const [l,t,r,b]=p.bounds,scale=100/Math.max(r-l,b-t),x=(112-(r-l)*scale)/2-l*scale,y=(112-(b-t)*scale)/2-t*scale;
+ const p=BK_PETS[id];if(!p)return '';const [l,t,r,b]=p.bounds,scale=70/Math.max(r-l,b-t),x=(112-(r-l)*scale)/2-l*scale,y=(112-(b-t)*scale)/2-t*scale;
  return owned?'<div class="bkPetArt"><img alt="'+({pet_bubu:'布布',pet_dengdeng:'燈燈',pet_guigui:'鬼鬼'}[id])+'" src="img/companions-v352/'+p.asset+'-pet.gif?v=356" style="width:'+p.size[0]*scale+'px;height:'+p.size[1]*scale+'px;left:'+x+'px;top:'+y+'px"></div>':'<canvas class="bkPetStill" width="112" height="112" data-book-pet="'+id+'" aria-label="未解鎖寵物靜態預覽"></canvas>';
 }
-function bkPaintPets(){document.querySelectorAll('canvas[data-book-pet]').forEach(cv=>{const p=BK_PETS[cv.dataset.bookPet];if(!p||cv.dataset.painted)return;cv.dataset.painted='1';const img=new Image();img.onload=()=>{const [l,t,r,b]=p.bounds,scale=100/Math.max(r-l,b-t),w=(r-l)*scale,h=(b-t)*scale,g=cv.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(img,l,t,r-l,b-t,(112-w)/2,(112-h)/2,w,h);};img.src='img/companions-v352/'+p.asset+'-pet.gif?v=356';});}
+function bkPaintPets(){document.querySelectorAll('canvas[data-book-pet]').forEach(cv=>{const p=BK_PETS[cv.dataset.bookPet];if(!p||cv.dataset.painted)return;cv.dataset.painted='1';const img=new Image();img.onload=()=>{const [l,t,r,b]=p.bounds,scale=70/Math.max(r-l,b-t),w=(r-l)*scale,h=(b-t)*scale,g=cv.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(img,l,t,r-l,b-t,(112-w)/2,(112-h)/2,w,h);};img.src='img/companions-v352/'+p.asset+'-pet.gif?v=356';});}
 function bkSlotHtml(id,name){
   if(window.TTRetiredOutfits?.retired(id,window.__shopCfg?.[id]))return '';
   const own=!!((window.__owned||{})[id]);
@@ -7625,7 +7625,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui-bridge.js?v=393"></script>
+<script src="tavern-ui-bridge.js?v=394"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
 <script src="lobby-ui/live.js?v=377"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
@@ -7641,7 +7641,7 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=393">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=395">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=373"></script>
 </body>

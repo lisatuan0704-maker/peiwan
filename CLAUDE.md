@@ -1,5 +1,8 @@
 # 小小酒館修改紀錄
 
+## v395 座椅交接包 v2、手帳寵物縮小
+js/tt-seats.js 以交接包 v2 原檔替換（SHA256 d25a96af5d12a1eae7e61c8999e0b795fb2dfdb859622541f7827cd17d25c286，-text），img/seats/mirror 換新十張素材；CFG／動畫未改、API 不變，沿用 v361 整合。掌櫃頁座椅價格欄預設 399（需掌櫃儲存並上架）。手帳寵物縮圖 70%。v382–v394 為整站視窗主題（lobby-ui/theme-skin.css、tavern-ui/theme-window.css、tavern-ui/theme-shop.css、theme-loading.css），只換外觀、不改商城比例。
+
 ## v381 飲料卡載入鏈快取修正
 大廳外框、商城橋接程式、商城外框及時裝間 iframe 的版本參數同步更新，避免沿用 v375 內頁而看見舊的三張並排飲料卡。卡片程式仍為 v380 偽 3D 實作；不改動原圖、帳號或交易邏輯。
 

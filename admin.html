@@ -16,7 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="js/tt-seats.js?v=1"></script><script src="lobby-ui/seats.js?v=361"></script>
+<script src="js/tt-seats.js?v=2"></script><script src="lobby-ui/seats.js?v=361"></script>
 <style>
 :root{
   --void:#160C06; --outline:#241407;
@@ -1097,7 +1097,7 @@ function renderShop(){
         +'<div style="font-size:11px;color:#B29AD0;margin-top:5px;max-width:170px;line-height:1.5">封面圖(選填)。若有上傳部件,可按下方「用合成圖當封面」自動產生</div>'
         +'</div>'
         +'<div style="flex:1;min-width:230px;display:flex;flex-direction:column;gap:9px">'
-        +'<label style="font-size:12.5px">價格 NT$ <input id="sp_'+it.id+'" type="number" value="'+(price??'')+'" style="width:90px;padding:5px 7px;font-size:13px"></label>'
+        +'<label style="font-size:12.5px">價格 NT$ <input id="sp_'+it.id+'" type="number" value="'+(price??(TTSeats.isSeat(it.id)?399:''))+'" style="width:90px;padding:5px 7px;font-size:13px"></label>'
         +'<label style="font-size:12.5px;display:flex;align-items:center;gap:8px;width:fit-content"><input id="sa_'+it.id+'" type="checkbox" '+(active?'checked':'')+' style="width:auto;flex:0 0 auto;margin:0;transform:scale(1.2)"> 上架販售</label>'
         +'<label style="font-size:12.5px;display:flex;align-items:center;gap:6px">限時開始 <input id="ss_'+it.id+'" type="datetime-local" value="'+dtLocal(c.start)+'" style="font-size:12px;padding:4px;width:auto;max-width:210px"></label>'
         +'<label style="font-size:12.5px;display:flex;align-items:center;gap:6px">限時結束 <input id="se_'+it.id+'" type="datetime-local" value="'+dtLocal(c.end)+'" style="font-size:12px;padding:4px;width:auto;max-width:210px"></label>'
