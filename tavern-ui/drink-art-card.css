@@ -46,3 +46,9 @@
 @media(prefers-reduced-motion:reduce){.dynamic-drink-card .ddc-plane,.dynamic-drink-card .ddc-depth{transition:none}.dynamic-drink-card .ddc-geometry span{animation:none}.dynamic-drink-card .ddc-companion .ddc-live{visibility:hidden!important}.dynamic-drink-card .ddc-companion .ddc-frozen{visibility:visible!important}}
 /* v401 遊戲字體.css 以 body * !important 統一介面字型，會蓋掉英文字的排版字型；這裡用調整頁指定的字型。 */
 .dynamic-drink-card .ddc-watermark{font-family:var(--ddc-font,Arial,sans-serif)!important}
+/* v404 反光只在卡片背景紙上（人物與飲料在它前面），緩慢掃過 */
+.dynamic-drink-card .ddc-paper{overflow:hidden}
+.dynamic-drink-card .ddc-paper::after{content:"";position:absolute;inset:-40% -60%;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(110deg,transparent 40%,#ffffff05 44%,#ffffff40 49%,#ffffff0a 54%,transparent 60%);transform:translateX(-45%) rotate(-10deg);animation:ddcFoil 7s ease-in-out infinite}
+@keyframes ddcFoil{0%,18%{transform:translateX(-55%) rotate(-10deg)}62%,100%{transform:translateX(55%) rotate(-10deg)}}
+@media(prefers-reduced-motion:reduce){.dynamic-drink-card .ddc-paper::after{animation:none;opacity:.6}}

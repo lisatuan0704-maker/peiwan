@@ -23,3 +23,11 @@ body[data-area][data-shop-category=other] #detail .drink-navigation>button{width
  #drinkOrderDialog .order-controls .primary{padding:11px!important}
  #drinkOrderDialog .order-feedback{min-height:0;margin:0}
 }
+
+/* v404 單張大卡：中間一張完整大卡，左右只露出下一張的邊緣；整片掃光移除，改在卡片背景紙上 */
+body[data-area][data-shop-category=other] #detail .drink-track{--card-width:min(340px,calc((100cqh - 60px)*320/516),70cqw);--peek:46px;--slide-gap:18px;--edge:calc(50% - var(--card-width)/2 - var(--slide-gap) - var(--peek));gap:var(--slide-gap)!important;
+  -webkit-mask-image:linear-gradient(90deg,transparent var(--edge),#000 calc(var(--edge) + var(--peek)*.9),#000 calc(100% - var(--edge) - var(--peek)*.9),transparent calc(100% - var(--edge)));mask-image:linear-gradient(90deg,transparent var(--edge),#000 calc(var(--edge) + var(--peek)*.9),#000 calc(100% - var(--edge) - var(--peek)*.9),transparent calc(100% - var(--edge)))}
+body[data-area][data-shop-category=other] #detail .drink-slide{opacity:.5!important;filter:saturate(.55) brightness(.92);transform:scale(.9)!important}
+body[data-area][data-shop-category=other] #detail .drink-slide.is-current{opacity:1!important;filter:none;transform:scale(1)!important}
+body[data-area][data-shop-category=other] #detail .drink-slide::after{display:none!important;content:none!important}
+@media(max-width:600px){body[data-area][data-shop-category=other] #detail .drink-track{--card-width:min(280px,calc((100cqh - 60px)*320/516),72cqw);--peek:26px;--slide-gap:12px}}
