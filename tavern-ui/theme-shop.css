@@ -187,3 +187,5 @@ html body[data-area] #lookSummary .look-item small[data-state=base]{color:#A3A8C
 }
 html body #lookSummary footer::before{display:none!important}
 html body[data-area=bag] #lookSummary footer{display:none!important}
+/* v399 試穿區右緣星星：整顆移進畫面內，坐在試穿框邊線上，不再被外框裁到 */
+@media(min-width:601px){html body aside.preview::before{right:4px!important}}
