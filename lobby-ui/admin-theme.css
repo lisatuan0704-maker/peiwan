@@ -1,0 +1,33 @@
+/* v412 掌櫃頁專屬補充（共用主題見 backoffice-theme.css）：黏頂分頁列、商城上架格、部件格、待核帳等改整站主題。只改外觀。 */
+html body:not(.dark) .tabs{background:rgba(253,253,255,.94)!important;border:3px solid var(--pt-ink);border-radius:18px;padding:10px!important;box-shadow:0 4px 0 rgba(28,33,86,.16)!important;backdrop-filter:blur(4px)}
+html body .tabs button{min-width:96px!important;padding:9px 6px!important;font-size:13.5px!important}
+/* 商城上架格 */
+html body:not(.dark) .shopCell{background:linear-gradient(170deg,#fff,#F4FAFF)!important;border:2px solid var(--pt-ink);border-radius:14px!important;box-shadow:inset 0 0 0 2px var(--pt-sky),0 3px 0 rgba(28,33,86,.14)!important}
+html body:not(.dark) .shopCell:hover{box-shadow:inset 0 0 0 2px #FFD6E6,0 5px 0 rgba(28,33,86,.18)!important}
+html body:not(.dark) .shopCell.on{box-shadow:inset 0 0 0 3px var(--pt-pink2),0 5px 0 rgba(28,33,86,.2)!important}
+html body:not(.dark) .shopThumb{background:radial-gradient(rgba(127,200,240,.22) 1.2px,transparent 1.6px) 0 0/10px 10px,#fff!important;border:2px solid #D3D8F2;border-radius:11px!important;box-shadow:none!important}
+html body:not(.dark) .shopNm{color:var(--pt-ink)!important}
+html body:not(.dark) .shopPr{color:var(--pt-pink)!important}
+html body .shopTag{background:var(--pt-pink)!important;border:2px solid var(--pt-ink);border-radius:999px!important}
+html body:not(.dark) .shopSw{border:2px solid var(--pt-ink)!important;border-radius:10px!important;background:#fff!important;color:var(--pt-ink)!important;box-shadow:0 2px 0 var(--pt-ink)!important}
+html body:not(.dark) .shopSw.on{background:linear-gradient(180deg,#9BE7C4,#5CC896)!important;color:#0E3A22!important}
+html body:not(.dark) .shopAdd{border:2px dashed var(--pt-pink2)!important;border-radius:14px!important;background:#FFF4F9!important;color:var(--pt-pink)!important}
+html body:not(.dark) .shopOps button{border:2px solid var(--pt-ink)!important;border-radius:9px!important;background:#fff!important;color:var(--pt-ink)!important}
+html body:not(.dark) .shopOps button.del{background:#FFE0EA!important;color:#C2275E!important}
+html body:not(.dark) .shopEdit{background:linear-gradient(170deg,#fff,#F6FAFF)!important;border:2px solid var(--pt-ink);border-radius:14px!important;box-shadow:inset 0 0 0 2px var(--pt-sky)!important}
+/* 部件格、微調、灰階測試 */
+html body:not(.dark) .partSlot{background:#fff!important;border:2px solid #C3CBEE;border-radius:12px!important;box-shadow:none!important}
+html body:not(.dark) .partSlot.has{border-color:#5CC896}
+html body:not(.dark) .partSlot.sel{border-color:var(--pt-pink);box-shadow:0 0 0 3px #FFD6E6!important}
+html body:not(.dark) .partSlot.add{border-style:dashed;border-color:var(--pt-pink2);background:#FFF4F9!important}
+html body:not(.dark) .nudgeBox{background:#F4FAFF!important;border:2px solid #D3D8F2;border-radius:12px!important}
+html body:not(.dark) .nudgePad button{border:2px solid var(--pt-ink)!important;border-radius:8px!important;background:#fff!important;color:var(--pt-ink)!important}
+html body:not(.dark) .grayBtn{border:2px solid var(--pt-ink)!important;border-radius:10px!important;background:#fff!important;color:var(--pt-ink)!important}
+html body:not(.dark) .grayBtn.on{background:linear-gradient(180deg,#B8A6FF,#8C70F0)!important;color:#fff!important}
+html body:not(.dark) .htUp{border:2px solid var(--pt-ink);border-radius:10px!important;background:#fff!important;color:var(--pt-ink)!important}
+/* 待核帳提醒 */
+html body .urgLate{outline:3px solid #FF8DB5;outline-offset:2px}
+/* 沒有樣式的一般按鈕（當季匯入、部件價格等）也套主題 */
+html body:not(.dark) .card button:not([class]):not([style]){border:2px solid var(--pt-ink);border-radius:10px;background:#fff;color:var(--pt-ink);font:inherit;font-weight:700;padding:7px 14px;box-shadow:0 2px 0 var(--pt-ink);cursor:pointer;margin:2px 4px 2px 0}
+html body:not(.dark) .card button:not([class]):not([style]):disabled{opacity:.45;box-shadow:none}
+html body:not(.dark) input[type=file]::file-selector-button{border:2px solid var(--pt-ink);border-radius:8px;background:#fff;color:var(--pt-ink);font-weight:700;padding:5px 10px;margin-right:8px;cursor:pointer}

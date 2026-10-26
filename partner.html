@@ -408,7 +408,12 @@ button{transition:scale .13s cubic-bezier(.34,1.56,.64,1),filter .15s}
 button:not(:disabled):hover{filter:brightness(1.05) saturate(1.06)}
 button:not(:disabled):active{scale:.94}
 </style>
-<script src="lobby-ui/discord-auth.js?v=298"></script><style>.partner-discord-binding{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid #d6c9e5;font-size:13px}.partner-dc-button{font:inherit;color:#4a3b63;background:#f7f3fc;border:1px solid #aa94c7;border-radius:8px;padding:8px 12px;cursor:pointer}.partner-dc-button:focus-visible{outline:3px solid #8e7ab0;outline-offset:2px}</style><style>#partnerCompanions:not([hidden]){display:flex;align-items:end;justify-content:center;gap:20px;padding:6px 0 12px}#partnerCompanions figure{margin:0;text-align:center}#partnerCompanions img{display:block;width:100px;height:102px;object-fit:contain;image-rendering:pixelated}#partnerCompanions .pet{width:80px;height:94px}#partnerCompanions figcaption{font-size:12px;color:var(--ink-soft)}</style></head>
+<link rel="stylesheet" href="lobby-ui/staff-dm.css?v=411">
+<script src="tavern-ui/sticker-catalog.js?v=249"></script>
+<script src="lobby-ui/staff-dm.js?v=411"></script>
+<script src="lobby-ui/discord-auth.js?v=298"></script><style>.partner-discord-binding{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid #d6c9e5;font-size:13px}.partner-dc-button{font:inherit;color:#4a3b63;background:#f7f3fc;border:1px solid #aa94c7;border-radius:8px;padding:8px 12px;cursor:pointer}.partner-dc-button:focus-visible{outline:3px solid #8e7ab0;outline-offset:2px}</style><style>#partnerCompanions:not([hidden]){display:flex;align-items:end;justify-content:center;gap:20px;padding:6px 0 12px}#partnerCompanions figure{margin:0;text-align:center}#partnerCompanions img{display:block;width:100px;height:102px;object-fit:contain;image-rendering:pixelated}#partnerCompanions .pet{width:80px;height:94px}#partnerCompanions figcaption{font-size:12px;color:var(--ink-soft)}</style>
+<link href="tavern-ui/assets/fonts/lineseed.css?v=257" rel="stylesheet">
+<link rel="stylesheet" href="lobby-ui/backoffice-theme.css?v=412"></head>
 <body>
 <button id="themeBtn" title="切換日間／夜間模式" aria-label="切換日間夜間模式">☀️</button>
 <script>
@@ -433,7 +438,7 @@ button:not(:disabled):active{scale:.94}
     <h1>🕯️ Tiny Tavern・角色手札</h1>
     <p>TINY TAVERN · PARTNER</p>
   </header>
-  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v18</div>
+  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v412</div>
 
   <div id="pgLogin">
     <div class="card lgCard">
@@ -466,7 +471,8 @@ button:not(:disabled):active{scale:.94}
   </script>
 
   <div id="pgMain">
-    <div id="bookingSoundControl" style="margin:8px 0;text-align:right"></div>
+  <div class="pt-layout">
+  <aside class="pt-side">
     <div class="card">
       <div class="me">
         <div class="em" id="meEmoji">✨</div>
@@ -485,14 +491,6 @@ button:not(:disabled):active{scale:.94}
         <span style="color:#A9834E">(已預約的單不受影響,時間到還是要出席)</span>
       </div>
     </div>
-    <div id="partnerVoiceInbox"></div><div class="tabs">
-      <button id="tb0" class="on" onclick="showTab(0)">🔔 新單<span id="cntNew"></span></button>
-      <button id="tb1" onclick="showTab(1)">⏱️ 進行中<span id="cntRun"></span></button>
-      <button id="tb2" onclick="showTab(2)">📖 本月</button>
-    </div>
-    <div id="tab0"></div>
-    <div id="tab1" style="display:none"></div>
-    <div id="tab2" style="display:none"></div>
     <div class="card">
       <h2>📅 我的行事曆</h2>
       <p class="hint" style="margin:0 0 10px">標記你<b>不能接單</b>的時間。客人預約時會看到這些時段是暗的,而且看得到你寫的理由。</p>
@@ -527,7 +525,21 @@ button:not(:disabled):active{scale:.94}
       <button class="btn" onclick="saveStaffCard()" style="margin-top:12px">儲存陪玩卡 ✦</button>
       <p class="hint" id="scMsg" style="text-align:center"></p>
     </div>
-
+  </aside>
+  <section class="pt-main">
+    <div id="bookingSoundControl" style="margin:8px 0;text-align:right"></div>
+    <div id="partnerVoiceInbox"></div>
+    <div class="tabs">
+      <button id="tb0" class="on" onclick="showTab(0)">🔔 新單<span id="cntNew"></span></button>
+      <button id="tb1" onclick="showTab(1)">⏱️ 進行中<span id="cntRun"></span></button>
+      <button id="tb2" onclick="showTab(2)">📖 本月</button>
+    </div>
+    <div id="tab0"></div>
+    <div id="tab1" style="display:none"></div>
+    <div id="tab2" style="display:none"></div>
+    <div class="card" id="staffDmCard"></div>
+  </section>
+  </div>
   </div>
 </div>
 
@@ -694,6 +706,8 @@ function boot(){
     if(document.getElementById('ptCalM')&&document.getElementById('ptCalM').style.display==='flex') renderCal();
     calSweep();
   });
+  /* v411 會員私訊收件匣 */
+  try{ if(window.TTStaffDM) TTStaffDM.mount({db,ROOT,cid,host:document.getElementById("staffDmCard"),getName:()=>PARTNER_ART[cid]?.name||(me&&me.name)}); }catch(e){ console.warn("私訊收件匣載入失敗",e); }
   // 每秒更新進行中的計時顯示
   if(ticker) clearInterval(ticker);
   ticker=setInterval(tick,1000);

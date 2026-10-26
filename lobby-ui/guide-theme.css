@@ -50,7 +50,7 @@ html body:before{display:none}
     var(--ht-sky-tl) left 0 top 0/170px 110px no-repeat,var(--sk-glass),var(--sk-glass2),linear-gradient(100deg,#FFFFFF 0%,#F4FAFF 40%,#EAF6FF 62%,#F3EEFF 100%)!important}
 .hero-word{-webkit-text-stroke:2px rgba(176,150,255,.55)!important}
 .hero-copy>.eyebrow{color:var(--sk-pink)!important}
-h1{color:var(--sk-ink)!important;font-family:var(--sk-head);font-weight:700;-webkit-text-stroke:1.6px currentColor;paint-order:stroke fill}
+h1{color:var(--sk-ink)!important;font-family:var(--sk-head);font-weight:700;-webkit-text-stroke:0 currentColor;paint-order:stroke fill}
 h1 span{display:inline-block!important;-webkit-text-stroke:0;margin-top:14px!important;padding:6px 30px 4px 16px;font-size:20px!important;border:3px solid var(--sk-ink);border-radius:4px;transform:rotate(-2deg) skewX(-8deg);
   background:var(--gem-tab) 0 0/100% 100% no-repeat;box-shadow:inset 0 0 0 2px rgba(255,255,255,.85),inset 0 0 0 3.5px #FFB3D1,4px 5px 0 var(--sk-pink2)}
 .hero-intro{color:var(--sk-ink2)!important}

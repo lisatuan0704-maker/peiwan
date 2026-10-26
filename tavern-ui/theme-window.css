@@ -139,3 +139,93 @@
 
 /* v396 商城視窗：使用者以調整頁選定整體 83%；寬高上限沿用 1160px／94dvh */
 @media(min-width:601px){#shopWindow{zoom:.83}#shopWindow .window-head small{font-size:12px!important}}
+/* v407 暫停預約的冒險者：選取鈕改成灰色停用樣式，並寫明「暫停預約」 */
+html body .cast-select:disabled{opacity:.6!important;cursor:not-allowed!important;background:#F1F2F8!important;color:#8A8FB5!important;border-color:#C3C8E4!important;box-shadow:none!important;transform:none!important}
+/* v407 冒險者名簿、冒險者資訊視窗套用與商城同一套外框（深藍框、頁籤、紙頁堆疊、標頭幾何與吉祥物） */
+#rosterWindow{--ui-ink:#1C2156!important;border:1px solid var(--sk-ink)!important;border-top-left-radius:0!important;border-radius:0 22px 22px 22px!important;overflow:visible!important;
+  background:var(--gem-br) right bottom/360px 180px no-repeat,linear-gradient(118deg,rgba(255,170,205,.22) 0 5%,transparent 5%),#FCFCFF!important;
+  box-shadow:0 0 0 2px var(--sk-ink),6px -12px 0 -3px #fff,6px -12px 0 0 var(--sk-ink),12px -6px 0 -3px #FFE4EF,12px -6px 0 0 var(--sk-ink),9px 10px 0 -3px #D4F0FF,9px 10px 0 0 var(--sk-ink),0 26px 70px rgba(18,14,48,.42)!important;
+  backdrop-filter:none!important;margin-top:24px}
+#rosterWindow .window-head{overflow:visible!important;border-radius:0 19px 0 0;border-bottom:0!important;box-shadow:inset 0 -3px 0 var(--sk-ink);isolation:isolate;
+  background:
+    var(--geo-a) 70% 50%/auto 100% no-repeat,
+    var(--sk-orbit) 34% 40%/150px 66px no-repeat,
+    var(--st-pink) 31% 26%/22px 22px no-repeat,
+    var(--st-blue) 52% 70%/24px 24px no-repeat,
+    var(--st-purple) 46% 30%/14px 14px no-repeat,
+    var(--st-white) 58% 36%/18px 18px no-repeat,
+    linear-gradient(112deg,#fff 0 28%,transparent 28%),
+    var(--sk-dot-sky) 0 0/9px 9px,
+    linear-gradient(112deg,transparent 0 28%,#D6F2FF 28% 40%,#F2FBFF 40% 42%,#BCE6FF 42% 54%,#FFE3EF 54% 72%,#E7DAFF 72%)!important;
+  color:var(--sk-ink)!important}
+/* 凸起頁籤＋右側斜收 */
+#rosterWindow .heading{position:relative;z-index:1}
+#rosterWindow .heading::before{content:"";position:absolute;left:-25px;top:-37px;width:330px;height:40px;z-index:-1;pointer-events:none;
+  background:#fff;border:3px solid var(--sk-ink);border-right:0;border-bottom:0;border-radius:20px 0 0 0}
+#rosterWindow .heading::after{content:"";position:absolute;left:302px;top:-37px;width:64px;height:28px;z-index:-1;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 20' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H8 Q12 0 15 3 L30 17.5 H46 V20 H0Z' fill='%23fff'/%3E%3Cpath d='M0 1.5 H8 Q11.5 1.5 14 4 L29.4 19 H46' fill='none' stroke='%231C2156' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat}
+/* 粉紅方形圖示＋白星 */
+#rosterWindow .brand-mark{display:block!important;width:50px!important;height:50px!important;flex:none;border:3px solid var(--sk-ink);border-radius:12px;color:transparent;fill:transparent;
+  background:var(--st-white) center/26px 26px no-repeat,linear-gradient(145deg,#FF7FAE,#FF3F80);box-shadow:3px 3px 0 rgba(28,33,86,.25)}
+#rosterWindow .brand-mark *{display:none}
+#rosterWindow .window-head small{color:var(--sk-pink)!important;font-weight:900;letter-spacing:2.5px!important}
+#rosterWindow .title{color:var(--sk-ink)!important;background:none!important;clip-path:none!important;padding:0!important;font-weight:900!important;letter-spacing:2px;text-shadow:2px 2px 0 #fff!important}
+#rosterWindow .window-head:before{color:transparent!important;-webkit-text-stroke:2px rgba(176,150,255,.75)!important;opacity:.9!important;font-family:'TT Title','TT Latin',sans-serif!important;right:150px!important}
+#rosterWindow .window-head:after{content:""!important;display:block!important;position:absolute!important;right:76px!important;left:auto!important;top:auto!important;bottom:0!important;width:128px!important;height:84px!important;
+  border:0!important;box-shadow:none!important;transform:none!important;opacity:1!important;animation:none!important;z-index:-1!important;
+  background:var(--sk-mascot) center bottom/contain no-repeat!important}
+#rosterWindow .close{width:44px!important;height:44px!important;border:3px solid var(--sk-ink)!important;border-radius:11px!important;background:#fff!important;color:var(--sk-ink)!important;
+  font:900 28px/34px Arial,sans-serif!important;box-shadow:3px 4px 0 var(--sk-pink2)!important}
+#rosterWindow .close:hover{transform:translate(-1px,-1px) rotate(-5deg)}
+@media(max-width:600px){
+  #rosterWindow{margin-top:18px}
+  #rosterWindow .heading::before{width:240px;left:-19px;top:-31px;height:34px}
+  #rosterWindow .heading::after{left:212px;top:-31px}
+  #rosterWindow .window-head:after{right:58px!important;width:84px!important;height:56px!important}
+  #rosterWindow .window-head:before{display:none!important}
+  #rosterWindow .brand-mark{width:40px!important;height:40px!important}}
+#profileWindow{--ui-ink:#1C2156!important;border:1px solid var(--sk-ink)!important;border-top-left-radius:0!important;border-radius:0 22px 22px 22px!important;overflow:visible!important;
+  background:var(--gem-br) right bottom/360px 180px no-repeat,linear-gradient(118deg,rgba(255,170,205,.22) 0 5%,transparent 5%),#FCFCFF!important;
+  box-shadow:0 0 0 2px var(--sk-ink),6px -12px 0 -3px #fff,6px -12px 0 0 var(--sk-ink),12px -6px 0 -3px #FFE4EF,12px -6px 0 0 var(--sk-ink),9px 10px 0 -3px #D4F0FF,9px 10px 0 0 var(--sk-ink),0 26px 70px rgba(18,14,48,.42)!important;
+  backdrop-filter:none!important;margin-top:24px}
+#profileWindow .window-head{overflow:visible!important;border-radius:0 19px 0 0;border-bottom:0!important;box-shadow:inset 0 -3px 0 var(--sk-ink);isolation:isolate;
+  background:
+    var(--geo-a) 70% 50%/auto 100% no-repeat,
+    var(--sk-orbit) 34% 40%/150px 66px no-repeat,
+    var(--st-pink) 31% 26%/22px 22px no-repeat,
+    var(--st-blue) 52% 70%/24px 24px no-repeat,
+    var(--st-purple) 46% 30%/14px 14px no-repeat,
+    var(--st-white) 58% 36%/18px 18px no-repeat,
+    linear-gradient(112deg,#fff 0 28%,transparent 28%),
+    var(--sk-dot-sky) 0 0/9px 9px,
+    linear-gradient(112deg,transparent 0 28%,#D6F2FF 28% 40%,#F2FBFF 40% 42%,#BCE6FF 42% 54%,#FFE3EF 54% 72%,#E7DAFF 72%)!important;
+  color:var(--sk-ink)!important}
+/* 凸起頁籤＋右側斜收 */
+#profileWindow .heading{position:relative;z-index:1}
+#profileWindow .heading::before{content:"";position:absolute;left:-25px;top:-37px;width:330px;height:40px;z-index:-1;pointer-events:none;
+  background:#fff;border:3px solid var(--sk-ink);border-right:0;border-bottom:0;border-radius:20px 0 0 0}
+#profileWindow .heading::after{content:"";position:absolute;left:302px;top:-37px;width:64px;height:28px;z-index:-1;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 20' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H8 Q12 0 15 3 L30 17.5 H46 V20 H0Z' fill='%23fff'/%3E%3Cpath d='M0 1.5 H8 Q11.5 1.5 14 4 L29.4 19 H46' fill='none' stroke='%231C2156' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat}
+/* 粉紅方形圖示＋白星 */
+#profileWindow .brand-mark{display:block!important;width:50px!important;height:50px!important;flex:none;border:3px solid var(--sk-ink);border-radius:12px;color:transparent;fill:transparent;
+  background:var(--st-white) center/26px 26px no-repeat,linear-gradient(145deg,#FF7FAE,#FF3F80);box-shadow:3px 3px 0 rgba(28,33,86,.25)}
+#profileWindow .brand-mark *{display:none}
+#profileWindow .window-head small{color:var(--sk-pink)!important;font-weight:900;letter-spacing:2.5px!important}
+#profileWindow .title{color:var(--sk-ink)!important;background:none!important;clip-path:none!important;padding:0!important;font-weight:900!important;letter-spacing:2px;text-shadow:2px 2px 0 #fff!important}
+#profileWindow .window-head:before{color:transparent!important;-webkit-text-stroke:2px rgba(176,150,255,.75)!important;opacity:.9!important;font-family:'TT Title','TT Latin',sans-serif!important;right:150px!important}
+#profileWindow .window-head:after{content:""!important;display:block!important;position:absolute!important;right:76px!important;left:auto!important;top:auto!important;bottom:0!important;width:128px!important;height:84px!important;
+  border:0!important;box-shadow:none!important;transform:none!important;opacity:1!important;animation:none!important;z-index:-1!important;
+  background:var(--sk-mascot) center bottom/contain no-repeat!important}
+#profileWindow .close{width:44px!important;height:44px!important;border:3px solid var(--sk-ink)!important;border-radius:11px!important;background:#fff!important;color:var(--sk-ink)!important;
+  font:900 28px/34px Arial,sans-serif!important;box-shadow:3px 4px 0 var(--sk-pink2)!important}
+#profileWindow .close:hover{transform:translate(-1px,-1px) rotate(-5deg)}
+@media(max-width:600px){
+  #profileWindow{margin-top:18px}
+  #profileWindow .heading::before{width:240px;left:-19px;top:-31px;height:34px}
+  #profileWindow .heading::after{left:212px;top:-31px}
+  #profileWindow .window-head:after{right:58px!important;width:84px!important;height:56px!important}
+  #profileWindow .window-head:before{display:none!important}
+  #profileWindow .brand-mark{width:40px!important;height:40px!important}}
+/* v411 冒險者資訊頁「私訊」按鈕 */
+#profileWindow .profile-foot .dm-cast{margin-left:auto;margin-right:10px;border:3px solid var(--sk-ink)!important;border-radius:12px!important;background:#fff!important;color:var(--sk-ink)!important;font-weight:900!important;padding:9px 16px!important;box-shadow:0 3px 0 var(--sk-ink)!important;cursor:pointer}
+#profileWindow .profile-foot .dm-cast:hover{background:#FFF0F6!important}

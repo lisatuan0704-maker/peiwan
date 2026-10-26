@@ -1445,7 +1445,7 @@ body.artBub.bub3s .npc .bub{
 }
 </style>
 <link rel="stylesheet" href="lobby-ui/contacts.css?v=341">
-<script src="lobby-ui/contacts.js?v=341"></script>
+<script src="lobby-ui/contacts.js?v=411"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
 <link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=347">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=357">
@@ -1569,8 +1569,8 @@ body.artBub.bub3s .npc .bub{
 </div></div>
 <div class="shopModal" id="shopM1"><div class="shopCard">
   <h3>想來點什麼?</h3>
-  <button class="planBtn" onclick="shopStep('play')"><b>找陪玩一起玩</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D">特戰英豪、語音陪聊</span></button>
-  <button class="planBtn" onclick="shopStep('member')"><b>加入會員</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D">月費會員、冠名支持</span></button>
+  <button class="planBtn" onclick="shopStep('play')"><b>找冒險者一起玩</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D">特戰英豪、找冒險者聊聊天</span></button>
+  <button class="planBtn" onclick="shopStep('member')"><b>加入會員</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D">三種月會員方案</span></button>
   <button class="planBtn" id="tbMenuBtn" style="display:none" onclick="openTables()"><b>［限定］酒館併桌</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D" id="tbMenuSub">多人同桌・一人一席・售完為止</span></button>
   <div class="btns"><button class="sc-back" onclick="shopClose()">先逛逛</button></div>
 </div></div>
@@ -1581,10 +1581,10 @@ body.artBub.bub3s .npc .bub{
   <div class="btns"><button class="sc-back" onclick="shopOpen(1)">回上一頁</button></div>
 </div></div>
 <div class="shopModal" id="shopMP"><div class="shopCard">
-  <h3>選擇陪玩</h3>
+  <h3>選擇冒險者</h3>
   <div class="pkTabs">
     <button class="pkTab on" data-t="now" onclick="pkTab('now')">即時<small>現在在班</small></button>
-    <button class="pkTab" data-t="book" onclick="pkTab('book')">預約<small>全部陪玩</small></button>
+    <button class="pkTab" data-t="book" onclick="pkTab('book')">預約<small>全部冒險者</small></button>
   </div>
   <div id="pkGrid"></div>
   <div class="btns"><button class="sc-back" onclick="shopOpen(1)">‹ 上一步</button></div>
@@ -1692,7 +1692,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v404</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v412</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -1717,7 +1717,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="dcGate">
   <div class="dgCard">
-    <img id="dgIcon" alt="" hidden><canvas class="tavern-welcome-art" data-tavern-welcome role="img" aria-label="三位陪玩在酒館等你"></canvas>
+    <img id="dgIcon" alt="" hidden><canvas class="tavern-welcome-art" data-tavern-welcome role="img" aria-label="三位冒險者在酒館等你"></canvas>
     <h1>歡迎來到小小酒館</h1>
     <p>綁定 Discord 帳號即可走進大廳 ——<br>你的闆卡、成就與購買紀錄都會跟著帳號保存,換裝置也不會不見。</p>
     <button class="dgBtn" onclick="dcAuth()">綁定 Discord・進入酒館</button>
@@ -1747,7 +1747,7 @@ body.artBub.bub3s .npc .bub{
 <div class="gwin" id="vipM"><div class="gcard">
   <div class="gtop"><span class="gt">VIP 等級與獎勵</span><button class="gx" onclick="gClose('vipM')">✕</button></div>
   <div class="gin">
-    <div class="ghint">依累積支持升級(儲值與月卡都算,儲值當下就計入)—— 每升一級解鎖:點單優惠券、專屬時裝寵物椅子、限定對話框,最高階送實體周邊。(等級門檻為暫定值,正式上線前會公告確認)</div>
+    <div class="ghint">依累積支持升級（儲值與月卡都算，儲值當下就計入）。每升一級解鎖：點單優惠券、專屬時裝、寵物、椅子、限定對話框，最高階送實體周邊。</div>
     <div id="vipList"></div>
   </div>
 </div></div>
@@ -1777,7 +1777,7 @@ body.artBub.bub3s .npc .bub{
 <div class="gwin" id="achM"><div class="gcard">
   <div class="gtop"><span class="gt">成就</span><button class="gx" onclick="gClose('achM')">✕</button></div>
   <div class="gin">
-    <div class="ghint">完成挑戰解鎖成就 —— 進度先記在這台裝置,之後與帳號同步;達成的成就未來可換稱號與頭像框。</div>
+    <div class="ghint">完成挑戰就能解鎖成就。</div>
     <div id="achList"></div>
   </div>
 </div></div>
@@ -3807,18 +3807,18 @@ let PAY_ACCOUNT = '(017)兆豐銀行 台南分行 213-09-07119-8 陽生實業有
 let PAY_NOTE = '';       /* 掌櫃可在後台填付款備註(例:匯款後請保留收據) */
 let PAY_MINS = 60;       /* 付款截止分鐘數,掌櫃可調 */
 const PLANS = {
-  play: { title:'找陪玩一起玩', items:[
+  play: { title:'找冒險者一起玩', items:[
     {id:'val1', n:'特戰英豪 1 小時', p:300},
     {id:'val2', n:'特戰英豪 2 小時', p:600},
-    {id:'chat1', n:'語音陪聊 1 小時', p:300},
+    {id:'chat1', n:'找冒險者聊聊天 1 小時', p:300},
   ]},
   member: { title:'加入會員', items:[
-    {id:'m699', n:'套餐會員(月)', p:699, d:['實體當月限定周邊小禮','當月限定桌布','陪玩優先預約權','會員聊天室使用權']},
-    {id:'m499', n:'基本會員(月)', p:499, d:['會員聊天室使用權','當月限定桌布']},
-    {id:'crown', n:'冠名支持(一次性)', p:1200, d:['陪玩三小時','一日陪玩改名權','專屬身分組(限定圖閱覽)']},
+    {id:'m1200', n:'基本會員（月）', p:1200, d:['會員優先預約權','DC 專屬身分組','會員們專用聊天室']},
+    {id:'m3000', n:'進階會員（月）', p:3000, d:['網站私訊冒險者（可在網站內私訊冒險者並留下訊息）','會員優先預約權','可許願下一季的時裝方向','會員們專用聊天室']},
+    {id:'m5000', n:'尊榮會員（月）', p:5000, d:['專屬語音房（可自由帶朋友使用）','會員優先預約權','會員們專用聊天室','DC 獨家身分組','可許願下一季的時裝方向','網站私訊冒險者（可在網站內私訊冒險者並留下訊息）','可選一位冒險者領取實體周邊一份']},
   ]},
 };
-/* v195:大廳「找陪玩一起玩」項目改讀掌櫃後台價目表(config/services,上架中才顯示)。
+/* v195:大廳「找冒險者一起玩」項目改讀掌櫃後台價目表(config/services,上架中才顯示)。
    價目表清空時退回內建三項,點單永遠不會開天窗。套餐類的多人拆帳=每人價,單位字由掌櫃寫明。 */
 let TT_SVCS=null;
 if(typeof db!=='undefined'&&db){
@@ -4331,6 +4331,8 @@ async function payWithCoins(){
  else toast('付款成功!');
  try{statInc('orders');notifyOrder(o);watchMyOrders();}catch(_){}
  if(kind==='play')void window.TTVoiceOrders?.register([ref.key]);
+ /* v408 買完染髮券：回到染髮工作室詢問是否直接染上剛剛的顏色（只開介面，交易已完成） */
+ if(kind==='shop'&&plan.itemId==='dyeTicket'){try{window.ttAfterDyeTicket?.();}catch(_){}}
 }
 /* 錢包顯示 + 儲值 */
 function updateCoinChip(){ const el=document.getElementById('coinBal'); if(el) el.textContent=(window.__wallet||0);
@@ -6061,13 +6063,13 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   window.__buildFrames2=buildFrames2;
   window.addEventListener('tt-companion-rewards',()=>{buildFrames2();applyFrame();});
   document.getElementById('h2ava').addEventListener('click',()=>{ if(window.bookOpen) bookOpen(); else window.__openFrames(); });
-  /* --- VIP 系統(暫訂數字,之後改 VIP_CFG 的 need 即可) --- */
+  /* --- VIP 系統(v407 門檻定案:3000/10000/15000/22000/30000;改 VIP_CFG 的 need,admin.html VIP_TIERS_ADMIN 同步) --- */
   const VIP_CFG=[
-    {lv:1,cls:'vc1',hex:'#7E9FDC',nm:'迎賓',need:500,  cp:1,disc:30, rw:[['coupon','優惠券 1 張・折 $30'],['chat','奶霜小貓'],['frame','頭像框・藍調樂手']]},
-    {lv:2,cls:'vc2',hex:'#61B98A',nm:'熟客',need:1500, cp:2,disc:50, rw:[['coupon','優惠券 2 張・折 $50'],['chair','限定坐墊椅'],['chat','花茶小兔'],['frame','頭像框・酒館饗宴']]},
-    {lv:3,cls:'vc3',hex:'#E67FA6',nm:'常客',need:3000, cp:3,disc:80, rw:[['coupon','優惠券 3 張・折 $80'],['dress','VIP 專屬時裝'],['chat','蜜桃小鳥'],['frame','頭像框・薔薇緞帶']]},
-    {lv:4,cls:'vc4',hex:'#A183DE',nm:'摯友',need:6000, cp:5,disc:120,rw:[['coupon','優惠券 5 張・折 $120'],['cat','VIP 限定寵物'],['chat','VIP 4 氣泡・設計中'],['frame','頭像框・星夜魔法']]},
-    {lv:5,cls:'vc5',hex:'#E9B028',nm:'貴賓',need:12000,cp:8,disc:200,rw:[['coupon','優惠券 8 張・折 $200'],['dress','貴賓時裝＋坐椅'],['chat','VIP 5 氣泡・設計中'],['frame','頭像框・甜心派對'],['gift','實體周邊禮物']]}
+    {lv:1,cls:'vc1',hex:'#7E9FDC',nm:'迎賓',need:3000, cp:1,disc:30, rw:[['coupon','優惠券 1 張・折 $30'],['chat','奶霜小貓'],['frame','頭像框・藍調樂手']]},
+    {lv:2,cls:'vc2',hex:'#61B98A',nm:'熟客',need:10000,cp:2,disc:50, rw:[['coupon','優惠券 2 張・折 $50'],['chair','限定坐墊椅'],['chat','花茶小兔'],['frame','頭像框・酒館饗宴']]},
+    {lv:3,cls:'vc3',hex:'#E67FA6',nm:'常客',need:15000,cp:3,disc:80, rw:[['coupon','優惠券 3 張・折 $80'],['dress','VIP 專屬時裝'],['chat','蜜桃小鳥'],['frame','頭像框・薔薇緞帶']]},
+    {lv:4,cls:'vc4',hex:'#A183DE',nm:'摯友',need:22000,cp:5,disc:120,rw:[['coupon','優惠券 5 張・折 $120'],['cat','VIP 限定寵物'],['chat','VIP 4 氣泡・設計中'],['frame','頭像框・星夜魔法']]},
+    {lv:5,cls:'vc5',hex:'#E9B028',nm:'貴賓',need:30000,cp:8,disc:200,rw:[['coupon','優惠券 8 張・折 $200'],['dress','貴賓時裝＋坐椅'],['chat','VIP 5 氣泡・設計中'],['frame','頭像框・甜心派對'],['gift','實體周邊禮物']]}
   ];
   window.__vipCfg=VIP_CFG;
   function vipSpent(){
@@ -6385,7 +6387,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
    安全設計:私訊只開放互為好友(陌生人不能私訊);封鎖後對方送邀請看起來成功但不會送達;
    全部訊息掌櫃後台可調閱,檢舉會帶最後 20 句上下文 */
 (function(){
-  let FR={}, FRQ={}, BLK={}, DMM={}, _frBound=false, _dmRef=null, _dmWith=null, _dmSending=false;
+  let FR={}, FRQ={}, BLK={}, DMM={}, _frBound=false, _dmRef=null, _dmWith=null, _dmSending=false, _dmStaffName='';
   window.ttPlayerSuppressed=k=>!!(k&&k!==myKey&&(Object.hasOwn(window.__ttHidden||{},k)||Object.hasOwn(BLK,k)));
   function myName(){ try{ return (agents.get(myKey).b.name)||'？'; }catch(e){ return '？'; } }
   function pairKey(a,b){ return [a,b].sort().join('~'); }
@@ -6420,7 +6422,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
       +'<div style="display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px">'
       +'<button title="檢舉/封鎖" style="border:none;background:none;cursor:pointer;padding:2px;line-height:0" onclick="dmWarnMenu(this)">'
       +'<svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 2.2 L23 21 H1 Z" fill="#E14E6B"/><rect x="10.9" y="8.6" width="2.4" height="6.6" rx="1.2" fill="#fff"/><circle cx="12.1" cy="17.9" r="1.5" fill="#fff"/></svg></button>'
-      +'<span style="color:#B7A6C9;margin-left:auto">私訊僅限互為好友.掌櫃可調閱</span>'
+      +'<span id="dmHint" style="color:#B7A6C9;margin-left:auto">私訊僅限互為好友・掌櫃可調閱</span>'
       +'</div></div></div>';
     document.body.appendChild(d);
     [w,d].forEach(x=>x.addEventListener('click',e=>{ if(e.target===x){ x.classList.remove('on'); if(x.id==='dmM') dmClose(true); } }));
@@ -6436,7 +6438,8 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     +';font-family:inherit;font-size:12px;font-weight:700;padding:5px 10px;border-radius:9px;cursor:pointer" onclick="'+fn+'">'+lb+'</button>'; }
   window.frPaint=function(){
     const el=document.getElementById('frBody'); if(!el||!window.TTContacts) return;
-    TTContacts.render(el,{friends:FR,requests:FRQ,blocked:BLK,messages:DMM,hidden:window.__ttHidden||{},present:new Set([...agents.keys()])},{message:k=>dmOpen(k),remove:k=>frRemove(k),accept:k=>frAccept(k),decline:k=>frDecline(k),block:k=>frBlock(k),unblock:k=>frUnblock(k),unhide:k=>ttUnhide(k)});
+    const staffList=(()=>{try{return window.TinyTavernUI?.staff?.()||[]}catch(e){return []}})();const staffThreads=Object.entries(DMM).filter(([k,m])=>/^staff_/.test(k)&&m).map(([k,m])=>{const s=staffList.find(x=>'staff_'+x.cid===k);return {id:k,name:(s&&s.name)||m.name||'冒險者',avatar:s&&s.theme?'tavern-ui/assets/avatar-'+s.theme+'.png?v=260':''};});
+    TTContacts.render(el,{friends:FR,requests:FRQ,blocked:BLK,messages:DMM,staffThreads,hidden:window.__ttHidden||{},present:new Set([...agents.keys()])},{message:k=>dmOpen(k),staffMessage:k=>staffDmOpen(k.slice(6),(staffThreads.find(t=>t.id===k)||{}).name),remove:k=>frRemove(k),accept:k=>frAccept(k),decline:k=>frDecline(k),block:k=>frBlock(k),unblock:k=>frUnblock(k),unhide:k=>ttUnhide(k)});
   };
   /* --- 好友動作 --- */
   window.frAdd=function(k,name){
@@ -6492,6 +6495,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     ensureWins(); dmClose(true);
     _dmWith=k;
     document.getElementById('dmTitle').textContent='私訊・'+((FR[k]&&FR[k].name)||'？');
+    {const h=document.getElementById('dmHint');if(h)h.textContent='私訊僅限互為好友・掌櫃可調閱';}
     TTDirectMessageLog.reset(document.getElementById('dmLog'));
     try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
     _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
@@ -6504,6 +6508,24 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     gOpen('dmM');
     setTimeout(()=>{ const i=document.getElementById('dmIn'); if(i) i.focus(); },80);
   };
+  /* v411 會員私訊冒險者：進階／尊榮會員可傳；沿用 dm／dmMeta，冒險者端代號 staff_<角色ID> */
+  window.ttMemberTier=function(){let best=0;try{Object.values(myOrdersCache||{}).forEach(o=>{if(!o||o.type!=='member'||!['confirmed','done','settled'].includes(o.status))return;if(Date.now()-(Number(o.createdAt)||0)>31*86400000)return;const n=String(o.planName||'');const lv=/尊榮/.test(n)?3:/進階/.test(n)?2:/會員/.test(n)?1:0;if(lv>best)best=lv;});}catch(e){}return best;};
+  window.staffDmOpen=function(cid,name){
+    if(!cid)return;if(!myKey){toast('先做一張闆卡，才能私訊冒險者 ✦');return;}
+    const k='staff_'+cid;
+    if(ttMemberTier()<2&&!DMM[k]){toast('進階會員以上就能私訊冒險者 ✦');try{shopOpen(2,'member');}catch(e){}return;}
+    ensureWins(); dmClose(true);
+    _dmWith=k;_dmStaffName=name||(DMM[k]&&DMM[k].name)||'冒險者';
+    document.getElementById('dmTitle').textContent='私訊・'+_dmStaffName;
+    {const h=document.getElementById('dmHint');if(h)h.textContent=ttMemberTier()>=2?'會員私訊・掌櫃可調閱':'會員已到期，只能查看紀錄';}
+    TTDirectMessageLog.reset(document.getElementById('dmLog'));
+    try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
+    _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
+    _dmRef.on('value',s=>{const v=s.val()||{};const log=document.getElementById('dmLog');if(!log||_dmWith!==k)return;TTDirectMessageLog.render(log,v,myKey);try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}});
+    gOpen('dmM');
+    try{window.TTDirectMessageDesign?.decorate(k);const h=document.querySelector('#dmM .dm-heading>.contact-avatar');const s=(window.TinyTavernUI?.staff?.()||[]).find(x=>x.cid===cid);if(h&&s&&s.theme){h.replaceChildren();const im=document.createElement('img');im.src='tavern-ui/assets/avatar-'+s.theme+'.png?v=260';im.alt=_dmStaffName;im.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:12px';h.append(im);}}catch(e){}
+    setTimeout(()=>{const i=document.getElementById('dmIn');if(i)i.focus();},80);
+  };
   window.dmClose=function(silent){
     if(_dmRef){ try{ _dmRef.off(); }catch(e){} _dmRef=null; }
     _dmWith=null;
@@ -6515,21 +6537,23 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     if(stickerCode!==undefined&&!sticker)return false;
     const t=sticker?stickerCode:(i.value||'').trim();if(!t)return false;
     if(window.__mute){toast('你目前被禁言中,暫時無法傳私訊');return false;}
-    if(!FR[_dmWith]){toast('你們已不是好友');return false;}
-    const k=_dmWith,sender=myKey,senderName=myName(),recipientName=FR[_dmWith]?.name||'';
+    const isStaff=/^staff_/.test(_dmWith);
+    if(isStaff&&ttMemberTier()<2){toast('進階會員以上才能私訊冒險者');return false;}
+    if(!isStaff&&!FR[_dmWith]){toast('你們已不是好友');return false;}
+    const k=_dmWith,sender=myKey,senderName=myName(),recipientName=isStaff?_dmStaffName:(FR[_dmWith]?.name||'');
     _dmSending=true;const sendButton=i.parentElement.querySelector('button:not(.dm-sticker-toggle)');if(sendButton){sendButton.disabled=true;sendButton.setAttribute('aria-busy','true');}
-    try{const s=await db.ref(ROOT+'/blocks/'+k+'/'+sender).once('value');
-      if(window.TTLegacySocial?.isolated||myKey!==sender||_dmWith!==k||!FR[k]||window.__mute)return false;
-      if(s.val())return false;
+    try{const s=isStaff?null:await db.ref(ROOT+'/blocks/'+k+'/'+sender).once('value');
+      if(window.TTLegacySocial?.isolated||myKey!==sender||_dmWith!==k||(!isStaff&&!FR[k])||window.__mute)return false;
+      if(s&&s.val())return false;
       await db.ref(ROOT+'/dm/'+pairKey(sender,k)).push({f:sender,x:t.slice(0,200),at:Date.now()});
       if(!sticker&&myKey===sender&&_dmWith===k&&i.value.trim()===t){i.value='';i.dispatchEvent(new Event('input',{bubbles:true}));}
       const last=sticker?'[貼圖] '+sticker.name:t.slice(0,40),at=Date.now();
-      await Promise.allSettled([db.ref(ROOT+'/dmMeta/'+sender+'/'+k).update({last,lastAt:at,name:recipientName}),db.ref(ROOT+'/dmMeta/'+k+'/'+sender).update({last,lastAt:at,name:senderName}),db.ref(ROOT+'/dmMeta/'+k+'/'+sender+'/unread').transaction(c=>(c||0)+1)]);
+      await Promise.allSettled([db.ref(ROOT+'/dmMeta/'+sender+'/'+k).update(isStaff?{last,lastAt:at,name:recipientName,staff:true}:{last,lastAt:at,name:recipientName}),db.ref(ROOT+'/dmMeta/'+k+'/'+sender).update({last,lastAt:at,name:senderName}),db.ref(ROOT+'/dmMeta/'+k+'/'+sender+'/unread').transaction(c=>(c||0)+1)]);
       try{SFX.tap&&SFX.tap();}catch{}return true;
     }catch{toast('訊息未送出，請稍後再試。');return false;}
     finally{_dmSending=false;if(sendButton){sendButton.disabled=false;sendButton.removeAttribute('aria-busy');}}
   };
-  window.dmBlockCur=function(){ if(_dmWith){ const k=_dmWith; frBlock(k); dmClose(); } };
+  window.dmBlockCur=function(){ if(_dmWith){ const k=_dmWith; if(/^staff_/.test(k)){toast('冒險者私訊無法封鎖，可以檢舉這段對話');return;} frBlock(k); dmClose(); } };
   window.dmReport=function(){
     if(!_dmWith) return;
     const k=_dmWith;
@@ -6656,10 +6680,10 @@ function statInc(k){
   ACH_DEF.forEach(a=>{
     if(a.k===k && TT_STATS[k]>=a.need && TT_STATS.u.indexOf(a.id)<0){
       TT_STATS.u.push(a.id); statSave();
-      if(typeof toast==='function') toast('成就達成:'+a.n+'!');
+      if(typeof toast==='function') toast('成就達成：'+a.n+'！');
       try{ SFX.clink(); }catch(e){}
       try{ if(window.updateTitle) window.updateTitle(); }catch(e){}
-      try{ if(window.celebrate) window.celebrate('成就達成!','「'+a.n+'」— '+a.d); }catch(e){}
+      try{ if(window.celebrate) window.celebrate('成就達成！','「'+a.n+'」— '+a.d); }catch(e){}
     }
   });
 }
@@ -7093,7 +7117,7 @@ window.lobbyNotify=lobbyNotify;
           else lobbyNotify({ok:true,icon:'star',title:'付款已確認!',sub:'「'+(o.planName||'訂單')+'」開始服務囉,好好享受 ✦',onclick:openOrders});
         } else if(st==='done'){
           if(o.type==='topup') lobbyNotify({ok:true,icon:'coin',title:'金幣已入帳!',sub:(o.coinAmount||o.amount)+' 金幣進到錢包了'+(curPlan?',回去完成剛剛的點單吧 ✦':' ✦'),onclick:()=>{ if(curPlan){ shopOpen(3); } else openTopup(); },hold:9000});
-          else if(o.type==='member') lobbyNotify({ok:true,icon:'crown',title:'會員已開通!',sub:'謝謝支持,會員權益即刻生效 ✦',onclick:openOrders,hold:9000});
+          else if(o.type==='member') lobbyNotify({ok:true,icon:'crown',title:'會員已開通！',sub:'謝謝支持，會員權益即刻生效 ✦',onclick:openOrders,hold:9000});
           else if(o.type==='shop'){ /* 即買即得,購買當下已有慶祝,不再重複通知 */ }
           else lobbyNotify({ok:true,icon:'gift',title:'訂單已完成',sub:'謝謝光臨!期待下次再見 ✦',onclick:openOrders});
         } else if(st==='cancelled'){
@@ -7625,10 +7649,10 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui-bridge.js?v=404"></script>
+<script src="tavern-ui-bridge.js?v=411"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
-<script src="lobby-ui/live.js?v=377"></script>
+<script src="lobby-ui/live.js?v=408"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
@@ -7642,7 +7666,7 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=398">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=411">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=373"></script>
 </body>

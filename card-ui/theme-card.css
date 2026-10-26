@@ -1,0 +1,77 @@
+/* v410 闆卡工房一體化：與大廳視窗同一套（白紙深藍框＋淺藍內框、粉藍錯位紙頁、寶石標題籤、粉色主按鈕、角落網點）。
+   只改外觀；登記流程、試衣、產卡與下載功能不變。 */
+:root{--tt-ink:#1C2156;--tt-ink2:#4A4F86;--tt-mute:#5C6196;--tt-pink:#FF4F8B;--tt-pink2:#FF8DB5;--tt-sky:#CFEFFF;
+  --tt-dot-pink:radial-gradient(#FF8DB5 1.4px,transparent 1.8px);--tt-dot-sky:radial-gradient(#7FC8F0 1.4px,transparent 1.8px);
+  --tt-star:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23FF4F8B'/%3E%3C/svg%3E");
+  --tt-star-b:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%233CB9EC'/%3E%3C/svg%3E")}
+html body{background:#2A2F63;color:var(--tt-ink)}
+html body::before{background:linear-gradient(rgba(28,33,86,.38),rgba(28,33,86,.5)),url('../img/lobby-layers-v254/base.png') center/cover!important}
+/* 外框 */
+html body .wrap{background:linear-gradient(165deg,#FFFFFF 0%,#F6FAFF 55%,#F8F3FF 100%)!important;border:3px solid var(--tt-ink)!important;border-radius:22px!important;
+  box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px var(--tt-sky),12px 12px 0 -1px #FFD6E6,12px 12px 0 2px var(--tt-ink),-10px 8px 0 -1px #D4F0FF,-10px 8px 0 2px var(--tt-ink),0 26px 70px rgba(18,14,48,.4)!important;color:var(--tt-ink)}
+html body .workshop-header{border-bottom:3px solid var(--tt-ink)!important;border-radius:19px 19px 0 0;
+  background:linear-gradient(90deg,#FF8DB5 0 20%,#7FC8F0 20% 40%,#C08CFF 40% 60%,#FFD36E 60% 80%,#FF8DB5 80%) 0 0/100% 7px no-repeat,
+    var(--tt-star) 58% 32%/22px 22px no-repeat,var(--tt-star-b) 66% 70%/18px 18px no-repeat,
+    linear-gradient(112deg,#fff 0 46%,#EAF6FF 46% 60%,#FFE7F1 60% 78%,#EDE4FF 78%)!important}
+html body .brand,html body .back-link{color:var(--tt-ink)!important;font-weight:700}
+html body .brand span{color:var(--tt-mute)!important}
+html body .back-link{border-bottom:2px solid var(--tt-pink2)!important}
+html body .eyebrow{color:var(--tt-pink)!important;font-weight:900!important}
+html body .header-copy h1{background:linear-gradient(180deg,#fff,#FFF0F6)!important;color:var(--tt-ink)!important;border:3px solid var(--tt-ink)!important;border-radius:5px!important;clip-path:none!important;
+  transform:skewX(-9deg);text-shadow:none!important;box-shadow:5px 6px 0 var(--tt-pink2)!important;font-weight:700!important;-webkit-text-stroke:0!important}
+html body .header-copy p,html body .header-note{color:var(--tt-mute)!important;font-weight:700}
+html body .header-ghost{-webkit-text-stroke:2px rgba(176,150,255,.6)!important}
+/* 步驟列 */
+html body .workshop-steps{background:#F4FAFF!important;border-bottom:2px solid #D3D8F2!important}
+html body .workshop-steps b{color:var(--tt-pink)!important}
+html body .workshop-steps span{color:var(--tt-ink)!important}
+html body .workshop-steps small{color:var(--tt-mute)!important}
+html body .workshop-steps a+a{border-left:2px dashed #C3CBEE!important}
+/* 卡片 */
+html body .card{background:linear-gradient(170deg,#fff,#F4FAFF)!important;border:2px solid var(--tt-ink)!important;border-radius:16px!important;box-shadow:inset 0 0 0 2px var(--tt-sky),0 4px 0 rgba(28,33,86,.16)!important;position:relative}
+html body .card::after{content:"";position:absolute;right:6px;top:6px;width:110px;height:70px;pointer-events:none;background:var(--tt-dot-pink) 0 0/9px 9px;-webkit-mask-image:radial-gradient(circle at 100% 0,#000,transparent 70%);mask-image:radial-gradient(circle at 100% 0,#000,transparent 70%);opacity:.7}
+html body .card h2{color:var(--tt-ink)!important}
+html body .section-intro,html body .hint,html body .studio-footnote,html body .stage-caption span,html body label small{color:var(--tt-mute)!important}
+html body label,html body .swlabel,html body .customize-heading,html body .form-divider span,html body .stage-caption strong,html body .finish-copy span{color:var(--tt-ink)!important}
+html body .register-seal{border:2px solid var(--tt-ink)!important;color:var(--tt-ink)!important;background:#FFF4F9}
+html body .shuffle{border:2px solid var(--tt-ink)!important;border-radius:10px!important;background:#fff!important;color:var(--tt-ink)!important;font-weight:700;box-shadow:0 2px 0 var(--tt-ink)}
+/* 試衣台 */
+html body .fitting-stage{border:2px solid var(--tt-ink)!important;background:radial-gradient(rgba(127,200,240,.32) 1.3px,transparent 1.7px) 0 0/12px 12px,linear-gradient(180deg,#F2FBFF,#FFF2F8)!important;box-shadow:inset 0 0 0 3px #fff}
+html body .stage-label{color:var(--tt-pink)!important}
+html body .stage-letter{-webkit-text-stroke:1.5px rgba(176,150,255,.5)!important}
+html body .stage-floor{background:linear-gradient(#fff,#DCE6FA)!important;border:2px solid var(--tt-ink)!important}
+/* 分頁、選項、色票 */
+html body .ptabs button{border:2px solid var(--tt-ink)!important;border-radius:10px!important;background:#fff!important;color:var(--tt-ink)!important;font-weight:700}
+html body .ptabs button.on{background:linear-gradient(180deg,#FF8DB5,#FF4F8B)!important;color:#fff!important}
+html body .opt{border:2px solid #C3CBEE!important;border-radius:10px!important;background:#fff!important}
+html body .opt.on{border:2px solid var(--tt-ink)!important;background:#FFF0F6!important;box-shadow:0 0 0 2px var(--tt-pink2)!important}
+html body .opt.on::after{color:var(--tt-pink)!important}
+html body .sw{box-shadow:0 0 0 2px var(--tt-ink)!important}
+html body .sw.on{box-shadow:0 0 0 3px var(--tt-pink)!important}
+html body .sw.on::after{border-color:var(--tt-pink)!important}
+html body #swArea,html body .studio-footnote,html body .form-divider,html body .finish-area{border-top:2px dashed #C3CBEE!important}
+html body #swArea input[type=range]::-webkit-slider-thumb{border:3px solid var(--tt-ink)!important}
+/* 欄位 */
+html body input:not([type=range]):not([type=checkbox]),html body select,html body textarea{border:2px solid #B9C2EE!important;border-radius:10px!important;background:#fff!important;color:var(--tt-ink)!important}
+html body input:focus,html body select:focus{border-color:var(--tt-ink)!important;outline:3px solid #FFC2D9!important}
+html body .tag{border:2px solid var(--tt-ink)!important;border-radius:999px!important;background:#fff!important;color:var(--tt-ink)!important;font-weight:700!important}
+html body .tag.on{background:#FFD6E6!important}
+html body .label-row>span,html body .finish-copy b{color:var(--tt-pink)!important}
+/* 按鈕 */
+html body .btn{border:3px solid var(--tt-ink)!important;border-radius:12px!important;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C)!important;color:#fff!important;font-weight:900!important;box-shadow:0 4px 0 var(--tt-ink),inset 0 2px 0 #ffffff80!important}
+html body .btn:hover{transform:translateY(-2px)}
+html body .btn.lav,html body #swArea .btn{background:#fff!important;color:var(--tt-ink)!important;box-shadow:0 3px 0 var(--tt-ink)!important}
+html body #genBtn{background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C)!important}
+html body .workshop-footer{background:#F4FAFF!important;border-top:2px solid #D3D8F2!important;color:var(--tt-mute)!important;border-radius:0 0 19px 19px}
+/* 入店說明、回訪、結果 */
+html body #notice,html body #pgResult{background:rgba(28,33,86,.45)!important;backdrop-filter:blur(4px)}
+html body #notice .welcome-card,html body .returning-guest>div{background:linear-gradient(170deg,#fff,#F6FAFF 60%,#F8F3FF)!important;border:3px solid var(--tt-ink)!important;border-radius:18px!important;
+  box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px var(--tt-sky),10px 10px 0 -1px #FFD6E6,10px 10px 0 2px var(--tt-ink),0 18px 40px rgba(28,33,86,.3)!important;color:var(--tt-ink)}
+html body #notice .tavern-welcome-art{border-bottom:3px solid var(--tt-ink)!important}
+html body #notice h2,html body .returning-guest h2{color:var(--tt-ink)!important}
+html body #notice p,html body #notice .sub,html body .welcome-sign,html body .returning-guest p{color:var(--tt-mute)!important;font-weight:700}
+html body .returning-guest button{border:3px solid var(--tt-ink)!important;border-radius:12px!important;background:linear-gradient(180deg,#FF8DB5,#FF4F8B)!important;color:#fff!important;box-shadow:0 4px 0 var(--tt-ink)!important}
+html body .result-title h2{display:table;margin:9px auto!important;background:linear-gradient(180deg,#fff,#FFF0F6);color:var(--tt-ink)!important;border:3px solid var(--tt-ink);border-radius:5px;padding:6px 22px;transform:skewX(-8deg);box-shadow:5px 6px 0 var(--tt-pink2)}
+html body .result-title .eyebrow{color:#FFD6E6!important}
+html body .result-title p{color:#EAF0FF!important}
+html body #pgResult #cardOut{border:3px solid var(--tt-ink)!important;border-radius:12px!important;box-shadow:8px 8px 0 -1px #FFD6E6,8px 8px 0 2px var(--tt-ink),0 16px 40px rgba(0,0,0,.35)!important}

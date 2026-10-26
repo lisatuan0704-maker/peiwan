@@ -154,13 +154,14 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
 </style>
 <link rel="stylesheet" href="card-ui/workshop.css?v=256">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
+<link rel="stylesheet" href="card-ui/theme-card.css?v=410">
 <script src="card-ui/tavern-scene.js?v=256" defer></script>
 </head>
 <body>
 <div id="notice" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
   <div class="card welcome-card">
     <span class="eyebrow">A LITTLE WELCOME / 入店邀請</span>
-    <canvas class="tavern-welcome-art" data-tavern-welcome role="img" aria-label="三位陪玩在酒館等你"></canvas>
+    <canvas class="tavern-welcome-art" data-tavern-welcome role="img" aria-label="三位冒險者在酒館等你"></canvas>
     <h2 id="welcomeTitle">在酒館，留一個位置給你。</h2>
     <p>選個喜歡的模樣，留下想被叫的名字。<br>你的第一張闆卡，就從這裡開始。</p>
     <p class="sub">闆卡會成為你在酒館活動時的形象。<br>完成後，也能到大廳的時裝間換裝。</p>
@@ -205,7 +206,7 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
         <div class="identity-fields">
           <label for="fName">酒館裡的名字 <small>必填 · 10 字內</small></label>
           <input id="fName" maxlength="10" placeholder="想讓大家怎麼叫你？" autocomplete="nickname" aria-describedby="nameHint">
-          <p class="hint" id="nameHint">這也是陪玩稱呼你的名字，請避免不雅或色情字詞。</p>
+          <p class="hint" id="nameHint">這也是冒險者稱呼你的名字，請避免不雅或色情字詞。</p>
           <label for="fDcid">Discord ID <small>必填</small></label>
           <input id="fDcid" placeholder="例：@boss123" autocomplete="off" spellcheck="false" aria-describedby="discordHint">
           <p class="hint" id="discordHint">填寫點單時使用的 Discord ID，方便掌櫃核對身分。</p>

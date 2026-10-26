@@ -13,33 +13,70 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <style>
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-  font-family:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW','Huninn',system-ui,sans-serif;color:#4A3B63;
-  background:linear-gradient(180deg,#BFCCF4 0%,#D3C6F0 45%,#E9D5EC 100%)}
-.card{background:#F7F3FC;border-radius:18px;padding:30px 28px;max-width:340px;width:calc(100% - 40px);text-align:center;
-  box-shadow:0 0 0 4px #fff,0 0 0 8px #C4ADEC,0 20px 44px rgba(70,50,100,.35)}
-h1{font-size:18px;color:#6E58A6;margin:0 0 10px;letter-spacing:1px}
-p{font-size:13.5px;color:#8E7AB0;line-height:1.8;margin:0 0 6px}
-img.av{width:64px;height:64px;border-radius:50%;box-shadow:0 0 0 3px #fff,0 0 0 6px #F6CE5A;margin-bottom:10px}
-.nm{font-size:16px;font-weight:700;color:#4A3B63;margin-bottom:14px}
-a.btn{display:block;text-decoration:none;background:linear-gradient(180deg,#FBB6D0,#F28FB2);color:#fff;
-  font-size:14px;font-weight:700;padding:12px;border-radius:12px;box-shadow:inset 0 -4px 0 #E27FA6;margin-top:14px}
-.spin{width:34px;height:34px;border-radius:50%;border:4px solid #E4D8F6;border-top-color:#C4ADEC;
-  margin:0 auto 14px;animation:sp 1s linear infinite}
+/* v406 Discord 回傳頁：整站主題（白紙深藍框、錯位紙卡、寶石標籤、網點、亮面貼紙） */
+:root{--ink:#1C2156;--ink2:#4A4F86;--mute:#5C6196;--pink:#FF4F8B;--pink2:#FF8DB5;--sky:#CFEFFF;--paper:#FDFDFF;
+  --head:'Tavern Numerals','TT Latin','LINE Seed TW','TT Huninn','Huninn',system-ui,sans-serif;
+  --st-pink:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23FF4F8B'/%3E%3C/svg%3E");--st-blue:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%233CB9EC'/%3E%3C/svg%3E");--st-purple:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23D45CEB'/%3E%3C/svg%3E");--stk-white:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cpath d='M22 3C23.6 15 29 20.4 41 22 29 23.6 23.6 29 22 41 20.4 29 15 23.6 3 22 15 20.4 20.4 15 22 3Z' fill='%23fff' stroke='%231C2156' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E");--stk-pink:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cpath d='M22 3C23.6 15 29 20.4 41 22 29 23.6 23.6 29 22 41 20.4 29 15 23.6 3 22 15 20.4 20.4 15 22 3Z' fill='%23FFC2D9' stroke='%231C2156' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E")}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:56px 20px 32px;
+  font-family:var(--head);color:var(--ink);overflow-x:hidden;
+  background:radial-gradient(circle at 12% 16%,#FFD6E6 0,transparent 34%),radial-gradient(circle at 88% 84%,#CFEFFF 0,transparent 38%),
+   radial-gradient(#1C215614 1.3px,transparent 1.6px) 0 0/14px 14px,linear-gradient(160deg,#F5EFFF 0%,#EEF8FF 52%,#FFF4F9 100%)}
+.stage{position:relative;width:min(360px,100%);isolation:isolate}
+.stage .sheet{position:absolute;inset:0;border:3px solid var(--ink);border-radius:20px;z-index:-2}
+.stage .sheet.s1{background:#FFC2D9;transform:translate(10px,10px) rotate(2.4deg)}
+.stage .sheet.s2{background:repeating-linear-gradient(135deg,#EAF6FF 0 9px,#D8EEFF 9px 18px);transform:translate(-9px,6px) rotate(-3deg)}
+.stage .peek{position:absolute;right:18px;top:-62px;width:112px;z-index:-1;pointer-events:none;user-select:none}
+.stage .chip{position:absolute;left:18px;top:-17px;z-index:3;display:inline-flex;align-items:center;gap:6px;padding:5px 14px 5px 12px;border:3px solid var(--ink);border-radius:999px;
+  background:linear-gradient(180deg,#FF8DB5,#FF4F8B 62%,#F03C7C);color:#fff;font-size:12px;font-weight:900;letter-spacing:1.6px;box-shadow:0 3px 0 var(--ink),inset 0 2px 0 #ffffff80;white-space:nowrap}
+.stage .chip:before{content:'';width:13px;height:13px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23fff'/%3E%3C/svg%3E") center/contain no-repeat}
+.stage .spark{position:absolute;pointer-events:none;background:center/contain no-repeat;z-index:4}
+.stage .spark.a{width:30px;height:30px;right:-14px;top:22px;background-image:var(--stk-white);transform:rotate(12deg)}
+.stage .spark.b{width:22px;height:22px;left:-12px;bottom:46px;background-image:var(--stk-pink)}
+.stage .spark.c{width:12px;height:12px;right:30px;bottom:-22px;background-image:var(--st-blue)}
+.stage .spark.d{width:10px;height:10px;left:46px;top:-34px;background-image:var(--st-purple)}
+.card{position:relative;overflow:hidden;background:var(--paper);border:3px solid var(--ink);border-radius:20px;padding:34px 26px 24px;text-align:center;
+  box-shadow:inset 0 0 0 3px var(--sky),0 14px 30px #1C215624}
+.card:before{content:'';position:absolute;right:-8px;top:-8px;width:120px;height:90px;pointer-events:none;
+  background:radial-gradient(#FF8DB5 1.6px,transparent 2px) 0 0/9px 9px;-webkit-mask-image:radial-gradient(circle at 100% 0,#000 0,transparent 72%);mask-image:radial-gradient(circle at 100% 0,#000 0,transparent 72%);opacity:.75}
+.card:after{content:'';position:absolute;left:-10px;bottom:-10px;width:110px;height:80px;pointer-events:none;
+  background:radial-gradient(#7FC8F0 1.5px,transparent 1.9px) 0 0/9px 9px;-webkit-mask-image:radial-gradient(circle at 0 100%,#000 0,transparent 72%);mask-image:radial-gradient(circle at 0 100%,#000 0,transparent 72%);opacity:.7}
+.card>*{position:relative;z-index:1}
+h1{display:table;font-size:19px;font-weight:900;color:var(--ink);margin:0 auto 12px;letter-spacing:1px;line-height:1.5;padding:0 6px;
+  background:linear-gradient(transparent 62%,#FFD6E6 62%,#FFD6E6 92%,transparent 92%)}
+p{font-size:14.5px;font-weight:700;color:var(--mute);line-height:1.85;margin:0 0 6px}
+img.av{display:block;width:72px;height:72px;margin-left:auto!important;margin-right:auto!important;border-radius:50%;border:3px solid var(--ink);box-shadow:0 0 0 4px #fff,0 0 0 7px var(--pink2);margin:4px 0 14px;background:#fff}
+.nm{display:table;font-size:15px;font-weight:900;color:var(--ink);margin:0 auto 14px;padding:3px 12px;border:2px solid var(--ink);border-radius:999px;background:#EAF6FF}
+a.btn,.card button{display:block;width:100%;text-decoration:none;border:3px solid var(--ink);border-radius:14px;cursor:pointer;font-family:inherit;
+  background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C);color:#fff;font-size:15px;font-weight:900;letter-spacing:1.5px;padding:12px;margin-top:16px;
+  box-shadow:0 4px 0 var(--ink),inset 0 2px 0 #ffffff8a;transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
+a.btn:after,.card button:after{content:'';position:absolute;top:0;bottom:0;left:-40%;width:30%;background:linear-gradient(100deg,transparent,#ffffff8c,transparent);transform:skewX(-18deg);animation:gl 3.2s ease-in-out infinite}
+a.btn:hover,.card button:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--ink),inset 0 2px 0 #ffffff8a}
+a.btn:active,.card button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink),inset 0 2px 0 #ffffff8a}
+@keyframes gl{0%,55%{left:-40%}100%{left:130%}}
+.spin{width:40px;height:40px;border-radius:50%;border:4px solid #D3D8F2;border-top-color:var(--pink);border-right-color:var(--ink);margin:2px auto 14px;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation-duration:3s}a.btn:after,.card button:after{animation:none;display:none}}
+@media(max-width:380px){.card{padding:30px 18px 20px}h1{font-size:17px}p{font-size:13.5px}.stage .peek{width:92px;top:-51px}}
 </style>
 </head>
 <body>
+<div class="stage">
+<div class="sheet s1"></div><div class="sheet s2"></div>
+<img class="peek" src="lobby-ui/assets/theme/peek-color.png" alt="">
+<div class="chip">TINY TAVERN</div>
+<span class="spark a"></span><span class="spark b"></span><span class="spark c"></span><span class="spark d"></span>
 <div class="card" id="card">
   <div class="spin"></div>
   <h1>正在完成 Discord 綁定…</h1>
-  <p>馬上就好,別走開</p>
+  <p>馬上就好，別走開</p>
+</div>
 </div>
 <script>
 const firebaseConfig={apiKey:"AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",authDomain:"my-shop-0520.firebaseapp.com",databaseURL:"https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"my-shop-0520",storageBucket:"my-shop-0520.firebasestorage.app",messagingSenderId:"430482271005",appId:"1:430482271005:web:967059c91a9b7970bdcff4"};
 let _db=null; try{ firebase.initializeApp(firebaseConfig); _db=firebase.database(); }catch(e){}
 const ROOT='peiwan';
-/* 換裝置找回帳號:此 DC 帳號若已綁過闆卡,把角色鑰匙還原到本機 */
+/* 換裝置找回帳號：此 DC 帳號若已綁過闆卡,把角色鑰匙還原到本機 */
 function restoreAccount(dcid){
   return new Promise(res=>{
     if(!_db){ res(false); return; }
@@ -72,8 +109,8 @@ function restoreAccount(dcid){
       if(!avatarRefresh||!avatarRefresh.id||!avatarRefresh.key||avatarRefresh.id!==current?.id||avatarRefresh.key!==localStorage.getItem('tt_me')||!Number.isFinite(avatarRefresh.at)||Date.now()-avatarRefresh.at<0||Date.now()-avatarRefresh.at>600000)throw Error('expired refresh');
     }
   }catch(e){ fail('頭貼更新已過期，請回大廳重新開始。');return; }
-  if(!avatarRefresh&&sessionStorage.getItem('tt_voice_login_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=306').then(m=>m.finishVoiceLogin(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
-  if(!avatarRefresh&&sessionStorage.getItem('tt_voice_rehearsal_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=306').then(m=>m.finishRehearsal(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
+  if(!avatarRefresh&&sessionStorage.getItem('tt_voice_login_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=407').then(m=>m.finishVoiceLogin(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
+  if(!avatarRefresh&&sessionStorage.getItem('tt_voice_rehearsal_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=407').then(m=>m.finishRehearsal(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
   if(!avatarRefresh&&sessionStorage.getItem('tt_partner_discord_bind_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/partner-binding.mjs?v=300').then(m=>m.finishBinding(callback,firebase.auth(),card)).catch(()=>{card.textContent='無法載入綁定功能，請返回陪玩工作頁重試。'});return;}
   function fail(msg){
     delete window.__ttDiscordCallback;
@@ -103,13 +140,13 @@ function restoreAccount(dcid){
       const av=dc.avatar?('https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=128'):'';
       restoreAccount(dc.id).then(restored=>{
         card.innerHTML=(av?'<img class="av" src="'+av+'" alt="">':'')
-          +'<h1>綁定成功!</h1><div class="nm">@'+TTDiscordAuth.escapeText(dc.global_name||dc.username)+'</div>'
-          +(restored?'<p>已找回你的闆卡與帳號資料 —— 換了裝置也回得來。</p>':'<p>之後點單會自動帶上你的 Discord 名稱,接單店員直接找得到你。</p>')
+          +'<h1>綁定成功！</h1><div class="nm">@'+TTDiscordAuth.escapeText(dc.global_name||dc.username)+'</div>'
+          +(restored?'<p>已找回你的闆卡與帳號資料 —— 換了裝置也回得來。</p>':'<p>之後點一杯時會自動帶上你的 Discord 名稱，酒館的大家直接找得到你。</p>')
           +'<a class="btn" href="lobby.html">回酒館大廳</a>';
         setTimeout(()=>{ location.href='lobby.html'; },2600);
       });
     })
-    .catch(()=>fail('連不上 Discord,請稍後再試一次。'));
+    .catch(()=>fail('連不上 Discord，請稍後再試一次。'));
 })();
 </script>
 </body>

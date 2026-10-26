@@ -15,7 +15,7 @@
     setM: ['settings', '酒館設定', '調成你喜歡的節奏。', 'MAKE YOURSELF AT HOME', 'TUNE IN'],
     mailBoxM: ['mail', '我的信箱', '給你的每一句話，都在這裡。', 'LETTERS TO YOU', 'POST'],
     shopM4: ['orders', '我的訂單', '約好的時間，替你好好記著。', 'TAVERN ORDERS', 'ORDERS'],
-    shopM1: ['menu', '想來點什麼？', '找店員一起玩，或看看酒館的會員方案。', 'ORDER MENU', 'ORDER']
+    shopM1: ['menu', '想來點什麼？', '找冒險者一起玩，或看看酒館的會員方案。', 'ORDER MENU', 'ORDER']
   };
   const shells = {};
   function shell(id) {
@@ -126,7 +126,7 @@
   // 點單選單保留原按鈕與 onclick：新版名簿、會員、限定併桌沿原路由。
   const menu=shells.shopM1.content, buttons=[...menu.querySelectorAll('.planBtn')];
   const grid=document.createElement('div');grid.className='feature-grid';
-  const choices=[['PLAY','mug','找陪玩一起玩','特戰英豪、語音陪聊','看名簿'],['MEMBER','coupon','加入會員','月費會員、冠名支持','看方案'],['TABLE','receipt','酒館併桌','多人同桌・一人一席','看場次']];
+  const choices=[['PLAY','mug','找冒險者一起玩','特戰英豪、找冒險者聊聊天','看名簿'],['MEMBER','coupon','加入會員','三種月會員方案','看方案'],['TABLE','receipt','酒館併桌','多人同桌・一人一席','看場次']];
   buttons.forEach((b,i)=>{const [word,ic,title,sub,cta]=choices[i];b.classList.add('feature-tile','framed-motion');b.innerHTML='<span class="tile-number">0'+(i+1)+'</span><span class="vertical-word" aria-hidden="true">'+word+'</span><img src="'+asset(ic)+'" alt=""><h2>'+title+'</h2><p>'+sub+'</p><span class="tile-cta">'+cta+' →</span>'+motion(i);if(i===2)b.querySelector('p').id='tbMenuSub';grid.append(b);});
   menu.prepend(grid);tbMenuRefresh();const ribbon=document.createElement('div');ribbon.className='menu-ribbon';ribbon.innerHTML='<b>今日菜單</b><span>WHAT WOULD YOU LIKE</span>';menu.prepend(ribbon);
   menu.querySelector(':scope > .btns')?.remove();
@@ -222,7 +222,7 @@
     $('ordTabA').setAttribute('aria-selected',String(_ordTab==='active'));$('ordTabH').setAttribute('aria-selected',String(_ordTab==='history'));
     const list=(_ordTab==='active'?active:history).slice().reverse(),pages=Math.max(1,Math.ceil(list.length/ORD_PER));_ordPage=Math.max(0,Math.min(_ordPage,pages-1));
     const visible=list.slice(_ordPage*ORD_PER,(_ordPage+1)*ORD_PER);
-    $('ordList').innerHTML=visible.length?visible.map(id=>orderCard(id,myOrdersCache[id])).join(''):'<div class="tt-empty"><img src="'+asset('receipt')+'" alt=""><h2>'+(_ordTab==='active'?'目前沒有進行中的訂單':'還沒有歷史訂單')+'</h2><p>點「我要點單」找店員一起玩，或逛逛商城。</p><button class="primary" data-order-action="shop">我要點單 →</button></div>';
+    $('ordList').innerHTML=visible.length?visible.map(id=>orderCard(id,myOrdersCache[id])).join(''):'<div class="tt-empty"><img src="'+asset('receipt')+'" alt=""><h2>'+(_ordTab==='active'?'目前沒有進行中的訂單':'還沒有歷史訂單')+'</h2><p>點「我要點單」找冒險者一起玩，或逛逛商城。</p><button class="primary" data-order-action="shop">我要點單 →</button></div>';
     if(pages>1)$('ordList').insertAdjacentHTML('beforeend','<div class="ordPg"><button data-page="-1" '+(_ordPage===0?'disabled':'')+'>‹ 上一頁</button><span>'+(_ordPage+1)+' / '+pages+'</span><button data-page="1" '+(_ordPage===pages-1?'disabled':'')+'>下一頁 ›</button></div>');
     $('ordList').querySelectorAll('[data-order-action]').forEach(b=>b.onclick=()=>{const id=b.dataset.order;switch(b.dataset.orderAction){case 'issue':openIssue(id);break;case 'cancel':selfCancel(id);break;case 'reorder':reorderPlay();break;case 'shop':shopOpen(1);break;}});
     $('ordList').querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>ordPage(Number(b.dataset.page)));

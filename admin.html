@@ -433,6 +433,9 @@ body.dark .b-end{background:#8A72C8!important;color:#fff!important}
 body.dark .b-fix{background:#4A3A28!important;color:#F0C98A!important;border-color:#8A6A3C!important}
 body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
 </style>
+<link href="tavern-ui/assets/fonts/lineseed.css?v=257" rel="stylesheet">
+<link rel="stylesheet" href="lobby-ui/backoffice-theme.css?v=412">
+<link rel="stylesheet" href="lobby-ui/admin-theme.css?v=412">
 </head>
 <body>
 <button id="themeBtn" title="切換日間／夜間模式" aria-label="切換日間夜間模式">☀️</button>
@@ -2012,7 +2015,7 @@ function renderSvcs(){
   const list=Object.entries(svcs).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
   tab2.innerHTML=`<div class="card">
     <h2>價目表（大廳點單即時同步）</h2>
-    <div style="font-size:12.5px;opacity:.75;margin:-4px 0 10px">「上架中」的項目會直接出現在大廳的「找陪玩一起玩」清單,客人點了就下單。
+    <div style="font-size:12.5px;opacity:.75;margin:-4px 0 10px">「上架中」的項目會直接出現在大廳的「找冒險者一起玩」清單,客人點了就下單。
     多人拆帳的套餐請把單價填「每人價」,單位字寫清楚(例:多人一小時/每人 250);一對一就照常填。</div>
     ${list.length? `<table><tr><th>名稱</th><th>計費</th><th>單價</th><th>單位</th><th>上架</th><th></th></tr>
       ${list.map(([id,v])=>`<tr>
@@ -2145,8 +2148,8 @@ function delCustomer(key,nm){
     db.ref(ROOT+'/friends/'+key).remove();
   });
 }
-/* VIP 門檻(暫定;之後 D 給定案數字就改這裡,或由 accounts.vip 直接帶入) */
-const VIP_TIERS_ADMIN=[500,1500,3000,6000,12000];  /* 與 lobby VIP_CFG.need 一致;定案後兩邊一起改 */
+/* VIP 門檻(v407 定案;與 lobby VIP_CFG.need 一致,或由 accounts.vip 直接帶入) */
+const VIP_TIERS_ADMIN=[3000,10000,15000,22000,30000];  /* 與 lobby VIP_CFG.need 一致;定案後兩邊一起改 */
 function vipFromSpend(amt){ let lv=0; VIP_TIERS_ADMIN.forEach((t,i)=>{ if(amt>=t) lv=i+1; }); return lv; }
 /* ===== 紙娃娃引擎(自 lobby 移植,畫客人頭像用) ===== */
 const SKINS=['#F5D5B8','#EDBE97','#C98F62','#8A5A38'];
@@ -2566,7 +2569,7 @@ function custInfo(k){
   const memOrd=paid.filter(([,o])=>(o.planName||'').match(/會員|月費|月卡/)).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0))[0];
   let mem=null;
   if(memOrd){ const o=memOrd[1]; const exp=(o.createdAt||0)+31*86400000;
-    mem={kind:(o.planName||'').match(/699|尊榮|套餐|冠名/)?'套餐月卡':'月卡', exp, live:Date.now()<exp}; }
+    mem={kind:(o.planName||'').match(/699|尊榮|進階|套餐|冠名/)?'套餐月卡':'月卡', exp, live:Date.now()<exp}; }
   const last=ords.length?Math.max(...ords.map(([,o])=>o.createdAt||0)):0;
   return {k,nm,doll:lb.doll||cd.doll||null,ac,dcName:ac?(ac.global_name||ac.username||''):'',
     ords,paidN:paid.length,total,byStaff,mTot,sTot,vip,bal,mem,last,
@@ -2725,5 +2728,5 @@ body.dark #qnavPop button{color:#D8CBEE}
     btn.style.display=(m&&m.style.display!=='none'&&m.offsetParent!==null)?'':'none'; },1200);
 })();
 </script>
-<script src="season-shop-import.js?v=400"></script></body>
+<script src="season-shop-import.js?v=405"></script></body>
 </html>
