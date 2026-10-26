@@ -174,3 +174,16 @@ html body[data-area] #lookSummary h3{font-size:15px!important}
 html body[data-area] .preview .previewbar button{font-size:15px!important}
 }
 @media(min-width:601px){html body[data-area] .preview .paneltitle>span{font-size:10px!important;letter-spacing:.4px!important;white-space:nowrap}}
+
+/* v397 商城／背包：一排三件、滑過不被切、目前搭配精簡 */
+@media(min-width:601px){
+html body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+html body[data-area] #grid{padding-top:6px!important;padding-bottom:6px!important}
+html body[data-area] #lookSummary .look-item strong{font-size:11px!important;line-height:1.35!important}
+html body[data-area] #lookSummary .look-item small{font-size:9.5px!important;margin-top:1px!important}
+html body[data-area] #lookSummary .look-item small[data-state=owned]{font-size:0!important;width:16px;height:16px;margin-top:3px!important;border-radius:50%;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%23E8F6FF' stroke='%231C2156' stroke-width='1.6'/%3E%3Cpath d='M4.6 8.3 7 10.6 11.4 5.6' fill='none' stroke='%23FF4F8B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+html body[data-area] #lookSummary .look-item small[data-state=base]{color:#A3A8CC!important}
+}
+html body #lookSummary footer::before{display:none!important}
+html body[data-area=bag] #lookSummary footer{display:none!important}
