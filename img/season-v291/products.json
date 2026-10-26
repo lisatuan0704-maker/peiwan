@@ -1,0 +1,296 @@
+{
+ "format": "tiny-tavern-season-import",
+ "version": 1,
+ "season": 291,
+ "products": {
+  "season291_bear": {
+   "custom": 1,
+   "type": "時裝",
+   "name": "熊熊偵探",
+   "price": 399,
+   "active": true,
+   "seasonFeatured": 291,
+   "sourceLayerCount": 16,
+   "highlightHair": true,
+   "doll": {
+    "hair": 2
+   },
+   "parts": {
+    "front": {
+     "n": "偵探前髮",
+     "d": "https://tinytavern.tw/img/season-v291/bear/8.偵探前髮.png",
+     "x": 0,
+     "y": 0,
+     "g": 1,
+     "highlight": {
+      "n": "前髮挑染",
+      "d": "https://tinytavern.tw/img/season-v291/bear/8.偵探前髮-挑染.png",
+      "x": 0,
+      "y": 0,
+      "g": 0
+     }
+    },
+    "back": {
+     "n": "偵探後髮",
+     "d": "https://tinytavern.tw/img/season-v291/bear/2.後髮.png",
+     "x": 0,
+     "y": 0,
+     "g": 1,
+     "highlight": {
+      "n": "後髮挑染",
+      "d": "https://tinytavern.tw/img/season-v291/bear/2.後髮上挑染.png",
+      "x": 0,
+      "y": 0,
+      "g": 0
+     }
+    },
+    "eye": {
+     "n": "熊熊偵探眼睛",
+     "d": "https://tinytavern.tw/img/season-v291/bear/eye.png",
+     "x": 0,
+     "y": 0,
+     "g": 0
+    },
+    "cloth": {
+     "n": "熊熊偵探服裝",
+     "d": "https://tinytavern.tw/img/season-v291/bear/cloth.png",
+     "x": 0,
+     "y": 0,
+     "g": 0
+    },
+    "brow": {
+     "n": "偵探眉毛",
+     "d": "https://tinytavern.tw/img/season-v291/bear/4.偵探眉毛.png",
+     "x": 0,
+     "y": 0,
+     "g": 0
+    },
+    "acc1": {
+     "n": "偵探腳印",
+     "d": "https://tinytavern.tw/img/season-v291/bear/0.身體後-發現腳印.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "back",
+     "z": "back",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc2": {
+     "n": "熊尾巴",
+     "d": "https://tinytavern.tw/img/season-v291/bear/1.身體後-熊尾.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "back",
+     "z": "back",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc3": {
+     "n": "飄散花朵",
+     "d": "https://tinytavern.tw/img/season-v291/bear/3.辮子上的花.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "head",
+     "z": "mid",
+     "independent": true,
+     "defaultEquipped": true,
+     "note": "推薦搭配熊熊偵探髮型使用"
+    },
+    "acc4": {
+     "n": "熊耳朵",
+     "d": "https://tinytavern.tw/img/season-v291/bear/7.前髮後-熊耳朵.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "head",
+     "z": "mid",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc5": {
+     "n": "偵探鼠",
+     "d": "https://tinytavern.tw/img/season-v291/bear/9.帽子後-偵探鼠.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "head",
+     "z": "top",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc6": {
+     "n": "偵探帽",
+     "d": "https://tinytavern.tw/img/season-v291/bear/10.帽子.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "head",
+     "z": "top",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc7": {
+     "n": "蝴蝶結",
+     "d": "https://tinytavern.tw/img/season-v291/bear/11.帽子上-花蝶結.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "head",
+     "z": "top",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc8": {
+     "n": "放大鏡",
+     "d": "https://tinytavern.tw/img/season-v291/bear/12.手上道具-放大鏡.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "hand",
+     "z": "top",
+     "independent": false,
+     "defaultEquipped": true
+    }
+   }
+  },
+  "season291_wolf": {
+   "custom": 1,
+   "type": "時裝",
+   "name": "龐克搖滾狼",
+   "price": 399,
+   "active": true,
+   "seasonFeatured": 291,
+   "sourceLayerCount": 16,
+   "highlightHair": true,
+   "doll": {
+    "hair": 10
+   },
+   "parts": {
+    "front": {
+     "n": "狼前髮",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/5.狼前髮(灰階).png",
+     "x": 0,
+     "y": 0,
+     "g": 1,
+     "highlight": {
+      "n": "前髮挑染",
+      "d": "https://tinytavern.tw/img/season-v291/wolf/5.前髮上-挑染(灰階).png",
+      "x": 0,
+      "y": 0,
+      "g": 0
+     }
+    },
+    "back": {
+     "n": "狼後髮",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/2.後髮(灰階).png",
+     "x": 0,
+     "y": 0,
+     "g": 1,
+     "highlight": {
+      "n": "後髮挑染",
+      "d": "https://tinytavern.tw/img/season-v291/wolf/2.後髮上-挑染(灰階).png",
+      "x": 0,
+      "y": 0,
+      "g": 0
+     }
+    },
+    "eye": {
+     "n": "龐克搖滾狼眼睛",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/eye.png",
+     "x": 0,
+     "y": 0,
+     "g": 0
+    },
+    "cloth": {
+     "n": "龐克搖滾狼服裝",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/cloth.png",
+     "x": 0,
+     "y": 0,
+     "g": 0
+    },
+    "brow": {
+     "n": "狼眉毛",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/3.狼眉毛.png",
+     "x": 0,
+     "y": 0,
+     "g": 0
+    },
+    "acc1": {
+     "n": "項圈",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/0.身體後-項圈.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "back",
+     "z": "back",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc2": {
+     "n": "狼尾巴",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/1.身體後-尾巴(灰階).png",
+     "x": 0,
+     "y": 0,
+     "g": 1,
+     "group": "back",
+     "z": "back",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc3": {
+     "n": "狼耳朵",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/4.前髮後-狼耳朵(灰階).png",
+     "x": 0,
+     "y": 0,
+     "g": 1,
+     "group": "head",
+     "z": "mid",
+     "independent": true,
+     "defaultEquipped": true
+    },
+    "acc4": {
+     "n": "吉他",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/9.手上道具-吉他.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "hand",
+     "z": "top",
+     "independent": false,
+     "defaultEquipped": true
+    },
+    "acc5": {
+     "n": "狼爪",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/9.手上道具-爪子(灰階).png",
+     "x": 0,
+     "y": 0,
+     "g": 1,
+     "group": "hand",
+     "z": "top",
+     "independent": true,
+     "defaultEquipped": false,
+     "drawOrder": -1
+    },
+    "acc6": {
+     "n": "狼耳環",
+     "d": "https://tinytavern.tw/img/season-v291/wolf/10.狼耳環.png",
+     "x": 0,
+     "y": 0,
+     "g": 0,
+     "group": "ear",
+     "z": "top",
+     "independent": true,
+     "defaultEquipped": true,
+     "requiresPart": {
+      "source": "season291_wolf",
+      "slot": "acc3"
+     },
+     "requirement": "需先穿戴狼耳朵"
+    }
+   }
+  }
+ }
+}

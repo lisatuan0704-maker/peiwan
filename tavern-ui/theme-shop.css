@@ -189,3 +189,9 @@ html body #lookSummary footer::before{display:none!important}
 html body[data-area=bag] #lookSummary footer{display:none!important}
 /* v399 試穿區右緣星星：整顆移進畫面內，坐在試穿框邊線上，不再被外框裁到 */
 @media(min-width:601px){html body aside.preview::before{right:4px!important}}
+/* v399 當季卡片背景跟隨展示髮色（--sv-a/b/c 由卡片帶入）：角色後方柔光＋斜紋色帶＋三色漸層，角落網點保留 */
+html body .season-card[style*="--sv-a"] .season-visual,html body .season-card[style*="--sv-a"]:nth-child(2) .season-visual{background:
+  var(--ht-pink-tr) right 4px top 4px/120px 80px no-repeat,var(--ht-sky-bl) left 4px bottom 4px/120px 80px no-repeat,
+  radial-gradient(ellipse 46% 40% at 50% 60%,color-mix(in srgb,var(--sv-a) 38%,#fff) 0 35%,transparent 72%),
+  linear-gradient(118deg,transparent 0 60%,color-mix(in srgb,var(--sv-b) 26%,transparent) 60% 68%,rgba(255,255,255,.75) 68% 69.4%,color-mix(in srgb,var(--sv-c) 18%,transparent) 69.4% 80%,transparent 80%),
+  linear-gradient(160deg,color-mix(in srgb,var(--sv-a) 20%,#fff) 0%,color-mix(in srgb,var(--sv-b) 24%,#fff) 58%,color-mix(in srgb,var(--sv-c) 26%,#fff) 100%)!important}

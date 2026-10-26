@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=399';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=400';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -95,7 +95,9 @@
   const initialOutfitNames={cloth2:'啟程旅人',cloth3:'微風日常'};
   const displayPartName=name=>String(name||'').replace(/星夜吟遊裝/g,'啟程旅人').replace(/貓耳限定裝/g,'微風日常').replace(/[（(]\s*灰階\s*[）)]/g,'').replace(/灰階/g,'').trim();
   function catalog(){
-    const cfg={...(window.__shopCfg||{}),...(window.TTSeasonDrafts||{})},own=window.__owned||{},now=Date.now();
+    const shopCfg=window.__shopCfg||{},cfg={...shopCfg},own=window.__owned||{},now=Date.now();
+    // v399：當季草稿保留原圖部件；掌櫃上架後（shopConfig 有同編號且售價有效）才改用掌櫃設定的售價與上架狀態。
+    for(const [id,d] of Object.entries(window.TTSeasonDrafts||{})){const live=shopCfg[id];cfg[id]=live&&live.custom&&Number.isSafeInteger(live.price)&&live.price>0?{...d,price:live.price,active:live.active,start:live.start,end:live.end,img:live.img||d.img,previewOnly:false}:d;}
     const base=(window.__outfitList?.()||[]).filter(o=>!window.TTSeasonDrafts?.[o.id]);
     const ids=new Set(base.map(o=>o.id));
     const pets=Object.keys(cfg).filter(id=>cfg[id]?.custom&&['寵物','其他'].includes(cfg[id]?.type)&&!ids.has(id)).map(id=>({id}));
