@@ -1,5 +1,8 @@
 # 小小酒館修改紀錄
 
+## v435 店長頁商城清單不列版權測試套
+admin.html 商城清單以 lobby-ui/retired-outfits.js 過濾：露亞經典裝（cloth0）、小莓甜心裝（cloth1）、星夜漫遊裝（cloth_mslu9a8o）與預想座椅蘑菇凳／絨布沙發椅／吧檯高腳椅（seat0～2）不再顯示。客人端早已停用（v357／v373）。只隱藏，不刪資料：shopConfig 與已購買紀錄保留。
+
 ## v434 合併桌機 v421（工房初始部件單買）＋資料庫規則第四批
 桌機 v421（分支 v421-desktop，以 v420 為底）合併進 v433：lobby-view／lobby／admin／tavern-ui-bridge 的版本號衝突改為 434，tavern-ui-bridge 採 v421 的工房部件結帳名稱；v428～v433 的資安、手機版、取消原因、店內名稱全部保留。
 v428 規則下 v421 無法運作（工房部件單買被價格檢查擋下、新闆卡的 owned/<key>/baseStart 被擋 → 新玩家會被當成舊老闆、初始部件全免費）。security/database.rules.json 第四批（tests/security-rules-v428/build/harden-phase4.cjs）：owned/<key>/base_<hair|face|cloth|acc>_* 依 config/basePricing/<kind> 檢查付款金額（未設定不能買，VIP 優惠券同樣最多折 200）；owned/<key>/baseStart 只在大廳尚無這張闆卡時可建立一次，欄位限 back/front/cloth/face/brow（0～99 整數）與 at，不能修改，店長可修正。已知限制：新玩家若刻意不寫 baseStart，會被當成舊老闆（初始部件全免費），價值有限，未強制。

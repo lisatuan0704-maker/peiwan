@@ -17,6 +17,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
+<script src="lobby-ui/retired-outfits.js?v=434"></script>
 <script src="js/tt-seats.js?v=2"></script><script src="lobby-ui/seats.js?v=361"></script>
 <style>
 :root{
@@ -1060,7 +1061,8 @@ function shopZoom(id,ev){
 function renderShop(){
   const el=document.getElementById('tab8'); if(!el) return;
   let groups={};
-  shopList().forEach(it=>{ (groups[it.type]=groups[it.type]||[]).push(it); });
+  /* v435: 版權測試套（露亞、小莓、星夜漫遊裝、舊座椅）不列在店長商城清單；資料保留，已購買的紀錄不受影響 */
+  shopList().filter(it=>!(window.TTRetiredOutfits&&TTRetiredOutfits.retired(it.id,shopConfig&&shopConfig[it.id]||it))).forEach(it=>{ (groups[it.type]=groups[it.type]||[]).push(it); });
   let html='<div class="card"><h2>🛍️ 商城上架管理</h2>'
     +'<p style="font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:4px">點<b>圖片</b>放大驗收、點<b>綠色/灰色按鈕</b>直接上下架、點<b>卡片其他地方</b>展開細部設定(價格、限時)。</p>';
   ['時裝','寵物','座椅'].forEach(type=>{
