@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<script src="lobby-ui/retired-outfits.js?v=373"></script>
+<script src="lobby-ui/retired-outfits.js?v=421"></script>
 <script src="lobby-ui/fixed-view.js?v=379"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
@@ -1693,7 +1693,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v420</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v421</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -5680,14 +5680,55 @@ function tryServeNudge(staff){
   window.openWardrobe=function(){ _wd=null; _info=''; _whl=null; _whl2=null; _wtgt='main'; _wcat=null; _wpage=0; build(); gOpen('wardM'); };
   window.__wardRender=function(reset){ if(reset){ _wd=null; _info=''; _whl=null; _whl2=null; _wtgt='main'; _wcat=null; _wpage=0; } build(); };
   /* 給背包用:列出已擁有(可用)的部件 */
-  window.__ownedParts=function(){
+  /* v421 工房初始部件：建卡時免費、選的永久保留；之後單買（頭髮＝前髮＋後髮一起、臉＝眼睛＋眉毛一起、衣服、花箋蝴蝶結），不能整套買。
+     售價由掌櫃設定在 config/basePricing（hair／face／cloth／acc），網站不寫死價格。
+     舊老闆（沒有 owned.baseStart 紀錄）保留初始男女部件全部；花箋與蝴蝶結要買（正在穿、染過或持有啟程旅人者保留）。 */
+  const BASE_UNITS=[
+    {id:'base_hair_2',kind:'hair',name:'花箋',parts:[['back',2],['front',2]],extra:true},
+    {id:'base_hair_3',kind:'hair',name:'妹妹頭',parts:[['back',3],['front',3]]},
+    {id:'base_hair_4',kind:'hair',name:'旁分',parts:[['back',4],['front',4]]},
+    {id:'base_cloth_3',kind:'cloth',name:'簡易休閒服',parts:[['cloth',3]]},
+    {id:'base_cloth_4',kind:'cloth',name:'綁帶牛仔套裝',parts:[['cloth',4]]},
+    {id:'base_face_2',kind:'face',name:'銳利眼＋堅定眉',parts:[['face',2],['brow',1]]},
+    {id:'base_face_3',kind:'face',name:'杏眼＋圓圓眉',parts:[['face',3],['brow',2]]},
+    {id:'base_face_4',kind:'face',name:'閉眼',parts:[['face',4]]},
+    {id:'base_acc_4',kind:'acc',name:'花箋蝴蝶結',parts:[['acc',4]],extra:true}
+  ];
+  const BASE_NAMES={'back:2':'花箋後髮','front:2':'花箋前髮','acc:4':'花箋蝴蝶結'};
+  const baseUnitOf=(sl,idx)=>BASE_UNITS.find(u=>u.parts.some(([s,i])=>s===sl&&i===idx))||null;
+  function baseUnitOwned(u){
+    if(!u)return false;const own=window.__owned||{};
+    if(own[u.id])return true;
+    if(u.id==='base_hair_2'&&own.cloth2)return true;
+    if(!own.baseStart&&!u.extra)return true;                       // 舊老闆
+    return false;
+  }
+  function basePartOwned(sl,idx){
+    const u=baseUnitOf(sl,idx);if(!u)return null;                   // 不是工房部件 → 沿用原規則
+    if(baseUnitOwned(u))return true;
+    const own=window.__owned||{},start=own.baseStart||{};
+    if(start[sl]===idx)return true;                                 // 建卡時選的
+    const d=myDoll(),ds=sl==='face'?'eye':sl;
+    if(d&&d[sl]===idx&&(sl==='acc'||d.uiBaseSlots?.includes(ds)||!(d.ps?.[ds]||d.set)))return true; // 正在穿
+    if((sl==='front'||sl==='back')&&Object.values(own.dyedHairSets||{}).some(x=>x?.[sl]?.base===idx))return true; // 染過（染髮當時已持有）
+    return false;
+  }
+  window.TTBaseUnits={list:()=>BASE_UNITS.map(u=>({...u,parts:u.parts.map(([s,i])=>[s,i])})),owned:u=>baseUnitOwned(typeof u==='string'?BASE_UNITS.find(x=>x.id===u):u),partOwned:basePartOwned,unitOf:(sl,i)=>baseUnitOf(sl,i)?.id||null,name:(sl,i,n)=>BASE_NAMES[sl+':'+i]||n};
+  function baseList(onlyOwned){
     const map=partSets(); const out={};
     SLOTS.forEach(([sl,label,getArr])=>{
       const arr=getArr(); out[sl]={label,items:[]};
-      arr.forEach((p,idx)=>{ if(!window.TTRetiredOutfits?.baseRetired(sl,idx)&&!lockedSets(map,sl,idx)) out[sl].items.push({idx,n:p.n||''}); });
+      arr.forEach((p,idx)=>{
+        if(window.TTRetiredOutfits?.baseRetired(sl,idx))return;
+        if(sl==='acc'&&idx>0&&!baseUnitOf(sl,idx))return;            // 其他舊配件仍只在舊換裝間使用
+        if(onlyOwned){const o=basePartOwned(sl,idx);if(o===false||(o===null&&lockedSets(map,sl,idx)))return;}
+        out[sl].items.push({idx,n:BASE_NAMES[sl+':'+idx]||p.n||''});
+      });
     });
     return out;
-  };
+  }
+  window.__ownedParts=function(){ return baseList(true); };
+  window.__allBaseParts=function(){ return baseList(false); };
 })();
 
 /* ================= 📱 手機直式專屬首頁 ================= */
@@ -7661,7 +7702,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui-bridge.js?v=420"></script>
+<script src="tavern-ui-bridge.js?v=421"></script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
