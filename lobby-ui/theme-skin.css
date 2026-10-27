@@ -1174,6 +1174,16 @@ html body #ttHub #frM .contact-avatar.ttf{background:none!important;box-shadow:n
 html body #ttHub #frM .contact-avatar.ttf .ttfAva canvas{width:100%!important;height:100%!important;object-fit:contain}
 html body #dmM .dm-heading .contact-avatar.ttf{background:none!important;border:0!important;box-shadow:none!important}
 html body #dmM .dm-heading .contact-avatar.ttf .ttfAva canvas{width:100%!important;height:100%!important;object-fit:contain}
-/* v429 我的狀態：只有三個按鈕，不再撐滿左欄；搜尋框緊接在下方 */
-html body #ttHub #frM .contacts-my-status{grid-area:2/1!important;align-self:start!important}
-html body #ttHub #frM .contacts-search{grid-area:3/1!important;align-self:start!important}
+/* v429 通訊錄改為上下分區：上方「我的狀態＋搜尋」一列、分頁與人數一列，下方整個寬度是好友名單（兩欄，自己捲動） */
+html body #ttHub #frM #frBody.tt-contacts{grid-template-columns:minmax(0,1fr) minmax(220px,300px)!important;grid-template-rows:auto auto auto minmax(0,1fr)!important;row-gap:12px!important}
+html body #ttHub #frM #frBody.tt-contacts>.contacts-heading{grid-area:1/1/2/3!important;align-self:end}
+html body #ttHub #frM .contacts-my-status{grid-area:2/1!important;align-self:center!important;display:flex!important;flex-wrap:wrap;align-items:center;column-gap:14px;row-gap:2px;padding:10px 16px!important;background-size:0 0,auto,auto!important}
+html body #ttHub #frM .contacts-my-status strong{margin:0!important;font-size:16px!important}
+html body #ttHub #frM .contacts-my-status .contacts-status-buttons{flex-wrap:nowrap!important;gap:8px!important}
+html body #ttHub #frM .contacts-my-status .contacts-status-note{flex-basis:100%;margin:2px 0 0!important;font-size:11.5px!important}
+html body #ttHub #frM .contacts-search{grid-area:2/2!important;align-self:center!important}
+html body #ttHub #frM .contacts-tabs{grid-area:3/1!important;align-self:center!important}
+html body #ttHub #frM .contacts-result{grid-area:3/2!important;align-self:center!important;justify-self:end;text-align:right}
+html body #ttHub #frM #frBody.tt-contacts>.contacts-list{grid-area:4/1/5/3!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px!important;align-content:start!important;overflow:auto!important;padding:2px 4px 6px!important}
+html body #ttHub #frM .contacts-list>.contacts-empty{grid-column:1/-1}
+@media(max-width:900px){html body #ttHub #frM #frBody.tt-contacts>.contacts-list{grid-template-columns:minmax(0,1fr)}}
