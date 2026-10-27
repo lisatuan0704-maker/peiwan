@@ -5,7 +5,7 @@ window.TTOutfitFx=(()=>{'use strict';
 const S=64;
 const BIND={season292_meow:{acc3:'sweep',acc7:'spark',acc2:'flow',acc4:'glitch',acc6:'bits'},
   // v447 疾風喵行：冰藍風鏡→風鏡反光、藍軌滑板→滑板殘影、晴空小翼→翅膀氣流、墨影貓尾→貓尾星光、逐風機能外套→風痕線條
-  season293_wind:{acc7:'glint',acc8:'board',acc1:'puff',acc2:'tailstar',acc3:'gust',acc6:'snow'}};   // v447 夜行貓耳帽→風雪
+  season293_wind:{acc7:'glint',acc8:'board',acc1:'puff',acc2:'tailstar',acc3:'gust',acc6:['snow','breath']}};   // v447 夜行貓耳帽→風雪＋哈白霧
 const MASK={sweep:'acc3',spark:'acc7',flow:'acc2',glint:'acc7',board:'acc8',puff:'acc1',tailstar:'acc2'};
 const masks={};   // `${source}:${slot}` → {data, path, box} 或 'loading'
 function partOf(source,slot){return window.TTSeasonDrafts?.[source]?.parts?.[slot]||null;}
@@ -27,7 +27,7 @@ function cablePath(cm){
 function active(d){
   if(!d)return [];const out=[];
   const refs=Array.isArray(d.uiAccessories)?d.uiAccessories:(d.set&&BIND[d.set]?Object.keys(BIND[d.set]).map(slot=>({source:d.set,slot})):[]);
-  for(const r of refs){const fx=BIND[r?.source]?.[r.slot];if(fx&&!out.some(o=>o.fx===fx))out.push({fx,source:r.source,slot:r.slot});}
+  for(const r of refs){const v=BIND[r?.source]?.[r.slot];for(const fx of [].concat(v||[]))if(!out.some(o=>o.fx===fx))out.push({fx,source:r.source,slot:r.slot});}
   return out;
 }
 const rnd=s=>{s=Math.sin(s*12.9898)*43758.5453;return s-Math.floor(s);};
@@ -63,6 +63,10 @@ function tailstar(g,t,m){const b=m.box;if(!b)return;if(!m.tip){let tip=null;for(
 function snow(g,t){for(let k=0;k<12;k++){const per=2600+rnd(k)*1400,ph=((t+k*517)%per)/per,seed=Math.floor((t+k*517)/per)*29+k;
   const x0=rnd(seed)*(S+24),x=x0-ph*22+Math.sin(ph*7+k)*1.6,y=-3+ph*(S+6),a=Math.min(1,ph*6,(1-ph)*5)*.85,big=rnd(seed+4)>.78;
   if(big){P(g,x,y,'#ffffff',a);P(g,x-1,y,'#dff1ff',a*.6);P(g,x+1,y,'#dff1ff',a*.6);P(g,x,y-1,'#dff1ff',a*.6);P(g,x,y+1,'#dff1ff',a*.6);}else P(g,x,y,rnd(seed+2)>.4?'#ffffff':'#cfe8ff',a);}}
+function breath(g,t,mx,my){const per=3400,u=(t%per)/1500;if(u>1)return;const e=Math.min(1,u/.12);
+  const cx=mx+8+u*10,cy=my-2-u*6,r=1.8+u*3.4,a=(1-u*.85)*e;   // 從嘴邊哈出，往旁邊飄出臉外、慢慢變大淡掉
+  for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){const d=Math.hypot(dx,dy*1.15);if(d>r+.3)continue;const edge=d>r-1;P(g,cx+dx,cy+dy,edge?"#c9dcf5":"#ffffff",a*(edge?.7:.95));}
+  if(u<.35)for(let k=0;k<4;k++)P(g,mx+1+k*1.8*(u/.35),my-k*.3,'#ffffff',a*.8);}
 const work=document.createElement('canvas');work.width=work.height=S;const wg=work.getContext('2d',{willReadFrequently:true});wg.imageSmoothingEnabled=false;
 const tint=document.createElement('canvas');tint.width=tint.height=S;const tg=tint.getContext('2d',{willReadFrequently:true});
 function tinted(d,r,gg,b){const im=tg.createImageData(S,S);for(let i=0;i<d.length;i+=4)if(d[i+3]>80){im.data[i]=r;im.data[i+1]=gg;im.data[i+2]=b;im.data[i+3]=170;}tg.putImageData(im,0,0);return tint;}
@@ -77,6 +81,7 @@ function render(src,t,list){
   for(const id of ['glint','puff','tailstar']){const o=on[id];if(!o)continue;const m=mask(o.source,MASK[id]);if(!m)continue;({glint,puff,tailstar})[id](wg,t,m);}
   if(on.gust)gust(wg,t,need().b);
   if(on.snow)snow(wg,t);
+  if(on.breath){const m=mask(on.breath.source,'eye'),b=m&&m.box;if(b)breath(wg,t,Math.round((b.x0+b.x1)/2),b.y1+4);}
   return work;
 }
 return {active,render,bindings:BIND};
