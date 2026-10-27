@@ -25,6 +25,8 @@ const cases=[
  ['陌生人建立新的闆卡','anon','PUT','peiwan/lobby/kNew',{name:'新人'},true],
  ['陌生人覆蓋別人的闆卡（輸入別人的 DC ID）','anon','PUT','peiwan/lobby/kA',{name:'假的'},false],
  ['Bob 改 Alice 的闆卡','bob','PATCH','peiwan/lobby/kA/pub',{status:'off'},false],
+ ['Alice 換一般頭像框','alice','PUT','peiwan/lobby/kA/pub/frm','wr1',true],
+ ['Alice 偽造陪玩角色框（沒有後端紀錄）','alice','PUT','peiwan/lobby/kA/pub/frm','companion_cA',false],
  ['Alice 改自己的狀態','alice','PATCH','peiwan/lobby/kA/pub',{status:'off'},true],
  ['陌生人假冒 Alice 移動位置','anon','PUT','peiwan/pos/kA',{x:1,y:1},false],
  ['Alice 更新自己的位置','alice','PUT','peiwan/pos/kA',{x:1,y:1},true],

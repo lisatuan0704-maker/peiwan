@@ -195,8 +195,13 @@
       },
       "lobby": {
         ".read": true,
-        "$k": {
-          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k) || (!data.exists() && newData.exists())"
+        "$key": {
+          "pub": {
+            "frm": {
+              ".validate": "newData.isString() && (!newData.val().matches(/^companion_/) || (auth != null && root.child('secureV1/owners').child($key).val() === auth.uid && root.child('secureV1/characters').child($key).child('pub/frm').val() === newData.val()))"
+            }
+          },
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($key).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $key) || (!data.exists() && newData.exists())"
         }
       },
       "orders": {
@@ -457,7 +462,7 @@
               ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 1500"
             },
             "from": {
-              ".validate": "newData.val() == '掌櫃客服'"
+              ".validate": "newData.val() == '店長客服' || newData.val() == '掌櫃客服'"
             },
             "at": {
               ".validate": "newData.isNumber()"

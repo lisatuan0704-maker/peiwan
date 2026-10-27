@@ -20,7 +20,9 @@ const inPair=(pair,who)=>`(${pair}.beginsWith(${who} + '~') || ${pair}.endsWith(
 // ---- character profile & presence -----------------------------------------------
 // A brand-new character may be created by anyone (the card page runs before login); after that only its owner (or staff) can change it.
 const NEW_CHAR=`(!data.exists() && newData.exists())`;
-P.lobby={'.read':true,'$k':{'.write':`${STAFF} || ${OWNER('$k')} || ${NEW_CHAR}`}};
+// keep the existing $key children (pub/frm: companion frames can only come from the server-verified record)
+const lobbyKey=P.lobby.$key||{};
+P.lobby={'.read':true,'$key':{...lobbyKey,'.write':`${STAFF} || ${OWNER('$key')} || ${NEW_CHAR}`}};
 P.cards={'.read':STAFF,'$k':{'.read':OWNER('$k'),'.write':`${STAFF} || ${OWNER('$k')} || ${NEW_CHAR}`}};
 P.pos={'.read':true,'$k':{'.write':`${STAFF} || ${OWNER('$k')}`}};
 
