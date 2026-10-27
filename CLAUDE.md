@@ -1,5 +1,8 @@
 # 小小酒館修改紀錄
 
+## v436 店長頁熊熊偵探／龐克搖滾狼縮圖
+以客人商城實際繪製的當季卡片人物（含展示髮色）擷取 64px 預覽，放大為 img/season-v291/bear.png、wolf.png（256px，最近鄰）。admin.html 商城卡片與放大檢視在 shopConfig 沒有 img 時改用這兩張；客人商城不變。
+
 ## v435 店長頁商城清單不列版權測試套
 admin.html 商城清單以 lobby-ui/retired-outfits.js 過濾：露亞經典裝（cloth0）、小莓甜心裝（cloth1）、星夜漫遊裝（cloth_mslu9a8o）與預想座椅蘑菇凳／絨布沙發椅／吧檯高腳椅（seat0～2）不再顯示。客人端早已停用（v357／v373）。只隱藏，不刪資料：shopConfig 與已購買紀錄保留。
 

@@ -777,6 +777,7 @@ const SHOP_CAT=[
   ...Object.entries(TTSeats.CATALOG).map(([id,c])=>({id,type:'座椅',name:c.name,price:null}))
 ];
 /* 自訂商品:店長可自行新增/改名/刪除,存在 shopConfig/<id> 裡(帶 custom:1) */
+const SHOP_SHOWCASE={season291_bear:'img/season-v291/bear.png?v=436',season291_wolf:'img/season-v291/wolf.png?v=436'};
 function shopList(){
   const out=SHOP_CAT.map(x=>Object.assign({},x));
   Object.keys(shopConfig||{}).forEach(function(id){
@@ -1053,7 +1054,7 @@ function shopZoom(id,ev){
     m.onclick=()=>m.style.display='none';
     document.body.appendChild(m); }
   m.innerHTML='<div style="text-align:center">'
-    +'<img src="'+c.img+'" style="width:min(70vw,70vh);height:min(70vw,70vh);object-fit:contain;image-rendering:pixelated;background:#fff;border-radius:18px;box-shadow:0 0 0 4px #fff,0 18px 40px rgba(0,0,0,.4)">'
+    +'<img src="'+(c.img||SHOP_SHOWCASE[id]||'')+'" style="width:min(70vw,70vh);height:min(70vw,70vh);object-fit:contain;image-rendering:pixelated;background:#fff;border-radius:18px;box-shadow:0 0 0 4px #fff,0 18px 40px rgba(0,0,0,.4)">'
     +'<div style="margin-top:12px;color:#fff;font-size:15px;font-weight:700">'+esc(it.name||'')+'</div>'
     +'<div style="margin-top:4px;color:#D8CBEE;font-size:12.5px">點任意處關閉</div></div>';
   m.style.display='flex';
@@ -1072,12 +1073,13 @@ function renderShop(){
       const c=shopConfig[it.id]||{};
       const price=c.price!=null?c.price:it.price;
       const active=c.active!==undefined?c.active:(type==='時裝');
-      const hasImg=!!c.img;
+      const img=c.img||SHOP_SHOWCASE[it.id]||'';   /* v436: 沒有上傳圖片的當季套組用商城展示圖 */
+      const hasImg=!!img;
       const open=shopOpenId===it.id;
       const lim=(c.end&&Date.now()<c.end);
       html+='<div class="shopCell'+(open?' on':'')+'" onclick="toggleShopItem(\''+it.id+'\')">'
         +'<div class="shopThumb" onclick="shopZoom(\''+it.id+'\',event)">'
-        +(TTSeats.isSeat(it.id)?TTSeatUI.markup(it.id):(hasImg?'<img src="'+c.img+'" alt="">':'<span class="noimg">無圖<br>待繪師</span>'))
+        +(TTSeats.isSeat(it.id)?TTSeatUI.markup(it.id):(hasImg?'<img src="'+img+'" alt="">':'<span class="noimg">無圖<br>待繪師</span>'))
         +(lim?'<span class="shopTag">限時</span>':'')
         +'</div>'
         +'<div class="shopNm">'+esc(it.name)+'</div>'
