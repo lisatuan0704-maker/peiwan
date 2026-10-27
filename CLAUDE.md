@@ -1,5 +1,8 @@
 # 小小酒館修改紀錄
 
+## v444 疾風喵行（預覽）
+season293_wind（tavern-ui/season-v293.js，img/season-v293/wind 原圖 13 張，名稱依使用者對照表）：cloth＝夜藍無袖裝、acc3 逐風機能外套（外套）、acc4 疾行手套（手套）、翅膀／貓尾背飾、鏡帶→貓耳帽→風鏡依 drawOrder 疊在前髮上、滑板手持。hideUntilLive，上架前只在 ?preview 顯示。season-display.js 預設展示色、season-color-adjust.html 加入（預設選取）。products.json 與匯入器 293（暫定整套 400，待使用者確認）。全部單買 530（未含特效）。
+
 ## v443 喵頻連線特效（商城試穿）
 使用者選定五種（meow-fx-preview.html）：護目鏡掃光、訊號盒光點、電線資料流、故障閃爍、數字飄字。依使用者「特效綁定物件、穿上即觸發」：幻彩視界→掃光、浮游訊號盒→光點、喵訊連接線→資料流、喵訊接收耳→故障閃爍、環音耳機→數字飄字（tavern-ui/outfit-fx.js，BIND 可改）。商城／背包試穿區（live-wardrobe.js drawPreviewIdle）每幀把特效畫在 64px 角色上再放大；減少動態設定時不播。大廳場景尚未顯示特效。另匯出 GIF（深色底／透明底，400×400、40ms、7.6 秒一輪）給使用者。
 大廳（使用者：要讓其他人也看到）：lobby.html setFrame 記下底圖 a._fxBase（眨眼改畫在暫存畫布），新增約 30fps 的 fxTick，穿著綁定部件的角色（自己與其他玩家，依 doll.uiAccessories）每幀在自己的 64px 畫布疊特效；系統減少動態、輕量特效模式、角色不在畫面上時不播。
