@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v438 闆卡工房用 Discord 登入自動帶入帳號
+card.html：原本客人自己打 Discord ID（未驗證，打錯就要店長人工審核）。改為進工房先用 Discord 登入（card-ui/discord-login.js，沒有登入過會先跳出登入卡，避免做到一半跳走造成造型遺失）；Discord 欄位自動帶入 @username 並鎖定，可「換一個帳號」。dc.html 新增工房分支（sessionStorage tt_card_login_v438）：只取回 Discord 帳號存 tt_dc，憑證暫存本分頁 tt_dc_token_v438 後回工房。做好闆卡（大廳資料寫入成功）後立刻以 TTSecureLogin 綁定新闆卡，進大廳免再登入、也不需店長審核；綁定失敗時大廳入口照舊請他登入。闆卡鑰匙算法不變（仍由 @username 算出），伺服器認領條件不變（闆卡 Discord 名稱與登入帳號相符）。
+驗證：本機以模擬資料載入工房，已登入時欄位帶入且唯讀、未登入時先顯示登入卡；真實 Discord 授權需使用者實測。全部測試結果與修改前一致。
+
 ## v437 店長頁翻新（淘汰白盒期功能）
 角色名冊：蕪／縭／桃改用繪師正式立繪頭像（tavern-ui/assets/avatar-KABUKI／RIRA／MOMO.png，依角色 ID），不再用白盒期 img/dog-*.png 與 emoji，名稱顯示店內名稱；委託總覽、月結同步用正式頭像。
 客人名冊：大廳新增 lobby-ui/avatar-snap.js，穿搭改變時以大廳同一套繪製（TTCharacterSnapshot，含當季套組、染髮、配件）輸出 64px 圖存到 cards/<key>/snap（本人寫、只有本人與店員能讀，不在公開大廳資料），店長頁客人卡片與詳細資料優先顯示這張；沒有快照（客人尚未回大廳）才用店長頁舊的簡易繪製。不需改資料庫規則（已在模擬器確認本人可寫、他人不可寫、未登入不可讀、店長可讀）。

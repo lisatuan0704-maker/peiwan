@@ -99,6 +99,23 @@ const ROOT='peiwan';
   if(!avatarRefresh&&sessionStorage.getItem('tt_voice_login_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=421').then(m=>m.finishVoiceLogin(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
   if(!avatarRefresh&&sessionStorage.getItem('tt_voice_rehearsal_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=407').then(m=>m.finishRehearsal(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
   if(!avatarRefresh&&sessionStorage.getItem('tt_partner_discord_bind_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/partner-binding.mjs?v=427').then(m=>m.finishBinding(callback,firebase.auth(),card)).catch(()=>{card.textContent='無法載入綁定功能，請返回陪玩工作頁重試。'});return;}
+  /* v438: 闆卡工房登入——只帶回 Discord 帳號（還沒有闆卡，不在這裡綁定），憑證留在本分頁給工房做好闆卡後綁定 */
+  if(!avatarRefresh&&sessionStorage.getItem('tt_card_login_v438')){
+    sessionStorage.removeItem('tt_card_login_v438');
+    const cb=window.__ttDiscordCallback||{};delete window.__ttDiscordCallback;
+    const back=msg=>{card.innerHTML='<h1>登入沒有完成</h1><p>'+TTDiscordAuth.escapeText(msg)+'</p><a class="btn" href="card.html">回闆卡工房</a>';};
+    if(!cb.token){back(cb.error||'請回闆卡工房重新登入。');return;}
+    fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+cb.token},redirect:'error',signal:AbortSignal.timeout(10000)})
+      .then(r=>{if(!r.ok)throw Error('http '+r.status);return r.json();})
+      .then(u=>{
+        if(!/^[0-9]{16,22}$/.test(u.id||'')||!u.username||(u.avatar&&!/^(a_)?[a-f0-9]{32}$/.test(u.avatar)))throw Error('invalid user');
+        const dc={id:u.id,username:u.username,global_name:u.global_name||null,avatar:u.avatar||null};
+        localStorage.setItem('tt_dc',JSON.stringify(dc));sessionStorage.setItem('tt_dc_token_v438',cb.token);
+        card.innerHTML='<h1>登入成功！</h1><div class="nm">@'+TTDiscordAuth.escapeText(dc.username)+'</div><p>回到闆卡工房繼續製作。</p><a class="btn" href="card.html">回闆卡工房</a>';
+        setTimeout(()=>{location.href='card.html';},1200);
+      }).catch(()=>back('連不上 Discord，請稍後再試一次。'));
+    return;
+  }
   function fail(msg){
     delete window.__ttDiscordCallback;
     card.innerHTML='<h1>'+(avatarRefresh?'頭貼更新沒有完成':'綁定沒有成功')+'</h1><p>'+msg+'</p><a class="btn" href="lobby.html">回酒館大廳</a>';
