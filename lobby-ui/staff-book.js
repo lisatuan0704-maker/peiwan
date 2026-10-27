@@ -1,5 +1,5 @@
 /* v414 冒險者通訊錄（手機首頁）：三位冒險者的上班狀態與會員私訊入口。
-   上班中＝在線上；未加入月費會員時整區蓋一層灰色提示。只讀既有 staffStatus／dmMeta，不新增資料寫入。 */
+   上班中＝在線上；未達進階會員時整區蓋一層灰色提示。只讀既有 staffStatus／dmMeta，不新增資料寫入。 */
 (function(){
   'use strict';
   const NAMES={KABUKI:'蕪',RIRA:'縭',MOMO:'桃'};
@@ -34,8 +34,8 @@
   function paint(){
     if(!box||box.hidden)return;
     const staff=list(),m=meta(),hasThread=staff.some(s=>m['staff_'+s.cid]);
-    const locked=tier()<1&&!hasThread;
-    const k=JSON.stringify([locked,staff.map(s=>[s.cid,s.on,s.busy]),staff.map(s=>m['staff_'+s.cid]||0)]);
+    const lv=tier(),locked=lv<2&&!hasThread;
+    const k=JSON.stringify([locked,lv,staff.map(s=>[s.cid,s.on,s.busy]),staff.map(s=>m['staff_'+s.cid]||0)]);
     if(k===sig&&box.firstChild)return;sig=k;
     const keep=box.querySelector('.sb-body')?.scrollTop||0;
     box.replaceChildren();
@@ -50,9 +50,9 @@
       if(!arr.length)w.append(el('p','sb-empty',empty));arr.forEach(s=>w.append(row(s,m,locked)));body.append(w);};
     sec('在線區',on,'目前沒有冒險者上班，可以先留言。');
     sec('休息中',off,'大家都在線上。');
-    body.append(el('p','sb-note','會員私訊會保留在酒館，掌櫃可調閱。上班時間以冒險者實際打卡為準。'));
+    body.append(el('p','sb-note','上班時間以冒險者實際打卡為準。'));
     if(locked){
-      const lock=el('div','sb-lock');lock.append(el('b','','此區為月卡會員專用'),el('span','','加入任一月費會員方案即可使用'));
+      const lock=el('div','sb-lock');lock.append(el('b','',lv>=1?'此區為進階會員以上專用':'此區為月卡會員專用'),el('span','',lv>=1?'升級進階或尊榮會員即可使用':'加入進階或尊榮會員即可使用'));
       const go=el('button','sb-plan','查看月費會員');go.type='button';go.onclick=()=>{close();try{shopOpen(2,'member');}catch(e){}};
       lock.append(go);body.classList.add('is-locked');card.append(lock);requestAnimationFrame(()=>card.style.setProperty('--sb-head',head.offsetHeight+'px'));
     }

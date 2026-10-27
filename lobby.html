@@ -1693,7 +1693,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v415</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v416</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -6421,10 +6421,10 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
       +'<div style="display:flex;gap:8px;margin-top:9px">'
       +'<input id="dmIn" maxlength="200" placeholder="訊息(最多 200 字)" style="flex:1;min-width:0" onkeydown="if(event.key===\'Enter\')dmSend()">'
       +'<button class="bkBtn" onclick="dmSend()">送出</button></div>'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px">'
-      +'<button title="檢舉/封鎖" style="border:none;background:none;cursor:pointer;padding:2px;line-height:0" onclick="dmWarnMenu(this)">'
+      +'<div id="dmFoot" style="display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px">'
+      +'<button id="dmWarnBtn" title="檢舉/封鎖" style="border:none;background:none;cursor:pointer;padding:2px;line-height:0" onclick="dmWarnMenu(this)">'
       +'<svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 2.2 L23 21 H1 Z" fill="#E14E6B"/><rect x="10.9" y="8.6" width="2.4" height="6.6" rx="1.2" fill="#fff"/><circle cx="12.1" cy="17.9" r="1.5" fill="#fff"/></svg></button>'
-      +'<span id="dmHint" style="color:#B7A6C9;margin-left:auto">私訊僅限互為好友・掌櫃可調閱</span>'
+      +'<span id="dmHint" style="color:#B7A6C9;margin-left:auto"></span>'
       +'</div></div></div>';
     document.body.appendChild(d);
     [w,d].forEach(x=>x.addEventListener('click',e=>{ if(e.target===x){ x.classList.remove('on'); if(x.id==='dmM') dmClose(true); } }));
@@ -6497,7 +6497,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     ensureWins(); dmClose(true);
     _dmWith=k;
     document.getElementById('dmTitle').textContent='私訊・'+((FR[k]&&FR[k].name)||'？');
-    {const h=document.getElementById('dmHint');if(h)h.textContent='私訊僅限互為好友・掌櫃可調閱';}
+    {const h=document.getElementById('dmHint');if(h)h.textContent='';const w=document.getElementById('dmWarnBtn');if(w)w.hidden=false;const f=document.getElementById('dmFoot');if(f)f.hidden=false;}
     TTDirectMessageLog.reset(document.getElementById('dmLog'));
     try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
     _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
@@ -6520,7 +6520,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     ensureWins(); dmClose(true);
     _dmWith=k;_dmStaffName=name||(DMM[k]&&DMM[k].name)||'冒險者';
     document.getElementById('dmTitle').textContent='私訊・'+_dmStaffName;
-    {const h=document.getElementById('dmHint');if(h)h.textContent=ttMemberTier()>=2?'會員私訊・掌櫃可調閱':'會員已到期，只能查看紀錄';}
+    {const h=document.getElementById('dmHint');if(h)h.textContent=ttMemberTier()>=2?'':'會員已到期，只能查看紀錄';const w=document.getElementById('dmWarnBtn');if(w)w.hidden=true;const f=document.getElementById('dmFoot');if(f)f.hidden=ttMemberTier()>=2;}
     TTDirectMessageLog.reset(document.getElementById('dmLog'));
     try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
     _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
@@ -7518,23 +7518,20 @@ function bkGo(k){
   const prev=_bkTab; _bkTab=k;
   if(k==='log'){ _bkTx=null; bkLoadTx(); }
   bkPaint();
-  if(prev!==k) bkFlipPlay();
+  if(prev!==k){ const ord=['me','bag','log','ach','ward','frames','bubbles']; bkFlipPlay(ord.indexOf(k)<ord.indexOf(prev)?-1:1); }
 }
-/* 素材包的 20 幀翻頁動畫(取 7 幀,只在雙頁模式播) */
+/* v416 程式繪製翻頁：白紙深藍框紙頁沿書脊翻過去（取代舊黃色素材動畫） */
 let _bkFlipT=null;
-function bkFlipPlay(){
-  const ov=document.getElementById('bkFlipOv'); if(!ov) return;
+function bkFlipPlay(dir){
+  const sp=document.querySelector('#bookM .bkSpread'); if(!sp) return;
   if(window.innerWidth<=760) return;
-  /* 全幅翻頁動畫非常吃顯示記憶體(7 張 1534x980),只在使用者主動選「華麗」時播放 */
-  if(window.__fxMode!=='hi'||document.body.classList.contains('liteFX')) return;
-  clearInterval(_bkFlipT);
-  let i=0;
-  ov.src=BKA.flip0; ov.style.display='block';
-  _bkFlipT=setInterval(()=>{
-    i++;
-    if(i>6){ clearInterval(_bkFlipT); ov.style.display='none'; return; }
-    ov.src=BKA['flip'+i];
-  },38);
+  try{ if(matchMedia('(prefers-reduced-motion: reduce)').matches) return; }catch(e){}
+  const pg=sp.querySelector(dir<0?'.bkPage.l':'.bkPage.r'); if(!pg) return;
+  sp.querySelectorAll('.bkLeaf').forEach(n=>n.remove()); clearTimeout(_bkFlipT);
+  const leaf=document.createElement('div'); leaf.className='bkLeaf'+(dir<0?' back':''); leaf.setAttribute('aria-hidden','true');
+  leaf.style.cssText='left:'+pg.offsetLeft+'px;top:'+pg.offsetTop+'px;width:'+pg.offsetWidth+'px;height:'+pg.offsetHeight+'px';
+  leaf.innerHTML='<i class="f"></i><i class="b"></i>'; sp.appendChild(leaf);
+  _bkFlipT=setTimeout(()=>leaf.remove(),700);
 }
 function bkLoadTx(){
   if(!myKey||typeof db==='undefined'||!db){ _bkTx=[]; bkPaint(); return; }
@@ -7665,10 +7662,10 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
 <script src="tavern-ui-bridge.js?v=411"></script>
-<script src="lobby-ui/staff-book.js?v=415"></script>
+<script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
-<script src="lobby-ui/live.js?v=408"></script>
+<script src="lobby-ui/live.js?v=416"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
@@ -7677,12 +7674,12 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/order-flow.js?v=373"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=377';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=353';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=416';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=415"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=416"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=373"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=414';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
