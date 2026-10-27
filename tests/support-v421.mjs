@@ -9,7 +9,9 @@ assert.throws(()=>replyUpdates({uid:'discord_a',id:'test',ticket:{...input,reply
 const base='http://127.0.0.1:9009',ns='demo-support';
 function token(uid,extra={}){const now=Math.floor(Date.now()/1000);return [Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url'),Buffer.from(JSON.stringify({iss:'https://securetoken.google.com/'+ns,aud:ns,sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'custom'},socialSession:'test',...extra})).toString('base64url'),''].join('.');}
 async function request(path,{method='GET',body,auth}={}){const r=await fetch(`${base}/${path}.json?ns=${ns}${auth && auth!=='owner'?'&auth='+encodeURIComponent(auth):''}`,{method,headers:{'Content-Type':'application/json',...(auth==='owner'?{Authorization:'Bearer owner'}:{})},body:body===undefined?undefined:JSON.stringify(body)});return {status:r.status,data:await r.json()};}
-const rules=JSON.parse(fs.readFileSync(new URL('../../firebase-rules-support.json',import.meta.url),'utf8'));
+// Start the official Realtime Database emulator on 127.0.0.1:9009 first.
+// This suite uses only demo-support and never contacts the production database.
+const rules={rules:{supportV1:JSON.parse(fs.readFileSync(new URL('../security/support.rules.json',import.meta.url),'utf8'))}};
 assert.equal((await request('.settings/rules',{method:'PUT',body:rules,auth:'owner'})).status,200,'rules compile');
 assert.equal((await request('',{method:'PUT',auth:'owner',body:{peiwan:{config:{adminUid:'admin'}},secureV1:{members:{discord_a:{active:true,key:'char_a'},discord_b:{active:true,key:'char_b'}},owners:{char_a:'discord_a',char_b:'discord_b'}}}})).status,200);
 const a=token('discord_a'),b=token('discord_b'),admin=token('admin'),at={'.sv':'timestamp'};
