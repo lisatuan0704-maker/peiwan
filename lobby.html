@@ -1490,7 +1490,7 @@ body.artBub.bub3s .npc .bub{
       <div class="fxSeg" id="fxSeg"><button data-v="lite">輕量</button><button data-v="auto">自動</button><button data-v="hi">華麗</button></div></div>
     <div style="border-top:2px dashed #EDE4F7;margin-top:12px;padding-top:12px;display:flex;gap:9px;flex-wrap:wrap">
       <a href="guide.html" style="flex:1;min-width:130px;text-align:center;text-decoration:none;background:#F3EDFB;color:#8E68C8;font-size:13px;font-weight:700;padding:11px 8px;border-radius:11px">新手指南</a>
-      <a href="https://discord.gg/aK9GFarxm" target="_blank" rel="noopener" style="flex:1;min-width:130px;text-align:center;text-decoration:none;background:linear-gradient(180deg,#B9C6F5,#8FA3E8);color:#fff;font-size:13px;font-weight:700;padding:11px 8px;border-radius:11px">客服</a>
+      <a href="lobby.html?contact=1" data-contact-support style="flex:1;min-width:130px;text-align:center;text-decoration:none;background:linear-gradient(180deg,#B9C6F5,#8FA3E8);color:#fff;font-size:13px;font-weight:700;padding:11px 8px;border-radius:11px">聯絡客服</a>
     </div>
   </div>
 </div></div>
@@ -4946,7 +4946,7 @@ function submitIssue(){
 
 /* ================= 大廳信箱(掌櫃寄信) ================= */
 let __mail={};
-function mailUnread(){ return Object.values(__mail||{}).filter(m=>m&&!m.read&&!m.hid).length; }
+function mailUnread(){ return Object.values({...(__mail||{}),...(window.TTSupportInbox||{})}).filter(m=>m&&!m.read&&!m.hid).length; }
 function updateMailBadge(){
   const n=mailUnread();
   const b=document.getElementById('mailBadge');
@@ -4955,7 +4955,7 @@ function updateMailBadge(){
 }
 /* 收進來的信:已被客人清掉(hid)的不再顯示 */
 function mailList(){
-  return Object.entries(__mail||{}).filter(([,m])=>m&&!m.hid).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+  return Object.entries({...(__mail||{}),...(window.TTSupportInbox||{})}).filter(([,m])=>m&&!m.hid).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
 }
 function renderMailBox(){
   const el=document.getElementById('mailBody2'); if(!el) return;
@@ -4981,6 +4981,7 @@ function renderMailBox(){
 }
 /* 清掉信件:只是從你的信箱收起來(標記 hid),不會動到別人的信 */
 function hideMail(id){
+  if(window.TTSupport?.handles(id)) return window.TTSupport.hide(id);
   const m=(__mail||{})[id]; if(!m) return;
   m.hid=Date.now();
   try{ if(myKey&&typeof db!=='undefined'&&db) db.ref(ROOT+'/mail/'+myKey+'/'+id+'/hid').set(m.hid); }catch(e){}
@@ -4991,6 +4992,7 @@ function clearReadMail(){
   if(!done.length) return;
   if(!confirm('要清掉 '+done.length+' 封已讀信件嗎?\n(還沒讀的會留著)')) return;
   done.forEach(([id])=>{
+    if(window.TTSupport?.handles(id)){window.TTSupport.hide(id);return;}
     const m=__mail[id]; if(!m) return; m.hid=Date.now();
     try{ if(myKey&&typeof db!=='undefined'&&db) db.ref(ROOT+'/mail/'+myKey+'/'+id+'/hid').set(m.hid); }catch(e){}
   });
@@ -4998,6 +5000,7 @@ function clearReadMail(){
   if(window.toast) toast('已清空 '+done.length+' 封');
 }
 function readMail(id){
+  if(window.TTSupport?.handles(id)) return window.TTSupport.read(id);
   const m=__mail[id]; if(!m) return;
   if(!m.read){
     m.read=Date.now();
@@ -7683,6 +7686,8 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=373"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=419';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
+<link rel="stylesheet" href="lobby-ui/support.css?v=421">
+<script type="module" src="lobby-ui/support.mjs?v=421"></script>
 </body>
 </html>
 

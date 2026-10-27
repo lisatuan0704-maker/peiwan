@@ -485,6 +485,7 @@ body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
       <button id="tb7" onclick="showTab(7)">💗 客人</button>
       <button id="tb8" onclick="showTab(8)">🛍️ 商城</button>
       <button id="tb9" onclick="showTab(9)">🍺 併桌</button>
+      <button id="tb10" onclick="showTab(10)">💬 線上客服<span id="supportBadge"></span></button>
     </div>
     <div id="tab0"></div>
     <div id="tab1" style="display:none"></div>
@@ -496,6 +497,7 @@ body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
     <div id="tab7" style="display:none"></div>
     <div id="tab8" style="display:none"></div>
     <div id="tab9" style="display:none"></div>
+    <div id="tab10" style="display:none"></div>
     <button class="logout" style="background:none;border:none;color:var(--grape);font-family:inherit;font-size:12px;text-decoration:underline;cursor:pointer;display:block;margin:0 auto" onclick="firebase.auth().signOut().then(()=>location.reload())">登出掌櫃帳號</button>
   </div>
 </div>
@@ -1780,7 +1782,7 @@ function sweepResolved(){
   });
 }
 function showTab(i){
-  for(let k=0;k<10;k++){document.getElementById("tab"+k).style.display=k===i?"block":"none";
+  for(let k=0;k<11;k++){document.getElementById("tab"+k).style.display=k===i?"block":"none";
     document.getElementById("tb"+k).classList.toggle("on",k===i);}
   askNotifyPerm();   // 首次點擊時順便要通知權限(瀏覽器要求需有使用者互動)
 }
@@ -2728,5 +2730,7 @@ body.dark #qnavPop button{color:#D8CBEE}
     btn.style.display=(m&&m.style.display!=='none'&&m.offsetParent!==null)?'':'none'; },1200);
 })();
 </script>
-<script src="season-shop-import.js?v=413"></script></body>
+<script src="season-shop-import.js?v=413"></script>
+<link rel="stylesheet" href="lobby-ui/support.css?v=421">
+<script type="module" src="lobby-ui/support-admin.mjs?v=421"></script></body>
 </html>

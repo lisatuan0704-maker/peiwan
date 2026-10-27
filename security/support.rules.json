@@ -1,0 +1,90 @@
+{
+  "tickets": {
+    ".read": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val()",
+    "$uid": {
+      ".read": "auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true",
+      "$id": {
+        ".write": "auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true && !data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['category','subject','text','myKey','name','at'])",
+        "category": {
+          ".validate": "newData.val() == '付款與儲值' || newData.val() == '訂單與服務' || newData.val() == '帳號與登入' || newData.val() == '其他問題'"
+        },
+        "subject": {
+          ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 60"
+        },
+        "text": {
+          ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 1500"
+        },
+        "orderId": {
+          ".validate": "newData.isString() && newData.val().length >= 0 && newData.val().length <= 80"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
+        },
+        "at": {
+          ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+        },
+        "myKey": {
+          ".validate": "newData.isString() && ((!data.exists() && newData.val() == root.child('secureV1/members').child($uid).child('key').val() && root.child('secureV1/owners').child(newData.val()).val() == $uid) || (data.exists() && newData.val() == data.val()))"
+        },
+        "reply": {
+          ".write": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val() && !data.exists() && newData.exists()",
+          ".validate": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val() && newData.hasChildren(['text','at'])",
+          "text": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 1500"
+          },
+          "at": {
+            ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  },
+  "inbox": {
+    "$uid": {
+      ".read": "(auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) || (auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+      ".indexOn": [
+        "at"
+      ],
+      "$id": {
+        ".write": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val() && !data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['title','text','from','at','ticketId','question']) && root.child('supportV1/tickets').child($uid).child($id).exists() && newData.child('ticketId').val() == $id",
+        "title": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
+        },
+        "text": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 1500"
+        },
+        "from": {
+          ".validate": "newData.val() == '掌櫃客服'"
+        },
+        "at": {
+          ".validate": "newData.isNumber()"
+        },
+        "ticketId": {
+          ".validate": "newData.val() == $id"
+        },
+        "question": {
+          ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 1500"
+        },
+        "read": {
+          ".write": "auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true && data.parent().exists() && newData.exists()",
+          ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+        },
+        "hid": {
+          ".write": "auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true && data.parent().exists() && newData.exists()",
+          ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
