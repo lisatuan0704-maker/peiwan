@@ -1,5 +1,8 @@
 # 小小酒館修改紀錄
 
+## v446 夜行貓耳帽遮髮
+使用者：戴這頂帽子時，超出帽子的頭髮都蓋掉，只留帽口露出的部分。部件旗標 hairClip:true（season-v293.js acc6）；lobby.html drawDollTo 的前髮／後髮層在戴著 hairClip 部件時以帽子範圍遮罩（每列帽子最左到最右，扣掉從上方露天連通的透明區，例如兩耳之間）destination-in 裁切。大廳、試穿、快照共用。已用網站繪製程式檢查 9 種髮型（/mnt/user-data/outputs/夜行貓耳帽-遮髮版.png）。
+
 ## v445 VIP 3 專屬時裝二選一（喵頻連線／疾風喵行）
 使用者：兩套改為 VIP 3 獎勵；達到 VIP 3 時問要選哪一套（二擇一，免費）；另一套只有 VIP 3 在商城看得到，整套 500、不拆賣；VIP 3 系列要有動態預覽。
 後端（order-voice-bot/vip-outfit.cjs，路由 /v1/voice/vip-outfit，需另行部署 20261028-v445）：Firebase 登入本人＋secureV1 綁定；伺服器以 clientOrders（myKey＝本人、confirmed/done、topup 或非錢包付款，排除 testOnly，與網站 vipSpent 相同）重新計算累積支持，滿 15000 才可領；owned/<key> transaction 寫入 vip3Outfit {id,at} 與該套 {vip:3,at,name}，每張闆卡只能領一次、同時送出兩個請求只會成立一套。body {} 回傳狀態。測試 vip-outfit.test.cjs 5 項、vip-outfit.emu.test.cjs（真實模擬器、併發）2 項。

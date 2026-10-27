@@ -11,7 +11,7 @@ window.TTSeasonDrafts=Object.assign(window.TTSeasonDrafts||{},{"season293_wind":
  "acc3":{"n":"逐風機能外套","d":D+"5.旋風機能外套.png","x":0,"y":0,"g":0,"group":"outer","z":"over","independent":true,"defaultEquipped":true,"drawOrder":1},
  "acc4":{"n":"疾行手套","d":D+"6.旋風手套.png","x":0,"y":0,"g":0,"group":"glove","z":"over","independent":true,"defaultEquipped":true,"drawOrder":3},
  "acc5":{"n":"靛藍鏡帶","d":D+"8.前髮上-護目鏡帶子.png","x":0,"y":0,"g":0,"group":"head","z":"top","independent":true,"defaultEquipped":true,"drawOrder":1},
- "acc6":{"n":"夜行貓耳帽","d":D+"9.旋風貓帽子.png","x":0,"y":0,"g":0,"group":"head","z":"top","independent":true,"defaultEquipped":true,"drawOrder":2},
+ "acc6":{"n":"夜行貓耳帽","d":D+"9.旋風貓帽子.png","x":0,"y":0,"g":0,"group":"head","z":"top","independent":true,"defaultEquipped":true,"drawOrder":2,"hairClip":true},
  "acc7":{"n":"冰藍風鏡","d":D+"10.旋風護目鏡.png","x":0,"y":0,"g":0,"group":"face","z":"top","independent":true,"defaultEquipped":true,"drawOrder":3},
  "acc8":{"n":"藍軌滑板","d":D+"11.手上物品-旋風滑板.png","x":0,"y":0,"g":0,"group":"hand","z":"top","independent":false,"defaultEquipped":true}
 },"sourceLayerCount":13}});})();

@@ -2090,6 +2090,24 @@ function csAccZ(v){
   }catch(e){}
   return 'top';
 }
+/* v446 帽子遮髮（部件 hairClip:true）：戴上時前髮、後髮只留在帽子範圍內（帽子本身＋帽口），超出帽子的頭髮不畫。
+   範圍＝每列帽子最左到最右之間，扣掉從上方露天（例如兩耳之間）連通進來的透明區。 */
+const _hairClipMasks={};
+function hairClipMask(p){
+  const src=p&&p.d;if(!src)return null;let m=_hairClipMasks[src];if(m)return m.cv||null;
+  m=_hairClipMasks[src]={cv:null};const im=new Image();
+  im.onload=()=>{const S=64,c=document.createElement('canvas');c.width=c.height=S;const g=c.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;g.drawImage(im,p.x||0,p.y||0,S,S);
+    const a=g.getImageData(0,0,S,S).data,hat=i=>a[i*4+3]>40,span=[];
+    for(let y=0;y<S;y++){let x0=-1,x1=-1;for(let x=0;x<S;x++)if(hat(y*S+x)){if(x0<0)x0=x;x1=x;}span[y]=x0<0?null:[x0,x1];}
+    const ins=(x,y)=>y>=0&&y<S&&span[y]&&x>=span[y][0]&&x<=span[y][1];
+    const out=new Uint8Array(S*S),q=[];
+    for(let y=0;y<S;y++)if(span[y])for(let x=span[y][0];x<=span[y][1];x++)if(!hat(y*S+x)&&!ins(x,y-1)){out[y*S+x]=2;q.push(y*S+x);}
+    while(q.length){const i=q.pop(),x=i%S,y=(i/S)|0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(!ins(nx,ny))continue;const n=ny*S+nx;if(out[n]||hat(n))continue;out[n]=2;q.push(n);}}
+    const im2=g.createImageData(S,S);for(let y=0;y<S;y++)for(let x=0;x<S;x++){const i=y*S+x;if(ins(x,y)&&out[i]!==2)im2.data[i*4+3]=255;}
+    g.clearRect(0,0,S,S);g.putImageData(im2,0,0);m.cv=c;try{scheduleTpReady();}catch(e){}};
+  im.src=src;return null;
+}
+function hairClipFor(d){try{const p=csAccList(d).find(v=>v&&v.hairClip);return p?hairClipMask(p):null;}catch(e){return null;}}
 function csAccBy(d,z){ return csAccList(d).filter(function(v){ return csAccZ(v)===z; }); }
 
 function csDraw(g,P,key){
@@ -2232,7 +2250,8 @@ if(TEST_MODE){
       }
       TTHairMotion.paint(g,c,motion,kind);if(edge&&native)hairEdge(g,fg);
     };
-    const slot=(name,cat,idx,kind,edge)=>layer(kind,fg=>{const custom=csSlot(fg,d,name,hi,hx,hx2);if(!custom&&!strict)tpDraw(fg,tpPosed(cat,idx,pose),hi,hx,hx2);return !custom&&!strict;},edge);
+    const clip=hairClipFor(d);
+    const slot=(name,cat,idx,kind,edge)=>layer(kind,fg=>{const custom=csSlot(fg,d,name,hi,hx,hx2);if(!custom&&!strict)tpDraw(fg,tpPosed(cat,idx,pose),hi,hx,hx2);if(clip&&kind==='hair'){fg.globalCompositeOperation='destination-in';fg.drawImage(clip,0,0);fg.globalCompositeOperation='source-over';}return !custom&&!strict;},edge);
     const customAcc=z=>csAccBy(d,z).forEach(v=>layer(/尾巴/.test(v.n||'')?'tail':(z==='under'||z==='over')?'cloth':'rigid',fg=>csDrawV(fg,v,hi,hx,hx2)));   /* v441 under＝衣服下（下身）、over＝衣服上（外套／手套） */
     const nativeAcc=(list,kind)=>{if(!strict&&list?.length)layer(kind,fg=>accLayer(fg,list,hi,hx));};
     slot('back','後髮',d.back||0,'hair',false);customAcc('back');nativeAcc(ap.b,'tail');nativeAcc(ap.m,'rigid');
