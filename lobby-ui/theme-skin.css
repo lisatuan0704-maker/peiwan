@@ -1187,3 +1187,16 @@ html body #ttHub #frM .contacts-result{grid-area:3/2!important;align-self:center
 html body #ttHub #frM #frBody.tt-contacts>.contacts-list{grid-area:4/1/5/3!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px!important;align-content:start!important;overflow:auto!important;padding:2px 4px 6px!important}
 html body #ttHub #frM .contacts-list>.contacts-empty{grid-column:1/-1}
 @media(max-width:900px){html body #ttHub #frM #frBody.tt-contacts>.contacts-list{grid-template-columns:minmax(0,1fr)}}
+/* v439 入店歡迎卡（#intro）套用整站主題，與登入卡一致 */
+html body #intro{background:rgba(28,33,86,.42)!important;backdrop-filter:blur(4px)}
+html body #intro #introCard{border:3px solid var(--sk-ink)!important;border-radius:18px!important;color:var(--sk-ink)!important;
+  background:var(--ht-pink-br) right 3px bottom 3px/150px 100px no-repeat,var(--ht-sky-bl) left 3px bottom 3px/120px 80px no-repeat,linear-gradient(170deg,#fff,#F6FAFF 60%,#F8F3FF)!important;
+  box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px #CFEFFF,10px 10px 0 -1px #FFD6E6,10px 10px 0 2px var(--sk-ink),0 18px 40px rgba(28,33,86,.3)!important}
+html body #intro #introCard h2{display:table;margin:6px auto 10px!important;color:var(--sk-ink)!important;font-weight:700!important;padding:2px 8px;background:linear-gradient(transparent 60%,#FFD6E6 60%,#FFD6E6 92%,transparent 92%)}
+html body #intro #introCard p{color:var(--sk-mute)!important;font-weight:700}
+html body #intro #introCard .steps{background:#fff!important;border:2px solid #D3D8F2!important;border-radius:12px!important;color:var(--sk-ink)!important}
+html body #intro #introCard .steps b{color:#F03C7C!important}
+html body #intro #introGo{border:3px solid var(--sk-ink)!important;border-radius:14px!important;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C)!important;color:#fff!important;font-weight:900!important;letter-spacing:1.5px;box-shadow:0 4px 0 var(--sk-ink),inset 0 2px 0 #ffffff80!important}
+html body #intro #introCard2{border:3px solid var(--sk-ink)!important;border-radius:14px!important;background:#fff!important;color:var(--sk-ink)!important;font-weight:900!important;box-shadow:0 4px 0 var(--sk-ink)!important}
+html body #intro #introCard2[hidden]{display:none!important}
+html body #intro #introSkip{background:none!important;box-shadow:none!important;border:0!important;color:var(--sk-mute)!important;font-weight:700}

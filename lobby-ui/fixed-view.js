@@ -14,5 +14,5 @@
   try{if(window.parent!==window&&window.parent.location.pathname.endsWith('/lobby-view.html'))a.target='_top';}catch{}
  },true);
  if(window.self!==window.top||new URLSearchParams(location.search).has('preview'))return;
- if(matchMedia('(hover: hover) and (pointer: fine)').matches){query.set('v','437');location.replace('lobby-view.html?'+query.toString()+location.hash);}
+ if(matchMedia('(hover: hover) and (pointer: fine)').matches){query.set('v','439');location.replace('lobby-view.html?'+query.toString()+location.hash);}
 })();

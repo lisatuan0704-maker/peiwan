@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=437"></script>
+<script src="lobby-ui/fixed-view.js?v=439"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=428"></script>
@@ -1789,11 +1789,11 @@ body.artBub.bub3s .npc .bub{
 <div id="intro"><div id="introCard">
   <div class="big"></div>
   <h2>歡迎光臨・小小酒館</h2>
-  <p>這裡是像素風的虛擬角色陪玩小酒館。找個店員陪你打遊戲、語音聊天——乾淨無擦邊、金流透明。</p>
+  <p>這裡是像素風的虛擬角色小酒館。找冒險者一起打遊戲、語音聊天——乾淨無擦邊、金流透明。</p>
   <div class="steps">
     <b>點地板</b>　讓小人走動<br>
     <b>雙擊小人</b>　看他的闆卡<br>
-    想被陪玩就按　<b>我要點單</b>
+    想找冒險者一起玩就按　<b>我要點單</b>
   </div>
   <button id="introGo">我要點單</button>
   <button id="introCard2">✦ 先做一張闆卡進來玩</button>
@@ -5170,6 +5170,9 @@ function tryServeNudge(staff){
   document.getElementById('introSkip').onclick=close;
   let seen=false; try{ seen=!!localStorage.getItem('tt_seen_intro'); }catch(e){}
   const portraitHome=()=>!!window.TTMobile||(window.innerWidth<=680 && window.innerHeight>window.innerWidth);   /* v432: 手機版沒有大廳場景，不顯示「點地板走動」的新手引導 */
+  /* v439: 已經有闆卡（例如剛做好）就不再顯示「先做一張闆卡」 */
+  let hasCard=false; try{ hasCard=!!localStorage.getItem('tt_me'); }catch(e){}
+  if(hasCard){ const b=document.getElementById('introCard2'); if(b) b.hidden=true; }
   if(!seen) setTimeout(()=>{ if(!portraitHome()) intro.classList.add('on'); },1000);
 })();
 
@@ -7757,7 +7760,7 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=430"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=439"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=427"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
