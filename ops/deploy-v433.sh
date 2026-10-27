@@ -1,0 +1,209 @@
+#!/bin/bash
+# 小小酒館後端 v433：Discord 機器人訊息的「陪玩」統一改為「冒險者」。
+# 在主機的 root 終端機執行。任何一步失敗都會停止；重啟後健康檢查失敗會自動還原舊版。
+set -euo pipefail
+R="${TT_ROOT:-}"
+TAG=20261027-v433
+UNIT=$R/etc/systemd/system/tinytavern-service.service
+say(){ printf '\n== %s\n' "$*"; }
+CUR=$(grep -o 'tinytavern-service:[A-Za-z0-9._-]*' "$UNIT" | head -1 | cut -d: -f2)
+SRC=$R/opt/tinytavern/releases/service-$CUR
+DST=$R/opt/tinytavern/releases/service-$TAG
+say "目前版本：$CUR"
+[ -d "$SRC" ] || { echo "找不到目前版本的資料夾 $SRC，停止。"; exit 1; }
+[ ! -e "$DST" ] || { echo "$DST 已經存在（可能已部署過），停止。"; exit 1; }
+say "核對主機上的程式是 v432"
+sha256sum -c - <<SUMS
+932af388cc469e7c4e0b6c9d80bbe1f6e307db575950e39b5f88b3cd602c09a0  $SRC/order-voice-bot/voice.cjs
+ce3fefd607472e0605e850c5caaf91cd920b362031936bb441faf8a248a3e79f  $SRC/order-voice-bot/order-notify.cjs
+143d9126da23a08c2894bb190f46e703b790910c367f3417e765e5b87e918efb  $SRC/order-voice-bot/staff-names.cjs
+SUMS
+say "建立新版本 $TAG"
+cp -a "$SRC" "$DST"
+base64 -d > "$DST/v433.tgz" <<'B64'
+H4sIAAAAAAAAA+xc63McVXbns/+KdtWWuttq9YxkYZsWLSGkMUwhS44km2IlrdKavqNp3NM9290j
+eRhNSsDi2GtYWAImEMJrQ7KA2RjYxI55bFW+7l+wHxM8kvWJfyHn3Ec/5mFLjoHdSlQuz/R9nHvu
+vefxO+feHj+wSTC04TslMrTmRzn6TS89HT5w//7y8HdsdJR+wl/H59HjI8OjDww/OHI8P5w/mj86
+8kB+ePTosZEHpPx95KHvXz2MrECSHgh8P7pTu7vV/4X+yfWQSGEUOKVIHjtU8r0wkkpBoxb5ZkB+
+XncCosiebxODFcqqaFScNnM/W8oPPbTSHD6ujeRbP8mJqrnThdnVmcLk9OqpBXM4f+RY/sgwbLSo
+bsKKl8vTTlhzrcasVSVhKxlLz9HaIQ/LUQ6TEc8WC08CuZFRT5Om5mZnC1OL8Dh64sHjx6Bk4XRh
+8glzJP/QcRAlb+xQue6VIsf3pA3LdeyirTi22nTKyuHitB6RMILnrS1ZVtWoEvibUiEI/ECRi7Nn
+J2eK06vTxYWpufnp1eI0jB+QqB54kmO3OqhaEZlD/VF8tXlIQuL+1tZhWJahyaGfWkPPwOqswvJo
+J3B12Ki+zseFhrP16hoJdCdcsMqk6EVkHUnpAdlwQhgDmiQPDw/3ZhSYLMzjGklskax6VPED5xli
+z5OQBBsWcmsinfjpLAmcskNs0zSjoE4GBny9ZjWqxItSNWXLDaFqMgisBnBIP4E3ujlTjh2q2C1+
+0l3irUcV6McLi3Y4wQtpQ78elNhapWqS5ikaAwPKklwjnu1467ImlyyvRFyX2PDd9j0ir+iOV3Lr
+NgkZO1E9hIXC7zA/sF2TtVrgb2RmlwxBNkjQUEqObY77usVbLmD1hL4ExSsTOi7gGZAVFdcUtzTD
+je+VnaBKudknZ4eVnluCe9u96sgxnQzKypznNlKzYOxa7v63T6UStOZQ7kXlYdYtK01nZs8W5osn
+i4W0QAnF8fUSGEm/inunjuGS9JQK2FicbvLENxR56CgaP9FbmBcWJ0+epGOnupT9oGCVKgpnh3Lg
+kU1pgUTKUpo3Tdf1pN+Kqoew5ofTIsmHH+zQpekzp2eKU5OLhdXTk/OLxani6cnZRVnsfx8tRbcR
+TUZ30GOQGlrPvz1sxp3isqG4aPzEsVHqDvuszNTjhekzMwXBla/7qEyzPsyv7tmk7HjEBtWJGjXi
+l6V0tYzWHaSXWqZluznaGlqKzdNKc1QbHklZJ95P7WMXqXSszp459SgXEsqL2AM05v0Y6miTcJWt
+iiUk34eD2clTqVWgO0t9SMe4vWWUtlRjiaSP8YgdxSGwpHjmOJ+Bl2HaE71G8/2WKmaUuw/oWy/B
+N2JPuWAuwGeMHUo5FLBEwWbgwDYo63XHBUnXAI/B/1WC0hWaSytqk5NaOiQ1HdsQCsrbqxqyauQ1
+y3X9TUPOy5pNvIaxQJlW0H1ucb+ptrQsCToUJzDMCfTot0W9rMrowgBIBrSOs6hXrZqCtlVJk3bu
+ha6qHlpJLY7thCWQzEVyPkI7AOZLLAUnxgrBywGmKBElt7R8Pp8fWj4/XF4+f7y8klvXZElO1StL
+y8t/fWT1b7YeHn9kRcXq5eWfDEOL0AUfouS1h0ATUwx4fgTWs0RNt0J1RCtVLM8jLuyQ2K+AlJya
+A4YYvnv+JmIC5pQ3K8Qz0WaBcXD1aYANi06VnPSDqhUp8jOVocUnZa0ZQdlPQTIMeTJ0rNyi5dSI
+I2sNYgWG7NVBQZySrFV9L6oY8siQ7aw7EWyx1Ug9VcDRph6rjlePSEf98IhB3UNLRduKLNAJxRYt
+xhJhxd/0zC60ljTnqqKlCig2iCkIzTbTG8hap5UeANHOGy/cunlTVjVKJdNeoXxwhZugD8aS3L7w
+6t5bH9/efkEGS/+073iK/O32s7KaYr9UIXYdHLTJRlzz/XMgK9xvxs0cLwoQ7MZ7h7Akw2LRnpCP
+HJEHxfOgfHv72b03Lnz31YtHjix78qASDzUh3/r6vfarL0rYnk5lELpKu2/9Yu+9V3Z//4v2Hz5p
+X7zW/odL33317J8+Uv74y/964+0/Xl5ePqL+6aJsyNleO6/9OzQGgtD99m+fa1/5Xfv1f+7VUR2U
+lz0cePvX0LR97WL7s6u3P35n790vdi7+YefmlfZzb7Y//PrWTeS4/c07t25c3vvHD/a2P4fa9rXP
+2i//660vPwSevt1+jvOQzJQxn51i91SgG2Owz6jPMhZvf3J594Obtz9+CTjYufIfO28+t3fl7xhP
+Oy9e2rv4OvDUfuHDmAgyFO8T4OC65VKBM5vy7o1PYdBaPai5BADYzvvPw2MZzAsJ4PH26x/D42YF
+zKnciimcIw0wo0knVq+Jbit62XEjcN3nzHEmcsIFpIZe8lZAPs6lxAyM2hMeVZSUmA4MsCcGOLtI
+pNxCE2TSNuSwEUakKoMNsWymnpoVGUCXKVfRNphMOmhmWEjAS8QjmOII1MXg+iUQ5ASoxSt7X74D
+m7Pz1Wu713//7fNf3rrx0s6l3+xc/ebb7V+D/BoQjgwqd9MAJods7+Mdal//PN5pJj7QbOftS7du
+bO9+emHnyrW4C9bCKIwuRxkTKBNUbr776i15MFNHmYL69u8+AMNA67mtv6P9iA04AAjaXZgJSmEf
+pgR9GOwXH8tLCKKnTxsapC4kGEijjR+Uv/vqYvvla7vP/kbUXGKNXr9OG52yoooe+ABUFD4NDgMz
+Bjh3jALBQVlqX7yw98rfy7C13CBOgfWHLbrXTaa2Dqihv7aNJrhuRYjvwACqh1iaplO11onRrAeu
+IVeiqBYauVzkeI3IAon29Ggz5/pra42hupOzwpBEIcsc5RAh1YZC4pJSROwheZBSZcs2hIum17z1
+iQ3zaP643GoZzZaqsfjIaGLIb8iLMIi0SEeR/vO61L72Mvzbe+HVvX/6LcCNyIlcYnROPrE6dPIw
+1w4bmBZTWSv5LoyXP//osYcenXoIF5eEJWA7SpQqob3z9tWdq+/vPnez/ct3bz//9c6Nq7c/AiP8
+Ii7v28+LFQbJv6sCgZ3dfe0zbvpS5o6NwLQELX3a+hlyv1qYUvvLm7ufXKaKBZOA4M61Q2OJryPT
+G1mjyMjYv/91PBcgtIEusqUJWrGC9CB3QPfcc4C9K5fb/3KZ6YwYo59CyYICAzExCbpCTNcEiXtV
+tzSLK7i0vg9+wWhS+9phwZj9kjqs12CXgqIwM/GMFZPqZLcqMxHb235r990PsVe6fVodsI6JA5u7
+rLYQj1sUsRpN11ojoLwdLlXWMirNN1Iv+dUcB7RhTh7sjCwG5VRhDHxhPAxhcjnp53VSJzk6EYhz
+/IBIp84sLEprRMKEBwmGQCiIrUuz6A+lMiG2VHJRVWhKKATrBsoTuQ2pQgKiJ7A78P0qCqiCe6w2
+Oah0ieWZwkAz8QXD7yGWdSHkV+TZk1NyJhioNadKLfy/3IJYoK5he+hfVVg+g1LMRnHzhceKC4uF
++QIL5FbnC391pghPSTqQBZjlwK8qrH/a9XCRR4MXIzJYfRTvVFRRAm8fkbNoOBdY9kpp0uXT+L5o
+2VAQ4g+y7gcN+OqXSvWa5ZUaGGmYGFLoCBbWA5jxqdB8iOYSNFKtRY3HeNlRLGphVLLUj+xKd7Yl
+ASpW2PBKUi3wSyQMaTr1kMQxEG5vYLIUsR5Ynu1Xz5wpTvPltTYtJ2JyoZdcC5YdUAztgswrqsYU
+UBUDYe4MNHqtHjYoepNcEklP+2v4NQoaOKwYF8XHzOZi06PRemRVHYP+ZroKnrFia6tJh8B0AhTp
+tYoVEjDfMt0bFuxnymHvSBBZjidnBWZqvoAZpPkChLRTxZni5GJxbjYtNqlBEg0SOpUt7cmQDT4V
+XKqsNtPTCEjV3yCTVJ5Cuq445VhIxVqKzq1WTz4GBmJ5orsq1pf2NuM6PfSsGlj4KE5R9OAbidN+
+OmJZQY8TrIHJdcBNWl4EULzTR9IMXhJLYhZPCwnEzktQEef8ELXguFhzOkVva2tpRUUSbHSsFoi+
+bo6nR04StXVVXVFXxtIs2gSbQtSY6cGAPNChZNP9AerT8UQSJM5t5zlZsI+ToERA3QMjB/GmkNdQ
+sgDrQHgPpjCQqK4CD3UvskE5xiS6y1Y5IGFFTzNIGy4AC8QUvE7QBWHaTkCvWNbfNBln63HRwEDc
+jhI4bHp1153IFhpUKVUDq/gUUHkQLcKn1rnsBhZoSXetgw2jk4nWWFqAQ4B6iT2AAbgUoRiJ6Q0M
+UJaGkkHGzbRpEzImsg5MILm6xy6OlXaomg7GD8wdMcfxcAjsk29TbZudW1w9OXdmFjSXqxJdDqby
+pCWYRC45sYEB8U2n2rHqYK6dK8rWlqjDVBiUjyQlMEfwhKx5Yoo7sopTj0/OzhZmVk8VF05NLk49
+LscciDmT0rmDaipnH3oyXR0YYA/rd5Yh1qhb3uNtSK2Kmt0EZoem9r0Vh7Nb0bX8Un9REvJKDWhi
+ATX+ZTJico4RdwhSKqdy/wurM4WTi3KfYQ5qcgWR1qHURwuAFhF2uFMh1WZa4dKaCZV3Ux9Kv5X4
+yJLrh2DN+pxjpQ+thOVlB1d0dcbNFG4e5OhCuBBGme96l2vL2P0fUCV/dI2kiJJLv9CI+yemYtjJ
+GQAc008Bwjg1dxYARiKs90FWuahmd6uG29JTdbVmjQRVJ8Q01GpykGH0O9NQW/ei7OBHp6jEMdgX
+Sh7GEZ4fSRVYUQg2iIdJQhjOltbAr6LHTgMOHn7ExOi8mE+2PImaTge6YsyhQQmQptGK45W5d4aY
+MAylzYrjEskvlzFGzDjmDrQ0sU8jnPLqzNhOCGt8F2CR1u9CAgooJYYIWN0+IEEnkRQw6Ky6Czzo
+bK518mDwOSYsgK2hdi1WHzoD4fQ7Cd7F9f85ucG/GN/HjnWnZuYWIN4tnDq9+NT36/wOHYh9JgFy
+38R3vYZoOp6V4Pwe2OYjMa5b3M2lEjvzpEScWlTwrDU3dQMDfGsIDgMc65rrl85l3SpudMD6TbDQ
+ROWi/XDKt2bCrnOkIYJpliJ43AorihxWrJEHj8mqziYM0xiU2VoMsWa2IdJQqRsbuu2s49m+XCHn
+hY9iw1QtxzV7nGxmRBO8YpJ1EFrUFbgxm8CII1mMl7zIlGnDVc6dPEarsqlskx447Ts/2XH2ljkc
+u/75zsVXdj+53OOIbNnb235z5+r74mgum8A8+AlnJqUJ7CXpTpWemd26sX37367v/uoj4HP300vt
+b16IW7ATsJ1ffQgs8wMusWiYXzTlrtncjYJINvJrQKcZzJuMpmgKw/cm5NtfX2rf+OL2F3+7c+XN
+9rW3gNjOezeghKWY5czG4dGATvPsXazwDWRNUklz817Hx7nRybS/eXH3tc/iGSZzE+lRfngrDh9Z
+wrh96aVbN19jWdudt59vX3hp5+VX9i68ClLBZtaxZDAKa8aSq9Csx4GjOsaMF1sOlk3tNihYqXSp
+gcwVfZWee2jYiK8tprB45RjmsDhiQAXo8BLVbrJIRwOCcYZxZFRF20XJmcJ4MRME0hpa66RoG/is
+O3arxX0L3pnI9Eig9fQpbvzlidiEGTAZ4FTWCOJd3hhEfbowUzxbmH9q9eRkcQaBJ7PmaQzAx9lX
+oJ+KVMBIOx5M/aQfmMytmuOZVP1QVhhi+8sb9zh0oTnPvDF8gmYYx7rHmozM1LBdS5/tws93nqDn
+yPtIXtHDRDGT/Rp0YcKFe6NFjEiHLU8zBzLrAFoFp5Rhk+et0KGM381JcRIOCSf0JeixItwVGwcQ
+88bo0WFDsihE5slrm+avGpKyRsqY948qTkijvXWiSvC14tg24HJr3XI8qe5Fjis56Hkakg/hqN47
+GZkJRREGJfEqj0sfzspF+saxmg1IKYZAGiiKST5XrO5hITTxrdsfP26l95Tva+R6t8D1ewz0xlrd
+MQJmcDnNiWbLaMb0WYJDFcBPbNm+kd++MouMoQ7kFw+FYhkCQXp2WLXOK/0ljaOeLFrM5OxpOCGz
+EEswbXZKXIe8Yz+RqRHSnlirra1Y03ulaLoOURgHyWU1I7ufic4bWROgJUO2surP9B4UnUjTTGCY
+PfA9MANWOcJgmYbeJb8KQRiec1mlEqnBPvGw2o9z3hEwIg3nJXZPLZS4EaGLLWzD4T8r45AW4+9L
+Sr9HAeXAX1wp3YcPo31hV5R0V8kvCyIdCV5WGlsB7reyEoTiEoIPsInU7TVw8xvCbeDpKpMm3yPc
+fQhhorK06UDXjAgBZ3QpktkmJis0+96y/d9J1cTSiiHWY6yn3GbiO2GZ+7iVlOHG81Px2NsViEru
+C0Z7X0bG2+2Pzc0/JaA+7MVpYNZh9x/BZUiPFk7OzRek03MLiwaqqFUHmQD4XpIoDOSabUkQISMU
+CmswE5IrBZY4neqhGfEZ6v014Iil+VqxAgqoe3tqaqyELxNbzq6MxJcLugNOfmN5RIv9qZGKgnv7
+wJSYgdfruCwBOFxNcPi+Mx/JYTNH4Xc7ZoaRBa7o2pTEByRMiYHw1RK6IzT7sR/YjucXGZk+AFIa
++6HxTSp8u3eQk93g2KRiWhozgaDVnu85Jctl+WmOebmFq9XXXCcEW7UuuY53LtQkhr2xgL9JZLGr
+7nW810L1UE9smIvHxdH+bjpw+8O69PdlW1u8RWzzMgdAzfuyZncChgdLAmaCUZGwhJ1+jEl9F+zB
+1q3MLp0WMi45VbDrDjR0G5q0Vo/E7sRRocSj6JChGthGhDtx7SZ8+JsCoBwEvPVAbM1+1pNDt36m
+MyF7b1b0YECxEw6m0EQCGukMOmJJvGDDEch+ErJ3QxsxfMuuLcbuHGuo0BWcDr3hf7BUp5ZFLRw9
+aQfJxu4/eO+TUuJDy/Q2bSaNRI+sSIRq5oHfBsdcnB7jztn2QVTxJAxf88T/LZudRonVulPsn+xV
+NurPrmOStOK60Z234rz3zlZ1jNI3a8W/YeKKA+HYbfYhcZ/SWGP7PZVIBUlcU6lgNVDn047h4Cqd
+onwvKn2voR/VzlbZ8SzXbXTcLnMJMB6PhZcL2KXPqo8vg+jkfM0PIlD87quMWsZZaYkn0NJ6qAkU
+BlR/7Hfh/y/++R2//8CemUDfr5+BuPPvPwwPHz1+tOP3Hx48dnz0/3//4Yf4y/7+Aw3RR04YHMGm
+FTWUIp+ioKrlgX0O5DBO/3CbotHjDLx6gc3YxW8dSS7C4yZZq/j+OenM/IyEdieLrFhjiXgbksJf
+MZ5bLJ58avXJwqOPz809sQrdVC2+kEH7UMxWkvC+h97vlyX298MSYpD5gpn7GbsZv5xbzinctS3j
+7fgt/mDVavRZXc5ZNWc5x+cVQge7OXxMGxlpLeeS96tXh1aaI3ltOPP7GCXXqZnKhuaZJ/Jq/KrR
+xsSEnL21Xkf1GMKP4TL+3+tF1kcUkR7Zwrvzam7d0eRH/nv7cuZtVi+ea7kamUo11DBxgrfGYXzu
+1m36hiqWKeyFdmimbm2Jq+V4vMvzKebc2tOkFNG77wUvQhei3Ovbrfx11vj1Vvo6a/x0T6+zLvp4
+PRVwDXuZ67w5vnSehpLaeZ2+F7KixvGCItZhoqZTVuibDjUd2BiEhaYvTdV0HIYiOWhEWRgDb5Vc
+4+eQRfHFtX2aQkhux29WfBP3XPmf9o61uYnr+lfETIe7si8iNrZp1t04xlBKSnAKpgzjapzVw1hY
+1mokucYomhGhDg7GhXRMElLajBtaCKRAmj6Iw8B/wUi2P6U/oedx7+5dacGeDpN80R1Glu77ce55
+3XMOXgKhDz3Jui2j6pCFbi4HR2Jvim6qZ5RRZYFuL3H9UEuO77geZHkqXnG2KELaJbRLKjvjyvBC
+dHU1rjxofvVk69JHW6vLXV3fP/7s2NhPRLc+ZS/hzqDRMZw1DrVerz/74Bq63Txcbjz6ZuPm0lb9
+RqO+FEcvNL/HR99s3vi8efPe87WVjb88pk7fVZP3Enm3XOmX/dDZu6FGC3+FdjCNxrdfUAtzDmkv
+VximeaAbfmhGseafsaqXSHmF2TJvVuPavc1/Lm7VL8TMTqiCauVvmTkD8olSY8OpGEXQVePSGjsZ
+qQpwVSzN8gMjJjmmht8mWNrW5frmqn7IXnwIi2w8uRJ79sEfYo21T7au/wd+Na4+XK9fgfE377y/
+Xl9uXvkw1tX17OZKTL3lr/wbTqirS/LuND9E3zLeL0GjJMMyGyDtknLNMhyC1i9+1/jdPxr1x/77
+Ovq6scOgeBPRw28K//387o3Ys/oK/4uhq+baGreSm/eWsBmcO40cVEMfZ4IqZfYAv+PszJ/NTOCT
+P9IHu1p0S8DkjguNkUSS3Q1qwU2ARtmKgxFLcpkDGN1EcBZZQbSDLxwMOsutLqojUQAGuK9Al2OA
+T3rxZQCNgNBt8TDoJ1mnLVAbvfLg+XefIjxpEwfZWFjmvYuLAHqMwBAAfzCpK5ca9z/zrQvM2bWS
+IDP0hAxi0cTJn5Teu3gIAl961saILhyuJztcidN4vnNb8/6/QtDp15MU1MXsEJpt3Pm68dHjVnhX
+F5Q6jrrIbfe4tdelenNhSd9gvbGwgwzLaHbxZAG2FSBa5cShqe9dfcDzyF0KT3xbeGYDFDbXMIA5
+BMDNjx8qJ7z/E2CTLNIECJ10/KPsyYeMsFXNpKSi9CdLeTmZBYn0yEwx79A3kOdQCnIsJKa1sENW
+Hpqk3PT022UjEhY5YdEbQcB6cACWYJCI4FSRnJHS8DNp0MqO0nTZyeA71qTFJlgkmP26Z68XLAp2
+hNz2nPHkIGrU0d2K4wZJEP6KxWyGf2G/7PrVGo4DQXp00pqZ/2VWu/lo9yyfGM3mMo5SVOoJlbPp
+2RJNBkVKdDfkHhJeAZgVQSQalo602jItNFUglllS/hpRbSCDX2XKp4CYW0LNbkL4j6FChJ0l3NYp
+ASsy5xb2umlyv8EpUafEPf00Hj0z33MswMtu4kzeS7n5CfZKdBMarvEw1eMzaTOqwcRqCkG2bDGw
+0hmr6M7nPVe/HaFaDA/KrVTQAtZ5bVB9+1mf/tbd3WIPW1JaGh9iDQiT1ZlsZcrL2AKVzcBMZV00
+q7arQpnm7RmDHYfrDDxvXkkBe8+WvYKoyZSXmbffOjF6LMHngJdEz1aWc2cKbt4eTsGlOEHfE8j9
+ebMVq4fscELuM6WEN60PSgXmCIp8rWpf7+vxKq4el+P0Yjg5hDX6xS+hcM/J2kfSz3Q2l7fUKZcS
+OGtgYBOkCpqgpyy6iHCIvTQhPpUa10de9h3gbXPlrAUIFn2+KmNqAfBbYiXmhlk/Vmuf8RtOP3Rb
+3Vl/OIUuSx9hTzyqb0YxLTjgF2Nj70yIbl9nr7la/962GDv4+REAV5ydKVqBehWxgTqVQcIMwdEY
+d5xs4S1CI37gi10KewRm0AoWq6hFqjlcuzyVm6wE1zvUKyYQG8lVlEQ9lkbxEoKM6aGSk6475Mdc
+uCnQfUaLkCwiFvGREna+Mgc32OiVJ1I5p24FIcpEGhZBYYoSlZJbKLPFnwU4ynkDPob8qFJ21dXa
+OOlnKq5w0BgE8XrlHAqJMzk400yLItWciTetfVLxugdyREi1qtCsl2A0GQ8NFr0QpZKuokBue9MS
+49O1mkeH4MqbHgqD1olDx8aEHc5TmlKjvY/NIoDz0PHjoxgjTEOwMv3WasaA3PgokPcE4KM077Rg
+ZtNbHORaAogD8yO0YOGz6Cjx8vM8Pw/sCaivQR69wnAm46BnAJBrQ27yKM8kOyqio45hhmTHI9FX
+BJl8KgZF0rdG9+BXzMH9ptAQuiYyepwZol+p2VQqnw3IF2n+01MukmgsKSsgZ+1MNhOzygAhcJ/V
+W2OcRuZrVpwtT1E0LloaPiZ4+Djt5TLqwhM2wA/adiB0sJ24qxNuJoM297RZEjmbyEM+ik7yx3zI
+UExdREVyVhIhpg/xBGAczWwQglGzmJyMmgbAkpxQl0S/E0Qqo1v5N/28IAN2q6Nu5tSq/21Rkr2S
+MV6u/32tZ6Cnt1X/29ffif/7g6QI/e++XjuGSgBSlmwuXvL1vFurDzZurWE8Cy34Nq4tg4z5/FG9
+8WRpY+VOY+2TxsJtzgShevP63e8fX9149Hf4bK5eBEF8vf4+jqFihX2x+vzpnzau34Aem58+2Fy8
+zC0bT+9tLNxGofzW7cbyKjQGiXDGg78jLojIz+p/g54watjVu42bd3hSKBpf/SOI8OEpUJSelW/Z
+8QAHZ0x/4PTEyJGDgRozmz0PxFLsGT13um8gez5fLByvDPRNnTwy9zpGNrt+V0gq3D/S99uD02fK
+pZ7z6flTqWkoxDhkWHg+NZn6VfrnA28NTB45PnD69OEpjN2zepFeBHnUo4cOD4+cbhs1jYvyh4EF
+Nx5dDH7SFvjj0EaojqXYunF34/dfilB8HsGuE5FFkAn/Qpk4O1PsDasuSFuZ5kgfASXD8LkmEePd
+pPC5mo83sgZ1nLSSO2cGbWFttwrC4gcZ4T0ah7qJincUw7KN4PtjPPnee5AXCpjZ7rVDWAvnW/bD
+Q1rhMKBUIz5Ef0DuZwWxVZA5oG/tq5fhxtTxEH6O55K2zwHGkcWJoEChzmTbbCXvkeQV/2jk6GX4
+n6yDXgER2Ab/9/ftM97/+hH/D/Tt29/B/z9EegH+91E+ad7W6xeeP13duP81UANTI8e4twXlKuRO
+KBfQ7+b9ywHiJSO2cFx5zELlXBkEuNYyztyrphd/YQD59tu1s4e/CKuFUEP/P0PAJqSfE/nsGTc9
+H6POyAIZ0AGIX0V8Hc0V9nDwKyoVxDUD5uRVJKBbkCzasIxG8XFJOD4+uF11IgFxDnm5k9pvjwa1
+t50MUVisj+Rn+96ZWO20Oq1PL3PbqTQ/fkgB7EQskvQq0rHTbVO94U6ob8EMMtls8VBku7I1rs9H
+E99kXI4raox7mvRHflkvAbGQ4xj8s+bDk+9CwS5zBFLkToHSXTqrRD2MqseakHyGoEtIUt8oCGNo
+PuyInrYk5IHRMUf0tiUhR4ahYF9bgoKTJ6Ckry0JSQHaHdHfloQ8NnrKYTc7lXzCT06O40myCytr
+bTOaMGWcahCclUN5oagq1DvIRMGwlOqRrOOyzRj8LXHvKWCfbIl3z5kR3ttcEPg+2LhsaVqBB0EU
+tTeEPU47kJSBa7DtQ0hSqolzz0oTYcPGdPd3DXA8NrT4pJwBlRVsAKEOp0paL9s/XepKmWEFudUa
+ryjI8c0ZgyzaYomfKg/1b/IsNufdP1ujM1GlFU+SsSGW01Gx8mAmXpMhY01zFsHsla7KqbIRYFDJ
+whCfykKEc2MYIpx4SIDAoao2ALcPs9F9X81uyzMN8aFRTYbs+s3BEH4G2pJAnzLDeDm0k5mZYAdo
+9eQ4qxbvGxZjx/vbkqjRHrAWbsfh/GBZZAVtw900ou/h0vD1yMaJAZDU4gkdbc+4E6HIw06LDn4c
+5843LRlgOItWpCLWO72+m3IbtiFjTI3RrF0wQGAmqsWNuBY8YnOwJDJoz7poaem3CzczXONf1HNA
+AjV+U33aMdGNVbUdyz4MExg9DFEBY8nh0pawtCoENAwIdxSWMQ23L5fPAyGvYJhrEYHU20ICGPee
+39hiGbfixkA8IT8m7MTA84XsHIcd9S2hEKeXCamH+AafbVAsitZzmXxJq5GeARMzjtYiV+nmCCRC
+gCnViznIlRcuN259GevByLogNQMhocdyG7Y2wGq2InbSjyUrpK9ltQOTIMnv+LZ+xa8ZBzCTUM+1
+xjEQF7J7966oMsXY7N4d2TD84P7CTjSM7oS/MAVlgASjcz64H5s176RO6qRO6qRO6qRO6qRO6qRO
+eqXpf1SQxlAAeAAA
+B64
+tar xzf "$DST/v433.tgz" -C "$DST" && rm "$DST/v433.tgz"
+sha256sum -c - <<SUMS
+0aa1315dab8ce714cfb3a3ca9c31e19a83a8aaefe59283791ac26abe1620d94f  $DST/order-voice-bot/voice.cjs
+272a25ebc2ce7ffd8adb8b908e6736887728681f93e6b0f370f813d95287eaab  $DST/order-voice-bot/order-notify.cjs
+00dda6ec3627a6706624b9a3a41b35d80277b38e92cd4cc0f8396d6e4a1fa137  $DST/order-voice-bot/staff-names.cjs
+e3fd2791325af1b507433efd7623df9e4fe73703a7bba33dd9267c3b73bfe424  $DST/order-voice-bot/staff-names.test.cjs
+SUMS
+if [ -n "$R" ]; then echo "TEST_ROOT: 檔案準備完成"; exit 0; fi
+say "建置 docker 映像（約 1～3 分鐘）"
+cd "$DST"
+docker build -t tinytavern-service:$TAG . > build.log 2>&1 || { tail -20 build.log; echo "建置失敗，正式服務沒有變動。"; exit 1; }
+for f in order-voice-bot/voice.cjs order-voice-bot/order-notify.cjs order-voice-bot/staff-names.cjs; do docker run --rm --network none --entrypoint node tinytavern-service:$TAG --check $f; done
+docker run --rm --network none --entrypoint node tinytavern-service:$TAG --test order-voice-bot/party.test.cjs order-voice-bot/party-flow.test.cjs order-voice-bot/voice-open.test.cjs order-voice-bot/staff-names.test.cjs > test.log 2>&1 || { tail -20 test.log; echo "測試失敗，正式服務沒有變動。"; exit 1; }
+cp -p "$UNIT" "$UNIT.before-v433"
+rollback(){ say "健康檢查失敗，還原舊版"; cp -p "$UNIT.before-v433" "$UNIT"; systemctl daemon-reload; systemctl restart tinytavern-service; echo "已還原為 $CUR。"; exit 1; }
+say "切換到新版本並重啟"
+sed -i "s/tinytavern-service:$CUR/tinytavern-service:$TAG/" "$UNIT"
+systemctl daemon-reload
+systemctl restart tinytavern-service
+for i in $(seq 1 30); do
+  sleep 2
+  systemctl is-active --quiet tinytavern-service || continue
+  docker logs --since 2m tinytavern-service 2>&1 | grep -q '^ORDER_NOTIFY_READY$' || continue
+  a=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8081/v1/voice/session || true)
+  b=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8081/v1/rooms/session || true)
+  if [ "$a" = 401 ] && [ "$b" = 401 ]; then say "V433_DEPLOYED_AND_HEALTHY"; exit 0; fi
+done
+docker logs --since 3m tinytavern-service 2>&1 | tail -20
+rollback
