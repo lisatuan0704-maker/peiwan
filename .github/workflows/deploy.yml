@@ -27,7 +27,7 @@ jobs:
             --exclude '.git' --exclude '.github' --exclude '.gitattributes' --exclude '_site' \
             --exclude '*.md' \
             --exclude 'security/' --exclude 'tests/' --exclude 'scripts/' --exclude 'docs/' \
-            --exclude 'test-inventory.html' --exclude 'test-inventory.js'
+            --exclude 'test-inventory.html' --exclude 'test-inventory.js' --exclude 'ops/'
           test -f _site/index.html && test -f _site/lobby.html && test -f _site/CNAME
       - uses: actions/upload-pages-artifact@v3
         with:
