@@ -3,7 +3,7 @@
 const SEASONS={
  283:{label:'中華小惡魔／心動情人',ids:['season283_devil','season283_valentine'],price:300,file:'img/season-v283/products.json?v=284',
   check(p){if(!/^https:\/\/tinytavern\.tw\/img\/season-v283\/(devil|valentine)\.png$/.test(p.img))throw Error('展示圖不符');if(Object.keys(p.parts||{}).length!==9)throw Error('部件不完整');for(const [slot,part] of Object.entries(p.parts)){if(!/^(front|back|eye|brow|cloth|acc[1-4])$/.test(slot)||!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(part.d)||part.d.length>150000||part.x!==0||part.y!==0)throw Error('部件格式不符');}}},
- 292:{label:'喵頻連線',ids:['season292_meow'],price:400,file:'img/season-v292/products.json?v=442',
+ 292:{label:'喵頻連線',ids:['season292_meow'],price:400,file:'img/season-v292/products.json?v=443',
   check(p){const url=/^https:\/\/tinytavern\.tw\/img\/season-v292\/meow\/[^"<>\\]+\.png$/;const parts=Object.entries(p.parts||{});if(parts.length!==13)throw Error('部件不完整');for(const [slot,part] of parts){if(!/^(front|back|eye|brow|cloth|acc[1-8])$/.test(slot)||!url.test(part.d)||part.x!==0||part.y!==0)throw Error('部件格式不符');}}},
  291:{label:'熊熊偵探／龐克搖滾狼',ids:['season291_bear','season291_wolf'],price:399,file:'img/season-v291/products.json?v=400',
   check(p,id){const dir=id==='season291_bear'?'bear':'wolf',url=new RegExp('^https://tinytavern\\.tw/img/season-v291/'+dir+'/[^"<>\\\\]+\\.png$');const parts=Object.entries(p.parts||{});if(parts.length<10||parts.length>14)throw Error('部件不完整');for(const [slot,part] of parts){if(!/^(front|back|eye|brow|cloth|acc[1-8])$/.test(slot)||!url.test(part.d)||part.x!==0||part.y!==0||(part.highlight&&!url.test(part.highlight.d)))throw Error('部件格式不符');}}}

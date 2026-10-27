@@ -123,7 +123,8 @@
   }
   const saleGroup=slot=>['front','back'].includes(slot)?'hair':['eye','brow'].includes(slot)?'face':slot==='cloth'?'cloth':/^acc\d*$/.test(slot)?slot:null;
   const saleKind=g=>['hair','face','cloth'].includes(g)?g:'acc';
-  function partPrice(c,g,grp){const k=wearKinds[grp]||saleKind(g),v=c?.partPrices?.[k]??partPricing?.[k];return Number.isSafeInteger(v)&&v>0?v:null;}
+  function partPrice(c,g,grp){const k=wearKinds[grp]||saleKind(g),v=c?.partPrices?.[g]??c?.partPrices?.[k]??partPricing?.[k];   // v443 單一配件可另訂價（有特效的部件 +30），鍵名 accN 與資料庫規則相同
+  return Number.isSafeInteger(v)&&v>0?v:null;}
   function withPartSale(o,c,own){
     if(o.drink||o.pet||o.type!=='時裝'||o.id==='cloth0'||o.retired)return o;
     const buyable=o.sale&&!o.previewOnly;
@@ -135,7 +136,7 @@
   function catalog(){
     const shopCfg=window.__shopCfg||{},cfg={...shopCfg},own=window.__owned||{},now=Date.now();
     // v399：當季草稿保留原圖部件；店長上架後（shopConfig 有同編號且售價有效）才改用店長設定的售價與上架狀態。
-    for(const [id,d] of Object.entries(window.TTSeasonDrafts||{})){const live=shopCfg[id];cfg[id]=live&&live.custom&&Number.isSafeInteger(live.price)&&live.price>0?{...d,price:live.price,active:live.active,start:live.start,end:live.end,img:live.img||d.img,partPrices:live.partPrices,previewOnly:false}:d;}
+    for(const [id,d] of Object.entries(window.TTSeasonDrafts||{})){const live=shopCfg[id];cfg[id]=live&&live.custom&&Number.isSafeInteger(live.price)&&live.price>0?{...d,price:live.price,active:live.active,start:live.start,end:live.end,img:live.img||d.img,partPrices:(d.partPrices||live.partPrices)?{...(d.partPrices||{}),...(live.partPrices||{})}:undefined,previewOnly:false}:d;}
     const base=(window.__outfitList?.()||[]).filter(o=>!window.TTSeasonDrafts?.[o.id]);
     const ids=new Set(base.map(o=>o.id));
     const pets=Object.keys(cfg).filter(id=>cfg[id]?.custom&&['寵物','其他'].includes(cfg[id]?.type)&&!ids.has(id)).map(id=>({id}));

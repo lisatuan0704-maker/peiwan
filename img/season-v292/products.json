@@ -140,6 +140,13 @@
      "independent": false,
      "defaultEquipped": true
     }
+   },
+   "partPrices": {
+    "acc2": 60,
+    "acc3": 60,
+    "acc4": 60,
+    "acc6": 60,
+    "acc7": 60
    }
   }
  }

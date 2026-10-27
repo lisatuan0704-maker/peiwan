@@ -1,6 +1,6 @@
 /* v441 喵頻連線：繪師原圖 13 張（窄裙套裝、外套分開）。售價未定，僅展示與試穿；店長上架後才開賣。 */
 (()=>{const D='img/season-v292/meow/';
-window.TTSeasonDrafts=Object.assign(window.TTSeasonDrafts||{},{"season292_meow":{"name":"喵頻連線","price":null,"previewOnly":true,"hideUntilLive":true,"seasonFeatured":292,"highlightHair":false,"doll":{"hair":2},"fx":"meow","parts":{
+window.TTSeasonDrafts=Object.assign(window.TTSeasonDrafts||{},{"season292_meow":{"name":"喵頻連線","price":null,"previewOnly":true,"hideUntilLive":true,"seasonFeatured":292,"highlightHair":false,"doll":{"hair":2},"fx":"meow","partPrices":{"acc2":60,"acc3":60,"acc4":60,"acc6":60,"acc7":60},"parts":{
  "front":{"n":"旋翹碎瀏海","d":D+"8.科技前髮(灰階).png","x":0,"y":0,"g":1},
  "back":{"n":"輕捲高馬尾","d":D+"0.科技後髮(灰階).png","x":0,"y":0,"g":1},
  "eye":{"n":"異色訊號眼","d":D+"3.科技眼睛.png","x":0,"y":0,"g":0},

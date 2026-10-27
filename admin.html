@@ -18,7 +18,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="tavern-ui/season-v291.js?v=441"></script><script src="tavern-ui/season-v292.js?v=441"></script><script src="tavern-ui/outfit-splits.js?v=441"></script>
+<script src="tavern-ui/season-v291.js?v=441"></script><script src="tavern-ui/season-v292.js?v=443"></script><script src="tavern-ui/outfit-splits.js?v=441"></script>
 <script src="js/tt-seats.js?v=2"></script><script src="lobby-ui/seats.js?v=361"></script>
 <style>
 :root{
@@ -880,12 +880,13 @@ function partUnitsHtml(id,type){
   if(!keys.length) return '<div style="margin-top:14px;border-top:2px dashed #E4D5F0;padding-top:12px;font-size:12.5px;color:var(--ink-soft)">這套沒有拆件資料（初始套裝由闆卡工房部件組成）。</div>';
   const units=[['hair','頭髮（前髮＋後髮）',['back','front']],['face','臉（眼睛＋眉毛）',['eye','face','brow']],['cloth','衣服',['cloth']]];
   keys.filter(k=>/^acc\d*$/.test(k)).sort((a,b)=>(+a.slice(3)||0)-(+b.slice(3)||0)).forEach(k=>units.push([({bottom:'bottom',outer:'outer',glove:'glove'})[parts[k].group]||'acc',parts[k].n||'配件',[k],k]));
-  const price=kind=>{const v=(c.partPrices&&c.partPrices[kind]!=null)?c.partPrices[kind]:adminPartPricing[kind];return Number.isSafeInteger(v)&&v>0?v:null;};
+  const draftPP=(window.TTSeasonDrafts&&window.TTSeasonDrafts[id]&&window.TTSeasonDrafts[id].partPrices)||{},pp=Object.assign({},draftPP,c.partPrices||{});
+  const price=(kind,accKey)=>{const v=(accKey&&pp[accKey]!=null)?pp[accKey]:(pp[kind]!=null)?pp[kind]:adminPartPricing[kind];return Number.isSafeInteger(v)&&v>0?v:null;};
   const cells=units.map(([kind,label,slots,accKey])=>{
     const have=slots.filter(sl=>parts[sl]);if(!have.length) return '';
     const layers=have.map(sl=>'<img src="'+esc(parts[sl].d)+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;object-fit:contain">').join('');
     const names=have.map(sl=>esc(parts[sl].n||sl)).join('＋');
-    const pr=price(kind);
+    const pr=price(kind,accKey);
     return '<div style="width:132px;border:2px solid #E8DDF3;border-radius:12px;background:#fff;padding:8px;text-align:center">'
       +'<div style="position:relative;width:100%;aspect-ratio:1;background:#F7F2FB;border-radius:8px;overflow:hidden">'+layers+'</div>'
       +'<div style="font-size:12px;font-weight:700;margin-top:6px;color:#5A4880">'+(accKey?esc(label):label)+'</div>'
@@ -2775,7 +2776,7 @@ body.dark #qnavPop button{color:#D8CBEE}
     btn.style.display=(m&&m.style.display!=='none'&&m.offsetParent!==null)?'':'none'; },1200);
 })();
 </script>
-<script src="season-shop-import.js?v=442"></script>
+<script src="season-shop-import.js?v=443"></script>
 <script src="lobby-ui/account-review.js?v=437"></script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support-admin.mjs?v=427"></script></body>

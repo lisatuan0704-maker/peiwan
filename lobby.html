@@ -3042,12 +3042,33 @@ function setFrame(a,p){
       if(a._hairCache.size>=48)a._hairCache.delete(a._hairCache.keys().next().value);
       a._hairCache.set(key,f);
     }
-  }else if(blink){drawDollTo(a.cv,{...a.b.doll,_blink:true},p);}
+  }else if(blink){f=a._blinkCv||(a._blinkCv=document.createElement('canvas'));f.width=f.height=64;drawDollTo(f,{...a.b.doll,_blink:true},p);}   /* v443 眨眼也畫在暫存畫布，時裝特效才有底圖 */
   else f=a.frames[p];
   a.frame=p;a._hairKey=key;
   if(a.cv.dataset)a.cv.dataset.hairFrame=motion?motion.mode+':'+motion.phase:'off';
-  if(f){const g=a.cv.getContext('2d');g.imageSmoothingEnabled=false;g.clearRect(0,0,64,64);g.drawImage(f,0,0);}
+  if(f){a._fxBase=f;const g=a.cv.getContext('2d');g.imageSmoothingEnabled=false;g.clearRect(0,0,64,64);g.drawImage(f,0,0);}
 }
+/* v443 時裝特效（tavern-ui/outfit-fx.js）：穿著綁定部件的角色每幀在自己的 64px 畫布上疊特效，所有人都看得到。
+   約 30fps；系統減少動態、輕量特效模式、角色不在畫面上時不播。 */
+(function(){
+  let last=0;
+  function fxTick(now){
+    requestAnimationFrame(fxTick);
+    if(now-last<33||document.hidden||!window.TTOutfitFx||typeof agents==='undefined')return;last=now;
+    const off=_hairMotionPreference.matches||document.body.classList.contains('liteFX');
+    agents.forEach(a=>{
+      if(!a||!a.cv||!a.b)return;
+      const dk=a.b.doll;if(a._fxDoll!==dk){a._fxDoll=dk;a._fx=window.TTOutfitFx.active(dk);}
+      const has=a._fx&&a._fx.length;
+      if(!has){if(a._fxDrawn&&a._fxBase){const g=a.cv.getContext('2d');g.clearRect(0,0,64,64);g.drawImage(a._fxBase,0,0);}a._fxDrawn=false;return;}
+      if(a._renderVisible===false||!a._fxBase)return;
+      const g=a.cv.getContext('2d');g.imageSmoothingEnabled=false;g.clearRect(0,0,64,64);
+      if(off){g.drawImage(a._fxBase,0,0);a._fxDrawn=false;return;}
+      try{g.drawImage(window.TTOutfitFx.render(a._fxBase,now,a._fx),0,0);a._fxDrawn=true;}catch(e){g.drawImage(a._fxBase,0,0);}
+    });
+  }
+  requestAnimationFrame(fxTick);
+})();
 function pickTarget(a){
   const far=Math.random()<.25;
   const r=far?0.4:0.14;
@@ -7741,7 +7762,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui/season-v292.js?v=441"></script>
+<script src="tavern-ui/season-v292.js?v=443"></script>
 <script src="tavern-ui/outfit-splits.js?v=441"></script>
 <script src="tavern-ui/outfit-fx.js?v=443"></script>
 <script src="tavern-ui-bridge.js?v=443"></script>
