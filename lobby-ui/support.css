@@ -14,3 +14,8 @@ dialog.tt-support::backdrop{background:#201a416b}
 @media(max-width:500px){.tt-support header{padding:20px}.tt-support .support-body{padding:16px 20px}.tt-support h1{font-size:24px}}
 @media(min-width:501px){.tt-support header{padding:16px 26px 12px}.tt-support .support-body{padding:14px 26px 18px}.tt-support .support-steps{margin-bottom:10px}.tt-support form{display:grid;grid-template-columns:1fr 1fr;column-gap:14px}.tt-support form[hidden]{display:none}.tt-support label{margin-top:8px}.tt-support label[for=supportCategory]{grid-column:1;grid-row:1}.tt-support #supportCategory{grid-column:1;grid-row:2}.tt-support label[for=supportOrder]{grid-column:2;grid-row:1}.tt-support #supportOrder{grid-column:2;grid-row:2}.tt-support label[for=supportSubject],.tt-support #supportSubject,.tt-support label[for=supportText],.tt-support #supportText,.tt-support form p,.tt-support form button{grid-column:1/-1}.tt-support textarea{min-height:105px}.tt-support input,.tt-support select{padding:9px 11px}}
 .tt-support button[hidden]{display:none}
+body.dark #tab10 .card h2{color:#f0eafb}
+body.dark .support-admin-ticket{background:#2a2342;border-color:#75658f;color:#f0eafb}
+body.dark .support-admin-ticket h3{color:#f0eafb}
+body.dark .support-admin-ticket small{color:#c7badc}
+body.dark .support-admin-ticket .support-reply{background:#383352;color:#f0eafb}
