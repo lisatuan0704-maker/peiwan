@@ -5,7 +5,7 @@
 
 ## v445 VIP 3 專屬時裝二選一（喵頻連線／疾風喵行）
 使用者：兩套改為 VIP 3 獎勵；達到 VIP 3 時問要選哪一套（二擇一，免費）；另一套只有 VIP 3 在商城看得到，整套 500、不拆賣；VIP 3 系列要有動態預覽。
-後端（order-voice-bot/vip-outfit.cjs，路由 /v1/voice/vip-outfit，需另行部署 20261028-v445）：Firebase 登入本人＋secureV1 綁定；伺服器以 clientOrders（myKey＝本人、confirmed/done、topup 或非錢包付款，排除 testOnly，與網站 vipSpent 相同）重新計算累積支持，滿 15000 才可領；owned/<key> transaction 寫入 vip3Outfit {id,at} 與該套 {vip:3,at,name}，每張闆卡只能領一次、同時送出兩個請求只會成立一套。body {} 回傳狀態。測試 vip-outfit.test.cjs 5 項、vip-outfit.emu.test.cjs（真實模擬器、併發）2 項。
+後端（order-voice-bot/vip-outfit.cjs，路由 /v1/voice/vip-outfit；secure-social-v295/server.cjs 路由白名單同步加入。已於 20261028-v445b 部署並通過健康檢查——第一次 v445 因白名單漏加回 404、自動還原）：Firebase 登入本人＋secureV1 綁定；伺服器以 clientOrders（myKey＝本人、confirmed/done、topup 或非錢包付款，排除 testOnly，與網站 vipSpent 相同）重新計算累積支持，滿 15000 才可領；owned/<key> transaction 寫入 vip3Outfit {id,at} 與該套 {vip:3,at,name}，每張闆卡只能領一次、同時送出兩個請求只會成立一套。body {} 回傳狀態。測試 vip-outfit.test.cjs 5 項、vip-outfit.emu.test.cjs（真實模擬器、併發）2 項。
 網站：lobby-ui/vip-outfit.js（TTVipOutfit）選擇視窗——兩張動態預覽（人物＋時裝特效＋待機）、選這套→確認「選了就不能更換」→呼叫後端；升上 VIP 3 時與之後每次登入（每個工作階段一次）未選者自動跳出。VIP 頁 VIP 3 卡片「VIP 專屬時裝」改為兩個動態小預覽與「選擇我的 VIP 時裝」。草稿加 vipOnly:3、noParts:true：bridge catalog 只對 VIP 3（或已擁有、?preview）列出；未選者商城卡片顯示「VIP 3 免費領取」開選擇視窗；noParts 不產生部件單買（目前搭配自動以整套計價）。products.json 兩套改 500、vipOnly、noParts，匯入器價格 500。season-display.js 寫入疾風喵行展示色、大廳也載入（選擇視窗用）。order-voice.mjs 加 vipOutfit 與錯誤訊息 VIP_LEVEL_REQUIRED。
 疾風喵行特效預覽 wind-fx-preview.html（八種：風痕線條、滑板殘影、風鏡反光、翅膀氣流、風中葉片、腳下旋風、貓尾星光、疾速殘影），待使用者挑選後接入 outfit-fx.js。
 已知限制：VIP 3 才能買另一套只在網站端判斷（資料庫規則仍只檢查付款 ≥ 500）；免費領取由後端把關。
