@@ -160,7 +160,7 @@ document.getElementById('none').onclick=()=>{picked.clear();sync();};
 document.getElementById('bg').onclick=()=>{document.body.classList.toggle('dark');document.body.classList.toggle('light');};
 document.getElementById('slow').onclick=e=>{speed=speed===1?.35:1;e.target.classList.toggle('on',speed!==1);};
 document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById('out').value);document.getElementById('status').textContent='已複製，貼給我就好。';}catch(e){document.getElementById('out').select();document.getElementById('status').textContent='請手動複製上面框內文字。';}};
-init().then(()=>{build();document.getElementById('status').textContent='點卡片加入或移出組合。';requestAnimationFrame(frame);}).catch(e=>{document.getElementById('status').textContent='素材載入失敗：'+e.message;});
+init().then(()=>{window.MeowFX={size:S,frame(t,ids){const [c,g]=cv();render(g,t,Object.fromEntries(ids.map(k=>[k,true])),{});return c.toDataURL();}};build();document.getElementById('status').textContent='點卡片加入或移出組合。';requestAnimationFrame(frame);}).catch(e=>{document.getElementById('status').textContent='素材載入失敗：'+e.message;});
 })();
 </script>
 </body>

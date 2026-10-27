@@ -182,7 +182,7 @@
  function requestPaint(){if(paintFrame)return;paintFrame=requestAnimationFrame(()=>{paintFrame=0;paint();});}
  let previewPet=null;
  const previewStage=$('#avatar').parentElement;
- let previewSource=null,previewFoot=1;
+ let previewSource=null,previewFoot=1,previewFx=[];   // v443 previewFx：穿著中會觸發的時裝特效
  const previewTexture=document.createElement('canvas');
  $('#avatar').dataset.fixedPixelPreview='1';
  function fitPreviewParty(){
@@ -229,8 +229,9 @@
   const width=Math.max(1,Math.round(box.width*parentScale*dpr)),height=Math.max(1,Math.round(box.height*parentScale*dpr));
   if(cv.width!==width||cv.height!==height){cv.width=width;cv.height=height;}
   const textureScale=Math.max(8,Math.ceil(Math.max(width,height)*1.031/64)),textureSize=64*textureScale;
-  if(previewTexture.width!==textureSize){previewTexture.width=previewTexture.height=textureSize;const t=previewTexture.getContext('2d');t.imageSmoothingEnabled=false;t.drawImage(previewSource,0,0,textureSize,textureSize);}
   const motionOff=document.body.classList.contains('motion-off')||parent.document.body.classList.contains('motion-off');
+  const fxOn=previewFx.length&&!motionOff&&api.fx;
+  if(previewTexture.width!==textureSize||fxOn||previewTexture.dataset.fx){previewTexture.width=previewTexture.height=textureSize;const t=previewTexture.getContext('2d');t.imageSmoothingEnabled=false;let src=previewSource;if(fxOn){try{src=api.fx.render(previewSource,performance.now(),previewFx);}catch(e){src=previewSource;}}t.drawImage(src,0,0,textureSize,textureSize);if(fxOn)previewTexture.dataset.fx='1';else delete previewTexture.dataset.fx;}
   const pose=motionOff?{sqx:1,sqy:1}:api.idlePose(),g=cv.getContext('2d'),foot=height*previewFoot;
   g.clearRect(0,0,width,height);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='low';
   g.drawImage(previewTexture,width*(1-pose.sqx)/2,foot*(1-pose.sqy),width*pose.sqx,height*pose.sqy);
@@ -244,7 +245,7 @@
  function paint(){
   renderLook();
   const dyeVisible=!!dyeDraft&&!$('#dyeDialog').hidden;
-  try{const d=api.makeDoll(selection,color);if(dyeVisible){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;if(dyeDraft.highlight)d.hairHighlight=dyeDraft.highlight;api.draw($('#dyePreview'),d);}setPreviewPet(api.followingPet?.(d));api.draw($('#avatar'),d,groundPreview);}catch(e){tell(e.message);}
+  try{const d=api.makeDoll(selection,color);previewFx=api.fx?.active(d)||[];if(dyeVisible){d.hairHex=dyeDraft.main;d.hairHex2=dyeDraft.tail;if(dyeDraft.highlight)d.hairHighlight=dyeDraft.highlight;api.draw($('#dyePreview'),d);}setPreviewPet(api.followingPet?.(d));api.draw($('#avatar'),d,groundPreview);}catch(e){tell(e.message);}
   // 訂製試色同時更新固定試穿區，商品縮圖不需每次重畫。
   if(dyeVisible)return;
   const list=entries();$$('#singles:not([hidden]) [data-preview]').forEach(cv=>{const p=list.find(p=>p.id===cv.dataset.preview);if(p)drawPart(cv,p);});

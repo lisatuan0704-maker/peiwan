@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=442';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=443';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -265,7 +265,8 @@
     idlePose:now=>_hairMotionPreference.matches?{sqx:1,sqy:1}:ttIdlePose(now??performance.now(),me()?.seed||0),previewFoot:cv=>TTScene.metrics({cv}),
     collection:()=>ACH_DEF.filter(a=>TT_STATS.u.includes(a.id)||!!(a.k&&(TT_STATS[a.k]||0)>=a.need)).map(a=>({id:a.id,name:a.n,description:a.d,image:AICON[a.ic],source:'酒館成就',kind:'成就紀錄'})),
     calendar:cid=>calWeekHtml(cid),booked:cid=>new Promise(resolve=>staffBookedTimes(cid,resolve)),
-    draw:drawPreview,seatChoice:()=>window.TTSeatUI?.choice(),selectSeat:id=>window.TTSeatUI?.select(id),seatThumb:(id,cv)=>window.TTSeatUI?.thumb(id,cv),
+    draw:drawPreview,fx:{active:d=>window.TTOutfitFx?.active(d)||[],render:(src,t,list)=>window.TTOutfitFx.render(src,t,list)},   // v443 時裝特效
+seatChoice:()=>window.TTSeatUI?.choice(),selectSeat:id=>window.TTSeatUI?.select(id),seatThumb:(id,cv)=>window.TTSeatUI?.thumb(id,cv),
     drawPart(cv,ref,color){if(ref.slot==='seat'&&Object.hasOwn(window.TTSeats?.CATALOG||{},ref.source)){TTSeatUI.thumb(ref.source,cv);return;}const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
       if(ref.slot==='pet'&&companionPets[ref.source]){const pet=companionPets[ref.source],src='img/companions-v352/'+pet.asset+'-pet.gif?v=356',img=csImg(src),[left,top,right,bottom]=pet.bounds;const draw=()=>{g.clearRect(0,0,cv.width,cv.height);if(!img.complete||!img.naturalWidth)return;const scale=Math.min((cv.width-8)/(right-left),(cv.height-8)/(bottom-top)),w=(right-left)*scale,h=(bottom-top)*scale;g.drawImage(img,left,top,right-left,bottom-top,(cv.width-w)/2,(cv.height-h)/2,w,h);};draw();afterPreviewImages(cv,[src],draw);return;}
       if(ref.base!==undefined&&ref.slot==='acc'){const ap=TACCP[ref.base];if(ap)['b','m','f','t'].forEach(k=>accLayer(g,ap[k],color?.hair||0,color?.hairHex));}
