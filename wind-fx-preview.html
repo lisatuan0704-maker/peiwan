@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>疾風喵行特效一覽</title>
+<style>
+:root{--ink:#1C2156;--pink:#FF4F8B;--mute:#5C6196;--paper:#fff;--line:#D3D8F2;--bg:#EEF1FB}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif}
+header{padding:18px 20px 6px}
+h1{margin:0 0 4px;font-size:22px}
+header p{margin:0;color:var(--mute);font-size:14px;line-height:1.6}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:18px;padding:14px 20px 30px;align-items:start}
+@media (max-width:980px){.wrap{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.card{background:var(--paper);border:2px solid var(--ink);border-radius:14px;padding:10px;box-shadow:4px 4px 0 #C9D2F5;cursor:pointer;transition:transform .12s}
+.card:hover{transform:translateY(-2px)}
+.card.on{box-shadow:4px 4px 0 var(--pink);border-color:var(--pink)}
+.card h3{margin:8px 2px 2px;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.card h3 span{font-size:12px;color:#fff;background:var(--ink);border-radius:999px;padding:1px 8px}
+.card.on h3 span{background:var(--pink)}
+.card p{margin:2px;font-size:12.5px;color:var(--mute);line-height:1.5}
+.stage{display:block;width:100%;aspect-ratio:1;border-radius:10px;image-rendering:pixelated}
+.dark .stage{background:radial-gradient(circle at 50% 60%,#2d2a5a,#120f2b 75%)}
+.light .stage{background:radial-gradient(circle at 50% 60%,#ffffff,#dfe7fb 75%)}
+aside{position:sticky;top:12px;background:var(--paper);border:2px solid var(--ink);border-radius:16px;padding:14px;box-shadow:5px 5px 0 #F7B6CC}
+aside h2{margin:0 0 8px;font-size:17px}
+.big{width:100%;aspect-ratio:1;border-radius:12px;image-rendering:pixelated;display:block}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+button{border:2px solid var(--ink);border-radius:9px;background:#fff;color:var(--ink);font-weight:700;padding:6px 10px;cursor:pointer;font-family:inherit;font-size:13px}
+button.on,button.main{background:var(--pink);border-color:var(--pink);color:#fff}
+.small{display:flex;gap:12px;align-items:flex-end;margin-top:8px;font-size:12px;color:var(--mute)}
+.small canvas{image-rendering:pixelated;border-radius:8px}
+textarea{width:100%;height:58px;font:12px/1.4 Consolas,monospace;border:2px solid var(--line);border-radius:8px;padding:6px}
+#status{font-size:12px;color:var(--mute);min-height:16px}
+</style>
+</head>
+<body class="dark">
+<header>
+  <h1>疾風喵行・風系特效一覽</h1>
+  <p>每張卡是一種特效，點卡片可以加進右邊的「組合預覽」。右邊可以切換背景、看大廳實際大小。選好按「複製選擇」貼給我。這頁只是預覽，不會改網站。</p>
+</header>
+<div class="wrap">
+  <main class="grid" id="grid"></main>
+  <aside>
+    <h2>組合預覽</h2>
+    <canvas class="big stage" id="big" width="400" height="400"></canvas>
+    <div class="small"><div><canvas id="real" width="80" height="80" style="width:80px;height:80px"></canvas><br>大廳實際大小</div><div><canvas id="real2" width="160" height="160" style="width:160px;height:160px"></canvas><br>放大 2 倍</div></div>
+    <div class="row"><button id="all">全部打開</button><button id="none">全部關閉</button><button id="bg">切換亮／暗背景</button><button id="slow">慢動作</button></div>
+    <div class="row"><button id="copy" class="main">複製選擇</button></div>
+    <textarea id="out" readonly></textarea>
+    <div id="status">載入素材中…</div>
+  </aside>
+</div>
+<script>
+(()=>{'use strict';
+const D='img/season-v293/wind/',BODY='img/outfit-studio-v280/body.png';
+const HAIR={main:'#0d0d0d',tail:'#7388f2'};
+// 圖層順序同大廳：翅膀／貓尾（身體後）→後髮→身體→衣服→外套→手套→眼→眉→前髮→鏡帶→貓耳帽→風鏡→滑板
+const LAYERS=[['wing','0.身體後-旋風翅膀.png'],['tail','1.身體後-旋風貓尾.png'],['back','2.旋風後髮(灰階).png',1],['body',null],['cloth','4.旋風無袖套裝.png'],['coat','5.旋風機能外套.png'],['glove','6.旋風手套.png'],['eye','3.旋風眼睛.png'],['brow','3.旋風眉毛.png'],['front','7.旋風前髮(灰階).png',1],['strap','8.前髮上-護目鏡帶子.png'],['hat','9.旋風貓帽子.png'],['goggle','10.旋風護目鏡.png'],['board','11.手上物品-旋風滑板.png']];
+const FX=[
+ {id:'gust',name:'風痕線條',desc:'白藍色的風痕從右往左掠過身邊。'},
+ {id:'board',name:'滑板殘影',desc:'滑板後面拖著兩道淡淡殘影，像正在滑行。'},
+ {id:'glint',name:'風鏡反光',desc:'每隔幾秒，一道白光掃過大片風鏡。'},
+ {id:'puff',name:'翅膀氣流',desc:'小翅膀尖端一陣陣吹出小小的氣流雲。'},
+ {id:'leaf',name:'風中葉片',desc:'幾片藍色小葉片被風吹著斜斜飛過。'},
+ {id:'swirl',name:'腳下旋風',desc:'腳底下一圈小旋風在轉。'},
+ {id:'tailstar',name:'貓尾星光',desc:'貓尾末端的藍點偶爾閃一下，拖出小星光。'},
+ {id:'dash',name:'疾速殘影',desc:'偶爾整隻角色往後拖出一道藍色殘影。'}
+];
+const S=80,OX=8,OY=12;
+const load=src=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(Error(src));i.src=src;});
+const cv=(w=S,h=S)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=false;return [c,g];};
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function tint(img){
+  const [c,g]=cv(128,128);g.drawImage(img,0,0);const d=g.getImageData(0,0,128,128),p=d.data;let y0=128,y1=0;
+  for(let y=0;y<128;y++)for(let x=0;x<128;x++)if(p[(y*128+x)*4+3]){y0=Math.min(y0,y);y1=Math.max(y1,y);}
+  const m=hex(HAIR.main),t=hex(HAIR.tail);
+  for(let y=0;y<128;y++){const w=Math.max(0,Math.min(1,((y-y0)/Math.max(1,y1-y0)-.5)/.4));for(let x=0;x<128;x++){const i=(y*128+x)*4;if(!p[i+3])continue;const l=(0.299*p[i]+0.587*p[i+1]+0.114*p[i+2])/255;
+    for(let ch=0;ch<3;ch++){const base=m[ch]*(1-w)+t[ch]*w;p[i+ch]=Math.max(0,Math.min(255,base+(255-base)*Math.max(0,l-.55)*.9));}}}
+  g.putImageData(d,0,0);return c;
+}
+let L={},CH,CHB,bounds,maskOf={};
+function layer64(src){const [c,g]=cv();g.drawImage(src,OX,OY,64,64);return c;}
+function pix(c){return c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,S,S).data;}
+function bbox(m){let b=null;for(let i=0;i<S*S;i++)if(m[i*4+3]>40){const x=i%S,y=(i/S)|0;b=b||{x0:x,x1:x,y0:y,y1:y};b.x0=Math.min(b.x0,x);b.x1=Math.max(b.x1,x);b.y0=Math.min(b.y0,y);b.y1=Math.max(b.y1,y);}return b;}
+async function init(){
+  for(const [k,f,gray] of LAYERS){const img=await load(f?D+f:BODY);L[k]=layer64(gray?tint(img):img);}
+  let g;[CH,g]=cv();for(const [k] of LAYERS)g.drawImage(L[k],0,0);
+  const cp=pix(CH);bounds=bbox(cp);
+  const [b,bg]=cv();const d=bg.createImageData(S,S);for(let i=0;i<cp.length;i+=4)if(cp[i+3]>80){d.data[i]=90;d.data[i+1]=140;d.data[i+2]=255;d.data[i+3]=255;}bg.putImageData(d,0,0);CHB=b;
+  for(const k of ['goggle','board','wing','tail'])maskOf[k]=pix(L[k]);
+}
+const rnd=s=>{s=Math.sin(s*12.9898)*43758.5453;return s-Math.floor(s);};
+const P=(g,x,y,c,a=1,w=1,h=1)=>{if(a<=0)return;g.globalAlpha=Math.min(1,a);g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),w,h);g.globalAlpha=1;};
+function gust(g,t){for(let k=0;k<7;k++){const per=900+rnd(k)*700,ph=((t+k*313)%per)/per,seed=Math.floor((t+k*313)/per)*17+k;
+  const y=Math.round(bounds.y0+6+rnd(seed)*(bounds.y1-bounds.y0-4)),len=3+Math.round(rnd(seed+1)*6),x=S+4-ph*(S+20),a=Math.sin(ph*Math.PI)*.75;
+  for(let i=0;i<len;i++)P(g,x+i,y,i<2?'#ffffff':'#bfe3ff',a*(1-i/len*.7));}}
+function board(g,t){const m=maskOf.board,b=bbox(m);if(!b)return;const u=(t%1200)/1200;
+  for(const [dx,a] of [[2+u*1.5,.35],[4+u*2.5,.18]]){g.globalAlpha=a;g.drawImage(L.board,-Math.round(dx),0);g.globalAlpha=1;}
+  if(Math.floor(t/120)%5===0)P(g,b.x0-1,b.y1-1,'#ffffff',.8);}
+function glint(g,t){const u=(t%2800)/900;if(u>1)return;const m=maskOf.goggle,b=bbox(m);if(!b)return;const pos=b.x0-6+u*(b.x1-b.x0+14);
+  for(let y=b.y0;y<=b.y1;y++)for(let x=b.x0;x<=b.x1;x++){if(m[(y*S+x)*4+3]<60)continue;const v=Math.abs((x-pos)+(y-b.y0)*0.7);if(v<1.2)P(g,x,y,'#ffffff',.9);else if(v<2.5)P(g,x,y,'#e6f6ff',.4);}}
+function puff(g,t){const b=bbox(maskOf.wing);if(!b)return;for(const side of [0,1]){const per=1500,ph=((t+side*700)%per)/per,x0=side?b.x1+1:b.x0-1,y0=b.y0+3,dir=side?1:-1;
+  const a=(1-ph)*.7,r=ph*4;for(const [dx,dy] of [[0,0],[1,-1],[1,1],[2,0]])P(g,x0+dir*(dx+r*1.5),y0+dy+ph*2,'#eaf6ff',a);}}
+function leaf(g,t){for(let k=0;k<4;k++){const per=2600,ph=((t+k*650)%per)/per,seed=Math.floor((t+k*650)/per)*23+k;
+  const x=S+2-ph*(S+12),y=bounds.y0-4+rnd(seed)*30+ph*16+Math.sin(ph*9+k)*2,a=Math.sin(ph*Math.PI)*.9,flip=Math.floor(t/160+k)%2;
+  const c=rnd(seed+2)>.5?'#7fa6ff':'#a9d8ff';P(g,x,y,c,a);P(g,x+(flip?1:-1),y+(flip?0:1),c,a*.8);P(g,x+1,y+1,'#1c2a6b',a*.6);}}
+function swirl(g,t){const cx=(bounds.x0+bounds.x1)/2+1,cy=bounds.y1+1;for(let s=0;s<22;s++){const an=t/260+s*0.55,r=2+s*0.45,a=(1-s/22)*.8;P(g,cx+Math.cos(an)*r*1.6,cy+Math.sin(an)*r*.45,s<4?'#ffffff':'#8ec5ff',a);}}
+function tailstar(g,t){const m=maskOf.tail,b=bbox(m);if(!b)return;let tip=null;for(let i=0;i<S*S;i++){const j=i*4;if(m[j+3]>60&&m[j+2]>m[j]+40){const x=i%S,y=(i/S)|0;if(!tip||x<tip.x)tip={x,y};}}tip=tip||{x:b.x0,y:b.y1};
+  const u=(t%1800)/1800;if(u>.45)return;const a=Math.sin(u/.45*Math.PI);P(g,tip.x,tip.y-1,'#ffffff',a);P(g,tip.x-1,tip.y-1,'#9fd0ff',a*.7);P(g,tip.x+1,tip.y-1,'#9fd0ff',a*.7);P(g,tip.x,tip.y-2,'#9fd0ff',a*.7);P(g,tip.x,tip.y,'#9fd0ff',a*.7);
+  for(let k=1;k<4;k++)P(g,tip.x-k*2,tip.y-1+k%2,'#8ec5ff',a*(.5-k*.12));}
+function render(g,t,on){g.clearRect(0,0,S,S);
+  if(on.dash){const u=(t%2500)/2500;if(u<.35){const a=(1-u/.35)*.45;g.globalAlpha=a;g.drawImage(CHB,-4-Math.round(u*8),0);g.globalAlpha=a*.5;g.drawImage(CHB,-8-Math.round(u*10),0);g.globalAlpha=1;}}
+  if(on.swirl)swirl(g,t);
+  if(on.board)board(g,t);
+  g.drawImage(CH,0,0);
+  if(on.glint)glint(g,t);if(on.puff)puff(g,t);if(on.tailstar)tailstar(g,t);if(on.gust)gust(g,t);if(on.leaf)leaf(g,t);}
+// ---- 頁面 ----
+const picked=new Set(['gust','board','glint']);
+const cards=[];
+function build(){const grid=document.getElementById('grid');
+  for(const fx of FX){const el=document.createElement('div');el.className='card';el.innerHTML='<canvas class="stage" width="240" height="240"></canvas><h3>'+fx.name+'<span></span></h3><p>'+fx.desc+'</p>';
+    el.onclick=()=>{picked.has(fx.id)?picked.delete(fx.id):picked.add(fx.id);sync();};grid.append(el);const [w,wg]=cv();cards.push({fx,el,out:el.querySelector('canvas').getContext('2d'),w,wg,st:{}});}
+  sync();}
+function sync(){for(const c of cards){const on=picked.has(c.fx.id);c.el.classList.toggle('on',on);c.el.querySelector('h3 span').textContent=on?'已加入':'加入組合';}
+  document.getElementById('out').value=JSON.stringify({windFx:FX.filter(f=>picked.has(f.id)).map(f=>f.name)});}
+const [bw,bg]=cv(),bst={};let speed=1,last=performance.now(),clock=0;
+function frame(now){clock+=(now-last)*speed;last=now;const t=clock;
+  for(const c of cards){render(c.wg,t+c.fx.id.length*137,{[c.fx.id]:true});c.out.imageSmoothingEnabled=false;c.out.clearRect(0,0,240,240);c.out.drawImage(c.w,0,0,240,240);}
+  const on=Object.fromEntries([...picked].map(k=>[k,true]));render(bg,t,on);
+  for(const [id,size] of [['big',400],['real',80],['real2',160]]){const o=document.getElementById(id).getContext('2d');o.imageSmoothingEnabled=false;o.clearRect(0,0,size,size);o.drawImage(bw,0,0,size,size);}
+  requestAnimationFrame(frame);}
+document.getElementById('all').onclick=()=>{FX.forEach(f=>picked.add(f.id));sync();};
+document.getElementById('none').onclick=()=>{picked.clear();sync();};
+document.getElementById('bg').onclick=()=>{document.body.classList.toggle('dark');document.body.classList.toggle('light');};
+document.getElementById('slow').onclick=e=>{speed=speed===1?.35:1;e.target.classList.toggle('on',speed!==1);};
+document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById('out').value);document.getElementById('status').textContent='已複製，貼給我就好。';}catch(e){document.getElementById('out').select();document.getElementById('status').textContent='請手動複製上面框內文字。';}};
+init().then(()=>{window.WindFX={size:S,frame(t,ids){const [c,g]=cv();render(g,t,Object.fromEntries(ids.map(k=>[k,true])));return c.toDataURL();}};build();document.getElementById('status').textContent='點卡片加入或移出組合。';requestAnimationFrame(frame);}).catch(e=>{document.getElementById('status').textContent='素材載入失敗：'+e.message;});
+})();
+</script>
+</body>
+</html>

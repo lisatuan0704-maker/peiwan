@@ -1,6 +1,6 @@
 /* v444 疾風喵行：繪師原圖 13 張；名稱依使用者提供對照表。店長上架前只在 ?preview 網址顯示。 */
 (()=>{const D='img/season-v293/wind/';
-window.TTSeasonDrafts=Object.assign(window.TTSeasonDrafts||{},{"season293_wind":{"name":"疾風喵行","price":null,"previewOnly":true,"hideUntilLive":true,"seasonFeatured":293,"highlightHair":false,"doll":{"hair":2},"parts":{
+window.TTSeasonDrafts=Object.assign(window.TTSeasonDrafts||{},{"season293_wind":{"name":"疾風喵行","price":null,"previewOnly":true,"hideUntilLive":true,"seasonFeatured":293,"vipOnly":3,"noParts":true,"highlightHair":false,"doll":{"hair":2},"parts":{
  "front":{"n":"飛揚碎瀏海","d":D+"7.旋風前髮(灰階).png","x":0,"y":0,"g":1},
  "back":{"n":"逆風翹短髮","d":D+"2.旋風後髮(灰階).png","x":0,"y":0,"g":1},
  "eye":{"n":"澄藍亮眸","d":D+"3.旋風眼睛.png","x":0,"y":0,"g":0},

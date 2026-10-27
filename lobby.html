@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=444"></script>
+<script src="lobby-ui/fixed-view.js?v=445"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=428"></script>
@@ -6179,7 +6179,9 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
     /* 升級慶祝(僅在載入後、等級真的上升時) */
     if(_lastVip===null || !_vipArmed){ _lastVip=info.lv; }
     else if(info.lv>_lastVip){ _lastVip=info.lv;
-      if(window.celebrate) window.celebrate('升上 VIP '+info.lv+'!', '解鎖「'+info.cur.nm+'」等級獎勵 — 優惠券已可使用'); }
+      if(window.celebrate) window.celebrate('升上 VIP '+info.lv+'!', '解鎖「'+info.cur.nm+'」等級獎勵 — 優惠券已可使用');
+      if(info.lv>=3)setTimeout(()=>window.TTVipOutfit?.maybePrompt(true),2600); }   /* v445 達到 VIP3 時請他選一套 VIP 時裝 */
+    try{window.TTVipOutfit?.maybePrompt(false);}catch(e){}
     try{ const dc=JSON.parse(localStorage.getItem('tt_dc')||'null');
       if(dc&&dc.id&&typeof db!=='undefined'&&db) db.ref(ROOT+'/accounts/'+dc.id).update({vip:info.lv,spent:info.spent}); }catch(e){}
   }
@@ -6204,6 +6206,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
     const chips=t.rw.map(r=>{
       const pk=VIP_BUB_PREVIEW[t.lv];
       if(r[0]==='chat'&&pk){return '<div class="vipRw">'+TTChatSkins.preview(pk)+'<span>'+TTChatSkins.catalog.find(c=>c.k===pk).n+'</span></div>';}
+      if(r[0]==='dress'&&t.lv===3&&window.TTVipOutfit)return window.TTVipOutfit.chipHtml();   /* v445 VIP3 時裝二選一，動態預覽 */
       if(r[0]==='frame'&&TTF_ART['vip'+t.lv]){
         return '<div class="vipRw"><img src="'+TTF_ART['vip'+t.lv].src+'" alt="" style="width:78px;height:78px;border-radius:6px"><span>'+r[1]+'</span></div>';
       }
@@ -6229,6 +6232,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
       +'<button class="vipPgB" '+(_vipPg>=VIP_CFG.length-1?'disabled':'')+' onclick="vipPg(1)">下一級 ›</button>'
       +'</div>'
       ;
+    try{window.TTVipOutfit?.mountAll(box);}catch(e){}
   }
   window.vipPg=function(d){ _vipPg+=d; if(_vipPg<0)_vipPg=0; if(_vipPg>=VIP_CFG.length)_vipPg=VIP_CFG.length-1; buildVip2(); try{SFX.tap();}catch(e){} };
   window.buildVip2=buildVip2;
@@ -7111,10 +7115,10 @@ function buildBag(){
     const listener=s=>{
       if(ownedAccount!==key||myKey!==key||ownedListener!==listener)return;
       const owned=s.val()||{};
-      const keys=Object.keys(owned).filter(k=>k!=='dyeTickets'&&k!=='dyedHairSets'&&!k.startsWith('bubble_'));
+      const keys=Object.keys(owned).filter(k=>k!=='dyeTickets'&&k!=='dyedHairSets'&&k!=='vip3Outfit'&&k!=='baseStart'&&!k.startsWith('bubble_'));
       if(document.getElementById('bkBubList'))setTimeout(bkBubbleRender,0);
       const fresh=loaded?keys.filter(k=>!seen.has(k)&&!window.TTRetiredOutfits?.retired(k,window.__shopCfg?.[k])):[];
-      keys.forEach(k=>seen.add(k));loaded=true;window.__owned=owned;
+      keys.forEach(k=>seen.add(k));loaded=true;window.__owned=owned;window.__ownedLoaded=key;try{window.TTVipOutfit?.refresh();}catch(e){}
       const seated=me();if(seated&&TTSeats.current(seated)&&!owned[TTSeats.current(seated)])TTSeats.clear(seated);
       if(window.__dressRefresh)window.__dressRefresh();
       if(fresh.length&&window.celebrate){const nm=owned[fresh[0]]?.name||'新時裝';
@@ -7762,11 +7766,13 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui/season-v292.js?v=443"></script>
-<script src="tavern-ui/season-v293.js?v=444"></script>
+<script src="tavern-ui/season-v292.js?v=445"></script>
+<script src="tavern-ui/season-v293.js?v=445"></script>
 <script src="tavern-ui/outfit-splits.js?v=441"></script>
-<script src="tavern-ui/outfit-fx.js?v=443"></script>
-<script src="tavern-ui-bridge.js?v=444"></script>
+<script src="tavern-ui/outfit-fx.js?v=445"></script>
+<script src="tavern-ui/season-display.js?v=445"></script>
+<script src="lobby-ui/vip-outfit.js?v=445"></script>
+<script src="tavern-ui-bridge.js?v=445"></script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
@@ -7780,7 +7786,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/order-flow.js?v=373"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=431';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=445';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
