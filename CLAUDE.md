@@ -1,5 +1,8 @@
 # 小小酒館修改紀錄
 
+## v442 喵頻連線展示配色、上架檔
+season-display.js 寫入使用者匯出的喵頻連線展示色（主色 #b7e6de、髮尾 #a9d4ea、背景跟隨髮色）。img/season-v292/products.json（350 金幣、13 部件為網站原圖網址，含拆件部位資訊）；season-shop-import.js 支援單套一季（292），按鈕「載入本次套組：喵頻連線」。店長頁商城縮圖 img/season-v292/meow.png（商城實際繪製 64px 放大 256）。部件價格使用者定：頭髮 100／臉 100／衣服、下身、外套、手套各 50／配件 30（需店長頁儲存）；全部單買合計 510。
+
 ## v441 喵頻連線（預覽）、時裝衣服依原檔拆件
 喵頻連線（season292_meow，tavern-ui/season-v292.js，img/season-v292/meow 原圖 13 張）：名稱依使用者提供對照表；護目鏡為面部配件、外套獨立。hideUntilLive：店長上架（shopConfig 有效售價）前只在 ?preview 網址顯示，客人看不到。season-display.js 預設展示色，season-color-adjust.html 加入喵頻連線（預設選取）。
 拆件（使用者：以原檔分商店類別）：新增配件部位 bottom 下身（z under：身體與衣服之間）、outer 外套、glove 手套（z over：衣服之上、眼睛之下），商城列在「衣服」分類並有 全部／衣服／下身／外套／手套 子分類。熊熊偵探 cloth＝偵探套裝＋acc9 偵探披風；龐克搖滾狼 cloth＝上衣＋acc7 褲子＋acc8 手套，eye＝狼眼＋acc9 狼眼疤痕（面部配件）；心動情人（tavern-ui/outfit-splits.js 覆蓋 shopConfig）cloth＝花襯衫＋acc5 下褲＋acc6 披風＋acc7 披肩；中華小惡魔早已拆好（v287）不變。整套外觀與拆件前逐像素相同。
