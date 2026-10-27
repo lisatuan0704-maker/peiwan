@@ -1,14 +1,16 @@
 import {CATEGORIES,ticketInput} from './support-core.mjs?v=421';
+import {beginVoiceLogin} from './voice-rehearsal.mjs?v=421';
 const auth=firebase.auth(),db=firebase.database(),stamp=()=>firebase.database.ServerValue.TIMESTAMP;
 const dialog=document.createElement('dialog');dialog.className='tt-support';dialog.setAttribute('aria-labelledby','supportTitle');
 dialog.innerHTML=`<header><small>TINY TAVERN · CUSTOMER SUPPORT</small><h1 id="supportTitle">聯絡客服</h1><p>有什麼需要幫忙的？留下問題，掌櫃會在站內信箱回覆你。</p><button type="button" class="support-close" aria-label="關閉聯絡客服">×</button></header><div class="support-body"><div class="support-steps"><span>01 填寫問題</span><span>02 掌櫃處理</span><span>03 站內信收回覆</span></div><p class="support-identity" id="supportIdentity"></p><form id="supportForm"><label for="supportCategory">問題類型</label><select id="supportCategory">${CATEGORIES.map(x=>`<option>${x}</option>`).join('')}</select><label for="supportSubject">主旨</label><input id="supportSubject" minlength="2" maxlength="60" required placeholder="請簡短說明需要協助的事情"><label for="supportOrder">訂單編號 <small>（選填）</small></label><input id="supportOrder" maxlength="80" placeholder="與訂單有關時，可填入編號方便查詢"><label for="supportText">問題說明</label><textarea id="supportText" minlength="5" maxlength="1500" required placeholder="請描述遇到的情況與需要協助的內容。"></textarea><p class="support-note">請勿填寫密碼、驗證碼或完整信用卡資料。回覆會送到「我的酒館 → 信箱」，不會寄到 Email。</p><button class="support-primary" id="supportSubmit">送出給客服</button></form><div id="supportStatus" class="support-status" role="status" aria-live="polite"></div><p class="support-note">客服內容僅供本人與掌櫃查看。<br>無法登入？可透過 <a href="https://discord.gg/aK9GFarxm" target="_blank" rel="noopener">Discord 聯絡酒館</a>。</p></div>`;
 document.body.append(dialog);const $=id=>dialog.querySelector('#'+id);
+const loginButton=document.createElement('button');loginButton.type='button';loginButton.className='support-primary';loginButton.textContent='登入 Discord 後聯絡客服';loginButton.onclick=()=>{sessionStorage.setItem('tt_support_return_v1','1');beginVoiceLogin();};$('supportIdentity').after(loginButton);
 let pending=null,busy=false,epoch=0,inboxRef=null,inboxFirst=true,known=new Set();
 window.TTSupportInbox={};
 function repaint(){window.updateMailBadge?.();if(document.getElementById('mailBoxM')?.classList.contains('on'))window.renderMailBox?.();}
 function validUser(){const u=auth.currentUser;return u?.uid?.startsWith('discord_')?u:null;}
 function status(text,error=false){$('supportStatus').textContent=text;$('supportStatus').dataset.error=String(error);}
-function identity(){const user=validUser();$('supportIdentity').textContent=user?'回覆將送至目前登入帳號的站內信箱。':'登入 Discord 並建立酒館角色後，即可送出客服單。';$('supportSubmit').disabled=!user||busy;dialog.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=busy);}
+function identity(){const user=validUser();$('supportIdentity').textContent=user?'回覆將送至目前登入帳號的站內信箱。':'登入 Discord 並建立酒館角色後，即可送出客服單。';loginButton.hidden=!!user;$('supportSubmit').disabled=!user||busy;dialog.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=busy);}
 function open(){identity();if(!dialog.open)dialog.showModal();}
 dialog.querySelector('.support-close').onclick=()=>dialog.close();
 document.addEventListener('click',e=>{if(e.target.closest('[data-contact-support]')){e.preventDefault();open();}});
@@ -33,4 +35,4 @@ $('supportForm').onsubmit=async e=>{e.preventDefault();if(busy)return;const user
   }catch(e){if(version===epoch)status(e.code==='PERMISSION_DENIED'?'目前無法送出，請確認已登入並建立酒館角色；也可以透過下方 Discord 聯絡客服。':(e.message?.startsWith('請先')?e.message:'送出結果尚未確認，請保持原內容後重試；系統會核對同一筆客服單，避免重複送出。'),true);}
   finally{if(version===epoch){busy=false;identity();}}
 };
-if(new URLSearchParams(location.search).has('contact'))open();
+if(new URLSearchParams(location.search).has('contact')||sessionStorage.getItem('tt_support_return_v1')){sessionStorage.removeItem('tt_support_return_v1');open();}
