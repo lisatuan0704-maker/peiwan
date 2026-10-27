@@ -50,7 +50,7 @@
    if(ref){try{ref.off()}catch(e){}ref=null;}
    current=k;paintList();
    const v=meta[k]||{};pane.replaceChildren();
-   const top=el('div','sdm-pane-head');top.append(el('b','',v.name||'老闆'),el('small','','會員私訊・掌櫃可調閱'));
+   const top=el('div','sdm-pane-head');top.append(el('b','',v.name||'老闆'));
    const log=el('div','sdm-log');log.dataset.first='1';
    const form=el('div','sdm-form');const input=el('input','sdm-input');input.maxLength=200;input.placeholder='回覆訊息（最多 200 字）';
    const stBtn=el('button','sdm-st-btn','貼圖');stBtn.type='button';const send=el('button','sdm-send','送出');send.type='button';
