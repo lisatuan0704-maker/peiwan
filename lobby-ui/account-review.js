@@ -10,7 +10,7 @@ box.innerHTML='<h2>帳號綁定審核</h2>'
  +'<label>闆卡鑰匙 <input id="arKey" placeholder="客人的 tt_me，或在客人分頁查詢" style="width:240px"></label> '
  +'<button class="btn sm" id="arCheck">查詢</button> <button class="btn sm ok" id="arBind" disabled>確認綁定</button>'
  +'<pre id="arOut" style="white-space:pre-wrap;font-size:12px;margin-top:8px"></pre>';
-($('pgMain')||document.body).append(box);
+{const t7=$('tab7');if(t7)t7.after(box);else($('pgMain')||document.body).append(box);}box.style.display=($('tab7')&&$('tab7').style.display!=='none')?'':'none';
 let checked=null;
 function input(){const dc=$('arDc').value.trim(),key=$('arKey').value.trim();
  if(!/^\d{16,22}$/.test(dc))throw Error('Discord 數字 ID 格式不對（16～22 位數字）');
