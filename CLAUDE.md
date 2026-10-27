@@ -1,5 +1,12 @@
 # 小小酒館修改紀錄
 
+## v441 喵頻連線（預覽）、時裝衣服依原檔拆件
+喵頻連線（season292_meow，tavern-ui/season-v292.js，img/season-v292/meow 原圖 13 張）：名稱依使用者提供對照表；護目鏡為面部配件、外套獨立。hideUntilLive：店長上架（shopConfig 有效售價）前只在 ?preview 網址顯示，客人看不到。season-display.js 預設展示色，season-color-adjust.html 加入喵頻連線（預設選取）。
+拆件（使用者：以原檔分商店類別）：新增配件部位 bottom 下身（z under：身體與衣服之間）、outer 外套、glove 手套（z over：衣服之上、眼睛之下），商城列在「衣服」分類並有 全部／衣服／下身／外套／手套 子分類。熊熊偵探 cloth＝偵探套裝＋acc9 偵探披風；龐克搖滾狼 cloth＝上衣＋acc7 褲子＋acc8 手套，eye＝狼眼＋acc9 狼眼疤痕（面部配件）；心動情人（tavern-ui/outfit-splits.js 覆蓋 shopConfig）cloth＝花襯衫＋acc5 下褲＋acc6 披風＋acc7 披肩；中華小惡魔早已拆好（v287）不變。整套外觀與拆件前逐像素相同。
+持有：splitFrom 標記——買過舊「衣服」（或「臉」）單位或整套者自動擁有拆出部件。舊穿搭（uiAccessoryVersion<441 或整套 set）自動補上拆出部件，外觀不變；新保存版本 441。
+價格：config/partPricing 新增 bottom／outer／glove（店長頁「時裝部件單買價格」，使用者定 外套 50／手套 30；下身未定，未設定前不開放單買）。資料庫規則對 ::accN 仍以配件價（30）為下限。店長頁拆件顯示網站最新部件。
+驗證：本機 Emulator 試穿三套、衣服子分類、舊穿搭補件與新格式逐像素相同、心動情人拆件前後相同、持有與標價、預覽／客人可見性；wardrobe-state-v276、dye-v230 通過。
+
 ## v440 背包隨時換膚色、Discord 伺服器連結
 背包（live-wardrobe.js 色票區）新增「膚色」四色，選了立即保存（bag 模式走 saveBag→wear）；tavern-ui-bridge.js makeDoll 支援 color.skin（0～3，SKINS），state() 帶 skins。商城試穿不顯示膚色。全站 Discord 邀請連結 discord.gg/aK9GFarxm 改為 discord.gg/sw95eYeJ2P（大廳、新手指南、訂單、客服）。版本鏈 bridge／tavern-ui index／時裝間比較／live-wardrobe 改 440。
 

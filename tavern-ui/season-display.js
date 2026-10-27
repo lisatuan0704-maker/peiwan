@@ -4,6 +4,8 @@
    bg 為 null 時，背景自動跟隨髮色。 */
 window.TTSeasonDisplay=Object.assign({
  /* v403 使用者以 season-color-adjust.html 調整後匯出（四套） */
+ /* v441 喵頻連線預設展示色（待使用者調整） */
+ "season292_meow":{"main": "#E6ECF7", "tail": "#7FD3F5", "highlight": null, "bg": ["#C9F1FF", "#6F8BFF", "#2B2370"]},
  "season291_bear":{"main": "#5D72B1", "tail": "#AECFDB", "highlight": "#63C3CA", "bg": ["#95A5D6", "#16ADE3", "#096167"]},
  "season291_wolf":{"main": "#120d1c", "tail": "#812c5a", "highlight": "#d2a1f2", "bg": ["#bbabd8", "#b325da", "#9f3c5f"]},
  "season283_devil":{"main": "#d2566f", "tail": "#52192a", "highlight": null, "bg": ["#a08895", "#e81756", "#510b0b"]},

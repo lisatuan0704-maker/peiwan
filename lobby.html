@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=440"></script>
+<script src="lobby-ui/fixed-view.js?v=441"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=428"></script>
@@ -2233,11 +2233,11 @@ if(TEST_MODE){
       TTHairMotion.paint(g,c,motion,kind);if(edge&&native)hairEdge(g,fg);
     };
     const slot=(name,cat,idx,kind,edge)=>layer(kind,fg=>{const custom=csSlot(fg,d,name,hi,hx,hx2);if(!custom&&!strict)tpDraw(fg,tpPosed(cat,idx,pose),hi,hx,hx2);return !custom&&!strict;},edge);
-    const customAcc=z=>csAccBy(d,z).forEach(v=>layer(/尾巴/.test(v.n||'')?'tail':'rigid',fg=>csDrawV(fg,v,hi,hx,hx2)));
+    const customAcc=z=>csAccBy(d,z).forEach(v=>layer(/尾巴/.test(v.n||'')?'tail':(z==='under'||z==='over')?'cloth':'rigid',fg=>csDrawV(fg,v,hi,hx,hx2)));   /* v441 under＝衣服下（下身）、over＝衣服上（外套／手套） */
     const nativeAcc=(list,kind)=>{if(!strict&&list?.length)layer(kind,fg=>accLayer(fg,list,hi,hx));};
     slot('back','後髮',d.back||0,'hair',false);customAcc('back');nativeAcc(ap.b,'tail');nativeAcc(ap.m,'rigid');
     layer('body',fg=>{const ownSkin=Number.isInteger(d.skin)&&d.skin>=0&&d.skin<4;if(ownSkin||(!csSlot(fg,d,'body',hi,hx,hx2)&&!strict)){const im=tpBody(pose,d.skin||0);if(im.complete)fg.drawImage(im,0,0,64,64);}});
-    slot('cloth','衣服',d.cloth||0,'cloth',false);
+    customAcc('under');slot('cloth','衣服',d.cloth||0,'cloth',false);customAcc('over');
     layer('rigid',fg=>{
       let done=false;if(d._blink){if(csSlot(fg,d,'eyeClose',hi,hx,hx2))done=true;else if(!strict){const ce=tpCloseEye();if(ce){tpDraw(fg,ce,hi,hx);done=true;}}}
       if(!done&&!csSlot(fg,d,'eye',hi,hx,hx2)&&!strict)tpDraw(fg,tpPosed('眼睛',d.face||0,pose),hi,hx);
@@ -7741,7 +7741,9 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui-bridge.js?v=440"></script>
+<script src="tavern-ui/season-v292.js?v=441"></script>
+<script src="tavern-ui/outfit-splits.js?v=441"></script>
+<script src="tavern-ui-bridge.js?v=441"></script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>

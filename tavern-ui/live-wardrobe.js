@@ -8,6 +8,8 @@
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const categories=[['hair','頭髮'],['cloth','衣服'],['acc','配件'],['eye','臉'],['pet','寵物'],['seat','座椅'],['other','飲品'],['bubbles','聊天氣泡']];
  const groupNames={head:'頭飾',ear:'耳環',face:'面部配件',hand:'手持物',back:'背飾／尾巴'};
+ const wearGroups={bottom:'下身',outer:'外套',glove:'手套'};   // v441 拆出的衣服部件：資料上是配件，商城列在「衣服」
+ const tabOf=p=>p.category==='acc'&&wearGroups[p.group]?'cloth':p.category;let clothFilter='all';
  let data,selection={},color={},area='store',category='bundles',mode='singles',filter='all',selected=null,saving=false;
  let drinkQuantity=1,drinkBusy=false,drinkDialogOpen=false;
  let hairSection='front',colorTarget='main',faceSection='brow';
@@ -131,13 +133,13 @@
  function entries(){
   const out=[];
   for(const o of products()){
-   const parts=o.parts.filter(p=>p.category===category&&(category!=='eye'||p.slot===faceSection)&&(area!=='bag'||category!=='hair'||p.slot===hairSection)&&(area!=='bag'||o.owned||p.owned));
+   const parts=o.parts.filter(p=>tabOf(p)===category&&(category!=='eye'||p.slot===faceSection)&&(area!=='bag'||category!=='hair'||p.slot===hairSection)&&(area!=='bag'||o.owned||p.owned));
    if(category==='hair'&&area==='store'){
     if(parts.length)out.push({id:o.id+'::hair',name:o.name+'・髮型',category:'hair',parts,product:o});
-   }else for(const p of parts)if(category!=='acc'||filter==='all'||filter===p.group)out.push({...p,product:o});
+   }else for(const p of parts)if((category!=='acc'||filter==='all'||filter===p.group)&&(category!=='cloth'||clothFilter==='all'||clothFilter===(wearGroups[p.group]?p.group:'main')))out.push({...p,product:o});
   }
   if(area==='bag')for(const [native,v] of Object.entries(data.baseParts)){
-   const sl=({face:'eye'}[native]||native),cat=({front:'hair',back:'hair',cloth:'cloth',eye:'eye',brow:'eye',acc:'acc'}[sl]);if(cat!==category||(cat==='eye'&&sl!==faceSection)||(cat==='hair'&&sl!==hairSection)||(cat==='acc'&&filter!=='all'&&filter!=='head'))continue;
+   const sl=({face:'eye'}[native]||native),cat=({front:'hair',back:'hair',cloth:'cloth',eye:'eye',brow:'eye',acc:'acc'}[sl]);if(cat!==category||(cat==='cloth'&&clothFilter!=='all'&&clothFilter!=='main')||(cat==='eye'&&sl!==faceSection)||(cat==='hair'&&sl!==hairSection)||(cat==='acc'&&filter!=='all'&&filter!=='head'))continue;
    for(const p of v.items||[]){
     // 露亞原有髮型、眼睛、衣服與露亞組合重複，保留組合中的命名；舊穿搭編號仍相容。
     if(p.idx===0&&['back','front','eye','cloth'].includes(sl)&&out.some(q=>q.source==='cloth0'&&q.slot===sl))continue;
@@ -359,6 +361,10 @@
   if(area==='bag'&&category==='hair'){
    $('#subtabs').innerHTML='<nav class="hair-sections" aria-label="頭髮分類"><button type="button" data-hair-section="front" aria-pressed="'+(hairSection==='front')+'">前髮</button><button type="button" data-hair-section="back" aria-pressed="'+(hairSection==='back')+'">後髮</button><button type="button" data-hair-section="saved" aria-pressed="'+(hairSection==='saved')+'">我的染髮 <span>'+Object.keys(data.dyed).length+'</span></button></nav><p class="hair-section-hint">'+(myHair?'已保存的專屬髮色，點一下試穿；再次穿戴不扣券。':(hairSection==='back'?'後髮可以和任何前髮分開搭配。':'前髮可以和任何後髮分開搭配。'))+'</p>';
    $$('[data-hair-section]').forEach(b=>b.onclick=()=>{hairSection=b.dataset.hairSection;selected=null;render();});
+  }
+  if(category==='cloth'&&data.catalog.some(o=>o.parts.some(p=>tabOf(p)==='cloth'&&p.category==='acc'))){
+   $('#subtabs').innerHTML='<nav class="hair-sections cloth-sections" aria-label="衣服分類">'+[['all','全部'],['main','衣服'],...Object.entries(wearGroups)].map(([id,name])=>'<button type="button" data-cloth-section="'+id+'" aria-pressed="'+(clothFilter===id)+'">'+name+'</button>').join('')+'</nav>';
+   $$('[data-cloth-section]').forEach(b=>b.onclick=()=>{clothFilter=b.dataset.clothSection;selected=null;render();$('#grid').scrollTop=0;});
   }
   if(category==='eye'){
    $('#subtabs').innerHTML='<nav class="hair-sections face-sections" aria-label="臉部分類">'+[['brow','眉毛'],['eye','眼型']].map(([id,name])=>'<button type="button" data-face-section="'+id+'" aria-pressed="'+(faceSection===id)+'">'+name+'</button>').join('')+'</nav>';

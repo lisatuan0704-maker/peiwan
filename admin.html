@@ -18,6 +18,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
+<script src="tavern-ui/season-v291.js?v=441"></script><script src="tavern-ui/season-v292.js?v=441"></script><script src="tavern-ui/outfit-splits.js?v=441"></script>
 <script src="js/tt-seats.js?v=2"></script><script src="lobby-ui/seats.js?v=361"></script>
 <style>
 :root{
@@ -875,10 +876,10 @@ function renamePart(id){
 let adminPartPricing={};try{db.ref(ROOT+'/config/partPricing').on('value',s=>{adminPartPricing=s.val()||{};if(typeof renderShop==='function'&&shopOpenId)renderShop();});}catch(e){}
 function partUnitsHtml(id,type){
   if(type!=='時裝') return '';
-  const parts=partsOf(id),c=shopConfig[id]||{},keys=Object.keys(parts);
+  const parts=Object.assign({},partsOf(id),(window.TTSeasonDrafts&&window.TTSeasonDrafts[id]&&window.TTSeasonDrafts[id].parts)||{},(window.TTOutfitSplits&&window.TTOutfitSplits[id])||{}),c=shopConfig[id]||{},keys=Object.keys(parts);   /* v441 拆件以網站最新部件為準 */
   if(!keys.length) return '<div style="margin-top:14px;border-top:2px dashed #E4D5F0;padding-top:12px;font-size:12.5px;color:var(--ink-soft)">這套沒有拆件資料（初始套裝由闆卡工房部件組成）。</div>';
   const units=[['hair','頭髮（前髮＋後髮）',['back','front']],['face','臉（眼睛＋眉毛）',['eye','face','brow']],['cloth','衣服',['cloth']]];
-  keys.filter(k=>/^acc\d*$/.test(k)).sort((a,b)=>(+a.slice(3)||0)-(+b.slice(3)||0)).forEach(k=>units.push(['acc',parts[k].n||'配件',[k],k]));
+  keys.filter(k=>/^acc\d*$/.test(k)).sort((a,b)=>(+a.slice(3)||0)-(+b.slice(3)||0)).forEach(k=>units.push([({bottom:'bottom',outer:'outer',glove:'glove'})[parts[k].group]||'acc',parts[k].n||'配件',[k],k]));
   const price=kind=>{const v=(c.partPrices&&c.partPrices[kind]!=null)?c.partPrices[kind]:adminPartPricing[kind];return Number.isSafeInteger(v)&&v>0?v:null;};
   const cells=units.map(([kind,label,slots,accKey])=>{
     const have=slots.filter(sl=>parts[sl]);if(!have.length) return '';
@@ -888,7 +889,7 @@ function partUnitsHtml(id,type){
     return '<div style="width:132px;border:2px solid #E8DDF3;border-radius:12px;background:#fff;padding:8px;text-align:center">'
       +'<div style="position:relative;width:100%;aspect-ratio:1;background:#F7F2FB;border-radius:8px;overflow:hidden">'+layers+'</div>'
       +'<div style="font-size:12px;font-weight:700;margin-top:6px;color:#5A4880">'+(accKey?esc(label):label)+'</div>'
-      +'<div style="font-size:11px;color:var(--ink-soft);line-height:1.5">'+(accKey?'配件':names)+'</div>'
+      +'<div style="font-size:11px;color:var(--ink-soft);line-height:1.5">'+(accKey?({bottom:'下身',outer:'外套',glove:'手套'}[kind]||'配件'):names)+'</div>'
       +'<div style="font-size:12px;font-weight:700;color:#D96A8B;margin-top:3px">'+(pr?'單買 '+pr+' 金幣':'尚未設定單買價')+'</div></div>';
   }).join('');
   return '<div style="margin-top:14px;border-top:2px dashed #E4D5F0;padding-top:12px">'

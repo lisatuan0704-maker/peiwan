@@ -1,0 +1,17 @@
+/* v441 喵頻連線：繪師原圖 13 張（窄裙套裝、外套分開）。售價未定，僅展示與試穿；店長上架後才開賣。 */
+(()=>{const D='img/season-v292/meow/';
+window.TTSeasonDrafts=Object.assign(window.TTSeasonDrafts||{},{"season292_meow":{"name":"喵頻連線","price":null,"previewOnly":true,"hideUntilLive":true,"seasonFeatured":292,"highlightHair":false,"doll":{"hair":2},"fx":"meow","parts":{
+ "front":{"n":"旋翹碎瀏海","d":D+"8.科技前髮(灰階).png","x":0,"y":0,"g":1},
+ "back":{"n":"輕捲高馬尾","d":D+"0.科技後髮(灰階).png","x":0,"y":0,"g":1},
+ "eye":{"n":"異色訊號眼","d":D+"3.科技眼睛.png","x":0,"y":0,"g":0},
+ "brow":{"n":"喵頻眉型","d":D+"3.科技眉毛.png","x":0,"y":0,"g":0},
+ "cloth":{"n":"白曜窄裙裝","d":D+"5.科技窄裙套裝.png","x":0,"y":0,"g":0},
+ "acc8":{"n":"藍脈短外套","d":D+"6.科技外套套裝.png","x":0,"y":0,"g":0,"group":"outer","z":"over","independent":true,"defaultEquipped":true,"drawOrder":1},
+ "acc1":{"n":"流光短披擺","d":D+"1.科技下身披風.png","x":0,"y":0,"g":0,"group":"back","z":"back","independent":true,"defaultEquipped":true},
+ "acc2":{"n":"喵訊連接線","d":D+"2.身體後-科技電線.png","x":0,"y":0,"g":0,"group":"back","z":"back","independent":true,"defaultEquipped":true},
+ "acc3":{"n":"幻彩視界","d":D+"4.科技半透護目鏡.png","x":0,"y":0,"g":0,"group":"face","z":"mid","independent":true,"defaultEquipped":true},
+ "acc4":{"n":"喵訊接收耳","d":D+"7.科技耳朵.png","x":0,"y":0,"g":0,"group":"head","z":"mid","independent":true,"defaultEquipped":true},
+ "acc5":{"n":"青光耳墜","d":D+"9.科技耳環.png","x":0,"y":0,"g":0,"group":"ear","z":"top","independent":true,"defaultEquipped":true},
+ "acc6":{"n":"環音耳機","d":D+"10.科技耳機.png","x":0,"y":0,"g":0,"group":"head","z":"top","independent":true,"defaultEquipped":true},
+ "acc7":{"n":"浮游訊號盒","d":D+"11.手上物品.png","x":0,"y":0,"g":0,"group":"hand","z":"top","independent":false,"defaultEquipped":true}
+},"sourceLayerCount":13}});})();

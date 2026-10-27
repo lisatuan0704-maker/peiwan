@@ -15,7 +15,7 @@ $('seasonPublish').onclick=async()=>{if(!payload||!season)return;const btn=$('se
 })();
 /* v405 時裝部件單買價格：頭髮（瀏海＋後髮）、臉（眼型＋眉毛）、衣服、每件配件。存於 config/partPricing；網站不寫死價格。 */
 (()=>{'use strict';const box=document.createElement('section');box.className='card';
-const kinds=[['hair','頭髮（瀏海＋後髮）'],['face','臉（眼型＋眉毛）'],['cloth','衣服'],['acc','配件（每件）']];
+const kinds=[['hair','頭髮（瀏海＋後髮）'],['face','臉（眼型＋眉毛）'],['cloth','衣服'],['bottom','下身'],['outer','外套'],['glove','手套'],['acc','配件（每件）']];   /* v441 衣服拆件：下身／外套／手套 */
 box.innerHTML='<h2>時裝部件單買價格</h2><p>客人可單買部件；同一套選的部件合計比整套貴時，商城會自動改成整套。留空或 0 表示該類部件不開放單買。</p><div style="display:flex;gap:14px;flex-wrap:wrap">'+kinds.map(([k,n])=>'<label style="font-size:13px">'+n+' <input id="pp_'+k+'" type="number" min="0" step="1" style="width:80px;padding:5px 7px"> 金幣</label>').join('')+'</div><button id="ppSave" style="margin-top:10px">儲存部件價格</button><p id="ppStatus" role="status"></p>';
 document.getElementById('pgMain').append(box);const $=id=>document.getElementById(id);
 try{db.ref(ROOT+'/config/partPricing').on('value',s=>{const v=s.val()||{};kinds.forEach(([k])=>{const el=$('pp_'+k);if(document.activeElement!==el)el.value=Number.isSafeInteger(v[k])?v[k]:'';});});}catch(e){}
