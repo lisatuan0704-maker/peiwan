@@ -45,7 +45,7 @@ function chipHtml(){
     +(ok&&!c?'<button type="button" class="vip-outfit-go" onclick="TTVipOutfit.open()">選擇我的 VIP 時裝</button>':(!ok?'<small>達到 VIP 3 可免費選一套，另一套可在商城以 500 金幣購買</small>':'<small>另一套可在商城以 500 金幣整套購買</small>'))+'</div>';
 }
 // ---- 選擇視窗 ----
-let modal=null,confirmId=null,busy=false,prompted=false;
+let modal=null,confirmId=null,buyId=null,buyReq=null,busy=false,prompted=false;   // v450 另一套 500 由伺服器扣款
 function ensure(){
   if(modal)return modal;
   modal=document.createElement('div');modal.id='vipOutfitM';modal.hidden=true;modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','VIP 3 專屬時裝二選一');
@@ -57,15 +57,17 @@ function render(){
   const m=ensure(),c=chosen(),ok=lv()>=3;
   m.innerHTML='<div class="vo-card"><button class="vo-x" type="button" aria-label="關閉">×</button>'
    +'<span class="vo-tag">VIP 3 常客獎勵</span><h2>選一套你的專屬時裝</h2>'
-   +'<p class="vo-sub">'+(c?'你已經選了「'+esc(nameOf(c))+'」，已收進背包。另一套可以在商城用 500 金幣整套購買。':'免費收進背包，<b>選了就不能更換</b>。另一套之後可以在商城用 500 金幣整套購買。')+'</p>'
+   +'<p class="vo-sub">'+(c?'你已經選了「'+esc(nameOf(c))+'」，已收進背包。另一套可以用 500 金幣整套購買。':'免費收進背包，<b>選了就不能更換</b>。另一套之後可以在商城用 500 金幣整套購買。')+'</p>'
    +'<div class="vo-grid">'+IDS.map(id=>{
       const mine=c===id,other=c&&!mine,asking=confirmId===id;
       return '<article class="vo-item'+(mine?' is-mine':'')+(asking?' is-asking':'')+'"><canvas width="256" height="256" data-vip-outfit="'+id+'"></canvas><h3>'+esc(nameOf(id))+'</h3><p>'+esc(BLURB[id]||'')+'</p>'
-       +(mine?'<button type="button" disabled>已收進背包</button>':other?'<button type="button" data-vo-shop>到商城購買 500</button>':!ok?'<button type="button" disabled>VIP 3 解鎖</button>':asking?'<div class="vo-confirm"><b>確定選「'+esc(nameOf(id))+'」？</b><span>選了就不能更換</span><div><button type="button" class="vo-yes" data-vo-yes="'+id+'">確定</button><button type="button" class="vo-no" data-vo-no>再想想</button></div></div>':'<button type="button" class="vo-pick" data-vo-pick="'+id+'">選這套</button>')
+       +(mine?'<button type="button" disabled>已收進背包</button>':other&&own()[id]?'<button type="button" disabled>已購買</button>':other&&buyId===id?'<div class="vo-confirm"><b>花 500 金幣購買「'+esc(nameOf(id))+'」？</b><span>整套購買，不拆賣</span><div><button type="button" class="vo-yes" data-vo-buyyes="'+id+'">購買</button><button type="button" class="vo-no" data-vo-no>再想想</button></div></div>':other?'<button type="button" class="vo-pick" data-vo-buy="'+id+'">用 500 金幣購買</button>':!ok?'<button type="button" disabled>VIP 3 解鎖</button>':asking?'<div class="vo-confirm"><b>確定選「'+esc(nameOf(id))+'」？</b><span>選了就不能更換</span><div><button type="button" class="vo-yes" data-vo-yes="'+id+'">確定</button><button type="button" class="vo-no" data-vo-no>再想想</button></div></div>':'<button type="button" class="vo-pick" data-vo-pick="'+id+'">選這套</button>')
        +'</article>';}).join('')+'</div><p class="vo-status" role="status"></p></div>';
   m.querySelector('.vo-x').onclick=close;
   m.querySelectorAll('[data-vo-pick]').forEach(b=>b.onclick=()=>{confirmId=b.dataset.voPick;render();});
-  m.querySelectorAll('[data-vo-no]').forEach(b=>b.onclick=()=>{confirmId=null;render();});
+  m.querySelectorAll('[data-vo-no]').forEach(b=>b.onclick=()=>{confirmId=null;buyId=null;render();});
+  m.querySelectorAll('[data-vo-buy]').forEach(b=>b.onclick=()=>{buyId=b.dataset.voBuy;buyReq=null;render();});
+  m.querySelectorAll('[data-vo-buyyes]').forEach(b=>b.onclick=()=>buy(b.dataset.voBuyyes));
   m.querySelectorAll('[data-vo-yes]').forEach(b=>b.onclick=()=>claim(b.dataset.voYes));
   m.querySelectorAll('[data-vo-shop]').forEach(b=>b.onclick=()=>{close();try{window.TinyTavernUI?.open('shop');}catch(e){}});
   mountAll(m);
@@ -80,7 +82,18 @@ async function claim(id){
   }catch(e){st.textContent='沒有領取成功：'+(e.message||'請稍後再試');modal.querySelectorAll('button').forEach(b=>b.disabled=false);}
   busy=false;
 }
-function open(){if(!window.TTSeasonDrafts?.season292_meow)return;confirmId=null;render();modal.hidden=false;document.body.classList.add('vo-open');}
+async function buy(id){
+  if(busy)return;busy=true;const st=modal.querySelector('.vo-status');modal.querySelectorAll('button').forEach(b=>b.disabled=true);st.textContent='購買中…';
+  try{
+    if(!window.TTVoiceOrders)throw Error('請先登入 Discord。');
+    buyReq=buyReq||(crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):String(Date.now())+Math.random().toString(36).slice(2,10));   // 同一次購買重試沿用同一編號，不會重複扣款
+    const r=await window.TTVoiceOrders.vipOutfit({buyId:id,requestId:buyReq});
+    buyId=null;buyReq=null;st.textContent='已購買「'+nameOf(r.outfitId)+'」！到背包就能穿上。';
+    setTimeout(()=>{busy=false;if(modal&&!modal.hidden)render();},1800);return;
+  }catch(e){st.textContent='沒有購買成功：'+(e.message||'請稍後再試');modal.querySelectorAll('button').forEach(b=>b.disabled=false);}
+  busy=false;
+}
+function open(){if(!window.TTSeasonDrafts?.season292_meow)return;confirmId=null;buyId=null;render();modal.hidden=false;document.body.classList.add('vo-open');}
 function close(){if(!modal)return;modal.hidden=true;confirmId=null;document.body.classList.remove('vo-open');}
 function maybePrompt(force){
   if(lv()<3||chosen()||!window.__ownedLoaded||busy)return;

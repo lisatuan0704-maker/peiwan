@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v450 VIP 3 另一套改由伺服器收費（免上架）
+使用者選擇「不用上架」方案。後端 vip-outfit.cjs 新增 body {buyId,requestId}：伺服器重新計算累積支持（≥15000）、必須已免費選過一套、買的是另一套且尚未持有，餘額 ≥500 時在 peiwan 節點 transaction 一次寫入：扣 500、wallet.lastTx、clientOrders/vipbuy_<requestId>（type shop、paidBy wallet、status done）、walletTx、owned（ref 指向訂單）。同一 requestId 重送不重複扣款，同時送出只成立一筆。補上 v445 的已知限制（VIP 3 才能買改由伺服器把關）。測試：vip-outfit.test.cjs 6 項、vip-outfit.emu.test.cjs 5 項（含併發、餘額不足、非 VIP 3）。部署 20261028-v450。
+網站：bridge 對 vipOnly 一律 price 500、sale false（不走一般結帳，目前搭配會列為不可結帳），新增 vipBuyable；商城列表改為 sale 或 vipOnly 皆顯示；商城卡片「購買整套」與選擇視窗「用 500 金幣購買」→確認→呼叫後端（重試沿用同一 requestId）。店長頁不需再上架這兩套（products.json／匯入器保留但不用）。
+
 ## v449 疾風喵行特效定案
 使用者選定 {"windFx":["滑板殘影","風鏡反光","貓尾星光","哈白霧","風雪"]}：outfit-fx.js 移除翅膀氣流（晴空小翼）與風痕線條（逐風機能外套）綁定，其餘不變。
 

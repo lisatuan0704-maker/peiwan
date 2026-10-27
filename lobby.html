@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=445"></script>
+<script src="lobby-ui/fixed-view.js?v=450"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=428"></script>
@@ -7790,8 +7790,8 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-splits.js?v=441"></script>
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
-<script src="lobby-ui/vip-outfit.js?v=445"></script>
-<script src="tavern-ui-bridge.js?v=445"></script>
+<script src="lobby-ui/vip-outfit.js?v=450"></script>
+<script src="tavern-ui-bridge.js?v=450"></script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
@@ -7805,7 +7805,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/order-flow.js?v=373"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=445';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=450';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
