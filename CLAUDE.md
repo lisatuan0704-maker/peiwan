@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v429 通訊錄好友頭貼置中、我的狀態縮小
+我的酒館通訊錄：v407 主題把好友頭貼畫布固定為 52px 並加粉色方底，但花圈／VIP 頭像框的開口只有約 41px（TTF_CIR 74%），角色被放大、往右下偏且下半身被裁。有頭像框（.ttf）時改回不加底色、畫布依開口 100% 縮放；私訊標題的頭像同樣處理。「我的狀態」原本跨兩列並拉伸佔滿左欄，改為依內容高度，搜尋框緊接在下方。只改 theme-skin.css（lobby.html 樣式版本 429）。
+驗證：在正式網站以真實角色資料、通訊錄實際結構重現修正前畫布 52px 塞進 41px 開口，修正後畫布與開口同為 41px、無粉色底；狀態區改為內容高度、搜尋框移到其下。
+
 ## v428 開幕前資安修正（三批）
 以 10/27 16:55 線上規則快照為底，產生 security/database.rules.json（需由店長在 Firebase 主控台貼上發布；未發布前網站行為不變）。
 第一批（後台權限）：原本規則多處只檢查 auth != null，而客人 Discord 登入後、或任何人用 partner.html 自行註冊 Email 帳號都算「已登入」，可改商品價格、員工資料、工單、陪玩卡、禁言名單、讀全部邀請碼與客戶帳號、改別人訂單狀態、發站內信、把金幣改成任意數字。改為：店長＝config/adminUid；店員＝links/<uid> 有紀錄（且 links 只能用有效且未使用的邀請碼建立，與 invites/<碼>/usedBy 同一筆寫入）。shopConfig／tables／board／characters／staff 寫入限店長；staffCards、staffStatus 限店長或該陪玩本人；orders、mutes、mail 寄送、clientOrders 修改、付款證明／檢舉／問題回報讀取限店員。partner.html、kefu.html 註冊改為同時寫入 usedBy；admin.html 用過的邀請碼不再顯示，解除綁定後可重新產生。
