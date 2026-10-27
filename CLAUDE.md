@@ -1,5 +1,8 @@
 # 小小酒館修改紀錄
 
+## v440 背包隨時換膚色、Discord 伺服器連結
+背包（live-wardrobe.js 色票區）新增「膚色」四色，選了立即保存（bag 模式走 saveBag→wear）；tavern-ui-bridge.js makeDoll 支援 color.skin（0～3，SKINS），state() 帶 skins。商城試穿不顯示膚色。全站 Discord 邀請連結 discord.gg/aK9GFarxm 改為 discord.gg/sw95eYeJ2P（大廳、新手指南、訂單、客服）。版本鏈 bridge／tavern-ui index／時裝間比較／live-wardrobe 改 440。
+
 ## v439 入店歡迎卡一體化
 #intro 套用與登入卡相同的整站主題（白紙深藍框、粉藍錯位紙頁、粉色主按鈕）；文案「陪玩小酒館／店員／想被陪玩」改為冒險者用字；本機已有闆卡（tt_me）時隱藏「先做一張闆卡進來玩」，剛做好闆卡進大廳不會再被叫去做卡。
 實測（使用者）：v438 工房 Discord 登入自動帶入、做卡後進大廳免再登入、店長頁客人名冊顯示 Discord 已綁定。

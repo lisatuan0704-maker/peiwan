@@ -307,6 +307,10 @@
   const highlight=colorTarget==='highlight',label=highlight?'挑染':'主色',selectedColor=highlight?color.highlight:color.hair;
   const targets=hasHighlight?'<div class="hair-color-targets" role="group" aria-label="換色部位">'+[['main','主色'],['highlight','挑染']].map(([id,name])=>'<button type="button" data-color-target="'+id+'" aria-pressed="'+(colorTarget===id)+'">'+name+'</button>').join('')+'</div>':'<strong>主色</strong>';
   $('#dyePanel').innerHTML='<div class="dye-head">'+targets+'<span>'+(color.savedId?'已保存髮色':'即時試色')+'</span></div><div class="swatches">'+preset.map(i=>'<button data-color="'+i+'" aria-label="試穿'+label+' '+(i+1)+'" style="--swatch:'+data.colors[i]+'" aria-pressed="'+(selectedColor===i)+'" '+(color.savedId?'disabled':'')+'></button>').join('')+'</div>';
+  /* v440: 背包可隨時換膚色（建卡後也能改），選了立即保存 */
+  if(area==='bag'&&Array.isArray(data.skins)&&data.skins.length){const cur=Number.isInteger(color.skin)?color.skin:(data.doll?.skin||0);
+   $('#dyePanel').insertAdjacentHTML('beforeend','<div class="dye-head" style="margin-top:10px"><strong>膚色</strong><span>選了就會保存</span></div><div class="swatches skin-swatches">'+data.skins.map((c,i)=>'<button data-skin="'+i+'" aria-label="膚色 '+(i+1)+'" style="--swatch:'+c+'" aria-pressed="'+(cur===i)+'"></button>').join('')+'</div>');
+   $$('[data-skin]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.skin);if(i===cur)return;saveBag(selection,{...color,skin:i},'已保存膚色。');});}
   $$('[data-color-target]').forEach(b=>b.onclick=()=>{colorTarget=b.dataset.colorTarget;swatches();});
   $$('[data-color]').forEach(b=>b.onclick=()=>{const index=Number(b.dataset.color),nextColor=highlight?{...color,highlight:index}:{...color,hair:index,keepOriginal:false};if(area==='bag')return saveBag(selection,nextColor,highlight?'已保存挑染色。':'已保存主色。');color=nextColor;swatches();requestPaint();});
  }

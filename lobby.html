@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=439"></script>
+<script src="lobby-ui/fixed-view.js?v=440"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=428"></script>
@@ -4377,7 +4377,7 @@ function renderTopup(){
     +tierHtml
     +'<div style="font-size:12px;color:#A5798D;margin-top:14px;line-height:1.8">金幣可用於點單與時裝購買(1 金幣＝1 元)。<br>'
       +'儲值後店長會核對銀行入帳,<b style="color:#8E68C8">通常幾分鐘內完成</b>,深夜可能稍久;入帳會跳通知給你 ✦<br>'
-      +'<a href="https://discord.gg/aK9GFarxm" target="_blank" rel="noopener" style="color:#E27FA6;text-decoration:underline">等太久?到 Discord 找店長 →</a></div>'
+      +'<a href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener" style="color:#E27FA6;text-decoration:underline">等太久?到 Discord 找店長 →</a></div>'
     +(bal>0?'<div style="text-align:center;margin-top:10px"><a href="#" onclick="renderWalletTx();return false" style="color:#8E68C8;font-size:12.5px;text-decoration:underline">查看交易紀錄</a></div>':'')
     +'<div id="walletTxBox"></div>';
 }
@@ -5187,7 +5187,7 @@ function tryServeNudge(staff){
 
 /* ================= 👗 商城(服裝 / 寵物 / 座椅)================= */
 (function(){
-  const DC='https://discord.gg/aK9GFarxm';
+  const DC='https://discord.gg/sw95eYeJ2P';
   // 服裝:用現有繪師部件組合成款式預覽(真正上架款由繪師陸續繪製)
   const OUTFITS=[
     {nm:'露亞經典裝', pr:120, de:'酒館招牌款,俐落好搭', doll:{back:0,front:0,cloth:0,face:0,acc:0}},
@@ -7741,12 +7741,12 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui-bridge.js?v=434"></script>
+<script src="tavern-ui-bridge.js?v=440"></script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
-<script src="lobby-ui/live.js?v=427"></script>
+<script src="lobby-ui/live.js?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
@@ -7765,7 +7765,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=427"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
-<script type="module" src="lobby-ui/support.mjs?v=427"></script>
+<script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=432">
 <script src="lobby-ui/mobile-app.js?v=432"></script>
 </body>

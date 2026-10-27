@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=421';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=440';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -137,7 +137,7 @@
       return withPartSale(prod,c,own);
     }).concat(seats,baseProducts());
   }
-  function state(){const a=typeof me==='function'?me():null;return {loggedIn:!!a,doll:clone(a?.b?.doll||{back:0,front:0,cloth:0,face:0,acc:0,hair:0}),catalog:catalog(),baseParts:window.__ownedParts?.()||{},colors:HAIRS.map(h=>h[0]),tickets:Number((window.__owned||{}).dyeTickets)||0,dyed:clone(Object.fromEntries(Object.entries((window.__owned||{}).dyedHairSets||{}).filter(([,s])=>![s.front,s.back].some(ref=>window.TTRetiredOutfits?.refRetired(ref,window.__shopCfg)))))};}
+  function state(){const a=typeof me==='function'?me():null;return {loggedIn:!!a,doll:clone(a?.b?.doll||{back:0,front:0,cloth:0,face:0,acc:0,hair:0}),catalog:catalog(),baseParts:window.__ownedParts?.()||{},colors:HAIRS.map(h=>h[0]),skins:SKINS.slice(),tickets:Number((window.__owned||{}).dyeTickets)||0,dyed:clone(Object.fromEntries(Object.entries((window.__owned||{}).dyedHairSets||{}).filter(([,s])=>![s.front,s.back].some(ref=>window.TTRetiredOutfits?.refRetired(ref,window.__shopCfg)))))};}
   function validPart(ref,owned=false,cache={}){if(!ref||typeof ref!=='object')return null;const o=(cache.items??=catalog()).find(o=>o.id===ref.source);const p=o&&!o.retired&&o.parts.find(p=>p.slot===ref.slot);return p&&(!owned||o.owned||p.owned)?p:undefined;}
   function makeDoll(selection,color,owned=false){
     const a=typeof me==='function'?me():null;
@@ -168,6 +168,7 @@
     if(changed||Object.keys(selection).some(k=>k.startsWith('accessory:'))){delete d.set;d.ps=ps;d.uiBaseSlots=baseKeys;d.acc=Number.isInteger(selection.acc?.base)?selection.acc.base:0;d.uiAccessoryVersion=287;d.uiAccessories=Object.entries(selection).filter(([s,r])=>s.startsWith('accessory:')&&r).map(([,r])=>({source:r.source,slot:r.slot}));}
     if(color){
       if(Number.isInteger(color.hair)&&color.hair>=0&&color.hair<HAIRS.length){d.hair=color.hair;if(!color.keepOriginal){delete d.hairHex;delete d.hairHex2;delete d.hairHighlight;}}
+      if(color.skin!==undefined){if(!Number.isInteger(color.skin)||color.skin<0||color.skin>=SKINS.length)throw Error('請選擇有效的膚色');d.skin=color.skin;}   // v440 背包可隨時換膚色
       if(color.highlight!==undefined){if(!Number.isInteger(color.highlight)||color.highlight<0||color.highlight>=HAIRS.length)throw Error('請選擇有效的挑染色');d.hairHighlight=HAIRS[color.highlight][0];}
       if(color.savedId){const saved=(window.__owned||{}).dyedHairSets?.[color.savedId];if(!saved)throw Error('找不到染色組合');
         const sameRef=(a,b)=>!!a&&!!b&&a.slot===b.slot&&(a.base!==undefined||b.base!==undefined?a.base===b.base:a.source===b.source);if(!sameRef(selection.front,saved.front)||!sameRef(selection.back,saved.back))throw Error('染色組合必須整組穿戴');d.hairHex=saved.main;d.hairHex2=saved.tail;d.dyedHairSet=color.savedId;if(saved.highlight)d.hairHighlight=saved.highlight;else delete d.hairHighlight;
