@@ -4318,8 +4318,9 @@ async function payWithCoins(){
     const changes={};changes['clientOrders/'+ref.key]=o;
     changes['wallet/'+key+'/balance']=firebase.database.ServerValue.increment(-amt);
     changes['walletTx/'+key+'/'+ref.key]={type:'spend',amount:-amt,ref:ref.key,note:plan.n,ts:o.createdAt};
+    changes['wallet/'+key+'/lastTx']=ref.key; // v-sec2: 資料庫規則以此核對「扣款＝交易紀錄」
     if(kind==='shop'&&plan.itemId==='dyeTicket')changes['owned/'+key+'/dyeTickets']=firebase.database.ServerValue.increment(1);
-    else if(kind==='shop'&&plan.itemId)changes['owned/'+key+'/'+plan.itemId]={name:plan.itemName||plan.n,ts:o.createdAt};
+    else if(kind==='shop'&&plan.itemId)changes['owned/'+key+'/'+plan.itemId]={name:plan.itemName||plan.n,ts:o.createdAt,ref:ref.key};
     // 訂單、扣款明細、商品一起成立，拒絕時全部不寫入。
     await db.ref(ROOT).update(changes);
    }});
@@ -7462,7 +7463,7 @@ async function buyChatSkin(c){if(bubbleBuying||!myKey||c.lv||c.price!==50)return
 try{const held=await db.ref(ROOT+'/owned/'+key+'/'+c.itemId).once('value');if(held.exists()){window.__owned[c.itemId]=held.val();bkBubbleRender();toast('你已擁有這款氣泡');return;}
 const bal=await db.ref(ROOT+'/wallet/'+key+'/balance').once('value');if(!Number.isSafeInteger(bal.val())||bal.val()<50){toast('金幣不足，需要 50 金幣');return;}
 const ref=db.ref(ROOT+'/clientOrders').push(),ts=Date.now();const o={type:'shop',plan:c.itemId,planName:'聊天氣泡・'+c.n,amount:50,origAmount:50,couponUsed:false,couponDisc:0,itemId:c.itemId,itemName:c.n,name:me()?.b?.name||'酒館客人',paidBy:'wallet',status:'done',createdAt:ts,myKey:key};
-await walletSafety().execute({key,amount:50,ids:[ref.key],lookup:walletLookup,commit:async()=>{const existing=await db.ref(ROOT+'/owned/'+key+'/'+c.itemId).once('value');if(existing.exists())throw Object.assign(Error('已擁有'),{code:'validation_failed'});const changes={};changes['clientOrders/'+ref.key]=o;changes['wallet/'+key+'/balance']=firebase.database.ServerValue.increment(-50);changes['walletTx/'+key+'/'+ref.key]={type:'spend',amount:-50,ref:ref.key,note:o.planName,ts};changes['owned/'+key+'/'+c.itemId]={name:c.n,ts};await db.ref(ROOT).update(changes);}});
+await walletSafety().execute({key,amount:50,ids:[ref.key],lookup:walletLookup,commit:async()=>{const existing=await db.ref(ROOT+'/owned/'+key+'/'+c.itemId).once('value');if(existing.exists())throw Object.assign(Error('已擁有'),{code:'validation_failed'});const changes={};changes['clientOrders/'+ref.key]=o;changes['wallet/'+key+'/balance']=firebase.database.ServerValue.increment(-50);changes['walletTx/'+key+'/'+ref.key]={type:'spend',amount:-50,ref:ref.key,note:o.planName,ts};changes['wallet/'+key+'/lastTx']=ref.key;changes['owned/'+key+'/'+c.itemId]={name:c.n,ts,ref:ref.key};await db.ref(ROOT).update(changes);}});
 rememberPaymentIds([ref.key]);if(myKey===key){window.__owned[c.itemId]={name:c.n,ts};__setBub(c.k);bkBubbleRender();toast('已購買並換上「'+c.n+'」');}
 }catch(e){if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'購買未完成，請查看訂單');}finally{bubbleBuying=false;}}
 window.openChatSkins=function(){window.bookOpen?.();bkGo('bubbles');};

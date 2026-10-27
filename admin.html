@@ -1810,7 +1810,8 @@ function months(){
   return [...set].sort().reverse();
 }
 function render(){ renderAll(); renderSettle(); renderSvcs(); renderChars(); renderStaff(); }
-function inviteOf(refId,type){const e=Object.entries(invites).find(([,v])=>v.refId===refId&&v.type===type);return e?e[0]:null;}
+/* v-sec1: 用過的邀請碼不再顯示,解除綁定後可以重新產生一組新的 */
+function inviteOf(refId,type){const e=Object.entries(invites).find(([,v])=>v.refId===refId&&v.type===type&&!v.usedBy);return e?e[0]:null;}
 function linkOf(refId,type){const e=Object.entries(links).find(([,v])=>v.refId===refId&&v.type===type);return e?e[0]:null;}
 function makeInvite(refId,type){db.ref(ROOT+"/invites/"+genCode()).set({type,refId});}
 function unbind(refId,type){

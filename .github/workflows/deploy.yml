@@ -19,7 +19,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # v428: 只發布網站本身。開發紀錄、資料庫規則、測試與工具腳本、內部測試頁不上線。
+      - name: Prepare public site
+        run: |
+          mkdir -p _site
+          rsync -a ./ _site/ \
+            --exclude '.git' --exclude '.github' --exclude '.gitattributes' --exclude '_site' \
+            --exclude '*.md' \
+            --exclude 'security/' --exclude 'tests/' --exclude 'scripts/' --exclude 'docs/' \
+            --exclude 'test-inventory.html' --exclude 'test-inventory.js'
+          test -f _site/index.html && test -f _site/lobby.html && test -f _site/CNAME
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
-      - uses: actions/deploy-pages@v4
+          path: '_site'
+      - id: deployment
+        uses: actions/deploy-pages@v4

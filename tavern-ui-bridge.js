@@ -214,18 +214,20 @@
     const ownedRef=db.ref(ROOT+'/owned/'+key);let reason='保存未完成，請再試一次';
     dyeSaving=true;
     try{
-      // 先讀取目前背包；扣券與新增組合放在同一筆交易，重試同一請求不重複扣券。
-      await ownedRef.once('value');
-      const result=await ownedRef.transaction(current=>{
-        if(myKey!==key){reason='帳號已切換，請重新開啟背包';return;}
-        const own=current||{},existing=own.dyedHairSets?.[requestId];
-        if(existing){if(same(existing))return own;reason='這次染色資料已變更，請重新開啟染髮';return;}
-        if([record.front,record.back].some(r=>r.source&&r.source!=='cloth0'&&!own[r.source]&&!own[r.source+'::hair'])){reason='這個髮型尚未取得';return;}
-        if(!Number.isSafeInteger(own.dyeTickets)||own.dyeTickets<1){reason='染髮券不足，預覽不會扣券';return;}
-        return {...own,dyeTickets:own.dyeTickets-1,dyedHairSets:{...(own.dyedHairSets||{}),[requestId]:{...record,at:Date.now()}}};
-      },undefined,false);
-      if(!result.committed)throw Error(reason);
-      const saved=result.snapshot.val();
+      // v-sec2: 扣券與新增組合放在同一筆多路徑更新。資料庫規則只允許「券數剛好減 1＋同時新增這筆組合」，
+      // 兩個分頁同時保存時較晚的一筆會被拒絕，不會一張券用兩次；重試同一請求不重複扣券。
+      const own=(await ownedRef.once('value')).val()||{};
+      if(myKey!==key)throw Error('帳號已切換，請重新開啟背包');
+      const existing=own.dyedHairSets?.[requestId];
+      if(existing&&!same(existing))throw Error('這次染色資料已變更，請重新開啟染髮');
+      if(!existing){
+        if([record.front,record.back].some(r=>r.source&&r.source!=='cloth0'&&!own[r.source]&&!own[r.source+'::hair']))throw Error('這個髮型尚未取得');
+        if(!Number.isSafeInteger(own.dyeTickets)||own.dyeTickets<1)throw Error('染髮券不足，預覽不會扣券');
+        try{await ownedRef.update({dyeTickets:own.dyeTickets-1,dyeLast:requestId,['dyedHairSets/'+requestId]:{...record,at:Date.now()}});}
+        catch(e){reason=String(e?.code||e?.message||'').toUpperCase().includes('PERMISSION')?'染髮券數量剛剛有變動（可能在其他分頁使用了），請重新開啟染髮再試一次':(e?.message||reason);}
+      }
+      const saved=(await ownedRef.once('value')).val();
+      if(!saved?.dyedHairSets?.[requestId])throw Error(reason);
       if(!same(saved?.dyedHairSets?.[requestId]))throw Error('尚未確認保存結果，請重試');
       if(myKey===key)window.__owned=saved;
       return {id:requestId,tickets:saved.dyeTickets};

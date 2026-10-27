@@ -473,7 +473,9 @@ function login(){
       return db.ref(ROOT+"/invites/"+code).once("value").then(sv=>{
         const inv=sv.val();
         if(!inv||inv.type!=="staff") throw new Error("邀請碼無效，或這不是客服邀請碼");
-        return db.ref(ROOT+"/links/"+c.user.uid).set({type:"staff",refId:inv.refId,code});
+        /* v-sec1: 邀請碼只能用一次:同時寫入 links 與 invites/<碼>/usedBy,由資料庫規則一起驗證 */
+        if(inv.usedBy) throw new Error("這組邀請碼已經被使用過,請向店長索取新的邀請碼");
+        return db.ref(ROOT).update({["links/"+c.user.uid]:{type:"staff",refId:inv.refId,code},["invites/"+code+"/usedBy"]:c.user.uid});
       });
     }).then(()=>afterAuth()).catch(e=>{
       if(String(e.message).includes("already")) alert("這個帳號名已被使用，換一個");

@@ -1,0 +1,442 @@
+{
+  "rules": {
+    "peiwan": {
+      "staffStatus": {
+        ".read": true,
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+        "$cid": {
+          ".write": "(auth != null && root.child('peiwan/links').child(auth.uid).child('type').val() == 'char' && root.child('peiwan/links').child(auth.uid).child('refId').val() == $cid)"
+        }
+      },
+      "mutes": {
+        ".read": true,
+        ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+      },
+      "renewReq": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": [
+          "myKey",
+          "staffCid"
+        ]
+      },
+      "cancelReq": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": [
+          "myKey",
+          "staffCid"
+        ]
+      },
+      "owned": {
+        ".read": true,
+        ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        "$k": {
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+          "$item": {
+            ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ($item != 'dyeTickets' && $item != 'dyedHairSets' && $item != 'dyeLast' && (!data.exists() && newData.child('ref').isString() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).exists() && !root.child('peiwan/clientOrders').child(newData.child('ref').val()).exists() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('myKey').val() == $k && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('itemId').val() == $item && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('type').val() == 'shop' && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('paidBy').val() == 'wallet' && (($item.beginsWith('bubble_') && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= 50) || (!$item.contains('::') && !$item.beginsWith('bubble_') && root.child('peiwan/shopConfig').child($item).child('price').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item).child('price').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || ($item.endsWith('::hair') && ((root.child('peiwan/shopConfig').child($item.replace('::hair','')).child('partPrices').child('hair').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::hair','')).child('partPrices').child('hair').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::hair','')).child('partPrices').child('hair').exists() && root.child('peiwan/config/partPricing').child('hair').isNumber() && root.child('peiwan/config/partPricing').child('hair').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('hair').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::face') && ((root.child('peiwan/shopConfig').child($item.replace('::face','')).child('partPrices').child('face').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::face','')).child('partPrices').child('face').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::face','')).child('partPrices').child('face').exists() && root.child('peiwan/config/partPricing').child('face').isNumber() && root.child('peiwan/config/partPricing').child('face').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('face').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::cloth') && ((root.child('peiwan/shopConfig').child($item.replace('::cloth','')).child('partPrices').child('cloth').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::cloth','')).child('partPrices').child('cloth').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::cloth','')).child('partPrices').child('cloth').exists() && root.child('peiwan/config/partPricing').child('cloth').isNumber() && root.child('peiwan/config/partPricing').child('cloth').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('cloth').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc0') && ((root.child('peiwan/shopConfig').child($item.replace('::acc0','')).child('partPrices').child('acc0').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc0','')).child('partPrices').child('acc0').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc0','')).child('partPrices').child('acc0').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc1') && ((root.child('peiwan/shopConfig').child($item.replace('::acc1','')).child('partPrices').child('acc1').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc1','')).child('partPrices').child('acc1').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc1','')).child('partPrices').child('acc1').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc2') && ((root.child('peiwan/shopConfig').child($item.replace('::acc2','')).child('partPrices').child('acc2').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc2','')).child('partPrices').child('acc2').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc2','')).child('partPrices').child('acc2').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc3') && ((root.child('peiwan/shopConfig').child($item.replace('::acc3','')).child('partPrices').child('acc3').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc3','')).child('partPrices').child('acc3').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc3','')).child('partPrices').child('acc3').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc4') && ((root.child('peiwan/shopConfig').child($item.replace('::acc4','')).child('partPrices').child('acc4').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc4','')).child('partPrices').child('acc4').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc4','')).child('partPrices').child('acc4').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc5') && ((root.child('peiwan/shopConfig').child($item.replace('::acc5','')).child('partPrices').child('acc5').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc5','')).child('partPrices').child('acc5').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc5','')).child('partPrices').child('acc5').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc6') && ((root.child('peiwan/shopConfig').child($item.replace('::acc6','')).child('partPrices').child('acc6').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc6','')).child('partPrices').child('acc6').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc6','')).child('partPrices').child('acc6').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc7') && ((root.child('peiwan/shopConfig').child($item.replace('::acc7','')).child('partPrices').child('acc7').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc7','')).child('partPrices').child('acc7').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc7','')).child('partPrices').child('acc7').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc8') && ((root.child('peiwan/shopConfig').child($item.replace('::acc8','')).child('partPrices').child('acc8').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc8','')).child('partPrices').child('acc8').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc8','')).child('partPrices').child('acc8').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc9') && ((root.child('peiwan/shopConfig').child($item.replace('::acc9','')).child('partPrices').child('acc9').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc9','')).child('partPrices').child('acc9').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc9','')).child('partPrices').child('acc9').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc10') && ((root.child('peiwan/shopConfig').child($item.replace('::acc10','')).child('partPrices').child('acc10').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc10','')).child('partPrices').child('acc10').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc10','')).child('partPrices').child('acc10').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))) || ($item.endsWith('::acc11') && ((root.child('peiwan/shopConfig').child($item.replace('::acc11','')).child('partPrices').child('acc11').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/shopConfig').child($item.replace('::acc11','')).child('partPrices').child('acc11').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child($item.replace('::acc11','')).child('partPrices').child('acc11').exists() && root.child('peiwan/config/partPricing').child('acc').isNumber() && root.child('peiwan/config/partPricing').child('acc').val() > 0 && newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('amount').val() >= root.child('peiwan/config/partPricing').child('acc').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.child('ref').val()).child('couponUsed').val() == true ? 200 : 0)))))))"
+          },
+          "dyeTickets": {
+            ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (newData.val() == (data.exists() ? data.val() : 0) + 1 && newData.parent().parent().parent().child('clientOrders').child(newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val()).child('itemId').val() == 'dyeTicket' && newData.parent().parent().parent().child('clientOrders').child(newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val()).child('myKey').val() == $k && newData.parent().parent().parent().child('clientOrders').child(newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val()).child('paidBy').val() == 'wallet' && !root.child('peiwan/clientOrders').child(newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val()).exists() && ((root.child('peiwan/shopConfig').child('dyeTicket/price').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val()).child('amount').val() >= root.child('peiwan/shopConfig').child('dyeTicket/price').val() - (newData.parent().parent().parent().child('clientOrders').child(newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val()).child('couponUsed').val() == true ? 200 : 0)) || (!root.child('peiwan/shopConfig').child('dyeTicket/price').exists() && newData.parent().parent().parent().child('clientOrders').child(newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val()).child('amount').val() >= 299 - (newData.parent().parent().parent().child('clientOrders').child(newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val()).child('couponUsed').val() == true ? 200 : 0)))) || (data.exists() && newData.val() == data.val() - 1 && newData.parent().child('dyeLast').val() != null && newData.parent().child('dyeLast').val() != data.parent().child('dyeLast').val() && newData.parent().child('dyedHairSets').child(newData.parent().child('dyeLast').val()).exists() && !data.parent().child('dyedHairSets').child(newData.parent().child('dyeLast').val()).exists())",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+          },
+          "dyeLast": {
+            ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (newData.isString() && newData.val() != data.val() && newData.parent().child('dyeTickets').val() == data.parent().child('dyeTickets').val() - 1 && newData.parent().child('dyedHairSets').child(newData.val()).exists() && !data.parent().child('dyedHairSets').child(newData.val()).exists())"
+          },
+          "dyedHairSets": {
+            "$req": {
+              ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && newData.exists() && newData.parent().parent().child('dyeTickets').val() == data.parent().parent().child('dyeTickets').val() - 1 && newData.parent().parent().child('dyeLast').val() == $req)"
+            }
+          }
+        }
+      },
+      "blocks": {
+        ".read": "auth != null",
+        ".write": true,
+        "$k": {
+          "$o": {
+            ".read": true
+          }
+        }
+      },
+      "pos": {
+        ".read": true,
+        ".write": true
+      },
+      "staffCards": {
+        ".read": true,
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+        "$cid": {
+          ".write": "(auth != null && root.child('peiwan/links').child(auth.uid).child('type').val() == 'char' && root.child('peiwan/links').child(auth.uid).child('refId').val() == $cid)"
+        }
+      },
+      "clientOrders": {
+        ".read": true,
+        ".indexOn": [
+          "myKey",
+          "staffCid",
+          "staffName"
+        ],
+        "$id": {
+          ".write": "(!data.exists() && newData.exists() && newData.child('myKey').isString() && newData.child('amount').isNumber() && newData.child('amount').val() >= 0 && newData.child('amount').val() % 1 == 0 && ((newData.child('paidBy').val() != 'wallet' && newData.child('status').val() == 'pending') || (newData.child('paidBy').val() == 'wallet' && (newData.child('status').val() == 'done' || newData.child('status').val() == 'confirmed') && ((!newData.child('groupId').exists() && newData.parent().parent().child('walletTx').child(newData.child('myKey').val()).child($id).child('amount').val() == -newData.child('amount').val() && !root.child('peiwan/walletTx').child(newData.child('myKey').val()).child($id).exists()) || (newData.child('groupId').isString() && newData.parent().parent().child('walletTx').child(newData.child('myKey').val()).child(newData.child('groupId').val()).exists() && !root.child('peiwan/walletTx').child(newData.child('myKey').val()).child(newData.child('groupId').val()).exists() && -newData.parent().parent().child('walletTx').child(newData.child('myKey').val()).child(newData.child('groupId').val()).child('amount').val() >= newData.child('amount').val()))))) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+        }
+      },
+      "config": {
+        ".read": true,
+        ".write": "auth != null && auth.uid == data.child('adminUid').val()",
+        "adminUid": {
+          ".validate": "newData.isString() && newData.val() == data.val()"
+        }
+      },
+      "clientOrderProofs": {
+        ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        "$id": {
+          ".write": "!data.exists() || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+        }
+      },
+      "characters": {
+        ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())"
+      },
+      "cards": {
+        ".read": "auth != null",
+        ".write": true
+      },
+      "chat": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": [
+          "t"
+        ]
+      },
+      "links": {
+        ".read": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+        "$uid": {
+          ".read": "auth != null && auth.uid == $uid",
+          ".write": "auth != null && auth.uid == $uid && !data.exists() && newData.exists() && root.child('peiwan/invites').child(newData.child('code').val()).exists() && !root.child('peiwan/invites').child(newData.child('code').val()).child('usedBy').exists() && newData.parent().parent().child('invites').child(newData.child('code').val()).child('usedBy').val() == auth.uid && root.child('peiwan/invites').child(newData.child('code').val()).child('type').val() == newData.child('type').val() && root.child('peiwan/invites').child(newData.child('code').val()).child('refId').val() == newData.child('refId').val()",
+          ".validate": "newData.hasChildren(['type','refId','code']) && (newData.child('type').val() == 'char' || newData.child('type').val() == 'staff')"
+        }
+      },
+      "reports": {
+        ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        "$id": {
+          ".write": "!data.exists() || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+        }
+      },
+      "board": {
+        ".read": true,
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())"
+      },
+      "friends": {
+        ".read": true,
+        ".write": true
+      },
+      "dmMeta": {
+        ".read": true,
+        ".write": true
+      },
+      "invites": {
+        ".read": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+        "$code": {
+          ".read": "auth != null",
+          "usedBy": {
+            ".write": "auth != null && !data.exists() && newData.val() == auth.uid && newData.parent().parent().parent().child('links').child(auth.uid).child('code').val() == $code"
+          }
+        }
+      },
+      "mail": {
+        ".read": true,
+        ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        "$k": {
+          "$id": {
+            "read": {
+              ".write": true
+            },
+            "hid": {
+              ".write": true
+            }
+          }
+        }
+      },
+      "dm": {
+        ".read": true,
+        ".write": true
+      },
+      "lobby": {
+        ".read": true,
+        ".write": true,
+        "$key": {
+          "pub": {
+            "frm": {
+              ".validate": "newData.isString() && (!newData.val().matches(/^companion_/) || (auth != null && root.child('secureV1/owners').child($key).val() === auth.uid && root.child('secureV1/characters').child($key).child('pub/frm').val() === newData.val()))"
+            }
+          }
+        }
+      },
+      "orders": {
+        ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        ".indexOn": [
+          "cid",
+          "month"
+        ]
+      },
+      "friendReq": {
+        ".read": true,
+        ".write": true
+      },
+      "staff": {
+        ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())"
+      },
+      "shopConfig": {
+        ".read": true,
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())"
+      },
+      "orderIssues": {
+        ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        "$id": {
+          ".write": "!data.exists() || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+        }
+      },
+      "wallet": {
+        ".read": true,
+        "$k": {
+          "balance": {
+            ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (data.exists() && newData.isNumber() && newData.val() < data.val() && newData.parent().child('lastTx').val() != null && newData.parent().child('lastTx').val() != data.parent().child('lastTx').val() && !root.child('peiwan/walletTx').child($k).child(newData.parent().child('lastTx').val()).exists() && newData.parent().parent().parent().child('walletTx').child($k).child(newData.parent().child('lastTx').val()).child('amount').val() == newData.val() - data.val())",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+          },
+          "lastTx": {
+            ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (newData.isString() && newData.val() != data.val() && newData.parent().parent().parent().child('walletTx').child($k).child(newData.val()).exists() && !root.child('peiwan/walletTx').child($k).child(newData.val()).exists())",
+            ".validate": "newData.isString() && newData.val().length <= 64"
+          }
+        }
+      },
+      "tables": {
+        ".read": true,
+        ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())"
+      },
+      "walletTx": {
+        ".read": true,
+        ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        "$k": {
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+          "$tx": {
+            ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && newData.child('type').val() == 'spend' && newData.child('ref').val() == $tx && newData.child('amount').isNumber() && newData.child('amount').val() < 0 && newData.child('amount').val() % 1 == 0 && newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val() == $tx && newData.parent().parent().parent().child('wallet').child($k).child('balance').val() == root.child('peiwan/wallet').child($k).child('balance').val() + newData.child('amount').val())"
+          }
+        }
+      },
+      "accounts": {
+        ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        ".write": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val()",
+        "$id": {
+          ".read": true,
+          ".write": "auth != null && auth.uid == 'discord_' + $id && newData.exists() && newData.child('deleted').val() == data.child('deleted').val() && ((data.exists() && data.child('myKey').exists() && newData.child('myKey').val() == data.child('myKey').val()) || (!data.exists() && root.child('secureV1/members').child(auth.uid).child('active').val() == true && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val() && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid))"
+        }
+      }
+    },
+    "friendV1": {
+      "people": {
+        "$uid": {
+          "inbox": {
+            ".indexOn": [
+              "at"
+            ]
+          },
+          ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && auth.uid == $uid",
+          "profile": {
+            ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && !root.child('friendV1/people').child($uid).child('blocked').child(auth.uid).exists() && !root.child('friendV1/people').child(auth.uid).child('blocked').child($uid).exists() && ((root.child('friendV1/people').child($uid).child('friends').child(auth.uid).val() == true && root.child('friendV1/people').child(auth.uid).child('friends').child($uid).val() == true) || root.child('friendV1/people').child(auth.uid).child('requests').child($uid).exists())"
+          },
+          "presence": {
+            ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && root.child('friendV1/people').child($uid).child('friends').child(auth.uid).val() == true && root.child('friendV1/people').child(auth.uid).child('friends').child($uid).val() == true && !root.child('friendV1/people').child($uid).child('blocked').child(auth.uid).exists() && !root.child('friendV1/people').child(auth.uid).child('blocked').child($uid).exists()"
+          }
+        }
+      }
+    },
+    "orderVoiceV1": {
+      ".read": false,
+      ".write": false
+    },
+    "socialV1": {
+      "control": {
+        "current": {
+          "$uid": {
+            ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.uid == $uid"
+          }
+        },
+        "rooms": {
+          "$room": {
+            ".read": false
+          }
+        }
+      },
+      "live": {
+        "$room": {
+          ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && root.child('socialV1/control/current').child(auth.uid).val() == $room && root.child('socialV1/control/rooms').child($room).child('members').child(auth.uid).child('leaseUntil').val() > now && root.child('socialV1/control/rooms').child($room).child('members').child(auth.uid).child('session').val() == auth.token.socialSession && (root.child('socialV1/control/rooms').child($room).child('kind').val() == 'public' || root.child('socialV1/control/rooms').child($room).child('expiresAt').val() > now)",
+          "positions": {
+            "$uid": {
+              "s": {
+                ".validate": "newData.isNumber() && (newData.val() == 0 || newData.val() == 1)"
+              },
+              "x": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1600"
+              },
+              "y": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 900"
+              },
+              "f": {
+                ".validate": "newData.isNumber() && (newData.val() == 0 || newData.val() == 1)"
+              },
+              ".validate": "newData.hasChildren(['x','y','at'])",
+              "m": {
+                ".validate": "newData.val() == 'hall' || newData.val() == 'forest'"
+              },
+              "$other": {
+                ".validate": false
+              },
+              ".write": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && auth.uid == $uid && root.child('socialV1/control/rooms').child($room).child('members').child(auth.uid).child('session').val() == auth.token.socialSession && (!newData.exists() || (root.child('socialV1/control/current').child(auth.uid).val() == $room && root.child('socialV1/control/rooms').child($room).child('members').child(auth.uid).child('leaseUntil').val() > now && root.child('socialV1/control/rooms').child($room).child('members').child(auth.uid).child('session').val() == auth.token.socialSession && (root.child('socialV1/control/rooms').child($room).child('kind').val() == 'public' || root.child('socialV1/control/rooms').child($room).child('expiresAt').val() > now)))",
+              "v": {
+                ".validate": "newData.isNumber() && newData.val() == 1"
+              },
+              "at": {
+                ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now-30000"
+              },
+              "w": {
+                ".validate": "newData.isNumber() && (newData.val() == 0 || newData.val() == 1)"
+              }
+            }
+          },
+          "messages": {
+            ".indexOn": [
+              "at"
+            ]
+          }
+        }
+      },
+      "roomViews": {
+        "$room": {
+          ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && root.child('socialV1/control/current').child(auth.uid).val() == $room && root.child('socialV1/control/rooms').child($room).child('members').child(auth.uid).child('leaseUntil').val() > now && root.child('socialV1/control/rooms').child($room).child('members').child(auth.uid).child('session').val() == auth.token.socialSession && (root.child('socialV1/control/rooms').child($room).child('kind').val() == 'public' || root.child('socialV1/control/rooms').child($room).child('expiresAt').val() > now)"
+        }
+      },
+      "directory": {
+        "$room": {
+          ".read": "auth != null && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && ($room == 'public-01' || $room == 'public-02' || $room == 'public-03')"
+        }
+      }
+    },
+    "secureV1": {
+      "owned": {
+        "$key": {
+          ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true && root.child('secureV1/members').child(auth.uid).child('key').val() == $key && root.child('secureV1/owners').child($key).val() == auth.uid"
+        }
+      },
+      "members": {
+        "$uid": {
+          "key": {
+            ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && auth.uid == $uid && root.child('secureV1/members').child(auth.uid).child('active').val() == true && root.child('secureV1/owners').child(data.val()).val() == auth.uid"
+          }
+        }
+      },
+      "characters": {
+        "$key": {
+          ".read": "auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() != false && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true && root.child('secureV1/members').child(auth.uid).child('key').val() == $key && root.child('secureV1/owners').child($key).val() == auth.uid"
+        }
+      },
+      "owners": {
+        ".indexOn": ".value"
+      }
+    },
+    "supportV1": {
+      "tickets": {
+        ".read": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val()",
+        "$uid": {
+          ".read": "auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true",
+          "$id": {
+            ".write": "auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['category','subject','text','myKey','name','at'])",
+            "category": {
+              ".validate": "newData.val() == '付款與儲值' || newData.val() == '訂單與服務' || newData.val() == '帳號與登入' || newData.val() == '其他問題'"
+            },
+            "subject": {
+              ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 60"
+            },
+            "text": {
+              ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 1500"
+            },
+            "orderId": {
+              ".validate": "newData.isString() && newData.val().length >= 0 && newData.val().length <= 80"
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
+            },
+            "at": {
+              ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+            },
+            "myKey": {
+              ".validate": "newData.isString() && ((!data.exists() && newData.val() == root.child('secureV1/members').child($uid).child('key').val() && root.child('secureV1/owners').child(newData.val()).val() == $uid) || (data.exists() && newData.val() == data.val()))"
+            },
+            "reply": {
+              ".write": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val() && !data.exists() && newData.exists()",
+              ".validate": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val() && newData.hasChildren(['text','at'])",
+              "text": {
+                ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 1500"
+              },
+              "at": {
+                ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "inbox": {
+        "$uid": {
+          ".read": "(auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) || (auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+          ".indexOn": [
+            "at"
+          ],
+          "$id": {
+            ".write": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val() && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['title','text','from','at','ticketId','question']) && root.child('supportV1/tickets').child($uid).child($id).exists() && newData.child('ticketId').val() == $id",
+            "title": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
+            },
+            "text": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 1500"
+            },
+            "from": {
+              ".validate": "newData.val() == '掌櫃客服'"
+            },
+            "at": {
+              ".validate": "newData.isNumber()"
+            },
+            "ticketId": {
+              ".validate": "newData.val() == $id"
+            },
+            "question": {
+              ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 1500"
+            },
+            "read": {
+              ".write": "auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true && data.parent().exists() && newData.exists()",
+              ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+            },
+            "hid": {
+              ".write": "auth != null && auth.uid == $uid && auth.token.socialSession != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true && data.parent().exists() && newData.exists()",
+              ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

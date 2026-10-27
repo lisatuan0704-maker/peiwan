@@ -1,5 +1,13 @@
 # 小小酒館修改紀錄
 
+## v428 開幕前資安修正（第一、二批）
+以 10/27 16:55 線上規則快照為底，產生 security/database.rules.json（需由店長在 Firebase 主控台貼上發布；未發布前網站行為不變）。
+第一批（後台權限）：原本規則多處只檢查 auth != null，而客人 Discord 登入後、或任何人用 partner.html 自行註冊 Email 帳號都算「已登入」，可改商品價格、員工資料、工單、陪玩卡、禁言名單、讀全部邀請碼與客戶帳號、改別人訂單狀態、發站內信、把金幣改成任意數字。改為：店長＝config/adminUid；店員＝links/<uid> 有紀錄（且 links 只能用有效且未使用的邀請碼建立，與 invites/<碼>/usedBy 同一筆寫入）。shopConfig／tables／board／characters／staff 寫入限店長；staffCards、staffStatus 限店長或該陪玩本人；orders、mutes、mail 寄送、clientOrders 修改、付款證明／檢舉／問題回報讀取限店員。partner.html、kefu.html 註冊改為同時寫入 usedBy；admin.html 用過的邀請碼不再顯示，解除綁定後可重新產生。
+第二批（金幣與購買）：一次購買必須同時包含 訂單＋新的扣款明細＋餘額剛好減少該金額＋wallet/<key>/lastTx 指向該明細，商品 owned/<key>/<item> 需帶 ref 指向這筆訂單，且付款金額不低於售價（shopConfig price；聊天氣泡 50；染髮券 shopConfig.dyeTicket.price 或 299；部件單買 partPrices 或 config/partPricing；VIP 優惠券最多折 200）。客人不能自己加金幣、偽造或刪除交易明細、不付錢發商品、清空或刪除別人背包、把轉帳單標成已確認。染髮保存改為多路徑 update（dyeTickets 剛好減 1＋dyeLast＋新增 dyedHairSets，同時保存只會成功一筆）。payWithCoins、聊天氣泡購買、群組陪玩單加上 lastTx／ref。
+部署：.github/workflows/deploy.yml 改為只上傳網站本體，*.md、security/、tests/、scripts/、docs/、test-inventory.* 不再公開。
+驗證：模擬器規則測試第一批 32 項、第二批 36 項全過（同時列出舊規則實際放行的漏洞）；tests/security-v428.cjs 以真實 Database Emulator＋大廳實際 payWithCoins 驗證染髮券／時裝／陪玩金幣單成功、前端竄改價格整筆被拒、雙裝置同時花錢只成立一筆，連續三輪通過。全部 65 個既有測試修改前後結果一致，僅 firebase-atomic-v273 因綁定舊規則檔而改為失敗（由 security-v428 取代）；dye-v230 模擬資料庫補上新寫法。
+尚未處理：客人端仍未登入 Firebase，私訊／好友／聊天／訂單建立仍可被知道角色鑰匙的人冒用（第三批，需後端配合）；lobby.html 內的 Discord webhook 仍公開（需重建並改由後台發送）。
+
 ## v420 染髮保存後直接穿上、我的染髮穿不上修正
 修正「我的染髮」按穿戴沒反應：背包重畫染髮預覽時，舊組合含已下架的基本髮型（例如 base 2）會讓 makeDoll 丟錯，而 saveBag 的 render 在 try 外，saving 卡在 true，之後所有按鈕都按不動。改為 render 放進 try、預覽逐張 try/catch（無法穿的組合用原始資料畫灰階預覽）。部件已下架的舊組合按鈕停用並顯示「這組髮型已下架，無法穿戴」。
 卸下染髮改為保留同一組瀏海與後髮、恢復原本髮色（舊版改成 base 0，已下架會穿不回去）。

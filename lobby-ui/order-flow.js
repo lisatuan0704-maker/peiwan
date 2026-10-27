@@ -119,6 +119,7 @@
       await walletSafety().execute({key:snap.key,amount:snap.price.amount,ids:records.map(r=>r.id),lookup:walletLookup,commit:async()=>{
         updates['wallet/'+snap.key+'/balance']=firebase.database.ServerValue.increment(-snap.price.amount);
         updates['walletTx/'+snap.key+'/'+groupId]={type:'spend',amount:-snap.price.amount,ref:groupId,groupId,orderIds:records.map(r=>r.id),note:snap.plan.n+'・'+snap.list.length+' 位冒險者',ts:snap.createdAt};
+        updates['wallet/'+snap.key+'/lastTx']=groupId; // v-sec2: 資料庫規則以此核對「扣款＝交易紀錄」
         await db.ref(ROOT).update(updates);
        }});
      }else await db.ref(ROOT).update(updates);
