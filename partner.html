@@ -16,6 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="lobby-ui/staff-names.js?v=432"></script>
 <style>
 :root{
   --void:#160C06; --outline:#241407;
@@ -924,6 +925,8 @@ function acceptClientOrder(coid){
       writeWorkOrder(coid,o,false);
     });
 }
+/* v432: 寄給客人的信、署名一律用店內名稱（資料欄位 staffName 保留原值，配對訂單用） */
+function shownName(){ return (PARTNER_ART[cid]&&PARTNER_ART[cid].name)||(window.TTStaffNames?TTStaffNames.display(me&&me.name,cid,'陪玩'):((me&&me.name)||'陪玩')); }
 function writeWorkOrder(coid,o,fromPool){
   const now=new Date();
   const no=String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
@@ -953,7 +956,7 @@ function writeWorkOrder(coid,o,fromPool){
 /* 寄信到客人的大廳信箱(接單/開始/完成都留一封,客人回頭看得到) */
 function mailCustomer(o,kind){
   if(!o||!o.myKey) return;
-  const nm=(me&&me.name)||'陪玩';
+  const nm=shownName();
   let title='', text='';
   if(kind==='accept'){
     title='『'+(o.planName||'訂單')+'』已接單!';
@@ -1305,7 +1308,7 @@ function processRenew(){
           }
           db.ref(ROOT+'/mail/'+co.myKey).push({title:'續單成功・+'+mins+' 分鐘',
             text:'謝謝你的續單! ✦\n\n方案:'+(co.planName||'')+'\n這次加時:'+mins+' 分鐘\n扣款:'+price+' 金幣\n預計結束:'+hm(end)+'\n\n繼續玩得開心!',
-            from:(me&&me.name)||'陪玩', at:Date.now()});
+            from:shownName(), at:Date.now()});
           reqResult('renewReq',coid,true,'',{mins,price,endAt:end});
           ptNotify('老闆續單了! +'+mins+' 分鐘','這單延長到 '+hm(end)+',金幣已入袋 ✦');
         });
@@ -1324,13 +1327,13 @@ function processCancelReq(){
     const back=+co.amount||0;
     db.ref(ROOT+'/clientOrders/'+coid+'/refunded').transaction(cur=>{ if(cur) return; return true; },(e,ok)=>{
       if(e||!ok){ reqResult('cancelReq',coid,false,'這筆單已經退過款了'); return; }
-      db.ref(ROOT+'/clientOrders/'+coid).update({status:'cancelled', cancelledAt:Date.now(), cancelBy:'customer'});
+      db.ref(ROOT+'/clientOrders/'+coid).update({status:'cancelled', cancelledAt:Date.now(), cancelBy:'customer', cancelReason:typeof req.reason==='string'?req.reason.slice(0,120):null});
       db.ref(ROOT+'/wallet/'+co.myKey+'/balance').transaction(cur=>Math.max(0,(cur||0)+back),(err,ok2,snap)=>{
         if(!err&&ok2) db.ref(ROOT+'/walletTx/'+co.myKey).push({type:'refund',amount:back,
           balAfter:(snap&&snap.val())||0,ref:coid,note:'客人自行取消退款・'+(co.planName||''),ts:Date.now()});
       });
       reqResult('cancelReq',coid,true,'',{refunded:back});
-      ptNotify('客人取消了一筆單','「'+esc(co.planName||'')+'」已自動退款,你不用處理');
+      ptNotify('客人取消了一筆單','「'+esc(co.planName||'')+'」已自動退款,你不用處理'+(req.reason?'<br>取消原因:'+esc(String(req.reason).slice(0,120)):''));
     });
   });
 }

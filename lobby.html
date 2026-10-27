@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=373"></script>
-<script src="lobby-ui/fixed-view.js?v=430"></script>
+<script src="lobby-ui/fixed-view.js?v=432"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=428"></script>
@@ -1456,7 +1456,9 @@ body.artBub.bub3s .npc .bub{
 <script src="js/tt-seats.js?v=2"></script>
 <script src="lobby-ui/seats.js?v=373"></script>
 <script src="lobby-ui/presence.js?v=373"></script>
+<script src="lobby-ui/staff-names.js?v=432"></script>
 <script src="lobby-ui/payment-safety.js?v=427"></script>
+<script src="lobby-ui/cancel-reason.js?v=432"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=274">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
@@ -3554,7 +3556,7 @@ function makeStaff(cid, st, idx){
     post, serveSpot:SERVE[idx%SERVE.length], mapLoc:'hall',
     state:'post',timer:0,seed:hash(cid)%10,
     faceLeft:STAFF_LAYOUT[cid]?.mirror??true,flipT:STAFF_LAYOUT[cid]?.mirror===false?1:-1,flipping:false,sitting:false,
-    staff:true,on:!!st.on,busy:false,cloakA:null,b:{name:st.name||'店員',doll:look}};
+    staff:true,on:!!st.on,busy:false,cloakA:null,b:{name:ttStaffDisplayName(cid,st.name||'店員'),doll:look}};
   a.frames={};
   POSES.forEach(p=>{
     const f=document.createElement('canvas');f.width=64;f.height=64;
@@ -3569,7 +3571,7 @@ function makeStaff(cid, st, idx){
     cv.replaceWith(img);a.cv=img;a.frames=null;a._staffGif=true;a._headTop=art.top/114;a._sceneBottom=(art.bottom+2)/118;
     img.onerror=()=>{img.replaceWith(cv);a.cv=cv;a._staffGif=false;delete a._headTop;delete a._sceneBottom;a.frames={};POSES.forEach(p=>{const f=document.createElement('canvas');f.width=f.height=64;drawDollTo(f,look,p);a.frames[p]=f;});a.frame=null;setFrame(a,'idle');};
   }
-  tag.textContent='☆ '+(art?.name||st.name||'店員');
+  tag.textContent='☆ '+(art?.name||ttStaffDisplayName(cid,st.name||'店員'));
   agents.set(a.key,a);
   return a;
 }
@@ -3625,7 +3627,7 @@ function syncResidentStaff(all){
     let a=agents.get(key);
     if(!a)a=makeStaff(cid,st,idx);
     a.on=!!st.on;
-    a.b.name=STAFF_GIF[cid]?.name||st.name||'店員';a.tag.textContent='☆ '+a.b.name;
+    a.b.name=STAFF_GIF[cid]?.name||ttStaffDisplayName(cid,st.name||'店員');a.tag.textContent='☆ '+a.b.name;
     setStaffServe(a,a.on&&!!st.busy);
     a.state='post';a.mapLoc='hall';a.sitting=false;a.chase=false;
     a.x=a.tx=a.post[0];a.y=a.ty=a.post[1];
@@ -4003,7 +4005,7 @@ function openReserve(next){
     const t=new Date(date); t.setHours(h,(m===undefined?0:m),0,0);
     const seg=busyRange(cid,t.getTime(),planMins);
     if(!seg){ toast('這個時間不能約'); return; }
-    const nm=(ss&&ss.name)||'陪陪';
+    const nm=ss?ttStaffDisplayName(ss.cid,ss.name||'陪陪'):'陪陪';
     pbox.innerHTML='<b style="color:#B03A5B">'+esc(nm)+' 這個時段不接單</b><br>'
       +'<span style="color:#8A6A7A">'+hhmm(seg.s)+'–'+hhmm(seg.e)+'　'+esc(seg.why||'不方便接單')+'</span>'
       +'<br><span style="font-size:11.5px;color:#A5798D">挑其他時間,或看看行事曆上有空的日子 ✦</span>';
@@ -4015,9 +4017,9 @@ function openReserve(next){
   const nbOff = !!(scid&&((STAFF_CARDS[scid]||{}).noBooking));
   function updateRes(){
     if(nbOff){
-      pbox.innerHTML='<b style="color:#B03A5B">'+esc(ss.name)+' 目前暫停接受新預約</b>';
+      pbox.innerHTML='<b style="color:#B03A5B">'+esc(ttStaffDisplayName(ss.cid,ss.name))+' 目前暫停接受新預約</b>';
       bkBox.innerHTML='<div style="background:#FFF0DA;border-radius:10px;padding:10px 12px;color:#8A5A2B;font-weight:700;line-height:1.7">'
-        +esc(ss.name)+' 目前暫停接受新預約(可能已滿檔或休假)。<br><span style="font-weight:400">可以改約其他陪玩,或選「即時單」看看誰在線上 ✦</span></div>';
+        +esc(ttStaffDisplayName(ss.cid,ss.name))+' 目前暫停接受新預約(可能已滿檔或休假)。<br><span style="font-weight:400">可以改約其他陪玩,或選「即時單」看看誰在線上 ✦</span></div>';
       curReserveAt=null; return;
     }
     curReserveAt=null;
@@ -4026,7 +4028,7 @@ function openReserve(next){
       if(d.getTime()>Date.now()+15*60000) curReserveAt=d.getTime();
     }
     pbox.innerHTML = curReserveAt
-      ? '<b style="color:#C2537D">已選:'+fmtRes(curReserveAt)+'</b>'+(scid?'<br><span style="color:#3E9E6B;font-size:12px">這個時段 '+esc(ss.name)+' 可以接單 ✓</span>':'')
+      ? '<b style="color:#C2537D">已選:'+fmtRes(curReserveAt)+'</b>'+(scid?'<br><span style="color:#3E9E6B;font-size:12px">這個時段 '+esc(ttStaffDisplayName(ss.cid,ss.name))+' 可以接單 ✓</span>':'')
       : (_resDate? (_resH===null?'選一個小時吧 ✦':'再挑個分鐘就好 ✦') : '先選日期,再選時間 ✦');
     /* 顯示已被預約時段(選了日期就只列當天) */
     let shown=_resBookedList;
@@ -4034,9 +4036,9 @@ function openReserve(next){
     let html='';
     if(scid){
       html = shown.length
-        ? '<b style="color:#C2537D">'+esc(ss.name)+' 已被預約:</b>'+shown.map(t=>{ const d=new Date(t);
+        ? '<b style="color:#C2537D">'+esc(ttStaffDisplayName(ss.cid,ss.name))+' 已被預約:</b>'+shown.map(t=>{ const d=new Date(t);
             return ' <span style="background:#FCE4EC;color:#C2537D;font-weight:700;padding:1px 8px;border-radius:7px">'+(_resDate?'':((d.getMonth()+1)+'/'+d.getDate()+' '))+hhmm(t)+'</span>'; }).join('')
-        : (_resDate?'<span style="color:#3E9E6B">這天 '+esc(ss.name)+' 目前沒有其他預約 ✓</span>':'');
+        : (_resDate?'<span style="color:#3E9E6B">這天 '+esc(ttStaffDisplayName(ss.cid,ss.name))+' 目前沒有其他預約 ✓</span>':'');
     }
     if(curReserveAt&&_resBookedList.some(t=>Math.abs(t-curReserveAt)<3600000)){
       html+='<div style="color:#C97B2B;font-weight:700;margin-top:4px">⚠ 這個時間跟其他預約很近,陪陪可能接不上,建議錯開一點</div>';
@@ -4045,7 +4047,7 @@ function openReserve(next){
   }
   drawHours(); drawMins(); updateRes();
   document.getElementById('resGo').onclick=()=>{
-    if(scid&&((STAFF_CARDS[scid]||{}).noBooking)){ toast(esc(ss.name)+' 目前暫停接受新預約'); return; }
+    if(scid&&((STAFF_CARDS[scid]||{}).noBooking)){ toast(esc(ttStaffDisplayName(ss.cid,ss.name))+' 目前暫停接受新預約'); return; }
     if(!_resDate||_resH===null||_resMi===null){ toast('請先選日期與時間'); return; }
     if(!curReserveAt){ toast('時間要在 15 分鐘之後唷'); return; }
     if(scid&&busyRange(scid,curReserveAt,planMins)){ toast('這個時段陪陪不接單,換一個吧'); return; }
@@ -4209,6 +4211,7 @@ let _submitting=false;   // 防連點:送出中不接受第二次
 function _selStaff(){ return (typeof selStaff!=='undefined'&&selStaff)?selStaff:null; }
 /* Formal display names are independent of the names retained in order records. */
 function ttStaffDisplayName(cid,fallback){
+  if(window.TTStaffNames) return TTStaffNames.display(fallback,cid,'冒險者');   /* v432: 共用 lobby-ui/staff-names.js */
   const names=new Map([['-OxY46ezlpnRt64hUIw9','蕪'],['-OxY7C4vDkgsr1zcyWbk','縭'],['-OzbfbQcF6J6fIR6YYGh','桃']]);
   const legacy=new Map([['Caboo','蕪'],['大卡','縭'],['小mo','桃']]);
   return names.get(cid)||legacy.get(fallback)||fallback||'冒險者';
@@ -4547,7 +4550,7 @@ function notifyOrder(o){
   }
   const lines=[
     '**方案**：'+o.planName+'（NT$'+o.amount+'）'+(o.paidBy==='wallet'?'　🪙 金幣支付（已成立,免核帳)':''),
-    o.staffName?('**指定陪玩**：'+o.staffName):null,
+    o.staffName?('**指定陪玩**：'+ttStaffDisplayName(o.staffCid,o.staffName)):null,
     (o.booking&&o.reserveAt)?('**預約時段**：'+fmtRes(o.reserveAt)):null,
     '**稱呼**：'+who,
     o.last5?('**帳號末五碼**：'+o.last5):null,
@@ -4686,9 +4689,12 @@ function cancelReqSent(){ try{ return JSON.parse(localStorage.getItem('tt_cancel
 let _cancelling=false;
 function selfCancel(id){
   const o=myOrdersCache[id]; if(!canSelfCancel(o)||_cancelling) return;
-  if(!confirm('要取消這筆「'+(o.planName||'訂單')+'」嗎?\n'+(o.amount||0)+' 金幣會退回你的錢包。')) return;
+  /* v432: 取消要填原因（店長與冒險者看得到），避免一直預約又取消 */
   _cancelling=true;
-  db.ref(ROOT+'/cancelReq/'+id).set({ myKey, staffCid:o.staffCid||null, planName:o.planName||'', amount:+o.amount||0, at:Date.now() })
+  (window.TTCancelReason?TTCancelReason.ask({title:o.planName||'訂單',amount:+o.amount||0}):Promise.resolve(confirm('要取消這筆「'+(o.planName||'訂單')+'」嗎?')?'（未填寫）':null)).then(reason=>{
+  if(!reason){ _cancelling=false; return; }
+  if(!canSelfCancel(myOrdersCache[id])){ _cancelling=false; toast('這筆訂單狀態已變更，無法自行取消'); return; }
+  db.ref(ROOT+'/cancelReq/'+id).set({ myKey, staffCid:o.staffCid||null, planName:o.planName||'', amount:+o.amount||0, reason, at:Date.now() })
     .then(()=>{
       _cancelling=false;
       const m=cancelReqSent(); m[id]=Date.now(); try{ localStorage.setItem('tt_cancelreq',JSON.stringify(m)); }catch(e){}
@@ -4699,6 +4705,7 @@ function selfCancel(id){
       renderMyOrders();
     })
     .catch(()=>{ _cancelling=false; toast('送出失敗,請稍後再試'); });
+  }).catch(()=>{ _cancelling=false; });
 }
 
 /* 送出保險絲:網路卡住時,15 秒後把按鈕放開並說明,不要讓客人對著一顆按不動的按鈕發呆 */
@@ -5162,7 +5169,7 @@ function tryServeNudge(staff){
   document.getElementById('introCard2').onclick=()=>{ close(); ttNavigate('card.html'); };
   document.getElementById('introSkip').onclick=close;
   let seen=false; try{ seen=!!localStorage.getItem('tt_seen_intro'); }catch(e){}
-  const portraitHome=()=>window.innerWidth<=680 && window.innerHeight>window.innerWidth;
+  const portraitHome=()=>!!window.TTMobile||(window.innerWidth<=680 && window.innerHeight>window.innerWidth);   /* v432: 手機版沒有大廳場景，不顯示「點地板走動」的新手引導 */
   if(!seen) setTimeout(()=>{ if(!portraitHome()) intro.classList.add('on'); },1000);
 })();
 
@@ -6372,7 +6379,7 @@ function renderPicker(){
     const mood=(card.mood||card.intro||'').slice(0,40);
     /* 預約分頁:暫停接受預約的陪玩要一眼看得出來,不要讓客人走到最後才被擋 */
     const nb=(pkMode==='book')&&!!card.noBooking;
-    g.appendChild(pkCardEl(cid,{name:st.name||'店員',sub,mood,nb,st: st.on?(st.busy?'busy':'free'):'off'},i));
+    g.appendChild(pkCardEl(cid,{name:ttStaffDisplayName(cid,st.name||'店員'),sub,mood,nb,st: st.on?(st.busy?'busy':'free'):'off'},i));
   });
 }
 
@@ -6469,7 +6476,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     +';font-family:inherit;font-size:12px;font-weight:700;padding:5px 10px;border-radius:9px;cursor:pointer" onclick="'+fn+'">'+lb+'</button>'; }
   window.frPaint=function(){
     const el=document.getElementById('frBody'); if(!el||!window.TTContacts) return;
-    const staffList=(()=>{try{return window.TinyTavernUI?.staff?.()||[]}catch(e){return []}})();const staffThreads=Object.entries(DMM).filter(([k,m])=>/^staff_/.test(k)&&m).map(([k,m])=>{const s=staffList.find(x=>'staff_'+x.cid===k);return {id:k,name:(s&&s.name)||m.name||'冒險者',avatar:s&&s.theme?'tavern-ui/assets/avatar-'+s.theme+'.png?v=260':''};});
+    const staffList=(()=>{try{return window.TinyTavernUI?.staff?.()||[]}catch(e){return []}})();const staffThreads=Object.entries(DMM).filter(([k,m])=>/^staff_/.test(k)&&m).map(([k,m])=>{const s=staffList.find(x=>'staff_'+x.cid===k);return {id:k,name:(s&&s.name)||ttStaffDisplayName(k.slice(6),m.name||'冒險者'),avatar:s&&s.theme?'tavern-ui/assets/avatar-'+s.theme+'.png?v=260':''};});
     TTContacts.render(el,{friends:FR,requests:FRQ,blocked:BLK,messages:DMM,staffThreads,hidden:window.__ttHidden||{},present:new Set([...agents.keys()])},{message:k=>dmOpen(k),staffMessage:k=>staffDmOpen(k.slice(6),(staffThreads.find(t=>t.id===k)||{}).name),remove:k=>frRemove(k),accept:k=>frAccept(k),decline:k=>frDecline(k),block:k=>frBlock(k),unblock:k=>frUnblock(k),unhide:k=>ttUnhide(k)});
   };
   /* --- 好友動作 --- */
@@ -6547,7 +6554,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     const k='staff_'+cid;
     if(ttMemberTier()<2&&!DMM[k]){toast('進階會員以上就能私訊冒險者 ✦');try{shopOpen(2,'member');}catch(e){}return;}
     ensureWins(); dmClose(true);
-    _dmWith=k;_dmStaffName=name||(DMM[k]&&DMM[k].name)||'冒險者';
+    _dmWith=k;_dmStaffName=ttStaffDisplayName(cid,name||(DMM[k]&&DMM[k].name)||'冒險者');
     document.getElementById('dmTitle').textContent='私訊・'+_dmStaffName;
     {const h=document.getElementById('dmHint');if(h)h.textContent=ttMemberTier()>=2?'':'會員已到期，只能查看紀錄';const w=document.getElementById('dmWarnBtn');if(w)w.hidden=true;const f=document.getElementById('dmFoot');if(f)f.hidden=ttMemberTier()>=2;}
     TTDirectMessageLog.reset(document.getElementById('dmLog'));
@@ -7705,7 +7712,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
 import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=431';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
-let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
+let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
 </script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=430"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
@@ -7714,6 +7721,8 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=427"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=432">
+<script src="lobby-ui/mobile-app.js?v=432"></script>
 </body>
 </html>
 

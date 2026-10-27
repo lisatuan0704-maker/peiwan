@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="lobby-ui/staff-names.js?v=432"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <style>
 :root{
@@ -518,7 +519,7 @@ function renderChars(){
   const list=Object.entries(chars).filter(([,c])=>c.active);
   charList.innerHTML = list.length? list.map(([id,c])=>`
     <div class="char ${selChar===id?'sel':''}" onclick="pickChar('${id}',this)">
-      ${c.avatar?`<img class="face" src="${c.avatar}">`:`<div class="em">${c.emoji||'✨'}</div>`}<div>${c.name}</div></div>`).join('')
+      ${c.avatar?`<img class="face" src="${c.avatar}">`:`<div class="em">${c.emoji||'✨'}</div>`}<div>${esc(TTStaffNames.display(c.name,id))}</div></div>`).join('')
     : '<div class="empty">後台還沒建角色</div>';
 }
 function pickChar(id,el){selChar=id;
@@ -598,13 +599,13 @@ function renderManage(){
       </select>
       <select onchange="fChar=this.value;renderManage()">
         <option value="">全部陪玩</option>
-        ${Object.entries(chars).map(([id,c])=>`<option value="${id}" ${id===fChar?'selected':''}>${esc(c.name)}</option>`).join("")}
+        ${Object.entries(chars).map(([id,c])=>`<option value="${id}" ${id===fChar?'selected':''}>${esc(TTStaffNames.display(c.name,id))}</option>`).join("")}
       </select>
     </div>
     ${list.length? `<table><tr><th>編號</th><th>陪玩</th><th>內容</th><th>金額</th><th>實際時長</th><th>客人</th><th>派單</th><th>付款</th><th>進度</th><th></th></tr>
       ${list.map(([id,o])=>`<tr style="${o.paid?'':'background:#FBE9DE'}">
         <td class="mono">${o.no}</td>
-        <td>${esc(o.charName)}</td>
+        <td>${esc(TTStaffNames.display(o.charName,o.cid))}</td>
         <td>${esc(o.serviceName)}${o.mode==='package'?'':' ×'+o.qty}${o.dispute?`<br><span style="font-size:11px;color:var(--rose-dk)">⚠ ${esc(o.dispute)}</span>`:(o.note?`<br><span style="font-size:11px;color:var(--ink-soft)">💬 ${esc(o.note)}</span>`:"")}</td>
         <td style="white-space:nowrap">NT$ ${o.amount.toLocaleString()}</td>
         <td style="font-size:12px">${o.accumSec?hmsShort(o.accumSec):(o.status==='serving'?'計時中…':'—')}</td>

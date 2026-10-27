@@ -1,4 +1,4 @@
-/* 桃與縭維持原圖光效；卡布使用覆蓋整張卡面的透明反光膜。 */
+/* 桃與縭維持原圖光效；蕪使用覆蓋整張卡面的透明反光膜。 */
 (() => {
  const host=document.querySelector('#profileWindow');if(!host)return;
  const layer=document.createElement('div');layer.className='profile-kinetics';layer.setAttribute('aria-hidden','true');

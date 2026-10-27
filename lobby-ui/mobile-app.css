@@ -1,0 +1,164 @@
+/* v432 手機版功能介面。只在 html.tt-mobile.ttm-on（手機、平板觸控）生效，電腦版不受影響。 */
+html.ttm-on{--ttm-ink:#5e4a68;--ttm-soft:#8f7c98;--ttm-line:#e3d8e6;--ttm-card:#fffdfe;--ttm-bg:#f7f2f7;--ttm-accent:#846c90;--ttm-pink:#d9799b;--ttm-top:150px;--ttm-bot:64px}
+html.ttm-on body.tt214{background:var(--ttm-bg)!important}
+html.ttm-on body.tt214 #mHome,html.ttm-on #ttHub,html.ttm-on #gearBtn{display:none!important}
+#ttM{display:none}
+html.ttm-on #ttM{display:block;position:fixed;inset:0;z-index:59;background:linear-gradient(180deg,#f3ebf3,#efe9f3);color:var(--ttm-ink);font-family:inherit;-webkit-tap-highlight-color:transparent}
+html.ttm-on #ttM button,html.ttm-on #ttM a{font-family:inherit;-webkit-tap-highlight-color:transparent}
+/* 上方：我的闆卡 */
+#ttM .ttm-top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 12px) max(14px,env(safe-area-inset-right)) 10px max(14px,env(safe-area-inset-left));box-sizing:border-box}
+#ttM .ttm-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:var(--ttm-card);border:1px solid var(--ttm-line);box-shadow:0 6px 18px #6a4f7412}
+#ttM #ttmDoll{flex:none;width:48px;height:48px;border-radius:14px;background:#f1e9f3;image-rendering:pixelated}
+#ttM .ttm-who{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.35}
+#ttM .ttm-who small{font-size:11px;letter-spacing:1px;color:var(--ttm-soft)}
+#ttM .ttm-who b{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ttM .ttm-coins{flex:none;display:flex;align-items:center;gap:5px;min-height:40px;padding:6px 12px;border:1px solid #ecd9a8;border-radius:999px;background:#fff8e6;color:#94702a;cursor:pointer}
+#ttM .ttm-coins i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a3,#e3b443 70%,#c69224);box-shadow:inset 0 0 0 1.5px #c99a35}
+#ttM .ttm-coins b{font-size:16px;font-weight:800}
+#ttM .ttm-coins small{font-size:11px}
+#ttM .ttm-actions{display:none;gap:10px;margin-top:10px}
+html.ttm-on[data-ttm-tab=orders] #ttM .ttm-actions{display:flex}
+#ttM .ttm-order{flex:1;min-height:48px;border:0;border-radius:14px;background:var(--ttm-accent);color:#fff;font-size:16px;font-weight:700;letter-spacing:1px;box-shadow:0 6px 14px #846c9033;cursor:pointer}
+#ttM .ttm-order span{margin-right:6px}
+#ttM .ttm-help{flex:none;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 14px;border:1px solid var(--ttm-line);border-radius:14px;background:var(--ttm-card);color:var(--ttm-ink);font-size:14px;text-decoration:none}
+#ttM .ttm-empty{position:absolute;left:0;right:0;top:var(--ttm-top);bottom:var(--ttm-bot);display:grid;place-items:center;color:var(--ttm-soft);font-size:14px}
+/* 下方分頁 */
+#ttM .ttm-tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));background:#fffdfef2;border-top:1px solid var(--ttm-line);box-shadow:0 -4px 16px #6a4f740d}
+#ttM .ttm-tabs button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;border:0;border-radius:12px;background:none;color:var(--ttm-soft);font-size:12px;cursor:pointer}
+#ttM .ttm-tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#ttM .ttm-tabs button[aria-selected=true]{color:var(--ttm-accent);background:#f1e9f4;font-weight:700}
+#ttM .ttm-dot{position:absolute;top:5px;left:calc(50% + 7px);min-width:9px;height:9px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#e0567a;color:#fff;font-size:10px;line-height:16px;font-weight:700}
+#ttM .ttm-dot:not(:empty){height:16px;top:2px}
+/* 分頁內容：沿用原本視窗，固定在小卡與分頁之間，拿掉電腦版的裝飾與關閉鈕 */
+html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview{position:fixed!important;left:0!important;right:0!important;top:var(--ttm-top)!important;bottom:var(--ttm-bot)!important;width:auto!important;height:auto!important;z-index:60!important;padding:0!important;margin:0!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;align-items:stretch!important;justify-content:stretch!important;overflow:hidden!important;animation:none!important}
+html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview::before,html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview::after{display:none!important}
+html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview>.panel{position:relative!important;inset:auto!important;width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;animation:none!important;background:transparent!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview>.panel::before,html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview>.panel::after{display:none!important}
+html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview .geometry,html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview .panel-head,html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview .panel-footer{display:none!important}
+html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview .panel-content{flex:1 1 auto!important;min-height:0!important;max-height:none!important;height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px max(14px,env(safe-area-inset-right)) 28px max(14px,env(safe-area-inset-left))!important;margin:0!important;background:none!important;box-sizing:border-box}
+/* 訂單：票根改成上方日期條，不再被內容拉長（選擇器要比 theme-skin 的 html body #shopM4 #ordList 更明確） */
+html.ttm-on #verTag{display:none!important}
+html.ttm-on body #shopM4.ttm-tabview .tabs{position:sticky;top:0;z-index:2;display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important;margin:0 -2px 10px!important;padding:6px 2px 8px!important;border:0!important;background:linear-gradient(#f2ebf3 75%,#f2ebf300)!important}
+html.ttm-on body #shopM4.ttm-tabview .tabs button{min-height:40px;margin:0!important;padding:6px 8px!important;border:1px solid var(--ttm-line)!important;border-radius:12px!important;background:var(--ttm-card)!important;color:var(--ttm-soft)!important;font-size:14px!important;box-shadow:none!important;transform:none!important}
+html.ttm-on body #shopM4.ttm-tabview .tabs button::before,html.ttm-on body #shopM4.ttm-tabview .tabs button::after{display:none!important}
+html.ttm-on body #shopM4.ttm-tabview .tabs button.active{background:var(--ttm-accent)!important;border-color:var(--ttm-accent)!important;color:#fff!important;font-weight:700}
+html.ttm-on body #shopM4.ttm-tabview #ordList{display:block!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order{display:block!important;position:relative;min-height:0!important;margin:0 0 12px!important;padding:0!important;border:1px solid var(--ttm-line)!important;border-radius:16px!important;background:var(--ttm-card)!important;box-shadow:0 4px 14px #6a4f740f!important;overflow:hidden!important;animation:none!important;transform:none!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order::before,html.ttm-on body #shopM4.ttm-tabview #ordList article.order::after{display:none!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-date{display:flex!important;flex-direction:row!important;align-items:baseline!important;justify-content:flex-start!important;flex-wrap:wrap;gap:2px 8px;min-height:0!important;height:auto!important;padding:9px 14px!important;margin:0!important;text-align:left!important;background:#f6eef6!important;filter:none!important;border:0!important;border-bottom:1px dashed #dcc8da!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order.is-complete .ticket-date{background:#eef3f8!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order.needs-help .ticket-date{background:#fff6df!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-date::before,html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-date::after,html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-date i{display:none!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-date small{font-size:12px!important;font-weight:700;letter-spacing:0;color:var(--ttm-soft)!important;margin:0!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-date b{font-size:18px!important;line-height:1.3!important;color:#8d5f7c!important;margin:0!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-date span{font-size:13px!important;line-height:1.3!important;color:#8d6f85!important;white-space:nowrap!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-body{padding:12px 14px 14px!important;min-width:0;background:none!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .order-top{display:flex!important;flex-wrap:wrap;align-items:flex-start!important;justify-content:space-between;gap:6px 10px!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .order-top h2{font-size:16px!important;line-height:1.45!important;color:var(--ttm-ink)!important;margin:0!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .order-top small{font-size:13px!important;color:var(--ttm-soft)!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .order-top strong{font-size:15px!important;padding:3px 10px!important;border-radius:999px!important;background:#fbe9ef!important;color:#b25b7d!important;box-shadow:none!important;border:0!important;transform:none!important;white-space:nowrap;clip-path:none!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .order-top strong::before,html.ttm-on body #shopM4.ttm-tabview #ordList article.order .order-top strong::after{display:none!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .order-status{margin:8px 0 10px!important;font-size:14px!important;font-weight:700;color:#5f8a76!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order p,html.ttm-on body #shopM4.ttm-tabview #ordList article.order small{line-height:1.6!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order p{font-size:13px!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .steps span{font-size:12px!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-bottom{margin-top:8px!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-footer{display:flex!important;align-items:center;gap:10px;flex-wrap:nowrap;border-top:1px dashed #dcd3e6!important;padding-top:8px!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-identity{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-barcode{flex:0 0 84px!important;width:84px!important;height:22px!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-number{min-width:0}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-number code{font-size:13px!important;word-break:break-all}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-report{flex:0 0 40px!important;width:40px!important;height:40px!important;border-width:1.5px!important}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .tt-order-actions button,html.ttm-on body #shopM4.ttm-tabview #ordList article.order .tt-order-actions a{min-height:42px}
+html.ttm-on body #shopM4.ttm-tabview #ordList article.order .ticket-voice .voice-join{min-height:46px;border-width:0!important}
+/* 私訊、信箱、儲值：卡片寬度跟著手機 */
+html.ttm-on #frM.ttm-tabview .friends-layout{display:block!important}
+html.ttm-on #frM.ttm-tabview .friend-cover{display:none!important}
+html.ttm-on #frM.ttm-tabview #frBody.tt-contacts{display:block!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important}
+html.ttm-on #frM.ttm-tabview #frBody.tt-contacts>.contacts-list{display:flex!important;flex-direction:column;gap:10px;max-height:none!important;overflow:visible!important}
+html.ttm-on #frM.ttm-tabview #frBody.tt-contacts>*{margin-bottom:12px}
+html.ttm-on #mailBoxM.ttm-tabview .gin,html.ttm-on #topupM.ttm-tabview .gin{padding:0!important;max-height:none!important;overflow:visible!important}
+html.ttm-on #topupM.ttm-tabview .purse-summary{padding:4px 2px 16px!important}
+html.ttm-on #topupM.ttm-tabview .coin-scene{width:96px!important;height:96px!important}
+html.ttm-on #topupM.ttm-tabview .wallet-balance strong{font-size:46px!important}
+html.ttm-on #topupM.ttm-tabview .packages{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important}
+html.ttm-on #topupM.ttm-tabview .package{min-height:96px}
+/* 疊在上面的視窗（付款、私訊對話、點單流程）在手機上用滿整個畫面，上傳截圖的按鈕要好按 */
+html.ttm-on #topupPayM input[type=file],html.ttm-on #shopM3 input[type=file]{display:block;width:100%;box-sizing:border-box;min-height:52px;padding:12px;border:2px dashed #cdb6d8;border-radius:14px;background:#faf5fb;color:var(--ttm-ink);font-size:14px}
+html.ttm-on #topupPayM input[type=file]::file-selector-button,html.ttm-on #shopM3 input[type=file]::file-selector-button{margin-right:12px;padding:8px 14px;border:0;border-radius:10px;background:var(--ttm-accent);color:#fff;font:inherit;font-weight:700}
+html.ttm-on #topupPayM input[type=text],html.ttm-on #shopM3 input[type=text]{min-height:46px;font-size:16px!important;box-sizing:border-box}
+html.ttm-on #tuProofPrev,html.ttm-on #proofPrev{max-height:220px!important;object-fit:contain;border-radius:12px}
+/* 平板或橫放：內容置中不拉太寬；矮的橫向畫面把小卡和點單鈕排成一列 */
+#ttM .ttm-top>*{max-width:760px;margin-left:auto;margin-right:auto}
+html.ttm-on body :is(#shopM4,#frM,#topupM,#mailBoxM).ttm-tabview .panel-content{padding-left:max(14px,calc((100vw - 760px)/2),env(safe-area-inset-left))!important;padding-right:max(14px,calc((100vw - 760px)/2),env(safe-area-inset-right))!important}
+@media(orientation:landscape) and (max-height:520px){
+ #ttM .ttm-top{display:flex;gap:10px;align-items:stretch;padding-top:calc(env(safe-area-inset-top) + 6px);padding-bottom:6px}
+ #ttM .ttm-top>*{max-width:none;margin:0}
+ #ttM .ttm-card{flex:1;min-width:0;padding:5px 10px}#ttM #ttmDoll{width:36px;height:36px}
+ #ttM .ttm-who small{display:none}
+ html.ttm-on[data-ttm-tab=orders] #ttM .ttm-actions{flex:1;margin:0}
+ #ttM .ttm-order,#ttM .ttm-help{min-height:0}
+ #ttM .ttm-tabs{padding-top:3px;padding-bottom:calc(3px + env(safe-area-inset-bottom))}
+ #ttM .ttm-tabs button{min-height:38px;flex-direction:row;gap:6px}#ttM .ttm-tabs svg{width:20px;height:20px}
+ #ttM .ttm-dot{position:static;margin-left:-2px;align-self:flex-start;margin-top:4px}
+}
+html.ttm-on body #frM.ttm-tabview #frBody.tt-contacts>.contacts-heading{display:none!important}
+/* 手機版不開放點單：藏起訂單卡裡的「再點一次／我要點單」 */
+html.ttm-on body #shopM4 [data-order-action=reorder],html.ttm-on body #shopM4 [data-order-action=shop],html.ttm-on body #shopM4 .tt-empty p{display:none!important}
+#ttM .ttm-note{display:none;margin:8px 4px 0;font-size:12px;line-height:1.5;color:var(--ttm-soft);text-align:center}
+html.ttm-on[data-ttm-tab=orders] #ttM .ttm-note{display:block}
+/* 儲值頁 */
+#ttM .ttm-page{display:none;position:absolute;left:0;right:0;top:var(--ttm-top);bottom:var(--ttm-bot);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px max(14px,calc((100vw - 640px)/2)) 32px;box-sizing:border-box}
+#ttM .ttm-page.on{display:block}
+#ttmWallet .ttm-balance{position:relative;padding:14px 16px;border-radius:18px;background:linear-gradient(150deg,#fffaf0,#f8f0e2);border:1px solid #efdfbd;margin-bottom:12px}
+#ttmWallet .ttm-balance small{display:block;font-size:12px;color:#a2885a}
+#ttmWallet .ttm-balance b{display:block;font-size:34px;line-height:1.2;color:#8a6a2c;font-weight:800}
+#ttmWallet .ttm-balance span{display:block;font-size:12px;color:#a2885a}
+#ttmWallet .ttm-link{position:absolute;right:12px;top:12px;min-height:36px;padding:0 10px;border:0;background:none;color:#8a6a2c;font-size:13px;text-decoration:underline;cursor:pointer}
+#ttmWallet .ttm-tx{margin:-4px 0 12px;padding:6px 12px;border-radius:14px;background:var(--ttm-card);border:1px solid var(--ttm-line);font-size:13px}
+#ttmWallet .ttm-txr{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--ttm-line)}
+#ttmWallet .ttm-txr:last-child{border-bottom:0}
+#ttmWallet .ttm-txr small{display:block;font-size:11px;color:var(--ttm-soft)}
+#ttmWallet .ttm-txr b.in{color:#3e8e62}#ttmWallet .ttm-txr b.out{color:#c05a7c}
+#ttmWallet .ttm-step{margin:0 0 12px;padding:14px;border-radius:18px;background:var(--ttm-card);border:1px solid var(--ttm-line);box-shadow:0 4px 14px #6a4f740a}
+#ttmWallet .ttm-step h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:16px;color:var(--ttm-ink)}
+#ttmWallet .ttm-step h3 i{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#efe6f3;color:var(--ttm-accent);font-style:normal;font-size:13px;font-weight:800}
+#ttmWallet .ttm-step.done h3 i{background:var(--ttm-accent);color:#fff;font-size:0}
+#ttmWallet .ttm-step.done h3 i::after{content:'✓';font-size:13px}
+#ttmWallet .ttm-tiers{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+#ttmWallet .ttm-tiers button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:74px;padding:10px 12px;border:1.5px solid var(--ttm-line);border-radius:14px;background:#fff;color:var(--ttm-ink);text-align:left;cursor:pointer}
+#ttmWallet .ttm-tiers button b{font-size:20px;font-weight:800;color:#8a6a2c}
+#ttmWallet .ttm-tiers button b small{font-size:12px}
+#ttmWallet .ttm-tiers button span{font-size:13px;color:var(--ttm-soft)}
+#ttmWallet .ttm-tiers button em{font-style:normal;font-size:12px;color:#3e8e62}
+#ttmWallet .ttm-tiers button[aria-pressed=true]{border-color:var(--ttm-accent);background:#f6effa;box-shadow:inset 0 0 0 1.5px var(--ttm-accent)}
+#ttmWallet .ttm-bank{border-radius:14px;background:#faf6fb;border:1px solid var(--ttm-line);padding:4px 12px}
+#ttmWallet .ttm-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--ttm-line)}
+#ttmWallet .ttm-row:last-child{border-bottom:0}
+#ttmWallet .ttm-row span{font-size:12px;color:var(--ttm-soft)}
+#ttmWallet .ttm-row b{font-size:15px;color:var(--ttm-ink);word-break:break-all;line-height:1.4}
+#ttmWallet .ttm-acct b{font-size:19px;letter-spacing:.5px}
+#ttmWallet .ttm-amt b{color:#b25b7d}
+#ttmWallet .ttm-copy{min-height:38px;padding:0 12px;border:1px solid #d9c9e0;border-radius:10px;background:#fff;color:var(--ttm-accent);font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer}
+#ttmWallet .ttm-copy.main{background:var(--ttm-accent);border-color:var(--ttm-accent);color:#fff;min-height:42px}
+#ttmWallet .ttm-copy.ok{background:#3e8e62;border-color:#3e8e62;color:#fff}
+#ttmWallet label{display:block;margin:10px 0 6px;font-size:13px;color:var(--ttm-soft)}
+#ttmWallet .ttm-step>label:first-of-type{margin-top:0}
+#ttmWallet input:not([type=file]){display:block;width:100%;box-sizing:border-box;min-height:48px;padding:10px 12px;border:1.5px solid var(--ttm-line);border-radius:12px;background:#fff;color:var(--ttm-ink);font:inherit;font-size:16px}
+#ttmWallet input:focus{outline:none;border-color:var(--ttm-accent);box-shadow:0 0 0 3px #846c9022}
+#ttmWallet label.ttm-upload{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:120px;margin:0;padding:14px;border:2px dashed #cdb6d8;border-radius:16px;background:#faf5fb;color:var(--ttm-ink);text-align:center;cursor:pointer}
+#ttmWallet .ttm-upload input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+#ttmWallet .ttm-up-empty b{display:block;font-size:16px;color:var(--ttm-accent)}
+#ttmWallet .ttm-up-empty b::before{content:'';display:block;width:34px;height:34px;margin:0 auto 6px;border-radius:10px;background:var(--ttm-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Ccircle cx='9' cy='10' r='1.6'/%3E%3Cpath d='m21 16-5-5-8 8'/%3E%3C/svg%3E") center/22px no-repeat}
+#ttmWallet .ttm-up-empty small{font-size:12px;color:var(--ttm-soft)}
+#ttmWallet #ttmTuPrev{max-width:100%;max-height:260px;border-radius:10px;object-fit:contain}
+#ttmWallet .ttm-up-again{font-size:13px;font-weight:700;color:var(--ttm-accent);text-decoration:underline}
+#ttmWallet .ttm-sub{margin:8px 2px 0;font-size:12px;line-height:1.6;color:var(--ttm-soft)}
+#ttmWallet .ttm-center{text-align:center}
+#ttmWallet .ttm-primary{display:block;width:100%;min-height:52px;margin:4px 0 0;border:0;border-radius:14px;background:var(--ttm-accent);color:#fff;font:inherit;font-size:17px;font-weight:700;letter-spacing:1px;cursor:pointer;box-shadow:0 6px 14px #846c9033}
+#ttmWallet .ttm-primary:disabled{background:#cbbdd1;box-shadow:none;cursor:not-allowed}
+#ttmWallet .ttm-ghost{display:block;width:100%;min-height:46px;margin-top:10px;border:1px solid var(--ttm-line);border-radius:14px;background:#fff;color:var(--ttm-ink);font:inherit;font-size:15px;cursor:pointer}
+#ttmWallet .ttm-done{padding:22px 16px;border-radius:18px;background:var(--ttm-card);border:1px solid var(--ttm-line);text-align:center}
+#ttmWallet .ttm-done b{display:block;font-size:20px;color:var(--ttm-accent);margin-bottom:6px}
+#ttmWallet .ttm-done p{margin:4px 0;font-size:15px;color:var(--ttm-ink)}
+#ttmWallet .ttm-done .ttm-primary{margin-top:16px}

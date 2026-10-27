@@ -16,6 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="lobby-ui/staff-names.js?v=432"></script>
 <script src="js/tt-seats.js?v=2"></script><script src="lobby-ui/seats.js?v=361"></script>
 <style>
 :root{
@@ -1336,7 +1337,7 @@ function processCancelReqAdmin(){
     const back=+co.amount||0;
     db.ref(ROOT+'/clientOrders/'+coid+'/refunded').transaction(cur=>{ if(cur) return; return true; },(e,ok)=>{
       if(e||!ok){ db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:false,why:'已經退過款了'}); return; }
-      db.ref(ROOT+'/clientOrders/'+coid).update({status:'cancelled', cancelledAt:Date.now(), cancelBy:'customer'});
+      db.ref(ROOT+'/clientOrders/'+coid).update({status:'cancelled', cancelledAt:Date.now(), cancelBy:'customer', cancelReason:typeof req.reason==='string'?req.reason.slice(0,120):null});
       db.ref(ROOT+'/wallet/'+co.myKey+'/balance').transaction(cur=>Math.max(0,(cur||0)+back),(err,ok2,snap)=>{
         if(!err&&ok2) db.ref(ROOT+'/walletTx/'+co.myKey).push({type:'refund',amount:back,balAfter:(snap&&snap.val())||0,
           ref:coid,note:'客人自行取消退款・'+(co.planName||''),ts:Date.now()});
@@ -1526,7 +1527,7 @@ function coFilterBar(all){
       .map(([v,t])=>coPill(_coRange===v,t,"coSetF('range','"+v+"')")).join(''));
   if(_coTab==='play'&&staffNames.length)
     h+=row('陪玩',coPill(_coStaff==='all','全部',"coSetF('staff','all')")
-      +staffNames.map(n=>coPill(_coStaff===n,esc(n),'coSetF(\'staff\',"'+esc(n).replace(/"/g,'&quot;')+'")')).join(''));
+      +staffNames.map(n=>coPill(_coStaff===n,esc(TTStaffNames.display(n)),'coSetF(\'staff\',"'+esc(n).replace(/"/g,'&quot;')+'")')).join(''));
   h+=row('排序',[['new','最新在前'],['old','最舊在前'],['amt','金額高到低']]
       .map(([v,t])=>coPill(_coSort===v,t,"coSetF('sort','"+v+"')")).join(''));
   h+='<div style="display:flex;gap:8px;align-items:center;margin-top:9px">'
@@ -1572,7 +1573,7 @@ function renderClientOrders(){
       +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">NT$'+(o.amount||0)+'</b>'
       +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+((o.coinAmount||o.amount||0))+' 金幣'+(o.credited?'・已入帳':'')+'</span>':'')
       +(o.paidBy==='wallet'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">金幣支付</span>':'')
-      +(o.staffName?'　<span style="background:#EFE4FB;color:#8E68C8;font-size:12px;font-weight:700;padding:2px 8px">指定:'+esc(o.staffName)+'</span>':'')
+      +(o.staffName?'　<span style="background:#EFE4FB;color:#8E68C8;font-size:12px;font-weight:700;padding:2px 8px">指定:'+esc(TTStaffNames.display(o.staffName,o.staffCid))+'</span>':'')
       +(o.groupId?'<div style="font-size:12px;color:#856c94;margin-top:7px">同組 '+Number(o.groupSize)+' 位：'+esc((o.groupStaffNames||[]).join('、'))+'｜整組實付 NT$'+Number(o.groupAmount)+'，本筆分攤 NT$'+Number(o.amount)+'｜組別 '+esc(o.groupId)+'</div>':'')
       +(o.booking&&o.reserveAt?'　<span style="background:#FFF0DA;color:#C97B2B;font-size:12px;font-weight:700;padding:2px 8px">預約:'+(function(t){const d=new Date(t);const W=["日","一","二","三","四","五","六"];return (d.getMonth()+1)+"/"+d.getDate()+"(週"+W[d.getDay()]+") "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");})(o.reserveAt)+'</span>':(o.booking?'　<span style="background:#FFF0DA;color:#C97B2B;font-size:12px;padding:2px 8px">預約·時段待定</span>':''))
       +(overdue?'　<span style="color:#C0392B;font-size:12px;font-weight:700">⚠ 逾時未確認</span>':'')
@@ -1590,7 +1591,7 @@ function renderClientOrders(){
       +(o.staffDeclined?(o.refunded
           ?'<div style="margin-top:7px;background:#EAF6EF;border-left:4px solid #57A87C;padding:7px 11px;font-size:12.5px;color:#2F6B4C;font-weight:700">✔ 陪玩回報無法接單'+(o.declineReason?'：'+esc(o.declineReason):'')+' —— <b>已自動退回 '+(o.amount||0)+' 金幣並通知客人</b>,你不用處理</div>'
           :'<div style="margin-top:7px;background:#FDECEF;border-left:4px solid #C0392B;padding:7px 11px;font-size:12.5px;color:#B03A5B;font-weight:700">⚠ 陪玩回報無法接單'+(o.declineReason?'：'+esc(o.declineReason):'')+' —— 此單非金幣支付,請人工退款給客人,退好後按「標記已退款」</div>'):'')
-      +(o.status==='cancelled'?'<div style="margin-top:7px;font-size:12.5px;color:#8E7AB0">已取消'+(o.refunded?'・金幣已退回':'')+'</div>':'')
+      +(o.status==='cancelled'?'<div style="margin-top:7px;font-size:12.5px;color:#8E7AB0">已取消'+(o.refunded?'・金幣已退回':'')+(o.cancelReason?'<br>取消原因:'+esc(o.cancelReason):'')+'</div>':'')
       +(adj.length?'<div style="margin-top:6px;font-size:12px;color:#8A5A2B;background:#FBF3E6;padding:5px 9px">'+adj.map(x=>'📋 '+new Date(x.t).toLocaleString("zh-TW")+'：'+esc(x.note)).join('<br>')+'</div>':'')
       +(open?proofHtml(id,o):'')
       +'</div>';
@@ -1863,7 +1864,7 @@ function backupAll(){
 }
 function manualOrderCard(){
   const opts=Object.entries(chars||{}).filter(([,c])=>c&&c.active!==false)
-    .map(([id,c])=>'<option value="'+id+'">'+esc(c.name)+'</option>').join('');
+    .map(([id,c])=>'<option value="'+id+'">'+esc(TTStaffNames.display(c.name,id))+'</option>').join('');
   if(!moOpen){
     return '<div class="card" style="padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button onclick="moToggle()" style="border:2px dashed #C9B6E6;background:none;color:#8E68C8;font-family:inherit;font-size:13px;font-weight:700;padding:8px 16px;border-radius:9px;cursor:pointer">＋ 手動補單(站外單)</button><span style="font-size:12px;color:var(--ink-soft)">客人不是從網站下單(私訊等)才用得到</span>'
     +'<button id="bkBtn" onclick="backupAll()" style="margin-left:auto;border:none;background:#DCEBFA;color:#3F6E9E;font-family:inherit;font-size:13px;font-weight:700;padding:8px 16px;border-radius:9px;cursor:pointer" title="下載整站資料 JSON,建議每週存一份">☁ 備份資料</button></div>';
@@ -1901,7 +1902,7 @@ function renderAll(){
   const servingList=Object.values(orders).filter(o=>o.status==="serving");
   const liveBar = servingList.length? `<div style="margin-bottom:12px;padding:10px 12px;border:2px solid var(--ok-deep);border-radius:12px;background:#EAF7EF">
     <b style="color:var(--ok-deep);font-size:13px">🟢 現在有 ${servingList.length} 位陪玩在陣：</b>
-    <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">${servingList.map(o=>`${chars[o.cid]?(chars[o.cid].emoji||''):''}${esc(o.charName)}（${esc(o.customer)}・${o.running?'計時中':'暫停中'}）`).join("、")}</div></div>` : "";
+    <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">${servingList.map(o=>`${chars[o.cid]?(chars[o.cid].emoji||''):''}${esc(TTStaffNames.display(o.charName,o.cid))}（${esc(o.customer)}・${o.running?'計時中':'暫停中'}）`).join("、")}</div></div>` : "";
 
   tab0.innerHTML=manualOrderCard()+`<div class="card">
     ${liveBar}
@@ -1915,14 +1916,14 @@ function renderAll(){
     <div class="filters">
       <select onchange="fMonth=this.value;renderAll()">${ms.map(m=>`<option ${m===fMonth?'selected':''}>${m}</option>`).join("")}<option value="" ${fMonth===""?'selected':''}>全部月份</option></select>
       <select onchange="fKefu=this.value;renderAll()"><option value="">全部客服</option>${Object.entries(staff).map(([id,k])=>`<option value="${id}" ${id===fKefu?'selected':''}>${esc(k.name)}</option>`).join("")}</select>
-      <select onchange="fChar=this.value;renderAll()"><option value="">全部陪玩</option>${Object.entries(chars).map(([id,c])=>`<option value="${id}" ${id===fChar?'selected':''}>${esc(c.name)}</option>`).join("")}</select>
+      <select onchange="fChar=this.value;renderAll()"><option value="">全部陪玩</option>${Object.entries(chars).map(([id,c])=>`<option value="${id}" ${id===fChar?'selected':''}>${esc(TTStaffNames.display(c.name,id))}</option>`).join("")}</select>
       <select onchange="fPaid=this.value;renderAll()"><option value="">全部付款</option><option value="unpaid" ${fPaid==='unpaid'?'selected':''}>未付款</option><option value="paid" ${fPaid==='paid'?'selected':''}>已付款</option></select>
       <select onchange="fProg=this.value;renderAll()"><option value="">全部進度</option>${Object.entries(PROG).map(([k,v])=>`<option value="${k}" ${k===fProg?'selected':''}>${v}</option>`).join("")}</select>
     </div>
     ${list.length? `<table><tr><th>編號</th><th>陪玩</th><th>內容</th><th>金額</th><th>實際時長</th><th>客人</th><th>客服</th><th>付款</th><th>進度</th><th></th></tr>
       ${list.map(([id,o])=>`<tr>
         <td class="mono">${o.no}</td>
-        <td>${chars[o.cid]?(chars[o.cid].emoji||''):''} ${esc(o.charName)}</td>
+        <td>${chars[o.cid]?(chars[o.cid].emoji||''):''} ${esc(TTStaffNames.display(o.charName,o.cid))}</td>
         <td>${esc(o.serviceName)}${o.mode==='package'?'':' ×'+o.qty}${o.dispute?`<br><span style="font-size:11px;color:var(--warn-deep)">⚠ ${esc(o.dispute)}</span>`:(o.note?`<br><span style="font-size:11px;color:var(--ink-soft)">💬 ${esc(o.note)}</span>`:"")}</td>
         <td>NT$ ${(+o.amount||0).toLocaleString()}</td>
         <td style="font-size:12px;white-space:nowrap">${o.accumSec?hmsShort(o.accumSec):(o.status==='serving'?'計時中…':'—')}
@@ -1952,7 +1953,7 @@ function renderSettle(){
     if(o.month!==sMonth) return;
     if(!o.paid) return;
     if(!["done","settled"].includes(o.status)) return;
-    (rows[o.cid]=rows[o.cid]||{name:o.charName,emoji:chars[o.cid]?chars[o.cid].emoji:'',n:0,total:0});
+    (rows[o.cid]=rows[o.cid]||{name:TTStaffNames.display(o.charName,o.cid),emoji:chars[o.cid]?chars[o.cid].emoji:'',n:0,total:0});
     rows[o.cid].n++; rows[o.cid].total+=o.amount;
   });
   const entries=Object.entries(rows);
@@ -1991,7 +1992,7 @@ function unpaidWaitBlock(list){
   if(!list.length) return "";
   return `<div style="margin-top:12px;padding:10px;border:2px dashed var(--warn);border-radius:12px;background:#FCEEEE">
     <b style="color:var(--warn-deep);font-size:13px">⚠ ${list.length} 筆單尚未收款、暫不列入月結：</b>
-    <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">${list.map(o=>`${o.no}（${esc(o.charName)}・NT$ ${o.amount}）`).join("、")}</div></div>`;
+    <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">${list.map(o=>`${o.no}（${esc(TTStaffNames.display(o.charName,o.cid))}・NT$ ${o.amount}）`).join("、")}</div></div>`;
 }
 function settle(cidK){
   if(!confirm("將該角色本月「已付款＋已完成」的單標記為已結算？（代表分潤已匯出）")) return;
@@ -2004,7 +2005,7 @@ function exportCsv(){
   const list=Object.values(orders).filter(o=>o.month===sMonth).sort((a,b)=>a.createdAt-b.createdAt);
   if(!list.length) return alert("這個月沒有單");
   const head="編號,日期,陪玩,內容,模式,數量,金額,實際時長,客人,客服,付款,進度\n";
-  const body=list.map(o=>[o.no,new Date(o.createdAt).toLocaleString("zh-TW"),o.charName,o.serviceName,
+  const body=list.map(o=>[o.no,new Date(o.createdAt).toLocaleString("zh-TW"),TTStaffNames.display(o.charName,o.cid),o.serviceName,
     {hour:"小時",round:"局",package:"套餐"}[o.mode]||o.mode,o.qty,o.amount,
     o.accumSec?hmsShort(o.accumSec):"",o.customer,o.kefuName,
     o.paid?"已付款":"未付款",PROG[o.status]||o.status]
@@ -2055,7 +2056,7 @@ function renderChars(){
     <h2>角色名冊（真人身分只存在這裡，客人／客服前台只見角色）</h2>
     ${list.length? `<table><tr><th>角色</th><th>介紹</th><th>帳號</th><th>分潤%</th><th>啟用</th><th></th></tr>
       ${list.map(([id,c])=>`<tr>
-        <td>${c.avatar?`<img class="face sm" src="${esc(c.avatar)}"> `:esc(c.emoji||"✨")+" "}<b>${esc(c.name)}</b><br>
+        <td>${c.avatar?`<img class="face sm" src="${esc(c.avatar)}"> `:esc(c.emoji||"✨")+" "}<b>${esc(TTStaffNames.display(c.name,id))}</b><br>
           <input placeholder="img/xxx.png" value="${esc(c.avatar||'')}" style="width:140px;font-size:11px;padding:4px;margin-top:4px" onchange="db.ref(ROOT+'/characters/${id}/avatar').set(this.value.trim()||null)"></td>
         <td style="font-size:12px;color:var(--ink-soft)">${esc(c.tagline||"")}</td>
         <td style="font-size:12px">${linkOf(id,'char')
@@ -2564,7 +2565,7 @@ function custInfo(k){
     if(o.type==='topup') total+=amt;
     else if(o.paidBy!=='wallet') total+=amt;
     if(o.type==='shop') sTot+=amt;
-    else if(o.type!=='topup'&&o.staffName) byStaff[o.staffName]=(byStaff[o.staffName]||0)+amt;
+    else if(o.type!=='topup'&&o.staffName){ const sn=TTStaffNames.display(o.staffName,o.staffCid); byStaff[sn]=(byStaff[sn]||0)+amt; }
     else if(o.type!=='topup'&&(o.planName||'').match(/會員|冠名|月費/)) mTot+=amt;
   });
   const vip=(ac&&ac.vip)?ac.vip:vipFromSpend(total);
