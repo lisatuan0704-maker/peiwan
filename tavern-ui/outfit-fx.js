@@ -5,7 +5,7 @@ window.TTOutfitFx=(()=>{'use strict';
 const S=64;
 const BIND={season292_meow:{acc3:'sweep',acc7:'spark',acc2:'flow',acc4:'glitch',acc6:'bits'},
   // v447 疾風喵行：冰藍風鏡→風鏡反光、藍軌滑板→滑板殘影、晴空小翼→翅膀氣流、墨影貓尾→貓尾星光、逐風機能外套→風痕線條
-  season293_wind:{acc7:'glint',acc8:'board',acc1:'puff',acc2:'tailstar',acc3:'gust',acc6:['snow','breath']}};   // v447 夜行貓耳帽→風雪＋哈白霧
+  season293_wind:{acc7:'glint',acc8:'board',acc2:'tailstar',acc6:['snow','breath']}};   // v449 使用者選定：滑板殘影、風鏡反光、貓尾星光、哈白霧、風雪（翅膀氣流、風痕線條不用）   // v447 夜行貓耳帽→風雪＋哈白霧
 const MASK={sweep:'acc3',spark:'acc7',flow:'acc2',glint:'acc7',board:'acc8',puff:'acc1',tailstar:'acc2'};
 const masks={};   // `${source}:${slot}` → {data, path, box} 或 'loading'
 function partOf(source,slot){return window.TTSeasonDrafts?.[source]?.parts?.[slot]||null;}
