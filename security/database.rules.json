@@ -270,7 +270,10 @@
         "$id": {
           ".read": "(auth != null && auth.uid == 'discord_' + $id) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
           ".write": "auth != null && auth.uid == 'discord_' + $id && newData.exists() && newData.child('deleted').val() == data.child('deleted').val() && ((data.exists() && data.child('myKey').exists() && newData.child('myKey').val() == data.child('myKey').val()) || (!data.exists() && root.child('secureV1/members').child(auth.uid).child('active').val() == true && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val() && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid))"
-        }
+        },
+        ".indexOn": [
+          "myKey"
+        ]
       }
     },
     "friendV1": {

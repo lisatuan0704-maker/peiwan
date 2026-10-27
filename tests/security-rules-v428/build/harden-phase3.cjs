@@ -43,6 +43,7 @@ P.blocks={'.read':ADMIN,'$k':{'.read':`${ME} && $k == ${MK}`,'.write':`${ME} && 
 // site mail: only the recipient (and staff) can read; staff send
 P.mail={'.read':STAFF,'.write':STAFF,'$k':{'.read':`${ME} && $k == ${MK}`,'$id':{'read':{'.write':`${ME} && $k == ${MK}`},'hid':{'.write':`${ME} && $k == ${MK}`}}}};
 // Discord account record: only that Discord account (and staff)
+P.accounts['.indexOn']=['myKey'];
 P.accounts.$id['.read']=`(auth != null && auth.uid == 'discord_' + $id) || ${STAFF}`;
 
 // ---- money: only the owner can spend (on top of phase-2 consistency checks) ----
