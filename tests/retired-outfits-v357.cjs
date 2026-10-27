@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const c={displayPartName:s=>s,TTSeats:{isSeat:()=>false}};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync('lobby-ui/retired-outfits.js','utf8'),c);const p=c.TTRetiredOutfits;
 assert(p.retired('cloth0',{name:'改名測試'}));assert(p.retired('cloth1',{}));assert(p.retired('alias',{parts:{acc:{n:'露亞頭飾'}}}));assert(!p.retired('cloth2',{name:'啟程旅人'}));assert(!p.retired('cloth3',{name:'微風日常'}));assert(p.retired('cloth_mslu9a8o',{}));assert(p.retired('alias',{name:'星夜漫遊裝'}));for(const id of ['seat0','seat1','seat2'])assert(p.retired(id));for(const id of ['seat3','seat4'])assert(!p.retired(id));
-for(const [sl,indices]of Object.entries({front:[0,1],back:[0,1],cloth:[0,1,2],eye:[0,1],acc:[1,2,3,4,5,6]}))for(const i of indices)assert(p.baseRetired(sl,i));
+for(const [sl,indices]of Object.entries({front:[0,1],back:[0,1],cloth:[0,1,2],eye:[0,1],acc:[1,2,3,5,6]}))for(const i of indices)assert(p.baseRetired(sl,i));assert(!p.baseRetired('acc',4)); /* v421 花箋蝴蝶結不是版權套，可單買 */
 assert(!p.baseRetired('cloth',3));assert(!p.baseRetired('acc',0));
 const old={set:'cloth0',front:0,back:1,cloth:2,face:0,acc:5,ps:{pet:'pet_guigui'},uiAccessories:[{source:'cloth0',slot:'acc1'},{source:'cloth2',slot:'acc'}]};const before=JSON.stringify(old),safe=p.sanitize(old);assert.equal(JSON.stringify(old),before);assert.equal(safe.front,3);assert.equal(safe.cloth,3);assert.equal(safe.ps.pet,'pet_guigui');assert.equal(safe.uiAccessories.length,1);
 const configured={set:'cloth2',front:0,cloth:0};assert.equal(p.sanitize(configured).set,'cloth2');

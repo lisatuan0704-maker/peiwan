@@ -459,7 +459,8 @@ const FIRST_HIDE=/露亞|小莓/;
 const ACC_HIDE=TACCP.filter(p=>p.n!=='無').map(p=>p.n);   /* 配件全部是付費時裝,初次闆卡不提供(配件分頁也不顯示) */
 function accLayer(g,list,hi,hx){ (list||[]).forEach(([c2,n2])=>tpDraw(g,tpFind(c2,n2),hi,hx)); }
 if(TEST_MODE){
-  const mk=(cat)=>TP.parts[cat].map((o,i)=>({n:o.n, hide:FIRST_HIDE.test(o.n), d:(g)=>tpDraw(g,TP.parts[cat][i],sel.hair,sel.hairHex,sel.hairHex2)}));
+  const BASE_NAMES={'後髮:2':'花箋後髮','前髮:2':'花箋前髮'};   /* v421 灰階髮型正式名稱 */
+  const mk=(cat)=>TP.parts[cat].map((o,i)=>({n:BASE_NAMES[cat+':'+i]||o.n, hide:FIRST_HIDE.test(o.n), d:(g)=>tpDraw(g,TP.parts[cat][i],sel.hair,sel.hairHex,sel.hairHex2)}));
   CATS[0].list = mk('後髮');
   CATS[1].list = mk('前髮');
   CATS[2] = {key:'face', name:'眼睛', list: mk('眼睛')};
@@ -620,12 +621,23 @@ async function generate(){
       doll:dollOut(),
       updatedAt:firebase.database.ServerValue.TIMESTAMP
     }).catch(e=>console.warn('card save failed',e));
+    /* v421 新建闆卡：記下工房選的初始部件（建卡時選的永久保留，之後其他工房部件單買）。
+       已有闆卡（重新製作）或已記錄過的不覆寫，舊老闆維持原本全部可用。寫入失敗不影響建卡。 */
+    try{
+      const d0=dollOut(),start={back:d0.back|0,front:d0.front|0,cloth:d0.cloth|0,face:d0.face|0,brow:d0.brow|0,at:firebase.database.ServerValue.TIMESTAMP};
+      Promise.all([db.ref(ROOT+'/lobby/'+key).once('value'),db.ref(ROOT+'/owned/'+key+'/baseStart').once('value')]).then(([l,b])=>{
+        if(l.exists()||b.exists())return;
+        return db.ref(ROOT+'/owned/'+key+'/baseStart').set(start);
+      }).catch(e=>console.warn('baseStart save failed',e)).finally(()=>saveLobby());
+    }catch(e){saveLobby();}
+    function saveLobby(){
     // 大廳公開展示資料(不含生日與 DC ID,保護隱私)
     db.ref(ROOT+'/lobby/'+key).set({
       name, tags:pickedTags, quote, doll:dollOut(),
       bm:Number(fBm.value), bd:Number(fBd.value), games,
       updatedAt:firebase.database.ServerValue.TIMESTAMP
     }).catch(e=>console.warn('lobby save failed',e));
+    }
   }
 
   pgMake.style.display='none';pgResult.style.display='block';

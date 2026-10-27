@@ -10,7 +10,7 @@
  const groupNames={head:'頭飾',ear:'耳環',face:'面部配件',hand:'手持物',back:'背飾／尾巴'};
  let data,selection={},color={},area='store',category='bundles',mode='singles',filter='all',selected=null,saving=false;
  let drinkQuantity=1,drinkBusy=false,drinkDialogOpen=false;
- let hairSection='original',colorTarget='main',faceSection='brow';
+ let hairSection='front',colorTarget='main',faceSection='brow';
  let dyeDraft=null,bagSection='wear',dyeSaving=false,dyeRequest=null;
  const bagNav=document.createElement('nav');bagNav.className='archive-nav';bagNav.setAttribute('aria-label','背包收納');
  bagNav.innerHTML='<button data-archive="wear" aria-pressed="true"><small>01 / DRESSING</small><b>我的穿搭</b><span>時裝與染色組合</span></button><button data-archive="collection" aria-pressed="false"><small>02 / KEEPSAKES</small><b>紀念收藏</b><span>小物與成就紀錄</span></button>';
@@ -26,12 +26,15 @@
  const lookPanel=document.createElement('aside');lookPanel.id='lookSummary';lookPanel.hidden=true;lookPanel.setAttribute('aria-label','目前搭配清單');document.querySelector('.workspace').append(lookPanel);
  const lookDialog=document.createElement('dialog');lookDialog.className='look-checkout-dialog';lookDialog.setAttribute('aria-label','確認選購清單');document.body.append(lookDialog);
  let lookExpanded=false,pendingLook=null;
- const lookSlots={front:'瀏海',back:'後髮',cloth:'衣服',eye:'眼型',brow:'眉毛',pet:'寵物'};
+ const lookSlots={front:'瀏海',back:'後髮',cloth:'衣服',eye:'眼型',brow:'眉毛',pet:'寵物',acc:'配件'};
  function lookItems(state=data){
   const seen=new Set();
   return Object.entries(selection).flatMap(([slot,r])=>{
    if(!r||slot==='seat')return [];
-   if(r.base!==undefined){const native=slot==='eye'?'face':slot,p=state.baseParts?.[native]?.items?.find(p=>p.idx===r.base);return p&&p.n!=='無'?[{slot,ref:r,name:api.displayPartName?.(p.n)||p.n||lookSlots[slot],owned:true,base:true,removable:r.base!==baseRef(slot)?.base}]:[];}
+   if(r.base!==undefined){const native=slot==='eye'?'face':slot,p=state.baseParts?.[native]?.items?.find(p=>p.idx===r.base);if(p)return p.n!=='無'&&!(slot==='acc'&&r.base===0)?[{slot,ref:r,name:api.displayPartName?.(p.n)||p.n||lookSlots[slot],owned:true,base:true,removable:slot==='acc'||r.base!==baseRef(slot)?.base}]:[];
+    // v421 未持有的工房部件：整個購買單位（頭髮前後髮／眼睛眉毛）一起計價
+    const unit=state.catalog.find(o=>o.baseUnit&&o.parts.some(q=>q.slot===slot&&q.base===r.base)),part=unit?.parts.find(q=>q.slot===slot&&q.base===r.base);if(!unit)return [];
+    const dup=seen.has(unit.id);seen.add(unit.id);return [{slot,ref:r,name:part.name,product:unit,part:{...part,saleId:null},dup,owned:!!unit.owned||!!part.owned,removable:true}];}
    const product=state.catalog.find(o=>o.id===r.source),part=product?.parts.find(p=>p.slot===r.slot);if(!part||product.drink)return [];
    const dup=!!part.saleId&&seen.has(part.saleId);if(part.saleId)seen.add(part.saleId);return [{slot,ref:r,name:part.name,product,part,dup,owned:product.owned||!!part.owned,removable:true}];
   });
@@ -70,7 +73,7 @@
   if(!visible)return;
   const items=lookItems(),q=lookQuote(items),scroll=lookPanel.querySelector('.look-items')?.scrollTop||0;
   lookPanel.classList.toggle('is-expanded',lookExpanded);
-  lookPanel.innerHTML='<header><div><small>YOUR LOOK</small><h3>目前搭配 <span>'+items.length+'</span></h3></div><button class="look-expand" type="button" aria-expanded="'+lookExpanded+'" aria-label="展開或收合目前搭配">'+(lookExpanded?'收合':'展開')+'</button></header><div class="look-items">'+items.map(p=>'<article class="look-item"><canvas width="64" height="64" data-look-thumb="'+esc(p.slot)+'" aria-label="'+esc(p.name)+'"></canvas><div><strong>'+esc(p.name)+'</strong><small data-state="'+(p.base?'base':p.owned?'owned':q.unavailable.includes(p.product)?'soon':'price')+'">'+(p.base?'基本款':p.owned?'已擁有':q.unavailable.includes(p.product)?'尚未開賣':p.part?.salePrice?(p.dup?'與同組一起計價':'單買 '+esc(p.part.salePrice)+' 金幣'):(p.product.pet?'單隻 ':'整套 ')+esc(p.product.price)+' 金幣')+'</small></div><button type="button" class="look-remove" data-look-remove="'+esc(p.slot)+'" aria-label="移除'+esc(p.name)+'" '+(!p.removable||saving?'disabled':'')+' title="'+(p.removable?'移除此部件':'目前為基本款')+'">−</button></article>').join('')+'</div><footer><div class="look-total"><span>'+(area==='bag'?'需購買金額':q.unavailable.length?'可購買部分小計':'需購買金額')+'</span><strong>'+q.total.toLocaleString()+'<small> 金幣</small></strong></div><p class="look-pricing">'+(q.ready.length?'單買或整套自動選划算的 · 已擁有不計價':'目前搭配的已擁有部件不計價')+'</p>'+(q.unavailable.length?'<p class="look-unavailable">另有 '+q.unavailable.length+' 套尚未開賣，未計入金額</p>':'')+(area==='store'?'<button type="button" class="primary look-checkout" '+(!q.ready.length?'disabled':'')+'>'+(q.ready.length?'確認選購 · '+q.ready.length+' 項':q.unavailable.length?'等待開賣':'已全部擁有')+'</button>':'')+'</footer>';
+  lookPanel.innerHTML='<header><div><small>YOUR LOOK</small><h3>目前搭配 <span>'+items.length+'</span></h3></div><button class="look-expand" type="button" aria-expanded="'+lookExpanded+'" aria-label="展開或收合目前搭配">'+(lookExpanded?'收合':'展開')+'</button></header><div class="look-items">'+items.map(p=>'<article class="look-item"><canvas width="64" height="64" data-look-thumb="'+esc(p.slot)+'" aria-label="'+esc(p.name)+'"></canvas><div><strong>'+esc(p.name)+'</strong><small data-state="'+(p.base?'base':p.owned?'owned':q.unavailable.includes(p.product)?'soon':'price')+'">'+(p.base?'基本款':p.owned?'已擁有':q.unavailable.includes(p.product)?'尚未開賣':p.part?.salePrice?(p.dup?'與同組一起計價':'單買 '+esc(p.part.salePrice)+' 金幣'):p.product.baseUnit?(p.dup?'與同組一起計價':'單買 '+esc(p.product.price)+' 金幣'):(p.product.pet?'單隻 ':'整套 ')+esc(p.product.price)+' 金幣')+'</small></div><button type="button" class="look-remove" data-look-remove="'+esc(p.slot)+'" aria-label="移除'+esc(p.name)+'" '+(!p.removable||saving?'disabled':'')+' title="'+(p.removable?'移除此部件':'目前為基本款')+'">−</button></article>').join('')+'</div><footer><div class="look-total"><span>'+(area==='bag'?'需購買金額':q.unavailable.length?'可購買部分小計':'需購買金額')+'</span><strong>'+q.total.toLocaleString()+'<small> 金幣</small></strong></div><p class="look-pricing">'+(q.ready.length?'單買或整套自動選划算的 · 已擁有不計價':'目前搭配的已擁有部件不計價')+'</p>'+(q.unavailable.length?'<p class="look-unavailable">另有 '+q.unavailable.length+' 套尚未開賣，未計入金額</p>':'')+(area==='store'?'<button type="button" class="primary look-checkout" '+(!q.ready.length?'disabled':'')+'>'+(q.ready.length?'確認選購 · '+q.ready.length+' 項':q.unavailable.length?'等待開賣':'已全部擁有')+'</button>':'')+'</footer>';
   lookPanel.querySelector('.look-expand').onclick=()=>{lookExpanded=!lookExpanded;renderLook();};
   lookPanel.querySelectorAll('[data-look-remove]').forEach(b=>b.onclick=()=>removeLook(b.dataset.lookRemove));
   lookPanel.querySelector('.look-checkout')?.addEventListener('click',openLookCheckout);
@@ -89,7 +92,7 @@
   if(!lookDialog.open)lookDialog.showModal();
  }
  const ref=p=>p.base!==undefined?{base:p.base,slot:p.slot}:{source:p.source,slot:p.slot};
- const key=p=>p.category==='acc'?(api.accessoryKey?.(p)||'accessory:'+p.group):p.slot;
+ const key=p=>p.category==='acc'?(p.base!==undefined?'acc':(api.accessoryKey?.(p)||'accessory:'+p.group)):p.slot;
  function isTrying(p){
   if(p.product?.drink)return false;
   if(p.parts)return p.parts.every(isTrying);
@@ -108,6 +111,7 @@
   }
   const accessories=d.uiAccessories||data.catalog.find(o=>o.id===d.set)?.parts.filter(p=>p.category==='acc')||Object.entries(d.ps||{}).filter(([k])=>/^acc\d*$/.test(k)).map(([slot,source])=>({source,slot}));
   (api.expandAccessories?.(accessories,d)||accessories).forEach(r=>{const p=data.catalog.find(o=>o.id===r.source&&!o.retired)?.parts.find(p=>p.slot===r.slot);if(p)next[key(p)]=ref(p);});
+  if(Number.isInteger(d.acc)&&d.acc>0&&(data.baseParts?.acc?.items||[]).some(x=>x.idx===d.acc))next.acc={base:d.acc,slot:'acc'};   // v421 工房配件（花箋蝴蝶結）
   return api.normalizeSelection?.(next)||next;
  }
  function init(){
@@ -123,21 +127,22 @@
  function outfitSelection(o){const next=selectionFromDoll(o.doll||{});o.parts.filter(p=>p.defaultEquipped!==false).forEach(p=>next[key(p)]=ref(p));return next;}
  const entryOwned=p=>p.product?.drink?!!p.product.owned:p.parts?p.parts.every(q=>p.product.owned||q.owned):!!(p.product?.owned||p.owned);
  const entryPrice=p=>p.parts?p.parts[0]?.salePrice:p.salePrice;
- function products(){return data.catalog.filter(o=>!o.retired&&(area==='bag'?o.owned||o.parts.some(p=>p.owned):o.sale));}
+ function products(){return data.catalog.filter(o=>!o.retired&&(area==='bag'?!o.baseUnit&&(o.owned||o.parts.some(p=>p.owned)):o.sale));}
  function entries(){
   const out=[];
   for(const o of products()){
-   const parts=o.parts.filter(p=>p.category===category&&(category!=='eye'||p.slot===faceSection)&&(area!=='bag'||o.owned||p.owned));
+   const parts=o.parts.filter(p=>p.category===category&&(category!=='eye'||p.slot===faceSection)&&(area!=='bag'||category!=='hair'||p.slot===hairSection)&&(area!=='bag'||o.owned||p.owned));
    if(category==='hair'&&area==='store'){
     if(parts.length)out.push({id:o.id+'::hair',name:o.name+'・髮型',category:'hair',parts,product:o});
    }else for(const p of parts)if(category!=='acc'||filter==='all'||filter===p.group)out.push({...p,product:o});
   }
   if(area==='bag')for(const [native,v] of Object.entries(data.baseParts)){
-   const sl=({face:'eye'}[native]||native),cat=({front:'hair',back:'hair',cloth:'cloth',eye:'eye',brow:'eye'}[sl]);if(cat!==category||(cat==='eye'&&sl!==faceSection))continue;
+   const sl=({face:'eye'}[native]||native),cat=({front:'hair',back:'hair',cloth:'cloth',eye:'eye',brow:'eye',acc:'acc'}[sl]);if(cat!==category||(cat==='eye'&&sl!==faceSection)||(cat==='hair'&&sl!==hairSection)||(cat==='acc'&&filter!=='all'&&filter!=='head'))continue;
    for(const p of v.items||[]){
     // 露亞原有髮型、眼睛、衣服與露亞組合重複，保留組合中的命名；舊穿搭編號仍相容。
     if(p.idx===0&&['back','front','eye','cloth'].includes(sl)&&out.some(q=>q.source==='cloth0'&&q.slot===sl))continue;
-    out.push({id:'base::'+sl+'::'+p.idx,slot:sl,base:p.idx,name:api.displayPartName?.(p.n)||p.n,category:cat,product:{owned:true,name:'原有部件'}});
+    if(sl==='acc'&&p.idx===0)continue;
+    out.push({id:'base::'+sl+'::'+p.idx,slot:sl,base:p.idx,name:api.displayPartName?.(p.n)||p.n,category:cat,group:sl==='acc'?'head':undefined,product:{owned:true,name:'原有部件'}});
    }
   }
   return out;
@@ -293,7 +298,7 @@
   let dialog=document.getElementById('drinkDialogue');if(!dialog){dialog=document.createElement('dialog');dialog.id='drinkDialogue';dialog.style.cssText='max-width:420px;width:calc(100% - 48px);border:2px solid #cab5d9;border-radius:18px;background:#fff8fb;color:#614461;padding:24px;box-shadow:0 12px 48px #55334c55';document.body.append(dialog);}
   dialog.replaceChildren();const msg=document.createElement('p');msg.style.cssText='font-size:18px;line-height:1.8;white-space:pre-wrap';msg.textContent=result.message;const done=document.createElement('button');done.className='primary';done.textContent='關閉';done.onclick=()=>dialog.close();dialog.append(companionArt(product),msg,done);dialog.showModal();
  }
- function setArea(next){drinkDialogOpen=false;orderDialog.close();drinkQuantity=1;area=mobile||next==='bag'?'bag':'store';bagSection='wear';category=area==='store'?'bundles':'hair';hairSection='original';selected=null;filter='all';mode='singles';render();}
+ function setArea(next){drinkDialogOpen=false;orderDialog.close();drinkQuantity=1;area=mobile||next==='bag'?'bag':'store';bagSection='wear';category=area==='store'?'bundles':'hair';hairSection='front';selected=null;filter='all';mode='singles';render();}
  window.ttDyeShop=()=>{if(area!=='store'){init();setArea('store');syncOuter('store');}category='dye';render();};
  function swatches(){
   const preset=[0,2,3,4,5,6,7,1,9].filter(i=>data.colors[i]);
@@ -348,7 +353,7 @@
   $('#singles').classList.toggle('has-accessory-filter',category==='acc');
   $('#subtabs').innerHTML=category==='acc'?'<nav class="accessory-filter" aria-label="配件部位">'+[['all','全部'],...Object.entries(groupNames)].map(([id,n])=>'<button data-group="'+id+'" aria-pressed="'+(id===filter)+'">'+n+'</button>').join('')+'</nav>':category==='hair'?(area==='bag'?'瀏海與後髮可分別搭配':'完整髮型 · 整組試穿'):'點圖片，即時試穿';
   if(area==='bag'&&category==='hair'){
-   $('#subtabs').innerHTML='<nav class="hair-sections" aria-label="頭髮分類"><button type="button" data-hair-section="original" aria-pressed="'+(hairSection==='original')+'">原有髮型</button><button type="button" data-hair-section="saved" aria-pressed="'+(hairSection==='saved')+'">我的染髮 <span>'+Object.keys(data.dyed).length+'</span></button></nav><p class="hair-section-hint">'+(myHair?'已保存的專屬髮色，點一下試穿；再次穿戴不扣券。':'瀏海與後髮可分別搭配。')+'</p>';
+   $('#subtabs').innerHTML='<nav class="hair-sections" aria-label="頭髮分類"><button type="button" data-hair-section="front" aria-pressed="'+(hairSection==='front')+'">前髮</button><button type="button" data-hair-section="back" aria-pressed="'+(hairSection==='back')+'">後髮</button><button type="button" data-hair-section="saved" aria-pressed="'+(hairSection==='saved')+'">我的染髮 <span>'+Object.keys(data.dyed).length+'</span></button></nav><p class="hair-section-hint">'+(myHair?'已保存的專屬髮色，點一下試穿；再次穿戴不扣券。':(hairSection==='back'?'後髮可以和任何前髮分開搭配。':'前髮可以和任何後髮分開搭配。'))+'</p>';
    $$('[data-hair-section]').forEach(b=>b.onclick=()=>{hairSection=b.dataset.hairSection;selected=null;render();});
   }
   if(category==='eye'){
@@ -358,7 +363,7 @@
   $$('[data-group]').forEach(b=>b.onclick=()=>{filter=b.dataset.group;selected=null;render();});
   const list=entries();
   if(!list.some(p=>p.id===selected))selected=list.find(isTrying)?.id||null;
-  $('#grid').innerHTML=list.map((p,i)=>'<button class="item" data-item="'+esc(p.id)+'" aria-label="'+(p.product.drink?'查看':isTrying(p)&&(area==='bag'||['acc','pet','seat','other'].includes(p.category))?'卸下':area==='bag'?'穿戴':'試穿')+esc(p.name)+'" aria-pressed="'+isTrying(p)+'"><span class="itemtop"><span class="item-number">'+String(i+1).padStart(2,'0')+'</span><span class="status">'+(entryOwned(p)?'已擁有':'')+'</span></span><span class="thumb">'+(p.product.drink?'<img class="drink-product-image" src="'+esc(p.product.img)+'" alt="'+esc(p.name)+'" decoding="async">':'<canvas width="64" height="64" data-preview="'+esc(p.id)+'"></canvas>')+'</span><span class="item-caption"><strong>'+esc(p.name)+'</strong>'+(p.note?'<small class="accessory-note">'+esc(p.note)+'</small>':'')+'<small>'+esc(p.product.drink?(p.product.owned?'已擁有':'每杯 '+p.product.price+' 金幣'):isTrying(p)?(area==='bag'||['acc','pet','seat','other'].includes(p.category)?'已搭配 · 再點卸下':'已搭配'):area==='bag'?'已收藏 · 點選搭配':entryOwned(p)?'已收藏':p.product.previewOnly?'新品試穿 · 敬請期待':entryPrice(p)?'單買 '+entryPrice(p)+' 金幣'+(/::face$/.test(p.saleId||'')?'・眼眉一組':/::hair$/.test(p.saleId||p.parts?.[0]?.saleId||'')?'・前後髮一組':''):(p.product.drink?'每杯 ':p.product.pet?'單隻 ':'整組 ')+p.product.price+' 金幣')+'</small>'+(p.requirement?'<small class="accessory-requirement">'+esc(p.requirement)+'</small>':'')+'</span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'這個分類還沒有已取得的部件。':'目前沒有上架商品。')+'</p>';
+  $('#grid').innerHTML=list.map((p,i)=>'<button class="item" data-item="'+esc(p.id)+'" aria-label="'+(p.product.drink?'查看':isTrying(p)&&(area==='bag'||['acc','pet','seat','other'].includes(p.category))?'卸下':area==='bag'?'穿戴':'試穿')+esc(p.name)+'" aria-pressed="'+isTrying(p)+'"><span class="itemtop"><span class="item-number">'+String(i+1).padStart(2,'0')+'</span><span class="status">'+(entryOwned(p)?'已擁有':'')+'</span></span><span class="thumb">'+(p.product.drink?'<img class="drink-product-image" src="'+esc(p.product.img)+'" alt="'+esc(p.name)+'" decoding="async">':'<canvas width="64" height="64" data-preview="'+esc(p.id)+'"></canvas>')+'</span><span class="item-caption"><strong>'+esc(p.name)+'</strong>'+(p.note?'<small class="accessory-note">'+esc(p.note)+'</small>':'')+'<small>'+esc(p.product.drink?(p.product.owned?'已擁有':'每杯 '+p.product.price+' 金幣'):isTrying(p)?(area==='bag'||['acc','pet','seat','other'].includes(p.category)?'已搭配 · 再點卸下':'已搭配'):area==='bag'?'已收藏 · 點選搭配':entryOwned(p)?'已收藏':p.product.previewOnly?'新品試穿 · 敬請期待':p.product.baseUnit?'單買 '+p.product.price+' 金幣'+(p.product.kind==='hair'?'・前後髮一組':p.product.kind==='face'&&p.product.parts.length>1?'・眼眉一組':''):entryPrice(p)?'單買 '+entryPrice(p)+' 金幣'+(/::face$/.test(p.saleId||'')?'・眼眉一組':/::hair$/.test(p.saleId||p.parts?.[0]?.saleId||'')?'・前後髮一組':''):(p.product.drink?'每杯 ':p.product.pet?'單隻 ':'整組 ')+p.product.price+' 金幣')+'</small>'+(p.requirement?'<small class="accessory-requirement">'+esc(p.requirement)+'</small>':'')+'</span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'這個分類還沒有已取得的部件。':'目前沒有上架商品。')+'</p>';
   $$('[data-item]').forEach(b=>b.onclick=()=>tryItem(list.find(p=>p.id===b.dataset.item)));
   $('#pager').replaceChildren();
   if(category==='other'&&list.length&&!list.some(p=>p.id===selected))selected=list[0].id;
@@ -430,11 +435,11 @@
    if($('#emptyDye'))$('#emptyDye').onclick=openDye;
    $$('[data-saved]').forEach(b=>{const id=b.dataset.saved,active=color.savedId===id;
     // 部件已下架或未持有的舊染髮組合：不能穿，按鈕停用並說明，不再讓整頁出錯
-    if(!active&&!dyedWearable(id)){b.textContent='這組髮型已下架，無法穿戴';b.disabled=true;b.closest('.saved-dye-bundle')?.classList.add('is-unwearable');return;}
+    if(!active&&!dyedWearable(id)){const s=data.dyed[id],need=s&&data.catalog.find(o=>o.baseUnit&&!o.owned&&o.parts.some(q=>['front','back'].some(k=>s[k]?.base===q.base&&s[k]?.slot===q.slot)));b.textContent=need?'先到商城買「'+need.name+'」髮型才能穿':'這組髮型已下架，無法穿戴';b.disabled=true;b.closest('.saved-dye-bundle')?.classList.add('is-unwearable');return;}
     b.textContent=active?'已穿戴 · 點一下卸下':'點一下穿戴';b.onclick=()=>{if(saving)return;const saved=data.dyed[id];const next=api.normalizeSelection({...selection,front:saved.front,back:saved.back});/* v420 卸下＝保留這組瀏海與後髮、改回原本髮色（舊版改成 base 0，已下架部件會穿不回去） */return saveBag(next,active?{hair:data.doll.hair||0}:{savedId:id},active?'已卸下染髮，髮型保留、恢復原本髮色。':'已穿上染髮組合。');}});
    $('#detail').replaceChildren();
   }else{
-   const available=products().filter(o=>!['寵物','其他','座椅'].includes(o.type)&&o.parts.length),featured=available.filter(o=>o.featured),all=(featured.length?featured:available).sort((a,b)=>b.featured-a.featured);const show=all;
+   const available=products().filter(o=>!o.baseUnit&&!['寵物','其他','座椅'].includes(o.type)&&o.parts.length),featured=available.filter(o=>o.featured),all=(featured.length?featured:available).sort((a,b)=>b.featured-a.featured);const show=all;
    $('#bundlegrid').innerHTML=show.map((o,i)=>'<article class="season-card" data-season="'+esc(o.id)+'" style="'+seasonVars(o)+'"><div class="season-visual"><span class="season-kicker">TAVERN / SEASON COLLECTION</span><span class="season-number">0'+(i+1)+'</span>'+(o.img&&!seasonShow(o).main?'<img src="'+esc(o.img)+'" alt="'+esc(o.name)+'完整套裝展示" width="240" height="240">':'<canvas width="64" height="64" data-outfit-preview="'+esc(o.id)+'"></canvas>')+'</div><div class="season-info"><h2>'+esc(o.name)+'</h2><p>'+(o.id==='season283_devil'?'暖金與紫色交織，藏一點小惡魔的俏皮。':o.id==='season283_valentine'?'粉色漸入深紫，把心動穿成今天的模樣。':'收藏完整造型，也能自由搭配喜歡的部件。')+'</p><div class="season-price"><strong>'+(o.previewOnly?'即將登場':esc(o.price))+(o.previewOnly?'':'<small>金幣／整套</small>')+'</strong><span>'+(o.owned?'已收藏':'當季完整套組')+'</span></div><div class="season-actions"><button class="ghost" data-try-outfit="'+esc(o.id)+'">試穿整套</button><button class="primary" data-buy-outfit="'+esc(o.id)+'" '+(o.owned||o.previewOnly?'disabled':'')+'>'+(o.owned?'已擁有':o.previewOnly?'敬請期待':'選購整套')+'</button></div></div></article>').join('')||'<p class="live-empty">目前沒有上架組合。</p>';
    $$('[data-try-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.tryOutfit);const next=outfitSelection(o),nextColor={hair:o.doll?.hair||0};try{api.makeDoll(next,nextColor);}catch(e){tell(e.message);return;}selection=next;color=nextColor;swatches();paint();tell('已試穿「'+o.name+'」');});
    $$('[data-buy-outfit]').forEach(b=>b.onclick=()=>{const o=data.catalog.find(o=>o.id===b.dataset.buyOutfit);if(!o.owned&&!o.previewOnly)buy(o.id);});
