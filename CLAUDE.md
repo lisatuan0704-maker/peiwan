@@ -1,10 +1,10 @@
 # 小小酒館修改紀錄
 
 ## v451 Discord 新客人身分組「旅人」「闆卡旅人」（互斥）
-使用者：剛進來的先給身分組；綁定闆卡的叫「闆卡旅人」（「冒險者」保留給縭／蕪／桃），兩個身分組不能同時擁有。採 C 案：入群同意店規由 Discord 內建新手引導給「旅人」（店方設定）；機器人負責換成「闆卡旅人」。
-後端 order-voice-bot/member-roles.cjs：身分組與頻道依名稱尋找（「旅人」「闆卡旅人」「旅人報到」，名稱要完全相同、各只有一個）；同步時讀最新成員資料，以一次 PATCH 寫入完整身分組清單（換上一個同時拿掉另一個，其他身分組保留），同一人同時多次同步會排隊。已綁定＝secureV1/members 啟用＋owners 相符＋大廳有闆卡名字。三種時機：①「旅人報到」機器人面板「我綁好闆卡了」（只有本人看得到的回覆，5 秒冷卻）②網站 /v1/voice/session 登入成功後（不等待、不影響登入）③每 20 分鐘檢查所有已綁定帳號（網站先綁定後才進群、或重新入群又被給旅人的人）。不需要 GUILD_MEMBERS 特權。面板不置頂，記在 orderVoiceV1/roleV1/panel。身分組還沒建好時每 2 分鐘重試。
-需要店方：建立兩個身分組、機器人要有「管理身分組」且角色排在這兩個之上；頻道權限要同時開給旅人與闆卡旅人（換成闆卡旅人時旅人會被拿掉）。
-測試 member-roles.test.cjs 10 項；party／voice-open／staff-names 26 項、vip-outfit 6 項通過。部署 ops/deploy-v451.sh（security-v428 bbecb0f）。
+使用者：剛進來的先給身分組；綁定闆卡的叫「闆卡旅人」（「冒險者」保留給縭／蕪／桃），兩個身分組不能同時擁有。改為全由機器人處理（不需開社群／新手引導）：「旅人報到」面板「我同意店規」給旅人（面板連到「酒館指南」頻道）、「我綁好闆卡了」換闆卡旅人；沒同意過（身上沒有旅人或闆卡旅人）的人，綁定闆卡也不給身分組。
+後端 order-voice-bot/member-roles.cjs：身分組與頻道依名稱尋找（「旅人」「闆卡旅人」「旅人報到」，名稱要完全相同、各只有一個）；同步時讀最新成員資料，以一次 PATCH 寫入完整身分組清單（換上一個同時拿掉另一個，其他身分組保留），同一人同時多次同步會排隊。已綁定＝secureV1/members 啟用＋owners 相符＋大廳有闆卡名字。同步時機：①面板按鈕（只有本人看得到的回覆，5 秒冷卻）②網站 /v1/voice/session 登入成功後（不等待、不影響登入）③每 20 分鐘檢查所有已綁定帳號（網站先綁定後才進群、或重新入群又被給旅人的人）。不需要 GUILD_MEMBERS 特權。面板不置頂，記在 orderVoiceV1/roleV1/panel。身分組還沒建好時每 2 分鐘重試。
+需要店方：建立兩個身分組、機器人要有「管理身分組」且角色排在這兩個之上；酒館門口分類所有人可見，其他頻道只開給旅人與闆卡旅人（換成闆卡旅人時旅人會被拿掉）。
+測試 member-roles.test.cjs 12 項；party／voice-open／staff-names 26 項、vip-outfit 6 項通過。部署 ops/deploy-v451.sh（security-v428 01656c6）。
 
 ## v450 VIP 3 另一套改由伺服器收費（免上架）
 使用者選擇「不用上架」方案。後端 vip-outfit.cjs 新增 body {buyId,requestId}：伺服器重新計算累積支持（≥15000）、必須已免費選過一套、買的是另一套且尚未持有，餘額 ≥500 時在 peiwan 節點 transaction 一次寫入：扣 500、wallet.lastTx、clientOrders/vipbuy_<requestId>（type shop、paidBy wallet、status done）、walletTx、owned（ref 指向訂單）。同一 requestId 重送不重複扣款，同時送出只成立一筆。補上 v445 的已知限制（VIP 3 才能買改由伺服器把關）。測試：vip-outfit.test.cjs 6 項、vip-outfit.emu.test.cjs 5 項（含併發、餘額不足、非 VIP 3）。部署 20261028-v450，已通過健康檢查（V450_DEPLOYED_AND_HEALTHY），部署腳本已從 security-v428 移除。
