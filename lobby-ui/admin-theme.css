@@ -31,3 +31,12 @@ html body .urgLate{outline:3px solid #FF8DB5;outline-offset:2px}
 html body:not(.dark) .card button:not([class]):not([style]){border:2px solid var(--pt-ink);border-radius:10px;background:#fff;color:var(--pt-ink);font:inherit;font-weight:700;padding:7px 14px;box-shadow:0 2px 0 var(--pt-ink);cursor:pointer;margin:2px 4px 2px 0}
 html body:not(.dark) .card button:not([class]):not([style]):disabled{opacity:.45;box-shadow:none}
 html body:not(.dark) input[type=file]::file-selector-button{border:2px solid var(--pt-ink);border-radius:8px;background:#fff;color:var(--pt-ink);font-weight:700;padding:5px 10px;margin-right:8px;cursor:pointer}
+/* v413 電腦版：分頁改左側一覽（直式選單、黏在左邊），內容在右欄；手機維持上方分頁 */
+@media(min-width:1000px){
+  html body #pgMain[style*="block"]{display:grid!important;grid-template-columns:220px minmax(0,1fr);column-gap:26px;row-gap:0;align-items:start}
+  html body #pgMain>*{grid-column:2;min-width:0}
+  html body #pgMain>.tabs{grid-column:1;grid-row:1/span 60;position:sticky!important;top:16px!important;align-self:start;display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;gap:8px!important;margin:0!important;padding:12px!important}
+  html body #pgMain>.tabs button{flex:none!important;width:100%;min-width:0!important;text-align:left;padding:11px 14px!important;border-radius:12px!important;font-size:14px!important}
+  html body #pgMain>.tabs button.on{transform:translateX(4px)}
+  html body #pgMain>.logout{justify-self:center}
+}

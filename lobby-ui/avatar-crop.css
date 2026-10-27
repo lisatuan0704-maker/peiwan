@@ -1,0 +1,4 @@
+/* 冒險者圓形頭貼裁切（由 avatar-crop-adjust.html 調整後寫回）。z＝放大倍率；x／y＝以頭貼框寬度為單位的位移。 */
+img[src*="avatar-KABUKI"]{--ac-z:1.14;--ac-x:0%;--ac-y:0%}
+img[src*="avatar-MOMO"]{--ac-z:1.14;--ac-x:0%;--ac-y:0%}
+img[src*="avatar-RIRA"]{--ac-z:1.14;--ac-x:0%;--ac-y:0%}

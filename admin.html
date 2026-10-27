@@ -435,7 +435,7 @@ body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
 </style>
 <link href="tavern-ui/assets/fonts/lineseed.css?v=257" rel="stylesheet">
 <link rel="stylesheet" href="lobby-ui/backoffice-theme.css?v=412">
-<link rel="stylesheet" href="lobby-ui/admin-theme.css?v=412">
+<link rel="stylesheet" href="lobby-ui/admin-theme.css?v=413">
 </head>
 <body>
 <button id="themeBtn" title="切換日間／夜間模式" aria-label="切換日間夜間模式">☀️</button>
@@ -2647,7 +2647,7 @@ function openCust(k){
   }
   const cat=[];
   Object.entries(r.byStaff).forEach(([n,v])=>cat.push(esc(n)+' '+v));
-  const catTxt=[r.mTot?('會員/冠名 NT$'+r.mTot):null, r.sTot?('時裝 NT$'+r.sTot):null, cat.length?('陪玩:'+cat.join('・')):null].filter(Boolean).join('｜');
+  const catTxt=[r.mTot?('會員 NT$'+r.mTot):null, r.sTot?('時裝 NT$'+r.sTot):null, cat.length?('陪玩:'+cat.join('・')):null].filter(Boolean).join('｜');
   m.innerHTML='<div style="max-width:440px;width:100%;max-height:86vh;overflow-y:auto;background:var(--parch,#F7F3FC);border-radius:16px;padding:20px 18px;box-shadow:0 0 0 3px #fff,0 0 0 8px #C4ADEC,0 20px 44px rgba(70,50,100,.4)">'
     +'<div style="display:flex;gap:14px;align-items:center;margin-bottom:12px">'
     +'<canvas id="custAva" width="64" height="64" style="width:84px;height:84px;image-rendering:pixelated;flex:0 0 auto"></canvas>'
@@ -2728,5 +2728,5 @@ body.dark #qnavPop button{color:#D8CBEE}
     btn.style.display=(m&&m.style.display!=='none'&&m.offsetParent!==null)?'':'none'; },1200);
 })();
 </script>
-<script src="season-shop-import.js?v=405"></script></body>
+<script src="season-shop-import.js?v=413"></script></body>
 </html>
