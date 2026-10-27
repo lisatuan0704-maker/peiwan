@@ -1,5 +1,11 @@
 # 小小酒館修改紀錄
 
+## v420 染髮保存後直接穿上、我的染髮穿不上修正
+修正「我的染髮」按穿戴沒反應：背包重畫染髮預覽時，舊組合含已下架的基本髮型（例如 base 2）會讓 makeDoll 丟錯，而 saveBag 的 render 在 try 外，saving 卡在 true，之後所有按鈕都按不動。改為 render 放進 try、預覽逐張 try/catch（無法穿的組合用原始資料畫灰階預覽）。部件已下架的舊組合按鈕停用並顯示「這組髮型已下架，無法穿戴」。
+卸下染髮改為保留同一組瀏海與後髮、恢復原本髮色（舊版改成 base 0，已下架會穿不回去）。
+染髮工作室按「使用 1 張並保存」（含買完券後的「直接染上」）成功後自動穿上：以目前已保存的穿搭為底，只換這組瀏海、後髮與髮色，不把試穿中的其他商品一起存；成功顯示「染好了，已經幫你穿上！」，失敗才請老闆到我的染髮按穿戴。扣券、保存交易與 wear 寫入函式未改。
+驗證：隔離模擬資料庫跑背包我的染髮（已下架組合停用、可穿組合穿上並寫入 doll、卸下保留髮型）、染髮保存後 doll 帶 dyedHairSet 與新髮色、券數 1→0 只扣一次；wardrobe-state-v276、dye-v230、payment-safety-v273 通過。已在正式站確認 v419 闆卡分享已上線（card-share.mjs?v=419、OPEN_TO_EVERYONE=true、含 pollSeq 修正）。
+
 ## v419 闆卡分享：晚到的舊輪詢不覆蓋較新的狀態
 GPT 補測：current 回 processing → 3 秒後 status 已送出但未回 → 按重新讀取，current 回 null 或較新的 published → 舊 status 才回 published，畫面倒退成舊狀態。stopPoll 改為取消排程並遞增 pollSeq（已送出的 status 回應一併失效）；loadCurrent 開始時先 stopPoll；輪詢鏈每次都由 stopPoll 取得新編號。保留 s===st 檢查、每 3 秒、最多 5 次與單一輪詢。
 驗證：tests/card-share-v418.cjs 加入 v419 情境共 38 項全過（晚到舊 status 遇 current null／較新 published／重開視窗三種、舊回應不再啟動輪詢、3 秒間隔、重新讀取後仍 processing 只有一條輪詢且最多 5 次）；新情境對 v418 版本有 5 項失敗。GPT 的 audit-v418-poll.cjs 對 v419 通過。

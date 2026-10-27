@@ -207,3 +207,7 @@ html body #dyeResume .dye-resume-swatch{height:22px;border:2px solid #1C2156;bor
 html body #dyeResume .dye-resume-actions{display:flex;gap:10px}
 html body #dyeResume .dye-resume-actions button{flex:1;min-height:42px;border:3px solid #1C2156;border-radius:12px;font:inherit;font-weight:900;font-size:14px;cursor:pointer;background:#fff;color:#1C2156;box-shadow:0 3px 0 #1C2156}
 html body #dyeResume .dye-resume-actions .primary{flex:1.4;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C);color:#fff;box-shadow:0 4px 0 #1C2156,inset 0 2px 0 #ffffff80}
+
+/* v420 已下架、無法穿戴的舊染髮組合 */
+.saved-dye-bundle.is-unwearable canvas{filter:grayscale(.85);opacity:.55}
+.saved-dye-bundle.is-unwearable button:disabled{background:#EEF1FA!important;color:#8A90B8!important;border-color:#C3CBEE!important;box-shadow:none!important;cursor:not-allowed}

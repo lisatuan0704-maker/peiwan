@@ -143,10 +143,12 @@
   return out;
  }
  async function saveBag(next,nextColor,message){
-  if(saving)return;const before=selection,beforeColor=color;saving=true;selection=next;color=nextColor;render();
-  try{await api.wear(next,nextColor);data=api.state();tell(message||'已保存穿搭。');}
+  if(saving)return;const before=selection,beforeColor=color;saving=true;
+  // v420：畫面重畫出錯也不能讓 saving 卡住（原本 render 在 try 外，丟錯後按鈕全部失效）
+  try{selection=next;color=nextColor;try{render();}catch(e){console.warn(e);}
+   await api.wear(next,nextColor);data=api.state();tell(message||'已保存穿搭。');}
   catch(e){selection=before;color=beforeColor;tell('未能保存：'+e.message);}
-  finally{saving=false;render();}
+  finally{saving=false;try{render();}catch(e){console.warn(e);}}
  }
  function tryItem(p){
   if(!p||saving)return;
@@ -240,7 +242,7 @@
   if(dyeVisible)return;
   const list=entries();$$('#singles:not([hidden]) [data-preview]').forEach(cv=>{const p=list.find(p=>p.id===cv.dataset.preview);if(p)drawPart(cv,p);});
   $$('#bundles:not([hidden]) [data-outfit-preview]').forEach(cv=>{const o=data.catalog.find(o=>o.id===cv.dataset.outfitPreview);if(o)api.draw(cv,seasonShowDoll(o,api.makeDoll(outfitSelection(o),{hair:o.doll?.hair||0})));});
-  $$('#bundles:not([hidden]) [data-dyed-preview]').forEach(cv=>{const s=data.dyed[cv.dataset.dyedPreview];if(s)api.draw(cv,api.makeDoll(api.normalizeSelection({...selection,front:s.front,back:s.back}),{savedId:cv.dataset.dyedPreview}));});
+  $$('#bundles:not([hidden]) [data-dyed-preview]').forEach(cv=>{const s=data.dyed[cv.dataset.dyedPreview];if(!s)return;try{api.draw(cv,api.makeDoll(api.normalizeSelection({...selection,front:s.front,back:s.back}),{savedId:cv.dataset.dyedPreview}));}catch(e){try{api.draw(cv,dyedFallbackDoll(s));}catch(_){}}});
  }
  const companionStyle=document.createElement('style');companionStyle.textContent='body[data-shop-category=other] #grid .item{min-height:220px;grid-template-rows:14px minmax(145px,1fr) 36px}body[data-shop-category=other] #grid{grid-auto-rows:minmax(220px,auto)} .thumb:has(.drink-product-image){position:relative;overflow:hidden}.thumb .drink-product-image{width:100%;height:100%;object-fit:contain;image-rendering:auto;position:absolute;inset:0;display:block} .drink-companions{display:flex;justify-content:center;align-items:end;gap:20px;margin:12px 0}.drink-companions figure{margin:0;text-align:center}.drink-companions img{display:block;object-fit:contain;image-rendering:pixelated;width:100px;height:114px}.drink-companions .drink-pet{width:80px;height:104px}.drink-companions figcaption{font-size:12px;margin-top:4px}#detail:has(.drink-companions){display:grid!important;grid-template-columns:minmax(0,1fr);height:auto!important;min-height:0;gap:8px}#detail>.drink-companions{grid-row:2;margin:0}#detail:has(.drink-companions)>.actions{display:flex!important;flex-wrap:wrap;justify-content:center;gap:10px;min-width:0;max-width:100%;grid-row:3}#detail:has(.drink-companions) .primary{max-width:100%;white-space:normal}';document.head.append(companionStyle);const carouselStyle=document.createElement('style');carouselStyle.textContent="\nbody[data-shop-category=other] .workspace{grid-template-columns:minmax(0,1fr)!important}body[data-shop-category=other] #catalog{grid-column:1/-1!important;width:100%} .drink-heading .drink-unit-price{display:block!important;text-align:center!important}body[data-shop-category=other] #grid,body[data-shop-category=other] #pager,body[data-shop-category=other] #bundlePager{display:none!important}\nbody[data-shop-category=other] #detail{display:flex!important;flex-direction:column;padding:0 0 24px;gap:14px;overflow:hidden;border-radius:24px;background:linear-gradient(145deg,#fffcf6,#f5e2e6);min-width:0}\nbody[data-shop-category=other] #detail>div:first-of-type{display:none}\nbody[data-shop-category=other] #detail>.actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:16px;padding:0 16px}\n.drink-carousel{width:100%;min-width:0}.drink-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x pan-y}.drink-track::-webkit-scrollbar{display:none}\n.drink-slide{flex:0 0 100%;min-width:0;scroll-snap-align:center;scroll-snap-stop:always;text-align:center;padding:22px 16px 0;box-sizing:border-box}\n.drink-heading small{font-size:10px;letter-spacing:2px;color:#ae7d80}.drink-heading h2{font-size:26px;margin:8px 0}.drink-heading .drink-unit-price{font-size:13px;margin:0;color:#9d7373}\n.drink-scene{display:flex;align-items:center;justify-content:center;gap:14px;min-height:250px;position:relative}.drink-center{width:240px;height:240px;max-width:50%;position:relative;display:grid;place-items:center}.drink-center:before{content:\"\";position:absolute;inset:15%;border-radius:50%;background:#fff9f3;box-shadow:0 0 55px #fff9f3}.drink-center img{position:relative;width:100%;height:100%;object-fit:contain}\n.drink-friend{object-fit:contain;image-rendering:pixelated;width:72px;height:82px;flex-shrink:0;align-self:flex-end;margin-bottom:44px}.drink-friend.pet{width:58px;height:76px;transform:scaleX(-1)}\n.drink-navigation{display:flex;justify-content:center;align-items:center;gap:24px;padding:0 16px 8px}.drink-navigation>button{width:36px;height:36px;border-radius:50%;font-size:19px}.drink-dots{display:flex;gap:10px}.drink-dots button{width:9px;height:9px;padding:0;border-radius:50%;background:#dfc7c7;border:0}.drink-dots button[aria-current=true]{background:#9c606b;box-shadow:0 0 0 4px #9c606b15}\n@media(max-width:600px){.drink-slide{padding:20px 8px 0}.drink-scene{gap:4px;min-height:208px}.drink-center{width:190px;height:190px;max-width:60%}.drink-friend{width:48px;height:58px;margin-bottom:34px}.drink-friend.pet{width:42px;height:56px}.drink-heading h2{font-size:23px}}\n";document.head.append(carouselStyle);
  function companionArt(product){const info=product?.companion;if(!info||!['rira','kabuki','momo'].includes(info.asset))return document.createElement('span');const row=document.createElement('div');row.className='drink-companions';for(const role of ['staff','pet']){const figure=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');img.src='../img/companions-v352/'+info.asset+'-'+role+'.gif?v=356';img.alt=role==='staff'?info.name:info.name+'的寵物';if(role==='pet')img.className='drink-pet';label.textContent=role==='staff'?info.name:'寵物';figure.append(img,label);row.append(figure)}return row;}
@@ -415,13 +417,21 @@
  function seasonShowDoll(o,d){const c=seasonShow(o);if(!c.main)return d;d.hairHex=c.main;if(c.tail)d.hairHex2=c.tail;else delete d.hairHex2;if(c.highlight)d.hairHighlight=c.highlight;return d;}
  function seasonVars(o){const c=seasonShow(o),a=c.main||c.base,b=c.tail||a,h=c.highlight||b,bg=c.bg||[a,b,h];return '--sv-a:'+bg[0]+';--sv-b:'+bg[1]+';--sv-c:'+bg[2];}
  window.__ttSeasonRepaint=()=>{try{renderBundles();paint();}catch(e){}};
+ // 舊染髮組合的部件已無法穿戴時，只用原始資料畫預覽，不經穿搭驗證
+ function dyedFallbackDoll(s){const d=JSON.parse(JSON.stringify(data.doll||{}));delete d.set;d.ps={...(d.ps||{})};let base=(d.uiBaseSlots||[]).slice();
+  for(const k of ['front','back']){const r=s[k]||{};if(r.base!==undefined){d[k]=r.base;delete d.ps[k];if(!base.includes(k))base.push(k);}else if(r.source){d.ps[k]=r.source;base=base.filter(x=>x!==k);}}
+  d.uiBaseSlots=base;d.hairHex=s.main;d.hairHex2=s.tail;if(s.highlight)d.hairHighlight=s.highlight;else delete d.hairHighlight;return d;}
+ function dyedWearable(id){const s=data.dyed[id];if(!s)return false;try{api.makeDoll(api.normalizeSelection({...selectionFromDoll(data.doll),front:s.front,back:s.back}),{savedId:id},true);return true;}catch(e){return false;}}
  function renderBundles(){
   $('#bundlePager').innerHTML='';
   if(area==='bag'){
    const saved=Object.entries(data.dyed);
    $('#bundlegrid').innerHTML=saved.map(([id,s])=>'<article class="bundle saved-dye-bundle"><div class="bundlebody"><small>MY HAIR</small><h2>'+esc(s.name||'專屬染髮')+'</h2><canvas class="dyed-preview" width="64" height="64" data-dyed-preview="'+esc(id)+'"></canvas><p>已固定瀏海、後髮與髮色。再次穿戴不扣券。</p><button class="primary" data-saved="'+esc(id)+'">試穿這組</button></div></article>').join('')||'<div class="live-empty"><p>還沒有保存的染髮。</p><button class="primary" id="emptyDye">開始染髮</button><p>先選好瀏海與後髮，再調整專屬髮色。</p></div>';
    if($('#emptyDye'))$('#emptyDye').onclick=openDye;
-   $$('[data-saved]').forEach(b=>{const id=b.dataset.saved,active=color.savedId===id;b.textContent=active?'已穿戴 · 點一下卸下':'點一下穿戴';b.onclick=()=>{if(saving)return;const saved=data.dyed[id];const next=api.normalizeSelection({...selection,front:active?{base:0,slot:'front'}:saved.front,back:active?{base:0,slot:'back'}:saved.back});return saveBag(next,active?{hair:data.doll.hair||0}:{savedId:id},active?'已卸下染髮組合，恢復原有髮型。':'已穿上染髮組合。');}});
+   $$('[data-saved]').forEach(b=>{const id=b.dataset.saved,active=color.savedId===id;
+    // 部件已下架或未持有的舊染髮組合：不能穿，按鈕停用並說明，不再讓整頁出錯
+    if(!active&&!dyedWearable(id)){b.textContent='這組髮型已下架，無法穿戴';b.disabled=true;b.closest('.saved-dye-bundle')?.classList.add('is-unwearable');return;}
+    b.textContent=active?'已穿戴 · 點一下卸下':'點一下穿戴';b.onclick=()=>{if(saving)return;const saved=data.dyed[id];const next=api.normalizeSelection({...selection,front:saved.front,back:saved.back});/* v420 卸下＝保留這組瀏海與後髮、改回原本髮色（舊版改成 base 0，已下架部件會穿不回去） */return saveBag(next,active?{hair:data.doll.hair||0}:{savedId:id},active?'已卸下染髮，髮型保留、恢復原本髮色。':'已穿上染髮組合。');}});
    $('#detail').replaceChildren();
   }else{
    const available=products().filter(o=>!['寵物','其他','座椅'].includes(o.type)&&o.parts.length),featured=available.filter(o=>o.featured),all=(featured.length?featured:available).sort((a,b)=>b.featured-a.featured);const show=all;
@@ -483,8 +493,13 @@
   dyeSaving=true;dyeStatus();$('#dyeError').hidden=true;
   try{
    const result=await api.saveDye(selection,dyeDraft,dyeRequest.id);
-   clearDyePending();data=api.state();color={savedId:result.id};dyeDraft=null;$('#dyeDialog').hidden=true;document.querySelector('.shop').inert=false;area='bag';bagSection='wear';category='hair';hairSection='saved';syncOuter('bag');render();
-   tell('染色組合已保存！按「穿上搭配」即可在大廳使用。');$('#showWear').focus();
+   clearDyePending();data=api.state();dyeDraft=null;$('#dyeDialog').hidden=true;document.querySelector('.shop').inert=false;area='bag';bagSection='wear';category='hair';hairSection='saved';syncOuter('bag');
+   // v420：染好直接穿上。以目前已保存的穿搭為底，只換成這組瀏海、後髮與髮色，不把試穿中的其他商品一起存進去。
+   const s=data.dyed[result.id];let worn=false,why='';
+   if(s){const next=api.normalizeSelection({...selectionFromDoll(data.doll),front:s.front,back:s.back});
+    try{await api.wear(next,{savedId:result.id});data=api.state();selection=next;color={savedId:result.id};worn=true;}catch(e){why=e.message||'';}}
+   try{render();}catch(e){console.warn(e);}
+   tell(worn?'染好了，已經幫你穿上！回到大廳就是新髮色。':'染髮已保存在「我的染髮」，但沒能自動穿上'+(why?'（'+why+'）':'')+'，可以在這裡按「點一下穿戴」。');
   }catch(e){$('#dyeError').textContent=e.message||'保存未完成，請重試';$('#dyeError').hidden=false;data=api.state();}
   finally{dyeSaving=false;dyeStatus();}
  }
