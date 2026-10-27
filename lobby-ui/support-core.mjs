@@ -14,6 +14,6 @@ export function replyUpdates({uid,id,ticket,text,at}) {
   if(ticket.reply) throw Error('這筆客服單已回覆，請重新整理確認。');
   return {
     [`supportV1/tickets/${uid}/${id}/reply`]:{text:body,at},
-    [`supportV1/inbox/${uid}/${id}`]:{title:'客服回覆｜'+ticket.subject,text:body,from:'掌櫃客服',at,ticketId:id,question:ticket.text}
+    [`supportV1/inbox/${uid}/${id}`]:{title:'客服回覆｜'+ticket.subject,text:body,from:'店長客服',at,ticketId:id,question:ticket.text}
   };
 }

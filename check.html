@@ -28,7 +28,7 @@ textarea{width:100%;height:132px;border-radius:12px;border:none;box-shadow:inset
 
 <div class="card">
   <h1>小小酒館・裝置檢測</h1>
-  <div class="sub">這頁不會動到任何資料,只是測一下你的瀏覽器畫圖有多快。等下面的測試跑完(約 6 秒),把結果截圖或複製給掌櫃就好。</div>
+  <div class="sub">這頁不會動到任何資料,只是測一下你的瀏覽器畫圖有多快。等下面的測試跑完(約 6 秒),把結果截圖或複製給店長就好。</div>
   <div id="stage"></div>
   <div class="big" id="fpsNow">測試中…</div>
   <div class="sub" style="text-align:center;margin:0" id="fpsHint">請不要切換視窗,讓它跑完</div>
@@ -92,7 +92,7 @@ textarea{width:100%;height:132px;border-radius:12px;border:none;box-shadow:inset
     var cls=fps>=50?'ok':(fps>=30?'warn':'bad');
     var word=fps>=50?'順暢':(fps>=30?'普通(偏卡)':'很卡');
     document.getElementById('fpsNow').innerHTML='<span class="'+cls+'">'+fps+' FPS・'+word+'</span>';
-    document.getElementById('fpsHint').textContent='測試完成,把下面的結果給掌櫃即可';
+    document.getElementById('fpsHint').textContent='測試完成,把下面的結果給店長即可';
     document.getElementById('rFps').innerHTML='<span class="'+cls+'">靜態 '+fpsIdle+' / 動畫 '+fpsLoad+' FPS</span>';
     document.getElementById('rAccel').innerHTML=g.accel?'<span class="ok">開啟(正常)</span>':'<span class="bad">關閉或使用軟體繪圖</span>';
     document.getElementById('rGpu').textContent=g.name;
@@ -115,7 +115,7 @@ textarea{width:100%;height:132px;border-radius:12px;border:none;box-shadow:inset
   }
   document.getElementById('copyBtn').onclick=function(){
     var t=document.getElementById('out'); t.select();
-    try{ document.execCommand('copy'); this.textContent='已複製!貼給掌櫃就好 ✦'; }
+    try{ document.execCommand('copy'); this.textContent='已複製!貼給店長就好 ✦'; }
     catch(e){ this.textContent='請手動選取下方文字複製'; }
   };
 })();

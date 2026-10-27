@@ -1,4 +1,4 @@
-import {CATEGORIES,ticketInput} from './support-core.mjs?v=421';
+import {CATEGORIES,ticketInput} from './support-core.mjs?v=427';
 import {beginVoiceLogin} from './voice-rehearsal.mjs?v=421';
 const auth=firebase.auth(),app=firebase.apps.find(a=>a.name==='tavern-support')||firebase.initializeApp(firebase.app().options,'tavern-support'),supportAuth=app.auth(),db=app.database(),stamp=()=>firebase.database.ServerValue.TIMESTAMP;
 const dialog=document.createElement('dialog');dialog.className='tt-support';dialog.setAttribute('aria-labelledby','supportTitle');

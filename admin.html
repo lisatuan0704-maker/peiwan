@@ -7,11 +7,11 @@
 <link rel="apple-touch-icon" href="/favicon.png">
 <meta name="theme-color" content="#FF9EB5">
 <meta property="og:site_name" content="Tiny Tavern 小小酒館">
-<meta property="og:title" content="掌櫃台帳｜Tiny Tavern">
+<meta property="og:title" content="店長台帳｜Tiny Tavern">
 <meta property="og:description" content="Tiny Tavern 內部管理">
 <meta property="og:image" content="https://tinytavern.tw/og-lobby.png">
 
-<title>掌櫃台帳｜Tiny Tavern 小小酒館</title>
+<title>店長台帳｜Tiny Tavern 小小酒館</title>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -434,8 +434,8 @@ body.dark .b-fix{background:#4A3A28!important;color:#F0C98A!important;border-col
 body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
 </style>
 <link href="tavern-ui/assets/fonts/lineseed.css?v=257" rel="stylesheet">
-<link rel="stylesheet" href="lobby-ui/backoffice-theme.css?v=412">
-<link rel="stylesheet" href="lobby-ui/admin-theme.css?v=413">
+<link rel="stylesheet" href="lobby-ui/backoffice-theme.css?v=427">
+<link rel="stylesheet" href="lobby-ui/admin-theme.css?v=427">
 </head>
 <body>
 <button id="themeBtn" title="切換日間／夜間模式" aria-label="切換日間夜間模式">☀️</button>
@@ -459,13 +459,13 @@ body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
 
 <div class="wrap">
   <header>
-    <h1>🗝️ Tiny Tavern・掌櫃台帳</h1>
+    <h1>🗝️ Tiny Tavern・店長台帳</h1>
     <p>TINY TAVERN · OWNER</p>
   </header>
 
   <div id="pgLogin" class="loginBox">
     <div class="card">
-      <h2 id="loginTitle">掌櫃登入</h2>
+      <h2 id="loginTitle">店長登入</h2>
       <input id="adminUser" placeholder="帳號" autocomplete="username" style="text-align:left;letter-spacing:1px">
       <input id="adminPw" type="password" placeholder="密碼（至少 6 碼）" autocomplete="current-password" style="text-align:left;letter-spacing:1px;margin-top:10px">
       <button class="btn" onclick="adminLogin()">開啟台帳 ✦</button>
@@ -498,7 +498,7 @@ body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
     <div id="tab8" style="display:none"></div>
     <div id="tab9" style="display:none"></div>
     <div id="tab10" style="display:none"></div>
-    <button class="logout" style="background:none;border:none;color:var(--grape);font-family:inherit;font-size:12px;text-decoration:underline;cursor:pointer;display:block;margin:0 auto" onclick="firebase.auth().signOut().then(()=>location.reload())">登出掌櫃帳號</button>
+    <button class="logout" style="background:none;border:none;color:var(--grape);font-family:inherit;font-size:12px;text-decoration:underline;cursor:pointer;display:block;margin:0 auto" onclick="firebase.auth().signOut().then(()=>location.reload())">登出店長帳號</button>
   </div>
 </div>
 
@@ -529,12 +529,12 @@ let fMonth="", fProg="", fChar="", fKefu="", fPaid="";
 
 db.ref(ROOT+"/config/adminUid").on("value",sv=>{
   adminUid=sv.val();
-  if(!adminUid){ loginTitle.textContent="首次使用：建立掌櫃帳號"; loginHint.textContent="帳號限英數 3-20 字、密碼至少 6 碼。這組是最高權限，設定後記牢。"; }
-  else{ loginTitle.textContent="掌櫃登入"; }
+  if(!adminUid){ loginTitle.textContent="首次使用：建立店長帳號"; loginHint.textContent="帳號限英數 3-20 字、密碼至少 6 碼。這組是最高權限，設定後記牢。"; }
+  else{ loginTitle.textContent="店長登入"; }
   tryAuto();
 });
 auth.onAuthStateChanged(u=>{
-  if(entered && (!u || (adminUid && u.uid!==adminUid))){ alert("登入身分已變更（可能在其他分頁登入了別的帳號），請重新登入掌櫃帳號"); location.reload(); return; }
+  if(entered && (!u || (adminUid && u.uid!==adminUid))){ alert("登入身分已變更（可能在其他分頁登入了別的帳號），請重新登入店長帳號"); location.reload(); return; }
   tryAuto();
 });
 function tryAuto(){
@@ -552,7 +552,7 @@ function adminLogin(){
       .catch(e=>alert("建立失敗："+e.message));
   }else{
     auth.signInWithEmailAndPassword(toEmail(un),pw)
-      .then(c=>{ if(c.user.uid!==adminUid){auth.signOut();alert("這不是掌櫃帳號");} else enter(); })
+      .then(c=>{ if(c.user.uid!==adminUid){auth.signOut();alert("這不是店長帳號");} else enter(); })
       .catch(()=>alert("帳號或密碼不對"));
   }
 }
@@ -616,7 +616,7 @@ function coSet(id,st){
             db.ref(ROOT+"/walletTx/"+o.myKey).push({type:'topup',amount:add,balAfter,ref:id,note:'儲值入帳',ts:Date.now()});
             db.ref(ROOT+'/mail/'+o.myKey).push({title:'儲值已入帳・'+add+' 金幣',
               text:'你的儲值已經確認收款,'+add+' 金幣已經進到錢包了 ✦\n\n可以直接去點單或逛時裝店囉,謝謝支持!',
-              from:'掌櫃',at:Date.now()});
+              from:'店長',at:Date.now()});
           }
         });
       });
@@ -667,17 +667,17 @@ function coMailCancel(o,refunded,amt){
   if(!o||!o.myKey) return;
   db.ref(ROOT+'/mail/'+o.myKey).push({
     title:'『'+(o.planName||'訂單')+'』已取消'+(refunded?',金幣已退回':''),
-    text:'不好意思,這筆訂單由掌櫃取消了。\n\n方案:'+(o.planName||'')+'\n'
-      +(refunded?('已退回 '+(amt||0)+' 金幣到你的錢包,可以重新點單 ✦'):'如需退款或有任何疑問,請直接聯絡掌櫃,我們會盡快處理。')
+    text:'不好意思,這筆訂單由店長取消了。\n\n方案:'+(o.planName||'')+'\n'
+      +(refunded?('已退回 '+(amt||0)+' 金幣到你的錢包,可以重新點單 ✦'):'如需退款或有任何疑問,請直接聯絡店長,我們會盡快處理。')
       +'\n\n造成不便真的很抱歉!',
-    from:'掌櫃', at:Date.now()});
+    from:'店長', at:Date.now()});
 }
 /* 非金幣單人工退款後,標記為已退款(不然警示會一直掛著) */
 function coMarkRefunded(id){
   const o=clientOrders[id]; if(!o) return;
   if(!confirm('確認你已經用其他方式(轉帳等)把款項退給客人了?標記後警示會消失。')) return;
   db.ref(ROOT+'/clientOrders/'+id).update({refunded:true, refundedManualAt:Date.now()});
-  db.ref(ROOT+'/clientOrders/'+id+'/adjustments').push({note:'掌櫃標記:已人工退款', t:Date.now()});
+  db.ref(ROOT+'/clientOrders/'+id+'/adjustments').push({note:'店長標記:已人工退款', t:Date.now()});
   coMailCancel(o,false,o.amount||0);
 }
 function walletAdjust(myKey,name){
@@ -686,12 +686,12 @@ function walletAdjust(myKey,name){
   if(!n){ return; }
   db.ref(ROOT+"/wallet/"+myKey+"/balance").transaction(cur=>Math.max(0,(cur||0)+n), (err,committed,snap)=>{
     if(!err&&committed){ const balAfter=(snap&&snap.val())||0;
-      db.ref(ROOT+"/walletTx/"+myKey).push({type:'adjust',amount:n,balAfter,note:'掌櫃手動調整',ts:Date.now()}); }
+      db.ref(ROOT+"/walletTx/"+myKey).push({type:'adjust',amount:n,balAfter,note:'店長手動調整',ts:Date.now()}); }
   });
 }
 /* ===== 🛍️ 商城上架管理 ===== */
 let shopConfig={};
-/* ====== ［限定］酒館併桌:掌櫃開桌 ====== */
+/* ====== ［限定］酒館併桌:店長開桌 ====== */
 let tablesCfg={};
 const _tbWarned=new Set();
 function renderTables(){
@@ -744,7 +744,7 @@ function tbAdminDel(id){ const t=tablesCfg[id]||{};
   db.ref(ROOT+'/tables/'+id).remove(); }
 /* 併桌佔位:已確認/完成且尚未佔位的併桌單,自動佔一席。
    transaction 搶 clientOrders/{id}/seated 旗標 → 兩台裝置同開也只佔一次;
-   桌滿時中止並提醒掌櫃處理退款(每筆單只提醒一次,不洗版) */
+   桌滿時中止並提醒店長處理退款(每筆單只提醒一次,不洗版) */
 function sweepTableSeats(){
   Object.entries(clientOrders||{}).forEach(([id,o])=>{
     if(!o||o.type!=='table'||!o.itemId||o.seated) return;
@@ -774,7 +774,7 @@ const SHOP_CAT=[
   {id:'seat2',type:'座椅',name:'吧檯高腳椅',price:160},
   ...Object.entries(TTSeats.CATALOG).map(([id,c])=>({id,type:'座椅',name:c.name,price:null}))
 ];
-/* 自訂商品:掌櫃可自行新增/改名/刪除,存在 shopConfig/<id> 裡(帶 custom:1) */
+/* 自訂商品:店長可自行新增/改名/刪除,存在 shopConfig/<id> 裡(帶 custom:1) */
 function shopList(){
   const out=SHOP_CAT.map(x=>Object.assign({},x));
   Object.keys(shopConfig||{}).forEach(function(id){
@@ -1330,9 +1330,9 @@ function processCancelReqAdmin(){
     if(!req||req.done) return;
     const co=clientOrders[coid];
     if(!co){ if(Date.now()-(req.at||0)>600000) db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:false,why:'找不到這筆訂單'}); return; }
-    if(co.accepted){ db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:false,why:'陪玩已經接單了,請直接聯絡掌櫃'}); return; }
+    if(co.accepted){ db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:false,why:'陪玩已經接單了,請直接聯絡店長'}); return; }
     if(co.status!=='confirmed'||co.refunded){ db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:false,why:'這筆單已經處理過了'}); return; }
-    if(co.paidBy!=='wallet'||!co.myKey){ db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:false,why:'非金幣付款,請掌櫃人工退款'}); return; }
+    if(co.paidBy!=='wallet'||!co.myKey){ db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:false,why:'非金幣付款,請店長人工退款'}); return; }
     const back=+co.amount||0;
     db.ref(ROOT+'/clientOrders/'+coid+'/refunded').transaction(cur=>{ if(cur) return; return true; },(e,ok)=>{
       if(e||!ok){ db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:false,why:'已經退過款了'}); return; }
@@ -1343,7 +1343,7 @@ function processCancelReqAdmin(){
       });
       db.ref(ROOT+'/cancelReq/'+coid).update({done:Date.now(),ok:true,refunded:back});
       db.ref(ROOT+'/mail/'+co.myKey).push({title:'『'+(co.planName||'訂單')+'』已取消,金幣已退回',
-        text:'你的取消申請已完成,'+back+' 金幣已經退回錢包 ✦\n\n隨時歡迎再來找我們玩!',from:'掌櫃',at:Date.now()});
+        text:'你的取消申請已完成,'+back+' 金幣已經退回錢包 ✦\n\n隨時歡迎再來找我們玩!',from:'店長',at:Date.now()});
     });
   });
 }
@@ -1381,8 +1381,8 @@ function autoRefundStale(id,o,now){
       title:'『'+(o.planName||'訂單')+'』已自動取消,金幣已退回',
       text:'很抱歉,這筆單超過時間都沒有陪玩接下來。\n\n方案:'+(o.planName||'')+'\n'
         +'已自動退回 '+back+' 金幣到你的錢包,不用擔心 ✦\n\n'
-        +'可以換個時段、或指定其他陪玩再點一次;想找人幫忙也可以直接聯絡掌櫃。真的很不好意思!',
-      from:'掌櫃', at:now});
+        +'可以換個時段、或指定其他陪玩再點一次;想找人幫忙也可以直接聯絡店長。真的很不好意思!',
+      from:'店長', at:now});
   });
 }
 let payCfg={};
@@ -1434,7 +1434,7 @@ function topupCardHtml(){
 }
 /* 待核帳提醒:分頁標題顯示件數 + 新單跳瀏覽器通知(把後台釘在手機/桌面分頁就會提醒你) */
 let _seenPending=null;
-const TITLE_BASE='掌櫃台帳｜Tiny Tavern 小小酒館';
+const TITLE_BASE='店長台帳｜Tiny Tavern 小小酒館';
 function askNotifyPerm(){
   try{ if(window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
 }
@@ -1623,7 +1623,7 @@ function muteByKey(key,name,ms,reason){
   const durTxt=ms===-1?'永久':(ms>=604800000?'7 天':(ms>=86400000?'24 小時':'1 小時'));
   mailCompose(key,name,'關於你在大廳的發言',
     '你好,因為「'+(reason||'違反大廳規範')+'」,你的大廳發言功能已暫停 '+durTxt+'。'
-    +(ms===-1?'':'\n時間到會自動恢復。')+'\n若有疑問或想說明,歡迎到 Discord 找掌櫃聊聊。');
+    +(ms===-1?'':'\n時間到會自動恢復。')+'\n若有疑問或想說明,歡迎到 Discord 找店長聊聊。');
 }
 function repMute(repId){
   const r=reports[repId]; if(!r) return;
@@ -1696,7 +1696,7 @@ function sendMail(){
   const title=(m.querySelector('#mailTitle').value||'').trim();
   const body=(m.querySelector('#mailBody').value||'').trim();
   if(!title||!body){ alert('標題和內容都要填'); return; }
-  db.ref(ROOT+'/mail/'+_mailKey).push({title:title.slice(0,30), text:body.slice(0,500), from:'掌櫃', at:Date.now()})
+  db.ref(ROOT+'/mail/'+_mailKey).push({title:title.slice(0,30), text:body.slice(0,500), from:'店長', at:Date.now()})
     .then(()=>{ m.style.display='none'; _mailKey=null; })
     .catch(()=>alert('寄出失敗,請稍後再試'));
 }
@@ -1839,9 +1839,9 @@ function addManualOrder(){
   db.ref(ROOT+'/orders').push({
     no, cid, charName:(chars[cid]&&chars[cid].name)||'',
     sid:null, serviceName:svc, mode:'package', qty:1, amount:amt,
-    customer:cust, note:note||'掌櫃手動補單（站外)',
+    customer:cust, note:note||'店長手動補單（站外)',
     paid, paidAt: paid? firebase.database.ServerValue.TIMESTAMP : null,
-    status:'confirmed', kefuId:'admin', kefuName:'掌櫃手動',
+    status:'confirmed', kefuId:'admin', kefuName:'店長手動',
     createdAt:firebase.database.ServerValue.TIMESTAMP,
     month:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')
   }).then(()=>{
@@ -2242,7 +2242,7 @@ const TP={"parts": {"後髮": [{"n": "露亞長髮","d": "iVBORw0KGgoAAAANSUhEUg
 function tpImg(d){ if(!TPimgs[d]){const i=new Image();i.src='data:image/png;base64,'+d;
   i.onload=()=>{ if(typeof tpReady==='function') tpReady(); };
   TPimgs[d]=i;} return TPimgs[d]; }
-/* 掌櫃在後台上傳的整套部件(shopConfig/<id>/parts):優先於內建部件 */
+/* 店長在後台上傳的整套部件(shopConfig/<id>/parts):優先於內建部件 */
 const CSimgs={};
 function csBust(){ try{ CSDEF.t=0; }catch(e){} }
 window.__csBust=csBust;
@@ -2392,7 +2392,7 @@ function csAccList(d){
    身體後 → 後髮前(瀏海會蓋住) → 前髮前 → 最上方 */
 function csAccZ(v){
   try{
-    if(v&&v.z) return v.z;                     /* 掌櫃後台指定的優先 */
+    if(v&&v.z) return v.z;                     /* 店長後台指定的優先 */
     const n=String((v&&v.n)||'');
     if(/尾巴|翅膀|披風|斗篷|背包/.test(n)) return 'back';
     if(/髮箍|髮帶|髮飾|頭箍|頭紗|耳環|耳飾|髮夾|緞帶|蝴蝶結|貓耳|獸耳|角/.test(n)) return 'mid';
@@ -2703,7 +2703,7 @@ body.dark #qnavPop button{color:#D8CBEE}
 <button id="qnavBtn" style="display:none">☰ 快速跳轉</button>
 <div id="qnavPop"></div>
 <script>
-/* 掌櫃 QoL:Enter 登入 + 區塊快速跳轉 */
+/* 店長 QoL:Enter 登入 + 區塊快速跳轉 */
 (function(){
   const go=e=>{ if(e.key==='Enter'){ e.preventDefault(); try{ adminLogin(); }catch(err){} } };
   ['adminUser','adminPw'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('keydown',go); });
@@ -2730,7 +2730,7 @@ body.dark #qnavPop button{color:#D8CBEE}
     btn.style.display=(m&&m.style.display!=='none'&&m.offsetParent!==null)?'':'none'; },1200);
 })();
 </script>
-<script src="season-shop-import.js?v=413"></script>
+<script src="season-shop-import.js?v=427"></script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
-<script type="module" src="lobby-ui/support-admin.mjs?v=421"></script></body>
+<script type="module" src="lobby-ui/support-admin.mjs?v=427"></script></body>
 </html>

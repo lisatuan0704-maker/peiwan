@@ -13,7 +13,7 @@ document.body.append(entry,dialog);
 const note=dialog.querySelector('.room-access-note'),login=dialog.querySelector('.room-login'),original=dialog.querySelector('#roomOriginal');
 let client=null,roomAuth=null,clock=null,publisher=null,bootstrapPending=null,identity=null,room=null,stopDirectory=()=>{},epoch=0;
 let availableRooms=['02','03'].map(n=>({id:'public-'+n,title:'公共大廳 '+n,count:0,capacity:30,available:false}));
-const errors={SERVICE_NOT_ACTIVATED:'房間服務尚未開放，目前可先使用酒館大廳。',ACCOUNT_REQUIRED:'這個帳號的角色綁定尚未確認，請聯絡掌櫃。',CHARACTER_UNAVAILABLE:'請先建立角色，再進入大廳。',CHARACTER_MISMATCH:'目前角色與登入帳號不一致，請重新整理後再試。',SESSION_IN_USE:'這個帳號正在另一個分頁或裝置的房間中，請先離開該房間。',PLAYER_MUTED:'你目前被禁言，暫時無法傳送訊息。',AUTH_REQUIRED:'請先登入 Discord，再選擇大廳。',AUTH_CHANGED:'帳號已切換，請重新整理後再試。',OFFLINE:'房間連線暫時中斷，請稍後再試。'};
+const errors={SERVICE_NOT_ACTIVATED:'房間服務尚未開放，目前可先使用酒館大廳。',ACCOUNT_REQUIRED:'這個帳號的角色綁定尚未確認，請聯絡店長。',CHARACTER_UNAVAILABLE:'請先建立角色，再進入大廳。',CHARACTER_MISMATCH:'目前角色與登入帳號不一致，請重新整理後再試。',SESSION_IN_USE:'這個帳號正在另一個分頁或裝置的房間中，請先離開該房間。',PLAYER_MUTED:'你目前被禁言，暫時無法傳送訊息。',AUTH_REQUIRED:'請先登入 Discord，再選擇大廳。',AUTH_CHANGED:'帳號已切換，請重新整理後再試。',OFFLINE:'房間連線暫時中斷，請稍後再試。'};
 const fail=e=>{if(TTRoomWorld.active){original.disabled=false;original.textContent='返回酒館大廳'}note.textContent=errors[e.code||e.message]||'房間連線暫時中斷，請稍後重試。';window.toast?.(note.textContent)};
 const picker=mountRoomSelector(dialog.querySelector('#roomPicker'),{
  joinPublic:async id=>{await bootstrap();return client.joinPublic(id)},

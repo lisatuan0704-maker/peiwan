@@ -1,4 +1,4 @@
-/* 測試道具發放：沿用掌櫃登入，只更新指定角色的 owned 節點。 */
+/* 測試道具發放：沿用店長登入，只更新指定角色的 owned 節點。 */
 (() => {
  'use strict';
  const $=id=>document.getElementById(id);
@@ -8,10 +8,10 @@
  const builtins={cloth2:'啟程旅人',cloth3:'微風日常'};
  try{$('target').value=localStorage.getItem('tt_me')||'';}catch{}
  const read=async path=>(await db.ref(root+'/'+path).once('value')).val();
- async function owner(){const u=auth.currentUser;if(!u||u.uid!==await read('config/adminUid'))throw new Error('請先在掌櫃台帳登入，再重開此頁。');return u.uid;}
+ async function owner(){const u=auth.currentUser;if(!u||u.uid!==await read('config/adminUid'))throw new Error('請先在店長台帳登入，再重開此頁。');return u.uid;}
  function clear(){draft=null;$('grant').disabled=true;}
  $('target').oninput=clear;$('tickets').oninput=clear;
- auth.onAuthStateChanged(async()=>{clear();$('preview').disabled=true;try{await owner();$('preview').disabled=false;$('summary').textContent='掌櫃身分已確認，請先核對目標帳號。';}catch(e){$('summary').textContent=e.message;}});
+ auth.onAuthStateChanged(async()=>{clear();$('preview').disabled=true;try{await owner();$('preview').disabled=false;$('summary').textContent='店長身分已確認，請先核對目標帳號。';}catch(e){$('summary').textContent=e.message;}});
  $('preview').onclick=async()=>{
   clear();$('preview').disabled=true;$('status').textContent='讀取中…';
   try{

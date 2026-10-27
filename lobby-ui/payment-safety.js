@@ -2,7 +2,7 @@
 (function(root){
  'use strict';
  const prefix='tt_pending_payment_v1:';
- const message='上一筆交易結果尚未確認，請先查看訂單或聯絡掌櫃，勿重複付款';
+ const message='上一筆交易結果尚未確認，請先查看訂單或聯絡店長，勿重複付款';
  function error(text,code){const e=new Error(text);e.code=code;return e;}
  function create({storage,locks,now=Date.now}){
   function pending(key){const raw=storage.getItem(prefix+key);if(!raw)return null;try{return JSON.parse(raw);}catch(_){throw error(message,'PENDING');}}
@@ -30,9 +30,9 @@
     try{await commit();}catch(e){
      const code=String(e.code||'').toLowerCase().replace(/-/g,'_');
      if(['permission_denied','database/permission_denied','validation_failed'].includes(code)){
-      clear();throw error('送出遭拒，訂單未成立，也未扣款；請確認餘額或聯絡掌櫃','REJECTED');
+      clear();throw error('送出遭拒，訂單未成立，也未扣款；請確認餘額或聯絡店長','REJECTED');
      }
-     stage('commit_unconfirmed');throw error('交易結果尚未確認，請查看訂單或聯絡掌櫃，勿重複付款','UNCONFIRMED');
+     stage('commit_unconfirmed');throw error('交易結果尚未確認，請查看訂單或聯絡店長，勿重複付款','UNCONFIRMED');
     }
     clear();return {ids};
    });

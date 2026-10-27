@@ -1,4 +1,4 @@
-/* v412 掌櫃頁專屬補充（共用主題見 backoffice-theme.css）：黏頂分頁列、商城上架格、部件格、待核帳等改整站主題。只改外觀。 */
+/* v412 店長頁專屬補充（共用主題見 backoffice-theme.css）：黏頂分頁列、商城上架格、部件格、待核帳等改整站主題。只改外觀。 */
 html body:not(.dark) .tabs{background:rgba(253,253,255,.94)!important;border:3px solid var(--pt-ink);border-radius:18px;padding:10px!important;box-shadow:0 4px 0 rgba(28,33,86,.16)!important;backdrop-filter:blur(4px)}
 html body .tabs button{min-width:96px!important;padding:9px 6px!important;font-size:13.5px!important}
 /* 商城上架格 */

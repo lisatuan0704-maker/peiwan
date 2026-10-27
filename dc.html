@@ -111,7 +111,7 @@ function restoreAccount(dcid){
   }catch(e){ fail('頭貼更新已過期，請回大廳重新開始。');return; }
   if(!avatarRefresh&&sessionStorage.getItem('tt_voice_login_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=421').then(m=>m.finishVoiceLogin(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
   if(!avatarRefresh&&sessionStorage.getItem('tt_voice_rehearsal_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=407').then(m=>m.finishRehearsal(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
-  if(!avatarRefresh&&sessionStorage.getItem('tt_partner_discord_bind_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/partner-binding.mjs?v=300').then(m=>m.finishBinding(callback,firebase.auth(),card)).catch(()=>{card.textContent='無法載入綁定功能，請返回陪玩工作頁重試。'});return;}
+  if(!avatarRefresh&&sessionStorage.getItem('tt_partner_discord_bind_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/partner-binding.mjs?v=427').then(m=>m.finishBinding(callback,firebase.auth(),card)).catch(()=>{card.textContent='無法載入綁定功能，請返回陪玩工作頁重試。'});return;}
   function fail(msg){
     delete window.__ttDiscordCallback;
     card.innerHTML='<h1>'+(avatarRefresh?'頭貼更新沒有完成':'綁定沒有成功')+'</h1><p>'+msg+'</p><a class="btn" href="lobby.html">回酒館大廳</a>';

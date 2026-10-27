@@ -62,7 +62,7 @@
           ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 1500"
         },
         "from": {
-          ".validate": "newData.val() == '掌櫃客服'"
+          ".validate": "newData.val() == '店長客服' || newData.val() == '掌櫃客服'"
         },
         "at": {
           ".validate": "newData.isNumber()"

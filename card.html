@@ -166,7 +166,7 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
     <p>選個喜歡的模樣，留下想被叫的名字。<br>你的第一張闆卡，就從這裡開始。</p>
     <p class="sub">闆卡會成為你在酒館活動時的形象。<br>完成後，也能到大廳的時裝間換裝。</p>
     <button class="btn full" id="welcomeStart" onclick="notice.style.display='none';document.getElementById('studioTitle').focus()">開始製作 <span aria-hidden="true">→</span></button>
-    <span class="welcome-sign">掌櫃，留給初次來訪的你</span>
+    <span class="welcome-sign">店長，留給初次來訪的你</span>
   </div>
 </div>
 
@@ -209,7 +209,7 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
           <p class="hint" id="nameHint">這也是冒險者稱呼你的名字，請避免不雅或色情字詞。</p>
           <label for="fDcid">Discord ID <small>必填</small></label>
           <input id="fDcid" placeholder="例：@boss123" autocomplete="off" spellcheck="false" aria-describedby="discordHint">
-          <p class="hint" id="discordHint">填寫點單時使用的 Discord ID，方便掌櫃核對身分。</p>
+          <p class="hint" id="discordHint">填寫點單時使用的 Discord ID，方便店長核對身分。</p>
         </div>
         <div class="form-divider"><span>再多認識你一點</span><small>A LITTLE ABOUT YOU</small></div>
         <div class="birthday-row"><div><label for="fBm">生日</label><p class="hint">只記月日，不問年份。</p></div><div class="grid2"><select id="fBm" aria-label="生日月份"></select><select id="fBd" aria-label="生日日期"></select></div></div>
@@ -694,7 +694,7 @@ renderTabs();renderOpts();renderTagBox();refresh();
     d.style.cssText='position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,#BFCCF4 0%,#D3C6F0 45%,#E9D5EC 100%)';
     d.innerHTML='<div style="max-width:330px;width:100%;text-align:center;background:#F7F3FC;border-radius:18px;padding:28px 24px;box-shadow:0 0 0 4px #fff,0 0 0 8px #C4ADEC,0 20px 44px rgba(70,50,100,.35)">'
       +'<h2 style="color:#5A4880;font-size:18px;margin:0 0 10px;letter-spacing:1px">你已經有闆卡囉</h2>'
-      +'<p style="font-size:13px;color:#8E7AB0;line-height:1.9;margin:0 0 16px">每位闆闆只有一張闆卡。<br>想換造型請到大廳的「時裝間」;<br>真的需要重做,請到 Discord 聯絡掌櫃。</p>'
+      +'<p style="font-size:13px;color:#8E7AB0;line-height:1.9;margin:0 0 16px">每位闆闆只有一張闆卡。<br>想換造型請到大廳的「時裝間」;<br>真的需要重做,請到 Discord 聯絡店長。</p>'
       +'<button onclick="location.href=\'lobby.html\'" style="display:block;width:100%;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:#fff;padding:14px;border-radius:13px;background:linear-gradient(180deg,#FBB6D0,#F28FB2);box-shadow:inset 0 -4px 0 #E27FA6">回酒館大廳</button></div>';
     document.body.appendChild(d);
   });

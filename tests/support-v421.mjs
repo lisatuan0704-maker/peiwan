@@ -27,7 +27,7 @@ await check('cannot spoof another character','supportV1/tickets/discord_a/t2',{m
 await check('oversized subject rejected','supportV1/tickets/discord_a/t2',{method:'PUT',body:{...ticket,subject:'長'.repeat(61)},auth:a},401);
 await check('owner cannot fake staff reply','supportV1/tickets/discord_a/t2',{method:'PUT',body:{...ticket,reply:{text:'偽造回覆',at}},auth:a},401);
 await check('admin can list tickets','supportV1/tickets',{auth:admin},200);
-const updates=replyUpdates({uid:'discord_a',id:'t1',ticket,text:'已收到測試訊息，這是掌櫃回覆。',at});
+const updates=replyUpdates({uid:'discord_a',id:'t1',ticket,text:'已收到測試訊息，這是店長回覆。',at});
 await check('atomic admin reply and inbox delivery','',{method:'PATCH',body:updates,auth:admin},200);
 await check('reply cannot be sent twice','',{method:'PATCH',body:updates,auth:admin},401);
 await check('owner can read reply inbox','supportV1/inbox/discord_a',{auth:a},200);

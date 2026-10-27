@@ -413,7 +413,7 @@ button:not(:disabled):active{scale:.94}
 <script src="lobby-ui/staff-dm.js?v=417"></script>
 <script src="lobby-ui/discord-auth.js?v=298"></script><style>.partner-discord-binding{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid #d6c9e5;font-size:13px}.partner-dc-button{font:inherit;color:#4a3b63;background:#f7f3fc;border:1px solid #aa94c7;border-radius:8px;padding:8px 12px;cursor:pointer}.partner-dc-button:focus-visible{outline:3px solid #8e7ab0;outline-offset:2px}</style><style>#partnerCompanions:not([hidden]){display:flex;align-items:end;justify-content:center;gap:20px;padding:6px 0 12px}#partnerCompanions figure{margin:0;text-align:center}#partnerCompanions img{display:block;width:100px;height:102px;object-fit:contain;image-rendering:pixelated}#partnerCompanions .pet{width:80px;height:94px}#partnerCompanions figcaption{font-size:12px;color:var(--ink-soft)}</style>
 <link href="tavern-ui/assets/fonts/lineseed.css?v=257" rel="stylesheet">
-<link rel="stylesheet" href="lobby-ui/backoffice-theme.css?v=412"></head>
+<link rel="stylesheet" href="lobby-ui/backoffice-theme.css?v=427"></head>
 <body>
 <button id="themeBtn" title="切換日間／夜間模式" aria-label="切換日間夜間模式">☀️</button>
 <script>
@@ -693,13 +693,13 @@ function boot(){
     _mood=c.mood||c.intro||''; _moodAt=c.moodAt||0; paintMoodPv();
   });
   /* 客人的續單/取消申請:由這邊(已登入)代為執行 */
-  /* 第二個參數是「被規則擋下來」時的處理:提醒掌櫃去更新規則,但不要讓整頁壞掉 */
+  /* 第二個參數是「被規則擋下來」時的處理:提醒店長去更新規則,但不要讓整頁壞掉 */
   db.ref(ROOT+"/renewReq").orderByChild("staffCid").equalTo(cid).on("value",
     s=>{ _renewReq=s.val()||{}; processRenew(); },
-    ()=>{ console.warn('renewReq 讀取被規則擋下,請掌櫃更新 Firebase 規則'); });
+    ()=>{ console.warn('renewReq 讀取被規則擋下,請店長更新 Firebase 規則'); });
   db.ref(ROOT+"/cancelReq").orderByChild("staffCid").equalTo(cid).on("value",
     s=>{ _cancelReq=s.val()||{}; processCancelReq(); },
-    ()=>{ console.warn('cancelReq 讀取被規則擋下,請掌櫃更新 Firebase 規則'); });
+    ()=>{ console.warn('cancelReq 讀取被規則擋下,請店長更新 Firebase 規則'); });
   /* 行事曆:即時同步(自己在另一台裝置改也會跟著更新) */
   db.ref(ROOT+"/staffCards/"+cid+"/busy").on("value",s=>{
     CAL=s.val()||{}; calSummary();
@@ -791,14 +791,14 @@ function clientInbox(){
       +'</div>';
   }
   if(!list.length){
-    /* 有指定我、但還沒付款(待掌櫃核帳)的單 → 告訴陪玩「有人點你了,正在等核款」,
+    /* 有指定我、但還沒付款(待店長核帳)的單 → 告訴陪玩「有人點你了,正在等核款」,
        避免出現「客人說已下單,但我這邊空的」的困惑 */
     const waiting=Object.values(clientBookings||{}).filter(o=>o&&o.status==='pending').length;
     const acceptedN=Object.values(clientBookings||{}).filter(o=>o&&o.accepted).length;
     let hint='<div class="empty">目前沒有新單,泡杯茶等等吧 ☕</div>';
     if(waiting) hint='<div style="background:#FFF0DA;border-left:4px solid #E8A33D;border-radius:9px;padding:11px 13px;font-size:13px;color:#8A5A2B;line-height:1.8">'
-      +'<b>有 '+waiting+' 筆單指定了你,正在等掌櫃核對收款</b><br>'
-      +'<span style="color:#A9834E">掌櫃確認收款後就會出現在這裡,可以先準備一下 ✦</span></div>';
+      +'<b>有 '+waiting+' 筆單指定了你,正在等店長核對收款</b><br>'
+      +'<span style="color:#A9834E">店長確認收款後就會出現在這裡,可以先準備一下 ✦</span></div>';
     else if(acceptedN) hint='<div class="empty">新單都接完囉,到「進行中」看你的單 ☕</div>';
     return {count:pool.length, html:poolHtml+hint};
   }
@@ -813,7 +813,7 @@ function clientInbox(){
       +'<span style="margin-left:auto;font-weight:800;font-size:16px;color:#C2537D">NT$'+(o.amount||0)+'</span></div>'
       +'<div style="font-size:12.5px;color:#8A6A7A;margin-top:4px">'+(bk?esc(o.planName||'')+'　':'')+'客人:'+esc(o.name||'?')+'　'+fmt(o.createdAt)+(soon?'　<span style="color:#D96A8B;font-weight:700">⏰ 24小時內</span>':'')+'</div>'
       +(declined
-        ? '<div style="margin-top:6px;font-size:12px;color:#B03A5B;font-weight:700">已回報無法接單,等掌櫃處理(退款或改期)</div>'
+        ? '<div style="margin-top:6px;font-size:12px;color:#B03A5B;font-weight:700">已回報無法接單,等店長處理(退款或改期)</div>'
         : '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:9px">'
           +'<button onclick="declineClientOrder(\''+id+'\')" style="border:none;background:#F4E3E9;color:#B03A5B;font-family:inherit;font-size:12.5px;padding:9px 14px;border-radius:9px;cursor:pointer">無法接單</button>'
           +'<button onclick="acceptClientOrder(\''+id+'\')" style="border:none;background:linear-gradient(180deg,#8FD3AE,#61B98A);color:#fff;font-family:inherit;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer">接單 ›</button></div>')
@@ -833,7 +833,7 @@ function declineClientOrder(coid){
     m.style.cssText='position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(30,20,45,.55)';
     m.innerHTML='<div style="max-width:360px;width:100%;background:var(--parch,#F7F3FC);border-radius:16px;padding:20px 18px;box-shadow:0 0 0 3px #fff,0 0 0 8px #C4ADEC,0 20px 44px rgba(70,50,100,.4)">'
       +'<h2 style="margin:0 0 6px;font-size:16px">無法接單的原因?</h2>'
-      +'<p class="hint" style="margin:0 0 12px">會回報給掌櫃,方便幫客人退款或改期。可複選。</p>'
+      +'<p class="hint" style="margin:0 0 12px">會回報給店長,方便幫客人退款或改期。可複選。</p>'
       +'<div id="ptDecOpts" style="display:flex;flex-direction:column;gap:9px;margin-bottom:12px">'
       +['該時段已有安排','前一單可能延後結束','臨時有事','設備或網路問題'].map((r,i)=>
         '<label style="display:flex;align-items:center;gap:9px;font-size:13.5px;cursor:pointer"><input type="checkbox" value="'+r+'" style="width:auto;flex:0 0 auto;margin:0;transform:scale(1.3)"> '+r+'</label>').join('')
@@ -868,11 +868,11 @@ function submitDecline(){
   if(!doRefund){
     db.ref(ROOT+'/clientOrders/'+coid).update(upd)
       .then(()=>{ mailCustomer(Object.assign({},o,{declineReason:reason,refunded:false}),'declined');
-        ptNotify('已回報','掌櫃會處理退款,你不用再做什麼'); })
+        ptNotify('已回報','店長會處理退款,你不用再做什麼'); })
       .catch(()=>ptNotify('回報失敗','請稍後再試'));
     return;
   }
-  /* 退款用 transaction 搶旗標,避免掌櫃同時按「取消並退款」造成退兩次 */
+  /* 退款用 transaction 搶旗標,避免店長同時按「取消並退款」造成退兩次 */
   claimRefund(coid, won=>{
     if(!won){ db.ref(ROOT+'/clientOrders/'+coid).update({staffDeclined:true, declineReason:reason, declinedAt:now});
       ptNotify('這筆剛剛已經退過款了','原因已一併記錄下來'); return; }
@@ -966,12 +966,12 @@ function mailCustomer(o,kind){
       +((o.booking&&o.reserveAt)?('原預約時段:'+fmtResP(o.reserveAt)+'\n'):'')
       +'\n'+(o.refunded
         ?('已退回 '+(o.amount||0)+' 金幣到你的錢包,可以直接再點一次單或換個時段 ✦')
-        :('這筆 '+(o.amount||0)+' 元的款項,掌櫃會盡快為你處理退款,造成不便真的很抱歉。'))
+        :('這筆 '+(o.amount||0)+' 元的款項,店長會盡快為你處理退款,造成不便真的很抱歉。'))
       +'\n\n真的很不好意思,下次再讓我陪你玩!';
   }else if(kind==='done'){
     title='『'+(o.planName||'訂單')+'』已完成,謝謝你!';
     text='今天玩得開心嗎?謝謝你找 '+nm+' 陪你 ✦\n\n'
-      +'這筆服務已經完成囉。如果覺得還不錯,歡迎再來找我;有任何問題也可以在訂單頁點「這筆有問題」回報給掌櫃。\n\n期待下次再見!';
+      +'這筆服務已經完成囉。如果覺得還不錯,歡迎再來找我;有任何問題也可以在訂單頁點「這筆有問題」回報給店長。\n\n期待下次再見!';
   }else return;
   try{
     db.ref(ROOT+'/mail/'+o.myKey).push({title:title.slice(0,30), text:text.slice(0,500), from:nm, at:Date.now()});
@@ -1256,14 +1256,14 @@ function processRenew(){
     /* 錢包對象:用訂單上的 myKey。若申請單帶的 myKey 跟訂單不同(闆卡換過等),
        直接講清楚,不要含糊地說「金幣不足」。 */
     const wkey=co.myKey||req.myKey;
-    if(!wkey){ reqResult('renewReq',coid,false,'找不到你的錢包,請聯絡掌櫃'); return; }
+    if(!wkey){ reqResult('renewReq',coid,false,'找不到你的錢包,請聯絡店長'); return; }
     if(req.myKey&&co.myKey&&req.myKey!==co.myKey){
-      reqResult('renewReq',coid,false,'這筆訂單綁的闆卡跟你現在的不一樣,請聯絡掌櫃處理');
+      reqResult('renewReq',coid,false,'這筆訂單綁的闆卡跟你現在的不一樣,請聯絡店長處理');
       console.warn('[續單] myKey 不一致 訂單=',co.myKey,' 申請=',req.myKey);
       return;
     }
     /* 先卡住這張申請,避免兩台裝置同時處理 */
-    /* 鎖帶時間戳:如果上一台裝置搶到鎖之後就斷線,3 分鐘後別人(或掌櫃)可以接手,
+    /* 鎖帶時間戳:如果上一台裝置搶到鎖之後就斷線,3 分鐘後別人(或店長)可以接手,
        不會讓客人的續單申請永遠卡住 */
     db.ref(ROOT+'/renewReq/'+coid+'/lock').transaction(cur=>{
       if(cur && typeof cur==='object' && cur.at && Date.now()-cur.at<180000) return;   // 還在有效期內
@@ -1279,8 +1279,8 @@ function processRenew(){
           if(err||!committed){
             /* 把實際數字講出來,不要只說「不足」—— 看到 0 就知道是錢包對不起來,不是真的沒錢 */
             const why = (bal===null||bal===undefined)
-              ? '讀不到你的錢包,請稍後再試或聯絡掌櫃'
-              : ('金幣不足:你的錢包 '+bal+' 金幣,這次續單需要 '+price+' 金幣'+(bal===0?'(錢包顯示 0,可能是闆卡對不起來,請聯絡掌櫃)':''));
+              ? '讀不到你的錢包,請稍後再試或聯絡店長'
+              : ('金幣不足:你的錢包 '+bal+' 金幣,這次續單需要 '+price+' 金幣'+(bal===0?'(錢包顯示 0,可能是闆卡對不起來,請聯絡店長)':''));
             reqResult('renewReq',coid,false,why);
             db.ref(ROOT+'/renewReq/'+coid+'/lock').set(null);   // 放開鎖,之後還能再試
             ptNotify('客人想續單但沒成功',why);
@@ -1318,7 +1318,7 @@ function processCancelReq(){
     if(!co||!isMine(co)) return;
     if(co.accepted){ reqResult('cancelReq',coid,false,'已經接單了,請直接跟陪玩討論'); return; }
     if(co.status!=='confirmed'||co.refunded){ reqResult('cancelReq',coid,false,'這筆單已經處理過了'); return; }
-    if(co.paidBy!=='wallet'||!co.myKey){ reqResult('cancelReq',coid,false,'這筆不是金幣付款,請聯絡掌櫃'); return; }
+    if(co.paidBy!=='wallet'||!co.myKey){ reqResult('cancelReq',coid,false,'這筆不是金幣付款,請聯絡店長'); return; }
     const back=+co.amount||0;
     db.ref(ROOT+'/clientOrders/'+coid+'/refunded').transaction(cur=>{ if(cur) return; return true; },(e,ok)=>{
       if(e||!ok){ reqResult('cancelReq',coid,false,'這筆單已經退過款了'); return; }
@@ -1514,7 +1514,7 @@ function endTimer(id,alreadyConfirmed=false){
   });
   /* 若來自網站自助單,把客人那邊的訂單也標成完成,客人的追蹤條會同步顯示「已完成」 */
   if(o.clientOrderId){
-    /* 只有還在進行中的單才標成完成 —— 掌櫃如果已經取消退款了,不能被這裡改回 done */
+    /* 只有還在進行中的單才標成完成 —— 店長如果已經取消退款了,不能被這裡改回 done */
     try{ db.ref(ROOT+"/clientOrders/"+o.clientOrderId+"/status").transaction(cur=>{
       if(cur==='cancelled'||cur==='done') return;   // 中止,不覆蓋
       return 'done';
@@ -1531,7 +1531,7 @@ function addManualTime(id){
   const m=parseInt(String(mins).replace(/[^0-9]/g,''),10);
   if(!m || m<=0 || m>1440){ alert("請填 1～1440 之間的分鐘數"); return; }
   const note=prompt("備註（建議寫明大約時段,例:今天 20:00-21:30 忘記按）","")||"";
-  if(!confirm("要補上 "+m+" 分鐘嗎?\n補登紀錄會標示為【補登時間】,掌櫃看得到。")) return;
+  if(!confirm("要補上 "+m+" 分鐘嗎?\n補登紀錄會標示為【補登時間】,店長看得到。")) return;
   db.ref(ROOT+"/orders/"+id).update({ accumSec:(o.accumSec||0)+m*60 });
   db.ref(ROOT+"/orders/"+id+"/timelog").push({
     kind:"manual", t:Date.now(), addSec:m*60, note:note.trim()||null
@@ -1569,8 +1569,8 @@ const openLogs=new Set();
 
 </script>
 <script type="module">
-import {mountBinding} from './lobby-ui/partner-binding.mjs?v=300';
+import {mountBinding} from './lobby-ui/partner-binding.mjs?v=427';
 let binding;const timer=setInterval(()=>{if(auth.currentUser&&cid){clearInterval(timer);binding=mountBinding({root:document.getElementById('partnerDiscordBinding'),getUser:()=>auth.currentUser,getCid:()=>cid})}},500);
 window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
-</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=312';import {installBookingSound} from './lobby-ui/booking-sound.mjs?v=308';const bookingSound=installBookingSound({root:document.getElementById('bookingSoundControl'),getUser:()=>auth.currentUser,notice:ptNotify});const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});const {createServiceTimer}=await import('./lobby-ui/service-timer.mjs?v=312');Object.assign(window,createServiceTimer({getOrder:id=>orders[id],request:(path,body)=>orderVoice.serviceTime(body),originals:{startTimer,pauseTimer,resumeTimer,endTimer},confirm:msg=>window.confirm(msg),notify:msg=>ptNotify(msg,'')}));mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>{orderVoice.update(items);bookingSound.update(items)},notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script></body>
+</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=427';import {installBookingSound} from './lobby-ui/booking-sound.mjs?v=308';const bookingSound=installBookingSound({root:document.getElementById('bookingSoundControl'),getUser:()=>auth.currentUser,notice:ptNotify});const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});const {createServiceTimer}=await import('./lobby-ui/service-timer.mjs?v=427');Object.assign(window,createServiceTimer({getOrder:id=>orders[id],request:(path,body)=>orderVoice.serviceTime(body),originals:{startTimer,pauseTimer,resumeTimer,endTimer},confirm:msg=>window.confirm(msg),notify:msg=>ptNotify(msg,'')}));mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>{orderVoice.update(items);bookingSound.update(items)},notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script></body>
 </html>

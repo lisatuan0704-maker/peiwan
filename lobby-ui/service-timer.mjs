@@ -3,7 +3,7 @@ export function createServiceTimer({getOrder,request,originals,confirm,notify}){
  const actions={startTimer:'start',pauseTimer:'pause',resumeTimer:'resume',endTimer:'complete'};
  return Object.fromEntries(Object.entries(actions).map(([name,action])=>[name,async id=>{
   const order=getOrder(id);if(!order||pending.has(id))return;
-  if(!order.clientOrderId){notify('這筆舊訂單未接上新計時，請聯絡掌櫃確認。');return}
+  if(!order.clientOrderId){notify('這筆舊訂單未接上新計時，請聯絡店長確認。');return}
   if(action==='complete'&&!confirm('結束這筆陪玩並記錄時長？'))return;
   pending.add(id);
   try{

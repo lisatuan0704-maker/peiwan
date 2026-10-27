@@ -5,7 +5,7 @@
   const info=document.getElementById('tuPayInfo');
   const fields=pay.querySelector('.tu-transfer-fields');
   fields.addEventListener('focusin',event=>{
-    const prompts={tuName:'填寫稱呼，讓掌櫃核對這筆轉帳。',tuLast5:'填寫轉出帳號末五碼，方便對帳。',tuProof:'上傳轉帳成功的截圖，再送出核帳。'};
+    const prompts={tuName:'填寫稱呼，讓店長核對這筆轉帳。',tuLast5:'填寫轉出帳號末五碼，方便對帳。',tuProof:'上傳轉帳成功的截圖，再送出核帳。'};
     const hint=info.querySelector('.tu-next-hint');
     if(hint&&prompts[event.target.id])hint.textContent=prompts[event.target.id];
   });
@@ -24,7 +24,7 @@
     bank.append(fields);
     pay.querySelector('.tu-bank-view')?.remove();
     const choice=document.createElement('div');choice.className='tu-methods';
-    choice.innerHTML='<div class="tu-choice-label"><b>選擇付款方式</b><span>先選一種，再繼續付款</span></div><div class="tu-method-grid" role="group" aria-label="付款方式"><button type="button" data-method="online" aria-controls="tuOnlineView"><span class="tu-method-icon" aria-hidden="true">↗</span><span><b>線上付款</b><small>信用卡・超商 / 自動入帳</small></span><i aria-hidden="true">✓</i></button><button type="button" data-method="bank" aria-controls="tuBankView"><span class="tu-method-icon" aria-hidden="true">⇄</span><span><b>銀行轉帳</b><small>上傳憑證 / 掌櫃核帳</small></span><i aria-hidden="true">✓</i></button></div>';
+    choice.innerHTML='<div class="tu-choice-label"><b>選擇付款方式</b><span>先選一種，再繼續付款</span></div><div class="tu-method-grid" role="group" aria-label="付款方式"><button type="button" data-method="online" aria-controls="tuOnlineView"><span class="tu-method-icon" aria-hidden="true">↗</span><span><b>線上付款</b><small>信用卡・超商 / 自動入帳</small></span><i aria-hidden="true">✓</i></button><button type="button" data-method="bank" aria-controls="tuBankView"><span class="tu-method-icon" aria-hidden="true">⇄</span><span><b>銀行轉帳</b><small>上傳憑證 / 店長核帳</small></span><i aria-hidden="true">✓</i></button></div>';
     const ready=typeof ONLINE_PAYMENT_READY!=='undefined'&&ONLINE_PAYMENT_READY;
     const onlineChoice=choice.querySelector('[data-method="online"]');
     if(!ready){onlineChoice.disabled=true;onlineChoice.setAttribute('aria-disabled','true');onlineChoice.querySelector('small').textContent='申請中・尚未開放';}

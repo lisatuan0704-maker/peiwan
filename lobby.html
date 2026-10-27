@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=373"></script>
-<script src="lobby-ui/fixed-view.js?v=379"></script>
+<script src="lobby-ui/fixed-view.js?v=427"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script>
@@ -391,7 +391,7 @@ body.in-forest .amGlow,body.in-forest .amMote,body.in-forest .amCat,body.in-fore
 .propHot{position:absolute;z-index:14;cursor:pointer;border-radius:50%}
 .propFx{position:absolute;left:50%;top:0;transform:translateX(-50%);font-size:20px;opacity:0;pointer-events:none;z-index:40}
 .propFx.go{animation:heartUp 1s ease-out forwards}
-/* ===== 掌櫃布告欄(世界內) ===== */
+/* ===== 店長布告欄(世界內) ===== */
 .boardNPC{position:absolute;z-index:14;cursor:pointer;text-align:center;animation:amBreath 3.4s ease-in-out infinite;transform-origin:50% 100%}
 .boardNPC .bimg{width:70px;height:84px;image-rendering:pixelated;
   background:linear-gradient(#8A6A4A,#6E5238);border:3px solid #4A3526;position:relative;
@@ -1456,7 +1456,7 @@ body.artBub.bub3s .npc .bub{
 <script src="js/tt-seats.js?v=2"></script>
 <script src="lobby-ui/seats.js?v=373"></script>
 <script src="lobby-ui/presence.js?v=373"></script>
-<script src="lobby-ui/payment-safety.js?v=273"></script>
+<script src="lobby-ui/payment-safety.js?v=427"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=274">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
@@ -1607,7 +1607,7 @@ body.artBub.bub3s .npc .bub{
     <label>轉帳截圖(付款證明)</label>
     <input type="file" id="payProof" accept="image/*">
     <img id="proofPrev">
-    <p class="warn">※ 送出後訂單成立,狀態為「待付款確認」,掌櫃核帳後更新。</p>
+    <p class="warn">※ 送出後訂單成立,狀態為「待付款確認」,店長核帳後更新。</p>
   </div>
   <div id="payCoinFields" style="display:none">
     <label>稱呼 / Discord 名</label>
@@ -1629,14 +1629,14 @@ body.artBub.bub3s .npc .bub{
   <div class="gin">
     <div class="ghint" id="issueOrd"></div>
     <textarea id="issueTx" maxlength="200" rows="4" placeholder="想反應什麼呢?例:時間沒到就結束了、和說好的內容不一樣…" style="width:100%;font-family:inherit;font-size:13.5px;padding:10px 12px;border:2px solid #DBCDEF;border-radius:12px;color:#4A3B63;resize:none"></textarea>
-    <button onclick="submitIssue()" style="display:block;width:100%;border:none;cursor:pointer;font-family:inherit;font-size:14.5px;font-weight:700;color:#fff;padding:13px;border-radius:12px;background:linear-gradient(180deg,#FBB6D0,#F28FB2);box-shadow:inset 0 -4px 0 #E27FA6;margin-top:12px">送出給掌櫃</button>
-    <div class="ghint" style="margin-top:10px">掌櫃看到就會處理;急件請直接到 Discord 找掌櫃。</div>
+    <button onclick="submitIssue()" style="display:block;width:100%;border:none;cursor:pointer;font-family:inherit;font-size:14.5px;font-weight:700;color:#fff;padding:13px;border-radius:12px;background:linear-gradient(180deg,#FBB6D0,#F28FB2);box-shadow:inset 0 -4px 0 #E27FA6;margin-top:12px">送出給店長</button>
+    <div class="ghint" style="margin-top:10px">店長看到就會處理;急件請直接到 Discord 找店長。</div>
   </div>
 </div></div>
 <div class="shopModal" id="topupPayM"><div class="shopCard">
   <h3>儲值付款</h3>
   <div class="paybox" id="tuPayInfo"></div>
-  <section class="tu-transfer-fields"><div class="tu-section-heading"><span>02 / BANK TRANSFER</span><h4>銀行轉帳資料</h4><p>使用銀行轉帳付款後，填寫以下資料供掌櫃核帳。</p></div>
+  <section class="tu-transfer-fields"><div class="tu-section-heading"><span>02 / BANK TRANSFER</span><h4>銀行轉帳資料</h4><p>使用銀行轉帳付款後，填寫以下資料供店長核帳。</p></div>
   <label for="tuName">稱呼 / Discord 名</label>
   <input type="text" id="tuName" maxlength="30" placeholder="例:阿明 / @boss123">
   <label for="tuLast5">轉帳帳號末五碼（對帳用）</label>
@@ -1644,7 +1644,7 @@ body.artBub.bub3s .npc .bub{
   <label for="tuProof">轉帳截圖（付款證明）</label>
   <input type="file" id="tuProof" accept="image/*">
   <img id="tuProofPrev" style="max-width:100%;max-height:150px;display:none;margin-top:8px;border:2px solid #E8C7D4">
-  <p class="warn">※ 儲值送出後,掌櫃核帳確認即入帳金幣,可在錢包查看紀錄。</p>
+  <p class="warn">※ 儲值送出後,店長核帳確認即入帳金幣,可在錢包查看紀錄。</p>
   </section>
   <div class="btns"><button class="sc-back" onclick="openTopup()">‹ 上一步</button><button class="sc-go" id="tuSubmitBtn" onclick="submitTopup()">送出儲值</button></div>
 </div></div>
@@ -1670,7 +1670,7 @@ body.artBub.bub3s .npc .bub{
   <div class="btns"><button class="sc-back" onclick="shopClose()">關閉</button></div>
 </div></div>
 <div class="shopModal" id="boardM"><div class="shopCard">
-  <h3>掌櫃布告欄</h3>
+  <h3>店長布告欄</h3>
   <div id="boardBody"></div>
   <div class="btns"><button class="sc-back" onclick="shopClose()">關閉</button></div>
 </div></div>
@@ -1934,7 +1934,7 @@ const TPimgs={};
 function tpImg(d){ if(!TPimgs[d]){const i=new Image();i.src='data:image/png;base64,'+d;
   i.onload=()=>{ scheduleTpReady(); };
   TPimgs[d]=i;} return TPimgs[d]; }
-/* 掌櫃在後台上傳的整套部件(shopConfig/<id>/parts):優先於內建部件 */
+/* 店長在後台上傳的整套部件(shopConfig/<id>/parts):優先於內建部件 */
 const CSimgs={};
 function csBust(){ try{ CSDEF.t=0; }catch(e){} }
 window.__csBust=csBust;
@@ -2080,7 +2080,7 @@ function csAccList(d){
    身體後 → 後髮前(瀏海會蓋住) → 前髮前 → 最上方 */
 function csAccZ(v){
   try{
-    if(v&&v.z) return v.z;                     /* 掌櫃後台指定的優先 */
+    if(v&&v.z) return v.z;                     /* 店長後台指定的優先 */
     const n=String((v&&v.n)||'');
     if(/尾巴|翅膀|披風|斗篷|背包/.test(n)) return 'back';
     if(/髮箍|髮帶|髮飾|頭箍|頭紗|耳環|耳飾|髮夾|緞帶|蝴蝶結|貓耳|獸耳|角/.test(n)) return 'mid';
@@ -3748,7 +3748,7 @@ document.getElementById('repSend').onclick=()=>{
   document.getElementById('repModal').style.display='none';
   if(db){
     db.ref(ROOT+'/reports').push(rep)
-      .then(()=>pushLog('系統','已送出檢舉,掌櫃會處理',false))
+      .then(()=>pushLog('系統','已送出檢舉,店長會處理',false))
       .catch(()=>pushLog('系統','檢舉送出失敗,請稍後再試',false));
   }
 };
@@ -3763,7 +3763,7 @@ function sendChat(stickerCode){
   const mu=window.__mute;
   if(mu&&(mu.until===-1||mu.until>Date.now())){
     const when=mu.until===-1?'':(','+new Date(mu.until).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' 解除');
-    pushLog('系統','你已被掌櫃禁言'+when+'。如有疑問請到 Discord 聯絡掌櫃',false); if(!sticker)el.value=''; return false;
+    pushLog('系統','你已被店長禁言'+when+'。如有疑問請到 Discord 聯絡店長',false); if(!sticker)el.value=''; return false;
   }
   if(window.TTRoomSession?.active)return TTRoomSession.send(t,el,sticker);
   if(TTWorldScope.isolated)return false;
@@ -3805,8 +3805,8 @@ if(db){
 }
 /* ====== 站內點單系統 ====== */
 let PAY_ACCOUNT = '(017)兆豐銀行 台南分行 213-09-07119-8 陽生實業有限公司';
-let PAY_NOTE = '';       /* 掌櫃可在後台填付款備註(例:匯款後請保留收據) */
-let PAY_MINS = 60;       /* 付款截止分鐘數,掌櫃可調 */
+let PAY_NOTE = '';       /* 店長可在後台填付款備註(例:匯款後請保留收據) */
+let PAY_MINS = 60;       /* 付款截止分鐘數,店長可調 */
 const PLANS = {
   play: { title:'找冒險者一起玩', items:[
     {id:'val1', n:'特戰英豪 1 小時', p:300},
@@ -3819,8 +3819,8 @@ const PLANS = {
     {id:'m5000', n:'尊榮會員（月）', p:5000, d:['專屬語音房（可自由帶朋友使用）','會員優先預約權','會員們專用聊天室','DC 獨家身分組','可許願下一季的時裝方向','網站私訊冒險者（可在網站內私訊冒險者並留下訊息）','可選一位冒險者領取實體周邊一份']},
   ]},
 };
-/* v195:大廳「找冒險者一起玩」項目改讀掌櫃後台價目表(config/services,上架中才顯示)。
-   價目表清空時退回內建三項,點單永遠不會開天窗。套餐類的多人拆帳=每人價,單位字由掌櫃寫明。 */
+/* v195:大廳「找冒險者一起玩」項目改讀店長後台價目表(config/services,上架中才顯示)。
+   價目表清空時退回內建三項,點單永遠不會開天窗。套餐類的多人拆帳=每人價,單位字由店長寫明。 */
 let TT_SVCS=null;
 if(typeof db!=='undefined'&&db){
   try{ db.ref(ROOT+'/config/services').on('value',s=>{ const v=s.val()||{};
@@ -3855,7 +3855,7 @@ function shopOpen(step, kind){
       (curKind==='play'?`指定陪玩:<b>${esc(ttSelectedStaffDisplayName())}</b><br>`:'')+
       (curBooking&&curReserveAt?`預約時段:<b style="color:#8E68C8">${fmtRes(curReserveAt)}</b><br>`:'')+
       `金額:<b style="color:#D96A8B" id="payAmt">NT$${curPlan.p}</b><br>`+
-      (curKind==='table'?`<div style="font-size:12px;color:#8E7AB0;margin:2px 0 4px">席位以「掌櫃確認付款」的順序為準,確認後就是你的位子</div>`:'')+
+      (curKind==='table'?`<div style="font-size:12px;color:#8E7AB0;margin:2px 0 4px">席位以「店長確認付款」的順序為準,確認後就是你的位子</div>`:'')+
       (canCoupon?`<label style="display:flex;align-items:center;gap:6px;margin:6px 0;font-size:13px;color:#8E68C8;cursor:pointer"><input type="checkbox" id="useCoupon" style="transform:scale(1.2)"> 使用 VIP${vi.lv} 優惠券(折 $${vi.cur.disc}・剩 ${couponsLeft()} 張)</label>`:'')+
       `<div style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b id="payAcc" style="color:#5A4880">${esc(PAY_ACCOUNT)}</b>`+
       `<button type="button" id="payCopy" style="border:none;background:#F0E7FA;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;cursor:pointer">複製</button></div>`+
@@ -4194,7 +4194,7 @@ function submitOrder(){
     if(o.type==='play'&&o.staffCid)void window.TTVoiceOrders?.register([ref.key]);
     proofData=null;
     shopClose();
-    if(window.lobbyNotify) lobbyNotify({icon:'receipt',title:(o.booking?'預約已送出!':'訂單已成立!'),sub:(o.booking?('預約 '+fmtRes(o.reserveAt)+',等待掌櫃確認'):'等待掌櫃核帳,可點右下角「訂單」查看進度'),onclick:()=>shopOpen(4),hold:8000});
+    if(window.lobbyNotify) lobbyNotify({icon:'receipt',title:(o.booking?'預約已送出!':'訂單已成立!'),sub:(o.booking?('預約 '+fmtRes(o.reserveAt)+',等待店長確認'):'等待店長核帳,可點右下角「訂單」查看進度'),onclick:()=>shopOpen(4),hold:8000});
     else alert('訂單成立!狀態:待付款確認。');
     try{ statInc('orders'); }catch(err){}
     try{ notifyOrder(o); }catch(err){}
@@ -4217,7 +4217,7 @@ function ttOrderStaffDisplayName(o){return ttStaffDisplayName(o.staffCid,o.staff
 function ttSelectedStaffDisplayName(){const s=_selStaff();return s?(s.members||[s]).map(p=>ttStaffDisplayName(p.cid,p.name)).join('、'):'不指定';}
 function coinsAvailable(){
   if(!((curKind==='play'||curKind==='shop') && !!myKey)) return false;
-  /* 防呆:掌櫃還沒設任何儲值方案時,金幣買不到 → 自動退回轉帳流程,店才不會整個付不了錢 */
+  /* 防呆:店長還沒設任何儲值方案時,金幣買不到 → 自動退回轉帳流程,店才不會整個付不了錢 */
   const hasTiers=(((window.__topupCfg||{}).tiers)||[]).some(t=>t&&t.amt>0);
   return hasTiers || (window.__wallet||0)>0;
 }
@@ -4323,7 +4323,7 @@ async function payWithCoins(){
     // 訂單、扣款明細、商品一起成立，拒絕時全部不寫入。
     await db.ref(ROOT).update(changes);
    }});
- }catch(e){if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'交易結果尚未確認，請聯絡掌櫃');return;}
+ }catch(e){if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'交易結果尚未確認，請聯絡店長');return;}
  finally{done();_submitting=false;if(btn)btn.disabled=false;}
  try{localStorage.setItem('tt_orders',JSON.stringify([...new Set([...myOrderIds(),ref.key])]));}catch(_){}
  try{shopClose();}catch(_){}
@@ -4370,8 +4370,8 @@ function renderTopup(){
     +(cfg.note?'<div class="ghint" style="text-align:center">'+esc(cfg.note)+'</div>':'')
     +tierHtml
     +'<div style="font-size:12px;color:#A5798D;margin-top:14px;line-height:1.8">金幣可用於點單與時裝購買(1 金幣＝1 元)。<br>'
-      +'儲值後掌櫃會核對銀行入帳,<b style="color:#8E68C8">通常幾分鐘內完成</b>,深夜可能稍久;入帳會跳通知給你 ✦<br>'
-      +'<a href="https://discord.gg/aK9GFarxm" target="_blank" rel="noopener" style="color:#E27FA6;text-decoration:underline">等太久?到 Discord 找掌櫃 →</a></div>'
+      +'儲值後店長會核對銀行入帳,<b style="color:#8E68C8">通常幾分鐘內完成</b>,深夜可能稍久;入帳會跳通知給你 ✦<br>'
+      +'<a href="https://discord.gg/aK9GFarxm" target="_blank" rel="noopener" style="color:#E27FA6;text-decoration:underline">等太久?到 Discord 找店長 →</a></div>'
     +(bal>0?'<div style="text-align:center;margin-top:10px"><a href="#" onclick="renderWalletTx();return false" style="color:#8E68C8;font-size:12.5px;text-decoration:underline">查看交易紀錄</a></div>':'')
     +'<div id="walletTxBox"></div>';
 }
@@ -4477,8 +4477,8 @@ function submitTopup(){
   db.ref(ROOT).update({['clientOrders/'+ref.key]:o,['clientOrderProofs/'+ref.key]:tuProofData}).then(()=>{
     const ids=myOrderIds(); ids.push(ref.key); try{ localStorage.setItem('tt_orders',JSON.stringify(ids)); }catch(e){}
     tuProofData=null; shopClose();
-    if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'儲值已送出!',sub:'掌櫃核帳確認後,'+get+' 金幣會入帳',onclick:()=>shopOpen(4),hold:8000});
-    else toast('儲值已送出,待掌櫃確認');
+    if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'儲值已送出!',sub:'店長核帳確認後,'+get+' 金幣會入帳',onclick:()=>shopOpen(4),hold:8000});
+    else toast('儲值已送出,待店長確認');
     try{ notifyOrder(o); }catch(e){}
     try{watchMyOrders();}catch(_){}
     _fuse3(); _submitting=false; if(_tb) _tb.disabled=false;
@@ -4516,7 +4516,7 @@ function submitTopup(){
 
 /* ===== 訂單即時通知(Discord Webhook) =====
    注意:此網址內嵌在公開網頁,技術上可被他人看到並濫發訊息。若某天頻道被灌訊息,
-   到 Discord 重新產生 webhook、把新網址給掌櫃更換即可(可反覆更換)。 */
+   到 Discord 重新產生 webhook、把新網址給店長更換即可(可反覆更換)。 */
 const ORDER_WEBHOOK='https://discord.com/api/webhooks/1533257136685977660/KmuVUZjBA_mF0z6sFghfLdXKsL1HXnCxKhYMd4ciYdS1YOtVEa4Nht7fDb25hgjSKbRB';
 function notifyOrder(o){
   if(!ORDER_WEBHOOK) return;
@@ -4533,7 +4533,7 @@ function notifyOrder(o){
       '**客人**：'+who,
       '**送出時間**：'+hh,
       '',
-      '銀行確認到帳後 → 掌櫃後台「客訂」按 **✔ 確認收款**,金幣才會入帳'
+      '銀行確認到帳後 → 店長後台「客訂」按 **✔ 確認收款**,金幣才會入帳'
     ];
     fetch(ORDER_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username:'小小酒館・儲值待核帳',
@@ -4621,7 +4621,7 @@ function renderMyOrders(){
       const resv2=o.booking&&o.reserveAt?'<div style="font-size:12px;color:#8E68C8;margin-top:6px">預約時段:'+fmtRes(o.reserveAt)+'</div>':'';
       const issued=issueSent()[id];
       const acts=(!cancelled)?('<div style="margin-top:10px;display:flex;align-items:center;gap:12px;justify-content:flex-end">'
-        +(issued?'<span style="font-size:11.5px;color:#A5798D">已回報問題,掌櫃處理中</span>'
+        +(issued?'<span style="font-size:11.5px;color:#A5798D">已回報問題,店長處理中</span>'
                 :'<a href="#" onclick="openIssue(\''+id+'\');return false" style="font-size:11.5px;color:#B29AD0;text-decoration:underline">這筆有問題?</a>')
         +((o.type==='play'||!o.type)?'<button onclick="reorderPlay()" style="border:none;background:linear-gradient(180deg,#FBB6D0,#F28FB2);color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;padding:6px 16px;border-radius:9px;cursor:pointer">再點一次</button>':'')
         +'</div>'):'';
@@ -4641,7 +4641,7 @@ function renderMyOrders(){
     const disc=o.couponUsed&&o.couponDisc?'<span style="color:#3E9E6B;font-size:11.5px">(已折 $'+o.couponDisc+')</span>':'';
     let resv=o.booking&&o.reserveAt?'<div style="font-size:12px;color:#8E68C8;font-weight:700;margin-top:2px">預約時段:'+fmtRes(o.reserveAt)+'</div>':'';
     if(o.booking&&o.status==='confirmed'){
-      if(o.staffDeclined) resv+='<div style="font-size:12px;color:#C2537D;font-weight:700;margin-top:2px">陪陪這個時段接不上,掌櫃正在幫你處理(退款或改期)</div>';
+      if(o.staffDeclined) resv+='<div style="font-size:12px;color:#C2537D;font-weight:700;margin-top:2px">陪陪這個時段接不上,店長正在幫你處理(退款或改期)</div>';
       else if(o.accepted) resv+='<div style="font-size:12px;color:#3E9E6B;font-weight:700;margin-top:2px">陪陪已確認,準時赴約 ✦</div>';
       else resv+='<div style="font-size:12px;color:#C97B2B;margin-top:2px">等待陪陪確認時段…</div>';
     }
@@ -4659,8 +4659,8 @@ function renderMyOrders(){
            +'<button onclick="selfCancel(\''+id+'\')" style="border:none;cursor:pointer;font-family:inherit;font-size:12px;background:#EFE4FB;color:#7A5FB0;padding:7px 13px;border-radius:8px">取消並退回金幣</button></div>'
          : '')
       +(issueSent()[id]
-         ? '<div style="text-align:right;margin-top:8px;font-size:11.5px;color:#A5798D">已回報問題,掌櫃處理中</div>'
-         : '<div style="text-align:right;margin-top:8px"><a href="#" onclick="openIssue(\''+id+'\');return false" style="font-size:11.5px;color:#B29AD0;text-decoration:underline">這筆有問題?回報掌櫃</a></div>')
+         ? '<div style="text-align:right;margin-top:8px;font-size:11.5px;color:#A5798D">已回報問題,店長處理中</div>'
+         : '<div style="text-align:right;margin-top:8px"><a href="#" onclick="openIssue(\''+id+'\');return false" style="font-size:11.5px;color:#B29AD0;text-decoration:underline">這筆有問題?回報店長</a></div>')
       +'</div>';
   }).join('')||'<p style="color:#A5798D;font-size:13px">載入中…</p>';
   if(pages>1){
@@ -4673,7 +4673,7 @@ function renderMyOrders(){
 function reorderPlay(){ shopClose(); shopOpen(2,'play'); }
 /* 自助取消:還沒有陪玩接的金幣單。
    ⚠ Firebase 規則不讓未登入的客人改訂單或把錢加回錢包,所以這裡只送出「取消申請」,
-   由陪玩端或掌櫃端(已登入)在幾秒內代為退款;若兩邊都沒開,掌櫃的自動掃描也會補退。 */
+   由陪玩端或店長端(已登入)在幾秒內代為退款;若兩邊都沒開,店長的自動掃描也會補退。 */
 function canSelfCancel(o){
   if(!o||(o.type&&o.type!=='play')) return false;
   return o.status==='confirmed' && !o.accepted && !o.refunded && o.paidBy==='wallet' && (+o.amount||0)>0 && !!myKey;
@@ -4917,7 +4917,7 @@ function doRenew(id,mins,price){
   setInterval(paintPlayCard,20000);
   setTimeout(paintPlayCard,2500);
 })();
-/* 對過往訂單回報問題 → 掌櫃後台「檢舉」分頁看得到 */
+/* 對過往訂單回報問題 → 店長後台「檢舉」分頁看得到 */
 let _issueId=null;
 function issueSent(){ try{ return JSON.parse(localStorage.getItem('tt_issues')||'{}'); }catch(e){ return {}; } }
 function openIssue(id){
@@ -4938,13 +4938,13 @@ function submitIssue(){
   }).then(()=>{
     const m=issueSent(); m[_issueId]=1; try{ localStorage.setItem('tt_issues',JSON.stringify(m)); }catch(e){}
     gClose('issueM');
-    if(window.lobbyNotify) lobbyNotify({ok:true,icon:'chat',title:'已回報給掌櫃',sub:'掌櫃看到就會處理,謝謝你告訴我們',hold:7000});
-    else toast('已回報給掌櫃');
+    if(window.lobbyNotify) lobbyNotify({ok:true,icon:'chat',title:'已回報給店長',sub:'店長看到就會處理,謝謝你告訴我們',hold:7000});
+    else toast('已回報給店長');
     renderMyOrders();
   }).catch(()=>toast('送出失敗,請稍後再試'));
 }
 
-/* ================= 大廳信箱(掌櫃寄信) ================= */
+/* ================= 大廳信箱(店長寄信) ================= */
 let __mail={};
 function mailUnread(){ return Object.values({...(__mail||{}),...(window.TTSupportInbox||{})}).filter(m=>m&&!m.read&&!m.hid).length; }
 function updateMailBadge(){
@@ -4960,7 +4960,7 @@ function mailList(){
 function renderMailBox(){
   const el=document.getElementById('mailBody2'); if(!el) return;
   const list=mailList();
-  if(!list.length){ el.innerHTML='<div style="text-align:center;color:#A5798D;font-size:13px;padding:22px 0;line-height:1.9">信箱空空的<br>掌櫃的通知和小紙條會寄到這裡 ✦</div>'; return; }
+  if(!list.length){ el.innerHTML='<div style="text-align:center;color:#A5798D;font-size:13px;padding:22px 0;line-height:1.9">信箱空空的<br>店長的通知和小紙條會寄到這裡 ✦</div>'; return; }
   const readN=list.filter(([,m])=>m.read).length;
   const bar='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
     +'<span style="font-size:12px;color:#A5798D">共 '+list.length+' 封'+(readN?'・已讀 '+readN:'')+'</span>'
@@ -5021,7 +5021,7 @@ function readMail(id){
       const mm=document.getElementById('mailBoxM'); if(mm&&mm.classList.contains('on')) renderMailBox();
       const cnt=Object.keys(__mail).length;
       if(!first&&cnt>prev){
-        if(window.lobbyNotify) lobbyNotify({icon:'note',title:'掌櫃寄來一封信',sub:'點開信箱看看吧 ✦',onclick:()=>{ renderMailBox(); gOpen('mailBoxM'); },hold:9000});
+        if(window.lobbyNotify) lobbyNotify({icon:'note',title:'店長寄來一封信',sub:'點開信箱看看吧 ✦',onclick:()=>{ renderMailBox(); gOpen('mailBoxM'); },hold:9000});
       }
       first=false;
     }); }catch(e){}
@@ -5217,7 +5217,7 @@ function tryServeNudge(staff){
     drawStage(); setStageName((_cur.nm||'')+' · 試穿中');
     toast('試穿預覽:這就是你穿上的樣子。購買後才會真正穿上身 ✦');
   }
-  /* 時裝清單 = 內建 4 款 + 掌櫃在後台自己新增的(shopConfig 裡 custom:1 且 type=時裝) */
+  /* 時裝清單 = 內建 4 款 + 店長在後台自己新增的(shopConfig 裡 custom:1 且 type=時裝) */
   function outfitList(){
     const list=OUTFITS.map(function(o,i){ return {id:'cloth'+i, nm:o.nm, pr:o.pr, de:o.de, doll:o.doll}; });
     const cfg=window.__shopCfg||{};
@@ -5857,13 +5857,13 @@ const SFX=(function(){
   [[43,136],[149,70],[1250,54],[1520,140]].forEach(p=>hot(p[0],p[1],40,'lantern'));
 })();
 
-/* ================= 📌 掌櫃布告欄 ================= */
+/* ================= 📌 店長布告欄 ================= */
 (function(){
   const w=document.getElementById('world'); if(!w) return;
   let BOARD=null;
   if(typeof db!=='undefined' && db){ try{ db.ref(ROOT+'/board').on('value',s=>{ BOARD=s.val()||null; }); }catch(e){} }
   const b=document.createElement('div'); b.className='boardNPC'; b.style.left='213px'; b.style.top='524px';
-  b.innerHTML='<div class="bimg"></div><div class="btag">掌櫃布告欄</div>';
+  b.innerHTML='<div class="bimg"></div><div class="btag">店長布告欄</div>';
   b.onclick=(e)=>{ e.stopPropagation(); openBoard(); }; w.appendChild(b);
   function acc(open, em, title, mini, html, build){
     const a=document.createElement('div'); a.className='acc'+(open?' open':'');
@@ -6185,7 +6185,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
       b.className='h2dc bound';
       const av=(dc.id&&dc.avatar)?('https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=32'):'';
       b.innerHTML=(av?'<img src="'+av+'" alt="" onerror="this.onerror=null;this.src=\'img/avatar-fallback.svg\'">':'')+'@'+TTDiscordAuth.escapeText(dc.global_name||dc.username);
-      b.title='已綁定 Discord(解除綁定請聯絡掌櫃)';
+      b.title='已綁定 Discord(解除綁定請聯絡店長)';
     }else{
       b.className='h2dc'; b.textContent='綁定 Discord'; b.title='';
     }
@@ -6244,8 +6244,8 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   document.getElementById('h2dc').addEventListener('click',()=>{
     const dc=getDC();
     if(!dc){ dcAuth(); return; }
-    /* 已綁定:不提供自行解綁(帳號掛著購買與成就紀錄)。要解綁或刪除帳號請聯絡掌櫃。 */
-    if(typeof toast==='function') toast('帳號已綁定 Discord。如需解除綁定或刪除帳號,請到 Discord 聯絡掌櫃處理');
+    /* 已綁定:不提供自行解綁(帳號掛著購買與成就紀錄)。要解綁或刪除帳號請聯絡店長。 */
+    if(typeof toast==='function') toast('帳號已綁定 Discord。如需解除綁定或刪除帳號,請到 Discord 聯絡店長處理');
   });
   /* 點單姓名自動帶 DC --- 包裝 shopOpen */
   const _shopOpen=window.shopOpen;
@@ -6350,7 +6350,7 @@ function renderPicker(){
   });
 }
 
-/* ================= v187:［限定］酒館併桌 —— 多位客人同桌各買一席,場次由掌櫃後台開 ================= */
+/* ================= v187:［限定］酒館併桌 —— 多位客人同桌各買一席,場次由店長後台開 ================= */
 let TT_TABLES={};
 if(typeof db!=='undefined'&&db){ try{ db.ref(ROOT+'/tables').on('value',s=>{ TT_TABLES=s.val()||{}; tbMenuRefresh(); }); }catch(e){} }
 function tbSellable(){ const now=Date.now();
@@ -6390,7 +6390,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
    節點:friendReq/{to}/{from}、friends/{a}/{b}(互寫)、blocks/{me}/{other}、
         dm/{pairKey}(pairKey=兩個 myKey 排序後用 ~ 接)、dmMeta/{me}/{other}{last,lastAt,unread,name}
    安全設計:私訊只開放互為好友(陌生人不能私訊);封鎖後對方送邀請看起來成功但不會送達;
-   全部訊息掌櫃後台可調閱,檢舉會帶最後 20 句上下文 */
+   全部訊息店長後台可調閱,檢舉會帶最後 20 句上下文 */
 (function(){
   let FR={}, FRQ={}, BLK={}, DMM={}, _frBound=false, _dmRef=null, _dmWith=null, _dmSending=false, _dmStaffName='';
   window.ttPlayerSuppressed=k=>!!(k&&k!==myKey&&(Object.hasOwn(window.__ttHidden||{},k)||Object.hasOwn(BLK,k)));
@@ -6563,14 +6563,14 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   window.dmReport=function(){
     if(!_dmWith) return;
     const k=_dmWith;
-    ttConfirmish('把這段私訊的最後 20 句送給掌櫃檢舉?(騷擾/擦邊/詐騙等都適用)',()=>{
+    ttConfirmish('把這段私訊的最後 20 句送給店長檢舉?(騷擾/擦邊/詐騙等都適用)',()=>{
       db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(20).once('value').then(s=>{
         const ctx=Object.values(s.val()||{}).sort((a,b)=>(a.at||0)-(b.at||0))
           .map(m=>({name:(m.f===myKey)?myName():((FR[k]&&FR[k].name)||'對方'),text:m.x||'',t:m.at||0}));
         db.ref(ROOT+'/reports').push({type:'dm',reason:'私訊檢舉',
           targetName:(FR[k]&&FR[k].name)||'？',targetKey:k,reporterKey:myKey,reporterName:myName(),
           ctx:ctx,at:Date.now(),status:'open'});
-        toast('已送出,掌櫃會盡快查看');
+        toast('已送出,店長會盡快查看');
       });
     });
   };
@@ -6861,7 +6861,7 @@ document.addEventListener('keydown',e=>{
 })();
 
 /* ================= v233:幽靈角色防護 =================
-   本機記得的角色(tt_me)如果在資料庫已經不存在(被掌櫃刪除/開店清空),
+   本機記得的角色(tt_me)如果在資料庫已經不存在(被店長刪除/開店清空),
    就清掉本機記憶、回到訪客狀態,讓客人重新做闆卡;不再替不存在的角色寫資料。
    剛做完闆卡(網址帶 ?me=)時多等幾秒再判斷,避免資料還沒寫進去就誤判。 */
 window.__hasCard=myKey?null:false;
@@ -6942,7 +6942,7 @@ function buildBag(){
     const cfgB=(window.__shopCfg||{})[o.id]||{};
     clothHtml+='<div class="ach2" style="align-items:center">'
       +'<canvas class="bagCv" width="64" height="64" data-id="'+o.id+'" data-hair="'+hair+'" style="width:46px;height:46px;image-rendering:pixelated;flex:0 0 auto"></canvas>'
-      +'<div style="flex:1"><div class="an2">'+esc(o.nm||'')+'</div><div class="ad2">'+(wearing?'目前穿著中':esc(o.de||(cfgB.parts?'掌櫃上架的新款':'')))+'</div></div>'
+      +'<div style="flex:1"><div class="an2">'+esc(o.nm||'')+'</div><div class="ad2">'+(wearing?'目前穿著中':esc(o.de||(cfgB.parts?'店長上架的新款':'')))+'</div></div>'
       +(wearing?'<span class="st2 ok">穿著中</span>':'<button class="bagWearBtn" data-id="'+o.id+'" style="border:none;background:linear-gradient(180deg,#FBDD79,#F6CE5A);color:#4A3B63;font-family:inherit;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer">穿上身</button>')
       +'</div>';
   });
@@ -6994,7 +6994,7 @@ function buildBag(){
   if(typeof db==='undefined'||!db) return;
   window.__shopCfg={}; window.__owned={};
   try{ db.ref(ROOT+'/shopConfig').on('value',s=>{ window.__shopCfg=s.val()||{}; if(window.__dressRefresh)window.__dressRefresh(); }); }catch(e){}
-  /* 收款資訊:掌櫃在後台設定,大廳即時套用(不必改程式碼) */
+  /* 收款資訊:店長在後台設定,大廳即時套用(不必改程式碼) */
   try{ db.ref(ROOT+'/config/pay').on('value',s=>{ const p=s.val()||{};
     if(p.account) PAY_ACCOUNT=p.account;
     PAY_NOTE=p.note||'';
@@ -7122,7 +7122,7 @@ window.lobbyNotify=lobbyNotify;
         if(prevAcc[id]===undefined){ prevAcc[id]=acc; prevDec[id]=dec; }
         else {
           if(acc&&!prevAcc[id]) lobbyNotify({ok:true,icon:'star',title:'陪陪已確認赴約!',sub:'「'+(o.planName||'預約')+'」'+(o.reserveAt?fmtRes(o.reserveAt):'')+' 到時見 ✦',onclick:openOrders,hold:9000});
-          if(dec&&!prevDec[id]) lobbyNotify({icon:'chat',title:'陪陪這個時段接不上',sub:'掌櫃會幫你退款或改期,也可以直接換個時段再約',onclick:openOrders,hold:10000});
+          if(dec&&!prevDec[id]) lobbyNotify({icon:'chat',title:'陪陪這個時段接不上',sub:'店長會幫你退款或改期,也可以直接換個時段再約',onclick:openOrders,hold:10000});
           prevAcc[id]=acc; prevDec[id]=dec;
         }
       }
@@ -7132,7 +7132,7 @@ window.lobbyNotify=lobbyNotify;
         prev[id]=st;
         if(st==='confirmed'){
           if(o.type==='topup') lobbyNotify({ok:true,icon:'coin',title:'金幣已入帳!',sub:(o.coinAmount||o.amount)+' 金幣進到錢包了'+(curPlan?',回去完成剛剛的點單吧 ✦':' ✦'),onclick:()=>{ if(curPlan){ shopOpen(3); } else openTopup(); },hold:9000});
-          else if(o.booking) lobbyNotify({ok:true,icon:'star',title:'預約已確定!',sub:'「'+(o.planName||'訂單')+'」'+(o.reserveAt?('時段:'+fmtRes(o.reserveAt)):'掌櫃會與你敲定時段'),onclick:openOrders,hold:9000});
+          else if(o.booking) lobbyNotify({ok:true,icon:'star',title:'預約已確定!',sub:'「'+(o.planName||'訂單')+'」'+(o.reserveAt?('時段:'+fmtRes(o.reserveAt)):'店長會與你敲定時段'),onclick:openOrders,hold:9000});
           else lobbyNotify({ok:true,icon:'star',title:'付款已確認!',sub:'「'+(o.planName||'訂單')+'」開始服務囉,好好享受 ✦',onclick:openOrders});
         } else if(st==='done'){
           if(o.type==='topup') lobbyNotify({ok:true,icon:'coin',title:'金幣已入帳!',sub:(o.coinAmount||o.amount)+' 金幣進到錢包了'+(curPlan?',回去完成剛剛的點單吧 ✦':' ✦'),onclick:()=>{ if(curPlan){ shopOpen(3); } else openTopup(); },hold:9000});
@@ -7140,7 +7140,7 @@ window.lobbyNotify=lobbyNotify;
           else if(o.type==='shop'){ /* 即買即得,購買當下已有慶祝,不再重複通知 */ }
           else lobbyNotify({ok:true,icon:'gift',title:'訂單已完成',sub:'謝謝光臨!期待下次再見 ✦',onclick:openOrders});
         } else if(st==='cancelled'){
-          lobbyNotify({icon:'coupon',title:o.staffDeclined?'陪玩臨時無法接單':'訂單已取消',sub:(o.refunded?((o.amount||0)+' 金幣已退回你的錢包,可以重新點單'):'掌櫃已取消此訂單')+'・詳情看信箱',onclick:openOrders,hold:9000});
+          lobbyNotify({icon:'coupon',title:o.staffDeclined?'陪玩臨時無法接單':'訂單已取消',sub:(o.refunded?((o.amount||0)+' 金幣已退回你的錢包,可以重新點單'):'店長已取消此訂單')+'・詳情看信箱',onclick:openOrders,hold:9000});
         }
       }
     });
@@ -7664,30 +7664,30 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 })();
 </script>
 <script src="tavern-ui/season-v291.js?v=373"></script>
-<script src="tavern-ui-bridge.js?v=420"></script>
+<script src="tavern-ui-bridge.js?v=427"></script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/companion-achievements.js?v=352"></script>
-<script src="lobby-ui/live.js?v=416"></script>
+<script src="lobby-ui/live.js?v=427"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=347"></script>
-<script src="lobby-ui/membership.js?v=273"></script>
+<script src="lobby-ui/membership.js?v=427"></script>
 <script src="lobby-ui/order-flow.js?v=373"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=377';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=416';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=427';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=416"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=427"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
-<script type="module" src="lobby-ui/rooms/entry.mjs?v=373"></script>
-<script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=419';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
+<script type="module" src="lobby-ui/rooms/entry.mjs?v=427"></script>
+<script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
-<script type="module" src="lobby-ui/support.mjs?v=426"></script>
+<script type="module" src="lobby-ui/support.mjs?v=427"></script>
 </body>
 </html>
 

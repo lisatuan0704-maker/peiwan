@@ -100,7 +100,7 @@
   const initialOutfitNames={cloth2:'啟程旅人',cloth3:'微風日常'};
   const displayPartName=name=>String(name||'').replace(/星夜吟遊裝/g,'啟程旅人').replace(/貓耳限定裝/g,'微風日常').replace(/[（(]\s*灰階\s*[）)]/g,'').replace(/灰階/g,'').trim();
   // v405：時裝部件單買。頭髮（瀏海＋後髮）、臉（眼型＋眉毛）、衣服、每件配件各為一個購買單位；
-  // 售價由掌櫃設定在 config/partPricing（可被商品 partPrices 覆蓋），網站不寫死價格。持有整套＝持有全部部件。
+  // 售價由店長設定在 config/partPricing（可被商品 partPrices 覆蓋），網站不寫死價格。持有整套＝持有全部部件。
   let partPricing=null;try{db.ref(ROOT+'/config/partPricing').on('value',s=>{partPricing=s.val()||null;try{window.__dressRefresh?.()}catch(e){}})}catch(e){}
   const saleGroup=slot=>['front','back'].includes(slot)?'hair':['eye','brow'].includes(slot)?'face':slot==='cloth'?'cloth':/^acc\d*$/.test(slot)?slot:null;
   const saleKind=g=>['hair','face','cloth'].includes(g)?g:'acc';
@@ -115,7 +115,7 @@
   }
   function catalog(){
     const shopCfg=window.__shopCfg||{},cfg={...shopCfg},own=window.__owned||{},now=Date.now();
-    // v399：當季草稿保留原圖部件；掌櫃上架後（shopConfig 有同編號且售價有效）才改用掌櫃設定的售價與上架狀態。
+    // v399：當季草稿保留原圖部件；店長上架後（shopConfig 有同編號且售價有效）才改用店長設定的售價與上架狀態。
     for(const [id,d] of Object.entries(window.TTSeasonDrafts||{})){const live=shopCfg[id];cfg[id]=live&&live.custom&&Number.isSafeInteger(live.price)&&live.price>0?{...d,price:live.price,active:live.active,start:live.start,end:live.end,img:live.img||d.img,partPrices:live.partPrices,previewOnly:false}:d;}
     const base=(window.__outfitList?.()||[]).filter(o=>!window.TTSeasonDrafts?.[o.id]);
     const ids=new Set(base.map(o=>o.id));
@@ -255,7 +255,7 @@
     originalInfo(cid){const s=staff().find(s=>s.cid===cid);if(s){close();oldInfo(cid,{name:s.name,st:s.on?(s.busy?'busy':'free'):'off'},0);}},
     openChatSkins(){close();window.openChatSkins();},
     buy(source){if(isDrink(source))throw Error('請在其他分類選擇飲料杯數');if(/^[^:]+::(hair|face|cloth|acc\d*)$/.test(String(source))){const sid=source.split('::')[0],o=catalog().find(x=>x.id===sid),part=o?.parts.find(p=>p.saleId===source);if(!o||o.retired)throw Error('這套時裝已下架');if(!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(!part||!part.salePrice)throw Error('這個部件尚未開放單買');if(o.owned||part.owned)throw Error('這個部件已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:source,n:'時裝部件・'+o.name+'・'+part.saleLabel,p:part.salePrice,itemId:source,itemName:o.name+'・'+part.saleLabel};shopClose();shopOpen(3);return;}const o=catalog().find(x=>x.id===source);if(o?.retired)throw Error('這套測試時裝已下架');if(!o||!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(o.owned)throw Error('這件商品已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:o.id,n:(['寵物','其他','座椅'].includes(o.type)?o.type+'・':'時裝・')+o.name,p:o.price,itemId:o.id,itemName:o.name};shopClose();shopOpen(3);},
-    /* v258:染髮券商品(一張全包主色+漸層;價格可由掌櫃在商城新增 id 為 dyeTicket 的商品覆蓋,預設 299) */
+    /* v258:染髮券商品(一張全包主色+漸層;價格可由店長在商城新增 id 為 dyeTicket 的商品覆蓋,預設 299) */
     dyePrice(){return Number(window.__shopCfg?.dyeTicket?.price)||299;},
     buyDye(){if(typeof me!=='function'||!me())throw Error('先做一張闆卡，再購買染髮券');close();curKind='shop';curBooking=false;curReserveAt=null;const p=this.dyePrice();curPlan={id:'dyeTicket',n:'染髮券 1 張',p,itemId:'dyeTicket',itemName:'染髮券 1 張'};shopClose();shopOpen(3);},
     staffDm(cid){const p=staff().find(s=>s.cid===cid);close();setTimeout(()=>window.staffDmOpen?.(cid,p?.name||'冒險者'),60);},

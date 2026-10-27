@@ -152,7 +152,7 @@ export function installCardShare({auth}){
     box2.append(el('b','','發布中，正在等 Discord 回覆…'),el('p','cs-note','請不要重複分享。'));
     const r=btn('cs-ghost',s.loading?'讀取中…':'重新讀取',loadCurrent);r.disabled=s.loading;box2.append(r);
    }else{
-    box2.append(el('b','','發布結果待確認，請勿重複分享'),el('p','cs-note','操作編號：'+(pub.publicationId||'')+'。酒館會確認結果；需要協助請把這個編號給掌櫃。'));
+    box2.append(el('b','','發布結果待確認，請勿重複分享'),el('p','cs-note','操作編號：'+(pub.publicationId||'')+'。酒館會確認結果；需要協助請把這個編號給店長。'));
     const r=btn('cs-ghost',s.loading?'讀取中…':'重新讀取',loadCurrent);r.disabled=s.loading;box2.append(r);
    }
    body.append(box2);if(s.error)body.append(el('p','cs-error',s.error));return;

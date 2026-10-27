@@ -1,4 +1,4 @@
-/* v412 後台頁（冒險者手札 partner.html、掌櫃頁 admin.html）共用主題：白紙深藍框＋淺藍內框、粉藍錯位紙頁、寶石標題籤、粉色主按鈕；手札另有桌面左右兩欄。只改外觀與區塊位置，所有按鈕與資料處理不變。夜間模式沿用原本的夜間配色。 */
+/* v412 後台頁（冒險者手札 partner.html、店長頁 admin.html）共用主題：白紙深藍框＋淺藍內框、粉藍錯位紙頁、寶石標題籤、粉色主按鈕；手札另有桌面左右兩欄。只改外觀與區塊位置，所有按鈕與資料處理不變。夜間模式沿用原本的夜間配色。 */
 :root{--pt-ink:#1C2156;--pt-ink2:#4A4F86;--pt-mute:#5C6196;--pt-pink:#FF4F8B;--pt-pink2:#FF8DB5;--pt-sky:#CFEFFF;
   --pt-head:'Tavern Numerals','TT Latin','LINE Seed TW','TT Huninn','Noto Sans TC',sans-serif;
   --pt-star:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 0C21.8 12.6 27.4 18.2 40 20 27.4 21.8 21.8 27.4 20 40 18.2 27.4 12.6 21.8 0 20 12.6 18.2 18.2 12.6 20 0Z' fill='%23FF4F8B'/%3E%3C/svg%3E");
