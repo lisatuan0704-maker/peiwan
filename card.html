@@ -587,6 +587,15 @@ async function generate(){
   const dcid=fDcid.value.trim(), name=fName.value.trim();
   if(!dcid) return alert('Discord ID 要填，這是你在酒館的身分');
   if(!name) return alert('取個顯示名字吧');
+  /* v428: 這個 Discord ID 已經有闆卡時不覆蓋（以前會直接蓋掉別人的闆卡）；本人請進大廳用 Discord 登入找回 */
+  if(typeof db!=='undefined'&&db){
+    const k=btoa(encodeURIComponent(dcid)).replace(/[=+/]/g,'');
+    let taken=false;try{taken=!!(await db.ref(ROOT+'/lobby/'+k+'/name').once('value')).val();}catch(e){}
+    if(taken){
+      alert('這個 Discord ID 已經做過闆卡了（闆卡每人一張）。\n如果是你本人，請到大廳用 Discord 登入，就會找回原本的闆卡。\n如果填錯了，請改成你自己的 Discord ID。');
+      return;
+    }
+  }
   await document.fonts.ready;
   try{ await Promise.all([
     document.fonts.load('76px Huninn','測試'),

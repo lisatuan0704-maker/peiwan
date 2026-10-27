@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/discord-auth.js?v=379"></script>
+<script src="lobby-ui/secure-login.js?v=428"></script>
 <script>window.__ttDiscordCallback=TTDiscordAuth.consume();</script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,21 +77,7 @@ a.btn:active,.card button:active{transform:translateY(3px);box-shadow:0 1px 0 va
 const firebaseConfig={apiKey:"AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",authDomain:"my-shop-0520.firebaseapp.com",databaseURL:"https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"my-shop-0520",storageBucket:"my-shop-0520.firebasestorage.app",messagingSenderId:"430482271005",appId:"1:430482271005:web:967059c91a9b7970bdcff4"};
 let _db=null; try{ firebase.initializeApp(firebaseConfig); _db=firebase.database(); }catch(e){}
 const ROOT='peiwan';
-/* 換裝置找回帳號：此 DC 帳號若已綁過闆卡,把角色鑰匙還原到本機 */
-function restoreAccount(dcid){
-  return new Promise(res=>{
-    if(!_db){ res(false); return; }
-    _db.ref(ROOT+'/accounts/'+dcid).once('value').then(s=>{
-      const a=s.val();
-      if(a&&a.myKey){
-        _db.ref(ROOT+'/lobby/'+a.myKey+'/name').once('value').then(cs=>{   /* v237:有名字才算真的闆卡 */
-          if(cs.val()){ try{ localStorage.setItem('tt_me',a.myKey); }catch(e){} res(true); }
-          else res(false);
-        }).catch(()=>res(false));
-      } else res(false);
-    }).catch(()=>res(false));
-  });
-}
+/* v428: 換裝置找回帳號改由伺服器驗證 Discord 後回傳這個帳號擁有的闆卡（TTSecureLogin.login），不再讀公開的 accounts。 */
 (function(){
   const card=document.getElementById('card');
   /* v379: a profile refresh is restricted to the already linked account and card. */
@@ -135,16 +122,29 @@ function restoreAccount(dcid){
         card.innerHTML='<h1>已重新讀取 Discord 頭貼</h1><p>返回大廳後會載入並儲存頭貼設定。</p><a class="btn" href="lobby.html">回酒館大廳</a>';
         setTimeout(()=>{location.href='lobby.html';},2600);return;
       }
-      try{ localStorage.setItem('tt_dc',JSON.stringify(dc)); }catch(e){}
       try{ history.replaceState(null,'',location.pathname); }catch(e){}
       const av=dc.avatar?('https://cdn.discordapp.com/avatars/'+dc.id+'/'+dc.avatar+'.png?size=128'):'';
-      restoreAccount(dc.id).then(restored=>{
+      /* v428: 由伺服器驗證這個 Discord 帳號，綁定（或找回）它的闆卡並登入；之後資料庫只讓本人改自己的闆卡、金幣與私訊。 */
+      let before=null;try{before=localStorage.getItem('tt_me');}catch(e){}
+      TTSecureLogin.login(firebase.auth(),tok,before).then(r=>{
+        try{ localStorage.setItem('tt_dc',JSON.stringify(dc)); if(before&&before!==r.key) localStorage.removeItem('tt_orders'); }catch(e){}
+        return before!==r.key;
+      },e=>{
+        const box=document.createElement('div');
+        const h=document.createElement('h1');h.textContent='登入沒有完成';
+        const p=document.createElement('p');p.textContent=e.message;
+        const a=document.createElement('a');a.className='btn';
+        if(e.code==='CHARACTER_REQUIRED'||e.code==='KEY_TAKEN'){a.href='card.html';a.textContent='去製作闆卡';try{if(e.code==='KEY_TAKEN')localStorage.removeItem('tt_me');}catch(_){}}
+        else{a.href='lobby.html';a.textContent='回酒館大廳';}
+        box.append(h,p,a);card.replaceChildren(box);
+        throw e;
+      }).then(restored=>{
         card.innerHTML=(av?'<img class="av" src="'+av+'" alt="">':'')
           +'<h1>綁定成功！</h1><div class="nm">@'+TTDiscordAuth.escapeText(dc.global_name||dc.username)+'</div>'
           +(restored?'<p>已找回你的闆卡與帳號資料 —— 換了裝置也回得來。</p>':'<p>之後點一杯時會自動帶上你的 Discord 名稱，酒館的大家直接找得到你。</p>')
           +'<a class="btn" href="lobby.html">回酒館大廳</a>';
         setTimeout(()=>{ location.href='lobby.html'; },2600);
-      });
+      }).catch(()=>{});   /* 錯誤訊息已顯示在卡片上 */
     })
     .catch(()=>fail('連不上 Discord，請稍後再試一次。'));
 })();

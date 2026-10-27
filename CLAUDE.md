@@ -1,12 +1,15 @@
 # 小小酒館修改紀錄
 
-## v428 開幕前資安修正（第一、二批）
+## v428 開幕前資安修正（三批）
 以 10/27 16:55 線上規則快照為底，產生 security/database.rules.json（需由店長在 Firebase 主控台貼上發布；未發布前網站行為不變）。
 第一批（後台權限）：原本規則多處只檢查 auth != null，而客人 Discord 登入後、或任何人用 partner.html 自行註冊 Email 帳號都算「已登入」，可改商品價格、員工資料、工單、陪玩卡、禁言名單、讀全部邀請碼與客戶帳號、改別人訂單狀態、發站內信、把金幣改成任意數字。改為：店長＝config/adminUid；店員＝links/<uid> 有紀錄（且 links 只能用有效且未使用的邀請碼建立，與 invites/<碼>/usedBy 同一筆寫入）。shopConfig／tables／board／characters／staff 寫入限店長；staffCards、staffStatus 限店長或該陪玩本人；orders、mutes、mail 寄送、clientOrders 修改、付款證明／檢舉／問題回報讀取限店員。partner.html、kefu.html 註冊改為同時寫入 usedBy；admin.html 用過的邀請碼不再顯示，解除綁定後可重新產生。
 第二批（金幣與購買）：一次購買必須同時包含 訂單＋新的扣款明細＋餘額剛好減少該金額＋wallet/<key>/lastTx 指向該明細，商品 owned/<key>/<item> 需帶 ref 指向這筆訂單，且付款金額不低於售價（shopConfig price；聊天氣泡 50；染髮券 shopConfig.dyeTicket.price 或 299；部件單買 partPrices 或 config/partPricing；VIP 優惠券最多折 200）。客人不能自己加金幣、偽造或刪除交易明細、不付錢發商品、清空或刪除別人背包、把轉帳單標成已確認。染髮保存改為多路徑 update（dyeTickets 剛好減 1＋dyeLast＋新增 dyedHairSets，同時保存只會成功一筆）。payWithCoins、聊天氣泡購買、群組陪玩單加上 lastTx／ref。
 部署：.github/workflows/deploy.yml 改為只上傳網站本體，*.md、security/、tests/、scripts/、docs/、test-inventory.* 不再公開。
 驗證：模擬器規則測試第一批 32 項、第二批 36 項全過（同時列出舊規則實際放行的漏洞）；tests/security-v428.cjs 以真實 Database Emulator＋大廳實際 payWithCoins 驗證染髮券／時裝／陪玩金幣單成功、前端竄改價格整筆被拒、雙裝置同時花錢只成立一筆，連續三輪通過。全部 65 個既有測試修改前後結果一致，僅 firebase-atomic-v273 因綁定舊規則檔而改為失敗（由 security-v428 取代）；dye-v230 模擬資料庫補上新寫法。
-尚未處理：客人端仍未登入 Firebase，私訊／好友／聊天／訂單建立仍可被知道角色鑰匙的人冒用（第三批，需後端配合）；lobby.html 內的 Discord webhook 仍公開（需重建並改由後台發送）。
+第三批（客人身分）：原本客人沒有登入 Firebase，身分只是本機 tt_me，任何知道角色鑰匙（大廳公開）或 Discord ID 的人都能冒用：看別人私訊／好友／信件／餘額／訂單、用別人名義聊天與下單、取消別人訂單；card.html 的鑰匙由填寫的 Discord ID 算出且直接覆寫，輸入別人的 ID 就能蓋掉並變成對方。改為：dc.html 綁定 Discord 時呼叫後端 /v1/voice/session（帶本機鑰匙），後端驗證 Discord 後把帳號綁到闆卡（secureV1/members、owners），回傳 Firebase 登入憑證與帳號擁有的鑰匙（換裝置找回改走這裡，移除讀公開 accounts 的 restoreAccount）。大廳入口有闆卡但未登入時顯示「用 Discord 登入酒館」；已登入但本機沒有鑰匙會自動找回。規則以登入身分判斷：闆卡／位置／聊天只能本人寫（新闆卡仍可在登入前建立，已存在的不可覆蓋）；私訊、私訊清單只限對話雙方（陪玩只看 staff_<自己> 的對話）；好友另一側需對方先送邀請；信件、帳號紀錄、餘額、交易明細只限本人；花錢、下單、取消／續單只能用自己的帳號；訂單可依 id、myKey（本人）或 staffCid（查檔期）讀取；工單只開放號碼。lobby-ui/secure-login.js、lobby-ui/account-review.js（店長頁「帳號綁定審核」，處理後端要求人工確認的情況）。card.html 遇到已存在的闆卡不覆寫，請本人用 Discord 登入找回。lobby.html 移除公開的 Discord webhook，付款復原查單帶登入憑證。
+後端（另行部署到 api.tinytavern.tw，不在此 repo）：order-voice-bot/account-claim.cjs 認領規則——已有綁定直接回傳；否則用 accounts/<Discord ID>.myKey 或本機鑰匙，條件為闆卡存在、尚未被其他帳號擁有、沒有其他 Discord 指向它，且（帳號紀錄相符／闆卡填的 Discord 名稱與登入帳號相符／闆卡 3 小時內建立）；owners 以 transaction 搶先，兩人同時認領只會一人成功；其他情況回 ACCOUNT_REVIEW_REQUIRED。order-voice-bot/order-notify.cjs 由後端監聽新訂單發 Discord 通知（網址只放在主機環境變數 ORDER_NOTIFY_WEBHOOK_URL，orderVoiceV1/orderNotify 去重，兩台同時跑也只發一次，客人名稱中的 @everyone 失效，聊天氣泡不通知）。
+驗證：tests/security-rules-v428/run.sh（第一批 32、第二批 36〔以已登入本人執行〕、第三批 56，每項同時列出舊規則結果）全過；tests/security-v428.cjs 改以已登入本人結帳，另驗證未登入不能付款，連續三輪通過；tests/secure-login-v428.cjs 驗證登入／錯誤訊息／換裝置找回／入口判斷；後端 v428.test.cjs（模擬器）11 項連續三輪通過、原有 party 測試 18 項通過。全部 65 個既有測試結果與修改前一致（僅 firebase-atomic-v273 由新測試取代）。
+上線順序：①部署後端並設定 ORDER_NOTIFY_WEBHOOK_URL（舊 webhook 刪除重建）②Firebase 主控台發布 security/database.rules.json ③合併到 main。②③要同時；所有客人第一次進大廳需用 Discord 登入一次。
 
 ## v420 染髮保存後直接穿上、我的染髮穿不上修正
 修正「我的染髮」按穿戴沒反應：背包重畫染髮預覽時，舊組合含已下架的基本髮型（例如 base 2）會讓 makeDoll 丟錯，而 saveBag 的 render 在 try 外，saving 卡在 true，之後所有按鈕都按不動。改為 render 放進 try、預覽逐張 try/catch（無法穿的組合用原始資料畫灰階預覽）。部件已下架的舊組合按鈕停用並顯示「這組髮型已下架，無法穿戴」。

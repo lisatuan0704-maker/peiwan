@@ -6,7 +6,7 @@
 <script src="lobby-ui/fixed-view.js?v=427"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
-<script src="lobby-ui/discord-auth.js?v=379"></script>
+<script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=428"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>酒館大廳｜Tiny Tavern 小小酒館</title>
@@ -4287,7 +4287,9 @@ async function walletLookup(ids){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
  try{return await Promise.all(ids.map(async id=>{
   // 復原時必須向伺服器重新確認，不採用離線或尚未送達的本機快取。
-  const r=await fetch(firebaseConfig.databaseURL+'/'+ROOT+'/clientOrders/'+encodeURIComponent(id)+'.json',{cache:'no-store',signal:controller.signal});
+  // v428: 訂單不再公開，查詢時帶上本人的登入憑證
+  let auth='';try{const u=firebase.auth().currentUser;if(u)auth='?auth='+encodeURIComponent(await u.getIdToken());}catch(_){}
+  const r=await fetch(firebaseConfig.databaseURL+'/'+ROOT+'/clientOrders/'+encodeURIComponent(id)+'.json'+auth,{cache:'no-store',signal:controller.signal});
   if(!r.ok)throw Error('無法確認訂單');return r.json();
  }));}finally{clearTimeout(timer);}
 }
@@ -4518,7 +4520,8 @@ function submitTopup(){
 /* ===== 訂單即時通知(Discord Webhook) =====
    注意:此網址內嵌在公開網頁,技術上可被他人看到並濫發訊息。若某天頻道被灌訊息,
    到 Discord 重新產生 webhook、把新網址給店長更換即可(可反覆更換)。 */
-const ORDER_WEBHOOK='https://discord.com/api/webhooks/1533257136685977660/KmuVUZjBA_mF0z6sFghfLdXKsL1HXnCxKhYMd4ciYdS1YOtVEa4Nht7fDb25hgjSKbRB';
+/* v428: 訂單通知改由伺服器（api.tinytavern.tw）發到店長的 Discord，網址不再寫在公開網站裡。 */
+const ORDER_WEBHOOK='';
 function notifyOrder(o){
   if(!ORDER_WEBHOOK) return;
   let dc=null; try{ dc=JSON.parse(localStorage.getItem('tt_dc')||'null'); }catch(e){}
@@ -6225,12 +6228,34 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
         setTimeout(()=>{ db.ref(ROOT+'/lobby/'+key+'/name').once('value').then(s2=>cb(!!s2.val())).catch(()=>cb(true)); }, 900);
       }).catch(()=>cb(true));
     }
+    /* v428: 進大廳前必須用 Discord 登入（伺服器驗證身分），資料庫才知道哪張闆卡、哪些金幣與私訊是你的。 */
+    function showLoginGate(){
+      const cardEl=g.querySelector('.dgCard');
+      cardEl.querySelector('h1').textContent='用 Discord 登入酒館';
+      cardEl.querySelector('p').innerHTML='為了保護你的闆卡、金幣與私訊，<br>進入大廳前請先用 Discord 登入。';
+      const b=cardEl.querySelector('.dgBtn');
+      b.textContent='用 Discord 登入';
+      b.onclick=(e)=>{ e.preventDefault(); dcAuth(); };
+      cardEl.querySelector('.dgSub').textContent='我們只會讀取你的 Discord 名稱與頭像。換了裝置，登入同一個 Discord 就會找回你的闆卡。';
+      g.style.display='flex';
+    }
     charExists(function(has){
-      if(has){ g.style.display='none';                          // 有闆卡就放行進場(綁定 Discord 改成大廳內提示,不再擋門)
-        if(!bound){ try{ if(window.__promptBind) window.__promptBind(); }catch(e){} }
+      if(!has){   // 真的沒有闆卡(或已被刪)才導去做卡;不清 tt_me,避免同步延遲把人卡死
+        /* 已用 Discord 登入、但這台裝置沒記住闆卡：直接找回帳號擁有的闆卡 */
+        if(typeof firebase!=='undefined'&&firebase.auth&&window.TTSecureLogin){
+          TTSecureLogin.check(firebase.auth(),db,ROOT,null).then(r=>{
+            if(r.ok&&r.key&&r.key!==myKey){ try{ localStorage.setItem('tt_me',r.key); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); return; }
+            showCardGate();
+          }).catch(()=>showCardGate());
+        }else showCardGate();
         return;
       }
-      showCardGate();   // 真的沒有闆卡(或已被刪)才導去做卡;不清 tt_me,避免同步延遲把人卡死
+      if(typeof firebase==='undefined'||!firebase.auth||!window.TTSecureLogin){ showLoginGate(); return; }
+      TTSecureLogin.check(firebase.auth(),db,ROOT,myKey).then(r=>{
+        if(r.switchTo){ try{ localStorage.setItem('tt_me',r.switchTo); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); return; }
+        if(r.ok){ g.style.display='none'; return; }
+        showLoginGate();
+      }).catch(()=>showLoginGate());
     });
   })();
   /* 未綁定 Discord 的客人:進場後給一次溫和提示(不擋門),鼓勵綁定以便換裝置找回與點單帶名 */
