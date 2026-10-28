@@ -3847,6 +3847,8 @@ if(db){
 }
 /* ====== 站內點單系統 ====== */
 let PAY_ACCOUNT = '(017)兆豐銀行 台南分行 213-09-07119-8 陽生實業有限公司';
+/* v455 使用者：戶名不要寫 → 畫面與複製只顯示到帳號為止 */
+function payAccShown(){const m=/^(.*?\d[\d -]{6,}\d)/.exec(String(PAY_ACCOUNT||''));return m?m[1].trim():String(PAY_ACCOUNT||'');}
 let PAY_NOTE = '';       /* 店長可在後台填付款備註(例:匯款後請保留收據) */
 let PAY_MINS = 60;       /* 付款截止分鐘數,店長可調 */
 const PLANS = {
@@ -3899,7 +3901,7 @@ function shopOpen(step, kind){
       `金額:<b style="color:#D96A8B" id="payAmt">NT$${curPlan.p}</b><br>`+
       (curKind==='table'?`<div style="font-size:12px;color:#8E7AB0;margin:2px 0 4px">席位以「店長確認付款」的順序為準,確認後就是你的位子</div>`:'')+
       (canCoupon?`<label style="display:flex;align-items:center;gap:6px;margin:6px 0;font-size:13px;color:#8E68C8;cursor:pointer"><input type="checkbox" id="useCoupon" style="transform:scale(1.2)"> 使用 VIP${vi.lv} 優惠券(折 $${vi.cur.disc}・剩 ${couponsLeft()} 張)</label>`:'')+
-      `<div style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b id="payAcc" style="color:#5A4880">${esc(PAY_ACCOUNT)}</b>`+
+      `<div style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b id="payAcc" style="color:#5A4880">${esc(payAccShown())}</b>`+
       `<button type="button" id="payCopy" style="border:none;background:#F0E7FA;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;cursor:pointer">複製</button></div>`+
       (PAY_NOTE?`<div style="font-size:12px;color:#8E7AB0;margin:2px 0 6px">${esc(PAY_NOTE)}</div>`:'')+
       `付款截止:<b id="payCountdown" style="color:#D96A8B"></b>`;
@@ -3910,7 +3912,7 @@ function shopOpen(step, kind){
     const cpBtn=document.getElementById('payCopy');
     if(cpBtn) cpBtn.onclick=()=>{ const t=PAY_ACCOUNT.replace(/[^\d\-()A-Za-z]/g,m=>m);
       const doCopy=(txt)=>{ try{ navigator.clipboard.writeText(txt); }catch(e){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} ta.remove(); } };
-      doCopy(PAY_ACCOUNT); cpBtn.textContent='已複製 ✓'; try{ if(window.SFX)SFX.pop&&SFX.pop(); }catch(e){} setTimeout(()=>cpBtn.textContent='複製',1600); };
+      doCopy(payAccShown()); cpBtn.textContent='已複製 ✓'; try{ if(window.SFX)SFX.pop&&SFX.pop(); }catch(e){} setTimeout(()=>cpBtn.textContent='複製',1600); };
     /* 付款倒數 */
     if(window.__payTick) clearInterval(window.__payTick);
     const cd=document.getElementById('payCountdown');
@@ -4448,8 +4450,8 @@ function pickTier(i){
       'background:linear-gradient(180deg,#F19FBE,#D96A8B);color:#fff;font-family:inherit;font-size:14.5px;font-weight:800;padding:12px;border-radius:12px;box-shadow:0 4px 12px rgba(200,90,130,.3)">'+
       '信用卡／超商代碼付款・申請中</button>'+
     '<div class="tu-bank-divider">或使用銀行轉帳</div>'+
-    '<div class="tu-bank-account" style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b style="color:#5A4880">'+esc(PAY_ACCOUNT)+'</b>'+
-    '<button type="button" onclick="(function(b){try{navigator.clipboard.writeText(PAY_ACCOUNT)}catch(e){}b.textContent=\'已複製 ✓\';setTimeout(()=>b.textContent=\'複製\',1500)})(this)" style="border:none;background:#F0E7FA;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;cursor:pointer">複製</button></div>'+
+    '<div class="tu-bank-account" style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b style="color:#5A4880">'+esc(payAccShown())+'</b>'+
+    '<button type="button" onclick="(function(b){try{navigator.clipboard.writeText(payAccShown())}catch(e){}b.textContent=\'已複製 ✓\';setTimeout(()=>b.textContent=\'複製\',1500)})(this)" style="border:none;background:#F0E7FA;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;cursor:pointer">複製</button></div>'+
     (PAY_NOTE?'<div style="font-size:12px;color:#8E7AB0">'+esc(PAY_NOTE)+'</div>':'');
   document.getElementById('tuProofPrev').style.display='none';
   document.getElementById('tuProof').value='';
@@ -7817,7 +7819,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=432"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=454">
-<script src="lobby-ui/mobile-app.js?v=454"></script>
+<script src="lobby-ui/mobile-app.js?v=455"></script>
 </body>
 </html>
 

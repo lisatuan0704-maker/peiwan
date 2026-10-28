@@ -117,7 +117,6 @@ const wallet=(()=>{
    +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="2"><h3><i><u>2</u></i><span class="hl">轉帳到酒館帳戶</span></h3>'
    +'<div class="ttm-bank">'+(acc.code?'<div class="ttm-row"><span>銀行</span><b>('+esc(acc.code)+') '+esc(acc.bank)+'</b><button type="button" class="ttm-copy" data-copy="'+esc(acc.code)+'" data-label="複製代碼">複製代碼</button></div>':'')
    +'<div class="ttm-row ttm-acct"><span>帳號</span><b>'+esc(acc.number)+'</b><button type="button" class="ttm-copy main" data-copy="'+esc(acc.digits)+'" data-label="複製帳號">複製帳號</button></div>'
-   +(acc.holder?'<div class="ttm-row"><span>戶名</span><b>'+esc(acc.holder)+'</b></div>':'')
    +'<div class="ttm-row ttm-amt"><span>金額</span><b>'+(t?'NT$ '+fmt(t.amt):'請先在上面選一個方案')+'</b>'+(t?'<button type="button" class="ttm-copy" data-copy="'+t.amt+'" data-label="複製金額">複製金額</button>':'')+'</div></div>'
    +(note?'<p class="ttm-sub">'+esc(note)+'</p>':'')+'<p class="ttm-sub">請依照上面選的方案金額<b>剛好轉帳</b>這個數字；複製帳號後到銀行 App 轉帳，完成後回到這裡填寫資料。</p></section>'
    +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="3"><h3><i><u>3</u></i><span class="hl">填寫對帳資料</span></h3>'
