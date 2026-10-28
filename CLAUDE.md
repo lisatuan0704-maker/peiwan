@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## v459 當季卡片播放時裝特效
+使用者：商城當季卡片的疾風喵行／喵頻連線「怎麼沒特效」。原本特效只在試穿區、大廳、VIP 選擇視窗播放，當季卡片的 64px 人物是靜態。live-wardrobe.js：卡片人物畫好後（api.draw 回呼）若 api.fx.active 有綁定特效，保存底圖並啟動共用 seasonFxTick（約 30fps，每張卡片以 api.fx.render 疊特效）；卡片不在畫面上略過、減少動態設定（motion-off 或系統 prefers-reduced-motion）只畫靜態。版本鏈 lobby→bridge 459→tavern-ui/index 459→時裝間比較 459→live-wardrobe 459。
+驗證：語法檢查通過；本機 Database Emulator 這次無法下載（storage.googleapis.com 被擋），未做瀏覽器實測，需使用者在正式站確認。
+宣傳配圖：/mnt/user-data/outputs/小小酒館-宣傳配圖.png／-動態.gif（1200×630，大廳背景＋主題紙卡＋縭蕪桃像素 GIF＋喵頻連線／疾風喵行／熊熊偵探／心動情人 3 倍、大廳同款待機壓扁回彈），使用者要求不放連結。
+
 ## v458 客人頻道開放、旅人私席限高級會員、酒館指南像素動態橫幅
 使用者：大廳閒聊應該有任何旅人身分組都看得到；組隊揪揪／揪團佈告欄機器人限定；酒館小報、酒館居民只有店長與機器人發言（v456 已是如此）；酒館居民與認識冒險者合併（選 A，認識冒險者由使用者自行處理）；💎 旅人私席只給進階＋尊榮會員，本月特調會員只能看、小窩會員可聊天，少一個小窩要補；橫幅改像素 GIF。
 server-layout.cjs VERSION 2：MEMBER_OPEN（大廳閒聊／創作與日常／旅人相遇處／大廳吧檯）與 旅人唯讀、櫃檯 即使原本私人也套用（其他私人頻道照舊不動）。member-lounge.cjs（新）：旅人私席分類 @everyone 不可見、進階／尊榮會員可見；本月特調會員唯讀；小窩會員可聊天；冒險者身分組以名稱辨認（含「冒險者」或縭／蕪／桃開頭）與 TT 可發言；補建「桃的小窩」；備份 orderVoiceV1/loungeV1/backup、做過一次記 loungeV1/applied。guide-channel.cjs：頻道導覽改「⭐ 酒館居民　認識縭、蕪、桃」；橫幅改 assets/guide-banner.gif（網站 img/companions-v352 縭蕪桃 staff GIF 2 倍、200ms×16 格，背景沿用主題橫幅），BANNER_VERSION 2 時兩則訊息刪除後依序重發。party-discord 附檔可指定 type。測試 member-lounge 4、guide-channel 6、server-layout 5，部署前 64 項通過。
