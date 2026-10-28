@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v462／v463 冒險者應徵頻道
+使用者：伺服器多一個冒險者應徵頻道，要徵第二批陪陪，讓應徵者進伺服器應徵；表單內容與須知經使用者確認（需年滿 18；服務類型拿掉；「為什麼選擇小小酒館」改在房間回覆）。後端 order-voice-bot/recruit-desk.cjs：找不到名稱含「冒險者應徵」的頻道時在門口分類建立「📝｜冒險者應徵ᵒ」（@everyone 可看、不能發言、可在討論串留言；TT 可開／管理私人討論串）。面板：招募說明＋入職須知（年滿 18、專屬陪玩店、店長出形象立繪＋像素小人、角色形象著作權屬小小酒館僅限本店使用、合法登記公司）＋「我要應徵」。表單 4 格：稱呼、年齡、擅長遊戲與段位、自認陪伴風格。送出後開私人討論串（只有應徵者與店方），貼表單（未滿 18 標示警告）與補充問題（60 秒語音訊息自介、為什麼選擇小小酒館、可上線時段、語音環境、陪玩／直播經驗），以 ORDER_NOTIFY webhook 通知店方（不 @）。一人同時一份（再按給連結）、30 秒冷卻、串內「結束應徵」封存鎖定。記在 orderVoiceV1/recruitV1（open／apps／panel）。測試 recruit-desk.test.cjs 4 項。
+v462 部署時 service-server 漏建立 recruit（插入條件判斷錯誤），健康檢查沒有檢查 RECRUIT_STARTED 而通過，期間互動在 recruit.handle 拋錯、揪團按鈕會失效（約 5 分鐘）。v463 補建立並在路由加保護，部署腳本健康檢查加入 RECRUIT_STARTED。部署 20261028-v463（Claude 於主機網頁主控台執行）：V463_DEPLOYED_AND_HEALTHY、RECRUIT_CHANNEL_CREATED、RECRUIT_PANEL_READY；腳本已從 security-v428 移除。
+
 ## v461 VIP 套組公開展示、訂單條碼不再跳動
 使用者：商店 500 的兩套（喵頻連線／疾風喵行）消失了，先放出來給人看（還沒開始營業）。tavern-ui-bridge.js：vipOnly 套組對所有人列出（原本只有 VIP 3、已擁有或 ?preview）；未達等級者 vipLocked，卡片按鈕改停用「VIP 3 才能入手」（live-wardrobe.js），仍可試穿；免費領取與 500 金幣購買照舊由後端檢查 VIP 等級。
 使用者：訂單票卡條碼一直在變化。lobby-ui/live.js identity()：原本以單號／訂單編號逐字產生最多 320 條，擠在 70px 寬的 SVG（preserveAspectRatio none），每條不到半個像素，縮放或重畫時邊緣一直跳動。改為對編號取雜湊、固定 6 段共 24 條（約 70 單位寬，每條約 1px），加 shape-rendering crispEdges；同一筆訂單條碼固定。版本鏈 live.js 461、bridge 461→index 461→時裝間比較 461→live-wardrobe 461。
