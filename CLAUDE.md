@@ -1,8 +1,13 @@
 # 小小酒館修改紀錄
 
+## v458 客人頻道開放、旅人私席限高級會員、酒館指南像素動態橫幅
+使用者：大廳閒聊應該有任何旅人身分組都看得到；組隊揪揪／揪團佈告欄機器人限定；酒館小報、酒館居民只有店長與機器人發言（v456 已是如此）；酒館居民與認識冒險者合併（選 A，認識冒險者由使用者自行處理）；💎 旅人私席只給進階＋尊榮會員，本月特調會員只能看、小窩會員可聊天，少一個小窩要補；橫幅改像素 GIF。
+server-layout.cjs VERSION 2：MEMBER_OPEN（大廳閒聊／創作與日常／旅人相遇處／大廳吧檯）與 旅人唯讀、櫃檯 即使原本私人也套用（其他私人頻道照舊不動）。member-lounge.cjs（新）：旅人私席分類 @everyone 不可見、進階／尊榮會員可見；本月特調會員唯讀；小窩會員可聊天；冒險者身分組以名稱辨認（含「冒險者」或縭／蕪／桃開頭）與 TT 可發言；補建「桃的小窩」；備份 orderVoiceV1/loungeV1/backup、做過一次記 loungeV1/applied。guide-channel.cjs：頻道導覽改「⭐ 酒館居民　認識縭、蕪、桃」；橫幅改 assets/guide-banner.gif（網站 img/companions-v352 縭蕪桃 staff GIF 2 倍、200ms×16 格，背景沿用主題橫幅），BANNER_VERSION 2 時兩則訊息刪除後依序重發。party-discord 附檔可指定 type。測試 member-lounge 4、guide-channel 6、server-layout 5，部署前 64 項通過。
+部署 20261028-v458（Claude 於主機網頁主控台執行）：V458_DEPLOYED_AND_HEALTHY；LAYOUT_DONE ok=6 fail=0（旅人唯讀 2、櫃檯 1、旅人可見 3、未動 19）；LOUNGE_ROLES 會員=2 冒險者=桃MOMO、縭RIRA、蕪KABUKI；LOUNGE_MOMO_CREATED；LOUNGE_DONE ok=4 fail=0；GUIDE_POSTED。腳本已從 security-v428 移除。
+
 ## v457 酒館指南頻道（機器人建立）
 使用者：酒館指南還沒做；rules 不是酒館指南，要用機器人做並附 PNG。內容與橫幅經使用者確認（「可以了發吧」）。後端 order-voice-bot/guide-channel.cjs：找不到名稱含「酒館指南」的頻道時，在門口分類 旅人報到 下方建立「📜｜酒館指南ᵒ」（@everyone 可看不能發言、TT 可發言／附檔）；發兩則訊息：①橫幅 assets/guide-banner.png（網站主題白紙深藍框＋粉色錯位紙頁＋縭／蕪／桃頭貼，標籤 店規／怎麼開始／頻道導覽）②四張說明卡（歡迎／店規六條／怎麼開始／頻道導覽，頻道以 <#id> 連結，用「陪陪」）＋前往酒館網站／新手指南按鈕。記在 orderVoiceV1/guideV1；VERSION 變更時編輯原訊息，訊息被刪才兩則一起重發。建立後重新整理旅人報到面板（連到新頻道）。party-discord request 支援自訂附檔名稱。測試 guide-channel.test.cjs 5 項，部署前 58 項通過。部署 20261028-v457（Claude 於主機網頁主控台執行）：V457_DEPLOYED_AND_HEALTHY、GUIDE_CHANNEL_CREATED、GUIDE_POSTED；腳本已從 security-v428 移除。
-待辦：v456 把原本已私人的客人頻道（大廳閒聊、組隊揪揪、揪團佈告欄等）當成店方頻道跳過，旅人看不到；等使用者提供完整頻道清單後明確列出要開放的頻道。
+（v456 跳過私人客人頻道的問題已於 v458 處理。）
 
 ## v456 Discord 頻道權限整理（店規閘門）＋宣傳影片
 使用者：DC 頻道還沒整頓好，你幫我把伺服器該用的用一用。後端 order-voice-bot/server-layout.cjs（只改權限，不改名、不搬移、不刪除；每頻道只調幾個權限位元，其他保留；動之前備份到 orderVoiceV1/layoutV1/backup；做過一次記在 layoutV1/applied，旅人身分組還沒建好時每 2 分鐘重試）：公開唯讀＝旅人報到／酒館指南／酒館小報／酒館居民／認識冒險者／認識陪陪（所有人可看、不能發言）；旅人唯讀＝揪團佈告欄／組隊揪揪；櫃檯（酒館櫃檯／呼喚店員）只關 @everyone 檢視；其他頻道與分類只開給旅人／闆卡旅人（語音含連線／說話）。原本就私人的頻道、機器人語音分類（DISCORD_VOICE_CATEGORY_ID／PARTY_VOICE_CATEGORY_ID）與門口分類本身不動；每個頻道先給 TT 自己檢視與發言，再關 @everyone，避免把自己鎖在外面；分類先改。測試 server-layout.test.cjs 4 項（含重複套用不再寫入），全部 53 項通過。部署 20261028-v456（含 v452，由 Claude 在主機網頁主控台執行）：V456_DEPLOYED_AND_HEALTHY，LAYOUT_DONE ok=10 fail=0（公開唯讀 4、旅人可見 6、未動 21＝原本私人或已符合），COUNTER／ROLES 面板就緒；部署腳本已從 security-v428 移除。
