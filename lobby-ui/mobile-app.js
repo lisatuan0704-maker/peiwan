@@ -111,18 +111,19 @@ const wallet=(()=>{
   page.innerHTML='<div class="ttm-balance"><small>目前金幣</small><b>'+fmt(bal)+'</b><span>1 金幣＝1 元，可用於點單與商城</span><button type="button" class="ttm-link" data-act="tx">'+(txOpen?'收起交易紀錄':'查看交易紀錄')+'</button></div>'
    +'<div id="ttmTx" class="ttm-tx"'+(txOpen?'':' hidden')+'></div>'
    +(list.length?(
-   '<section class="ttm-step" data-step="1"><h3><i>1</i>選擇儲值金額</h3><div class="ttm-tiers">'
-   +list.map((x,i)=>'<button type="button" data-tier="'+i+'" aria-pressed="'+(i===tier)+'"><b>'+fmt(x.amt+(x.bonus||0))+' <small>金幣</small></b><span>付 NT$ '+fmt(x.amt)+'</span>'+(x.bonus>0?'<em>含贈送 '+fmt(x.bonus)+'</em>':'')+'</button>').join('')+'</div></section>'
-   +'<section class="ttm-step" data-step="2"><h3><i>2</i>轉帳到酒館帳戶</h3>'
+   '<section class="ttm-step" data-step="1"><h3><i><u>1</u></i><span class="hl">選一個儲值方案</span></h3>'
+   +'<p class="ttm-guide">儲值金額由酒館固定提供，不用自己輸入，點一下想要的方案就好。</p><div class="ttm-tiers" role="radiogroup" aria-label="儲值方案">'
+   +list.map((x,i)=>'<button type="button" role="radio" data-tier="'+i+'" aria-pressed="'+(i===tier)+'" aria-checked="'+(i===tier)+'"><b>'+fmt(x.amt+(x.bonus||0))+' <small>金幣</small></b><span>轉帳 NT$ '+fmt(x.amt)+'</span>'+(x.bonus>0?'<em>含贈送 '+fmt(x.bonus)+'</em>':'')+'<span class="pick">'+(i===tier?'✓ 已選擇':'點我選這個')+'</span></button>').join('')+'</div></section>'
+   +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="2"><h3><i><u>2</u></i><span class="hl">轉帳到酒館帳戶</span></h3>'
    +'<div class="ttm-bank">'+(acc.code?'<div class="ttm-row"><span>銀行</span><b>('+esc(acc.code)+') '+esc(acc.bank)+'</b><button type="button" class="ttm-copy" data-copy="'+esc(acc.code)+'" data-label="複製代碼">複製代碼</button></div>':'')
    +'<div class="ttm-row ttm-acct"><span>帳號</span><b>'+esc(acc.number)+'</b><button type="button" class="ttm-copy main" data-copy="'+esc(acc.digits)+'" data-label="複製帳號">複製帳號</button></div>'
    +(acc.holder?'<div class="ttm-row"><span>戶名</span><b>'+esc(acc.holder)+'</b></div>':'')
-   +'<div class="ttm-row ttm-amt"><span>金額</span><b>'+(t?'NT$ '+fmt(t.amt):'請先選擇金額')+'</b>'+(t?'<button type="button" class="ttm-copy" data-copy="'+t.amt+'" data-label="複製金額">複製金額</button>':'')+'</div></div>'
-   +(note?'<p class="ttm-sub">'+esc(note)+'</p>':'')+'<p class="ttm-sub">複製帳號後到銀行 App 轉帳，完成後回到這裡填寫資料。</p></section>'
-   +'<section class="ttm-step" data-step="3"><h3><i>3</i>填寫對帳資料</h3>'
+   +'<div class="ttm-row ttm-amt"><span>金額</span><b>'+(t?'NT$ '+fmt(t.amt):'請先在上面選一個方案')+'</b>'+(t?'<button type="button" class="ttm-copy" data-copy="'+t.amt+'" data-label="複製金額">複製金額</button>':'')+'</div></div>'
+   +(note?'<p class="ttm-sub">'+esc(note)+'</p>':'')+'<p class="ttm-sub">請依照上面選的方案金額<b>剛好轉帳</b>這個數字；複製帳號後到銀行 App 轉帳，完成後回到這裡填寫資料。</p></section>'
+   +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="3"><h3><i><u>3</u></i><span class="hl">填寫對帳資料</span></h3>'
    +'<label for="ttmTuName">稱呼 / Discord 名</label><input id="ttmTuName" maxlength="30" autocomplete="nickname" placeholder="例：阿明 / @boss123">'
    +'<label for="ttmTuLast5">轉出帳號末五碼</label><input id="ttmTuLast5" maxlength="5" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="例：12345"></section>'
-   +'<section class="ttm-step" data-step="4"><h3><i>4</i>上傳轉帳截圖</h3>'
+   +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="4"><h3><i><u>4</u></i><span class="hl">上傳轉帳截圖</span></h3>'
    +'<label class="ttm-upload" for="ttmTuFile"><input type="file" id="ttmTuFile" accept="image/*"><span class="ttm-up-empty"'+(proof?' hidden':'')+'><b>選擇轉帳成功的截圖</b><small>從相簿選擇，或直接拍照</small></span>'
    +'<img id="ttmTuPrev" alt="轉帳截圖預覽"'+(proof?' src="'+proof+'"':' hidden')+'><span class="ttm-up-again"'+(proof?'':' hidden')+'>換一張</span></label>'
    +'<p class="ttm-sub">截圖需看得到轉帳金額與時間。</p></section>'
@@ -134,7 +135,7 @@ const wallet=(()=>{
   bind();sync();if(txOpen)loadTx();
  }
  function bind(){
-  page.querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>{tier=+b.dataset.tier;render();});
+  page.querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>{const first=tier<0;tier=+b.dataset.tier;render();if(first){const s2=page.querySelector('[data-step="2"]');if(s2)setTimeout(()=>{try{s2.scrollIntoView({behavior:'smooth',block:'start'})}catch{}},60);}});
   page.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copy(b.dataset.copy,b,b.dataset.label));
   page.querySelectorAll('#ttmTuName,#ttmTuLast5').forEach(i=>i.oninput=()=>{if(i.id==='ttmTuLast5')i.value=i.value.replace(/\D/g,'').slice(0,5);sync();});
   const f=page.querySelector('#ttmTuFile');

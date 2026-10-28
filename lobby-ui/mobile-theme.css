@@ -1,0 +1,68 @@
+/* v454 手機版（#ttM）套用整站主題：白紙深藍框＋淡藍內緣、粉色錯位紙頁、粉色主按鈕、寶石步驟編號。
+   只換外觀，處理器與資料流程不變。只在 html.ttm-on 生效。 */
+html.ttm-on{--ttm-ink:var(--sk-ink,#1C2156);--ttm-soft:var(--sk-mute,#5C6196);--ttm-line:#D3D8F2;--ttm-card:#fff;--ttm-bg:#EEF3FF;--ttm-accent:var(--sk-ink,#1C2156);--ttm-pink:var(--sk-pink,#FF4F8B)}
+html.ttm-on #ttM{background:radial-gradient(circle at 12% 8%,#FFE3EF 0,transparent 38%),radial-gradient(circle at 92% 92%,#DDF1FF 0,transparent 40%),linear-gradient(180deg,#F5F8FF,#EEF1FF)!important;color:var(--ttm-ink)}
+/* 共用紙卡 */
+#ttM .ttm-card,#ttmWallet .ttm-step,#ttmWallet .ttm-done,#ttmWallet .ttm-tx{border:2.5px solid var(--ttm-ink)!important;border-radius:16px!important;background:linear-gradient(170deg,#fff,#F7FAFF 70%,#FAF5FF)!important;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 4px #CFEFFF,6px 6px 0 -1px #FFD6E6,6px 6px 0 1.5px var(--ttm-ink)!important}
+#ttM .ttm-card{margin-right:7px}
+#ttM .ttm-who small{color:var(--ttm-soft);font-weight:700}
+#ttM .ttm-who b{color:var(--ttm-ink);font-weight:900}
+#ttM #ttmDoll{background:#EAF2FF!important;border:2px solid var(--ttm-ink);box-sizing:border-box}
+#ttM .ttm-coins{border:2px solid var(--ttm-ink)!important;background:#FFF6D6!important;color:var(--ttm-ink)!important;box-shadow:0 3px 0 var(--ttm-ink)}
+#ttM .ttm-order{border:2.5px solid var(--ttm-ink)!important;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C)!important;box-shadow:0 4px 0 var(--ttm-ink),inset 0 2px 0 #ffffff80!important;font-weight:900}
+#ttM .ttm-help{border:2.5px solid var(--ttm-ink)!important;background:#fff!important;color:var(--ttm-ink)!important;font-weight:700;box-shadow:0 4px 0 var(--ttm-ink)}
+/* 下方分頁 */
+#ttM .ttm-tabs{background:#fff!important;border-top:2.5px solid var(--ttm-ink)!important;box-shadow:none!important}
+#ttM .ttm-tabs button{color:var(--ttm-soft);font-weight:700}
+#ttM .ttm-tabs button[aria-selected=true]{color:#fff!important;background:var(--ttm-ink)!important}
+/* 儲值：餘額 */
+#ttmWallet .ttm-balance{border:2.5px solid var(--ttm-ink)!important;border-radius:16px!important;background:linear-gradient(150deg,#FFF8DC,#FFEFC2)!important;box-shadow:inset 0 0 0 2px #fff,6px 6px 0 -1px #FFD6E6,6px 6px 0 1.5px var(--ttm-ink)!important;margin-right:7px}
+#ttmWallet .ttm-balance small,#ttmWallet .ttm-balance span{color:var(--ttm-soft)!important;font-weight:700}
+#ttmWallet .ttm-balance b{color:var(--ttm-ink)!important;font-weight:900}
+#ttmWallet .ttm-link{color:var(--ttm-ink)!important;font-weight:700}
+#ttmWallet .ttm-step,#ttmWallet .ttm-done,#ttmWallet .ttm-tx{margin-right:7px!important;margin-bottom:16px!important}
+/* 步驟標題：寶石編號＋粉色螢光底線 */
+#ttmWallet .ttm-step h3{font-weight:900;color:var(--ttm-ink)}
+#ttmWallet .ttm-step h3 span.hl{padding:0 4px;background:linear-gradient(transparent 58%,#FFD6E6 58%,#FFD6E6 92%,transparent 92%)}
+#ttmWallet .ttm-step h3 i{width:26px;height:26px;border-radius:7px!important;transform:rotate(45deg);background:var(--ttm-ink)!important;color:#fff!important}
+#ttmWallet .ttm-step h3 i>u{display:block;transform:rotate(-45deg);text-decoration:none}
+#ttmWallet .ttm-step.done h3 i{background:var(--ttm-pink)!important}
+#ttmWallet .ttm-step.done h3 i>u{font-size:0}
+#ttmWallet .ttm-step.done h3 i::after{content:'✓';transform:rotate(-45deg);font-size:13px;position:absolute}
+#ttmWallet .ttm-step h3 i{position:relative}
+#ttmWallet .ttm-guide{margin:-2px 0 10px;padding:8px 10px;border-radius:10px;background:#EEF6FF;border:1.5px dashed #9FB4E8;font-size:12.5px;line-height:1.55;color:var(--ttm-ink);font-weight:700}
+/* 方案卡：看起來是「選一個」而不是「輸入金額」 */
+#ttmWallet .ttm-tiers{grid-template-columns:1fr 1fr!important;gap:12px!important}
+#ttmWallet .ttm-tiers button{position:relative;min-height:96px!important;padding:12px 12px 10px 40px!important;border:2.5px solid var(--ttm-ink)!important;border-radius:14px!important;background:#fff!important;box-shadow:0 4px 0 var(--ttm-ink)!important;transition:transform .12s,box-shadow .12s}
+#ttmWallet .ttm-tiers button::before{content:'';position:absolute;left:12px;top:15px;width:18px;height:18px;border-radius:50%;border:2.5px solid var(--ttm-ink);background:#fff;box-sizing:border-box}
+#ttmWallet .ttm-tiers button b{color:var(--ttm-ink)!important;font-weight:900}
+#ttmWallet .ttm-tiers button b small{color:var(--ttm-soft)}
+#ttmWallet .ttm-tiers button span{color:var(--ttm-soft)!important;font-weight:700}
+#ttmWallet .ttm-tiers button .pick{margin-top:4px;font-size:12px;font-weight:900;color:var(--ttm-pink)}
+#ttmWallet .ttm-tiers button[aria-pressed=true]{background:linear-gradient(170deg,#FFF0F6,#FFE3EE)!important;transform:translateY(2px);box-shadow:0 2px 0 var(--ttm-ink),inset 0 0 0 2px #fff!important}
+#ttmWallet .ttm-tiers button[aria-pressed=true]::before{background:var(--ttm-pink) radial-gradient(circle,#fff 0 3px,transparent 3.5px);border-color:var(--ttm-ink)}
+#ttmWallet .ttm-tiers button[aria-pressed=true] .pick{color:var(--ttm-ink)}
+/* 還沒選方案前，後面的步驟變淡並提示 */
+#ttmWallet .ttm-step.locked{opacity:.5;filter:grayscale(.4);pointer-events:none}
+#ttmWallet .ttm-step.locked h3::after{content:'先選上面的方案';margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ttm-soft)}
+/* 匯款資料 */
+#ttmWallet .ttm-bank{border:2px solid #D3D8F2!important;border-radius:12px!important;background:#fff!important}
+#ttmWallet .ttm-row{border-bottom:1.5px dashed #D3D8F2!important}
+#ttmWallet .ttm-row span{color:var(--ttm-soft)!important;font-weight:700}
+#ttmWallet .ttm-row b{color:var(--ttm-ink)!important;font-weight:900}
+#ttmWallet .ttm-amt b{color:#F03C7C!important}
+#ttmWallet .ttm-copy{border:2px solid var(--ttm-ink)!important;background:#fff!important;color:var(--ttm-ink)!important;font-weight:900!important;box-shadow:0 3px 0 var(--ttm-ink)}
+#ttmWallet .ttm-copy.main{background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C)!important;color:#fff!important}
+#ttmWallet .ttm-copy.ok{background:#3E8E62!important;color:#fff!important}
+#ttmWallet label{color:var(--ttm-ink)!important;font-weight:700}
+#ttmWallet input:not([type=file]){border:2px solid var(--ttm-ink)!important;border-radius:12px!important}
+#ttmWallet input:focus{box-shadow:0 0 0 3px #FFD6E6!important}
+#ttmWallet label.ttm-upload{border:2.5px dashed var(--ttm-ink)!important;background:#F5F9FF!important}
+#ttmWallet .ttm-up-empty b,#ttmWallet .ttm-up-again{color:var(--ttm-ink)!important}
+#ttmWallet .ttm-up-empty b::before{background-color:var(--ttm-pink)!important}
+#ttmWallet .ttm-sub{color:var(--ttm-soft)!important}
+#ttmWallet .ttm-primary{border:2.5px solid var(--ttm-ink)!important;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C)!important;color:#fff!important;font-weight:900!important;box-shadow:0 4px 0 var(--ttm-ink),inset 0 2px 0 #ffffff80!important;width:calc(100% - 7px)!important}
+#ttmWallet .ttm-primary:disabled{background:#C9CDE6!important;color:#fff!important;box-shadow:0 4px 0 #9AA0C8!important;border-color:#9AA0C8!important}
+#ttmWallet .ttm-ghost{border:2.5px solid var(--ttm-ink)!important;color:var(--ttm-ink)!important;font-weight:700;box-shadow:0 4px 0 var(--ttm-ink);width:calc(100% - 7px)!important}
+#ttmWallet .ttm-done b{color:var(--ttm-ink)!important;font-weight:900}
+#ttmWallet .ttm-txr{border-bottom:1.5px dashed #D3D8F2!important}
