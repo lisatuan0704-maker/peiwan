@@ -1,7 +1,7 @@
 # 小小酒館修改紀錄
 
 ## v459 當季卡片播放時裝特效
-使用者：商城當季卡片的疾風喵行／喵頻連線「怎麼沒特效」。原本特效只在試穿區、大廳、VIP 選擇視窗播放，當季卡片的 64px 人物是靜態。live-wardrobe.js：卡片人物畫好後（api.draw 回呼）若 api.fx.active 有綁定特效，保存底圖並啟動共用 seasonFxTick（約 30fps，每張卡片以 api.fx.render 疊特效）；卡片不在畫面上略過、減少動態設定（motion-off 或系統 prefers-reduced-motion）只畫靜態。版本鏈 lobby→bridge 459→tavern-ui/index 459→時裝間比較 459→live-wardrobe 459。
+使用者：商城當季卡片的疾風喵行／喵頻連線「怎麼沒特效」。原本特效只在試穿區、大廳、VIP 選擇視窗播放，當季卡片的 64px 人物是靜態。live-wardrobe.js：卡片人物畫好後（api.draw 回呼）若 api.fx.active 有綁定特效，保存底圖並啟動共用 seasonFxTick（約 30fps，每張卡片以 api.fx.render 疊特效）；卡片不在畫面上略過、減少動態設定（motion-off 或系統 prefers-reduced-motion）只畫靜態。版本鏈 lobby→bridge→tavern-ui/index→時裝間比較→live-wardrobe 改 460（459 在部署前被預先讀取而快取到舊檔，改號避開）。
 驗證：語法檢查通過；本機 Database Emulator 這次無法下載（storage.googleapis.com 被擋），未做瀏覽器實測，需使用者在正式站確認。
 宣傳配圖：/mnt/user-data/outputs/小小酒館-宣傳配圖.png／-動態.gif（1200×630，大廳背景＋主題紙卡＋縭蕪桃像素 GIF＋喵頻連線／疾風喵行／熊熊偵探／心動情人 3 倍、大廳同款待機壓扁回彈），使用者要求不放連結。
 
