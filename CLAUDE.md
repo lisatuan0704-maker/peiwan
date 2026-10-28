@@ -1,7 +1,7 @@
 # 小小酒館修改紀錄
 
 ## v465 冒險者應徵面板上方放招募橫圖
-使用者：自己做的「第二批陪陪招募」橫圖（2576×1450 JPG）讓機器人放在應徵面板文字最上面。recruit-desk.cjs：assets/recruit-banner.jpg 先發一則（tavern-recruit.jpg），面板在下一則；BANNER_VERSION 1，記在 recruitV1/panel（bannerId、bannerVersion）；換圖或任一則被刪就兩則一起重發維持順序，舊 v464 面板會被刪除重發。測試 recruit-desk 8 項。部署腳本 ops/deploy-v465.sh（含 v464，取代 deploy-v464；主機需為 v463）待執行。
+使用者：自己做的「第二批陪陪招募」橫圖（2576×1450 JPG）讓機器人放在應徵面板文字最上面。recruit-desk.cjs：assets/recruit-banner.jpg 先發一則（tavern-recruit.jpg），面板在下一則；BANNER_VERSION 1，記在 recruitV1/panel（bannerId、bannerVersion）；換圖或任一則被刪就兩則一起重發維持順序，舊 v464 面板會被刪除重發。測試 recruit-desk 8 項。部署：主機當時已是 v464（使用者自行部署）。第一次 20261028-v465 測試失敗（圖檔權限 600，容器讀不到，EACCES），正式服務未變動；改 TAG 20261028-v465b 並 chmod 644 後部署，主機目前版本 20261028-v465b。腳本已從 security-v428 移除。
 另做招募橫圖草稿與角色去背圖（/mnt/user-data/outputs），使用者最後用自己做的版本。
 
 ## v464 應徵小房間分類、櫃檯意見回饋
