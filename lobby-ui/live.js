@@ -194,8 +194,10 @@
   }
   function identity(no,id){
     // 票根視覺條碼；不作為付款或掃碼憑證，也不虛構後台單號。
-    let x=0;const bars=[];for(const ch of (String(no||id)+'|TINY-TAVERN|').slice(0,80))for(let bit=0;bit<4;bit++){const n=ch.charCodeAt(0),w=1+((n>>bit)&1);bars.push('<rect x="'+x+'" width="'+w+'" height="25"/>');x+=w+1+((n>>(bit+2))&1);}
-    return '<div class="ticket-identity"><svg class="ticket-barcode" viewBox="0 0 '+Math.max(1,x)+' 25" preserveAspectRatio="none" aria-hidden="true">'+bars.join('')+'</svg><div class="ticket-number"><span class="ticket-id-label">後台單號</span><code>'+text(no||'待建立／同步')+'</code></div></div>';
+    // v460 條碼只取 6 個字元（24 條），寬 70px 時每條至少約 1 像素；原本最多 320 條擠在 70px，縮放或重畫時像素一直跳動（使用者：條碼一直在變化）
+    let h=2166136261;for(const ch of String(no||id))h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0;
+    let x=0;const bars=[];for(let i=0;i<6;i++){const n=(h>>>(i*5))&31|((i*7)&32);for(let bit=0;bit<4;bit++){const w=1+((n>>bit)&1);bars.push('<rect x="'+x+'" width="'+w+'" height="25"/>');x+=w+1+((n>>((bit+1)%5))&1);}}
+    return '<div class="ticket-identity"><svg class="ticket-barcode" viewBox="0 0 '+Math.max(1,x)+' 25" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true">'+bars.join('')+'</svg><div class="ticket-number"><span class="ticket-id-label">後台單號</span><code>'+text(no||'待建立／同步')+'</code></div></div>';
   }
   function orderCard(id,o){
     const staffName=ttOrderStaffDisplayName(o);

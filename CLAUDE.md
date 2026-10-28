@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## v461 VIP 套組公開展示、訂單條碼不再跳動
+使用者：商店 500 的兩套（喵頻連線／疾風喵行）消失了，先放出來給人看（還沒開始營業）。tavern-ui-bridge.js：vipOnly 套組對所有人列出（原本只有 VIP 3、已擁有或 ?preview）；未達等級者 vipLocked，卡片按鈕改停用「VIP 3 才能入手」（live-wardrobe.js），仍可試穿；免費領取與 500 金幣購買照舊由後端檢查 VIP 等級。
+使用者：訂單票卡條碼一直在變化。lobby-ui/live.js identity()：原本以單號／訂單編號逐字產生最多 320 條，擠在 70px 寬的 SVG（preserveAspectRatio none），每條不到半個像素，縮放或重畫時邊緣一直跳動。改為對編號取雜湊、固定 6 段共 24 條（約 70 單位寬，每條約 1px），加 shape-rendering crispEdges；同一筆訂單條碼固定。版本鏈 live.js 461、bridge 461→index 461→時裝間比較 461→live-wardrobe 461。
+驗證：語法檢查；本機資料庫模擬器無法下載，未做瀏覽器實測。
+
 ## v459 當季卡片播放時裝特效
 使用者：商城當季卡片的疾風喵行／喵頻連線「怎麼沒特效」。原本特效只在試穿區、大廳、VIP 選擇視窗播放，當季卡片的 64px 人物是靜態。live-wardrobe.js：卡片人物畫好後（api.draw 回呼）若 api.fx.active 有綁定特效，保存底圖並啟動共用 seasonFxTick（約 30fps，每張卡片以 api.fx.render 疊特效）；卡片不在畫面上略過、減少動態設定（motion-off 或系統 prefers-reduced-motion）只畫靜態。版本鏈 lobby→bridge→tavern-ui/index→時裝間比較→live-wardrobe 改 460（459 在部署前被預先讀取而快取到舊檔，改號避開）。
 驗證：語法檢查通過；本機 Database Emulator 這次無法下載（storage.googleapis.com 被擋），未做瀏覽器實測，需使用者在正式站確認。

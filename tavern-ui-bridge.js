@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=460';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=461';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -144,7 +144,8 @@
     // v441 新套組在店長上架前只在預覽網址（?preview）顯示，客人看不到
     // v445 VIP 限定套組（vipOnly）：只有達到該 VIP 等級或已擁有的人看得到，上架前 VIP3 也能看到並免費二選一
     const previewMode=/[?&]preview/.test(location.search),vipLv=(()=>{try{return window.__vipInfo?.().lv||0}catch(e){return 0}})();
-    const drafts=Object.keys(window.TTSeasonDrafts||{}).filter(id=>{const d=window.TTSeasonDrafts[id];if(previewMode||own[id])return true;if(d.vipOnly)return vipLv>=d.vipOnly;return !d.hideUntilLive||(shopCfg[id]?.custom&&Number.isSafeInteger(shopCfg[id]?.price)&&shopCfg[id].price>0);});
+    const drafts=Object.keys(window.TTSeasonDrafts||{}).filter(id=>{const d=window.TTSeasonDrafts[id];if(previewMode||own[id])return true;if(d.vipOnly)return true;   // v460 使用者：VIP 套組先放出來給大家看（只能看、試穿；購買／領取仍限 VIP 等級）
+      return !d.hideUntilLive||(shopCfg[id]?.custom&&Number.isSafeInteger(shopCfg[id]?.price)&&shopCfg[id].price>0);});
     return [...base,...pets,...drafts.map(id=>({id}))].map(o=>{
       const c=cfg[o.id]||{},retired=!!window.TTRetiredOutfits?.retired(o.id,{...o,...c}),sale=!retired&&(c.active===undefined?true:!!c.active)&&(!c.start||now>=c.start)&&(!c.end||now<c.end);
       const prod={id:o.id,name:isDrink(o.id)?drinkCompanions[o.id].name+'的飲料':initialOutfitNames[o.id]||c.name||o.nm,companion:drinkCompanions[o.id]||null,type:isDrink(o.id)?'其他':c.type||'時裝',drink:isDrink(o.id),pet:!!companionPets[o.id],price:c.price??o.pr,quantity:isDrink(o.id)&&drinkUid===window.TTVoiceOrders?.userId?.()?(drinkCounts[o.id]||0):0,owned:isDrink(o.id)?(drinkUid===window.TTVoiceOrders?.userId?.()&&(drinkCounts[o.id]||0)>0):o.id==='cloth0'||!!own[o.id],sale,retired,previewOnly:!!c.previewOnly,highlightHair:!!c.highlightHair,
