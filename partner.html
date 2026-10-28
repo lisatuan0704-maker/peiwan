@@ -564,7 +564,7 @@ const PROG = {pending:"待核對",confirmed:"待開始",serving:"服務中",done
 const auth=firebase.auth();
 const EMAIL_DOMAIN="@peiwan-tavern.com";
 function toEmail(u){return u.toLowerCase()+EMAIL_DOMAIN;}
-let cid=null, me=null, orders={}, ticker=null, regMode=false, booted=false;
+let cid=null, me=null, orders={}, ticker=null, regMode=false, booted=false, registering=false;
 
 function toggleReg(){
   regMode=!regMode;
@@ -580,17 +580,24 @@ function login(){
   if(regMode){
     const code=lgCode.value.trim().toUpperCase();
     if(!code) return alert("首次註冊要填老闆給的邀請碼");
-    auth.createUserWithEmailAndPassword(toEmail(un),pw).then(c=>{
-      return db.ref(ROOT+"/invites/"+code).once("value").then(sv=>{
+    /* v453: 註冊期間不讓 onAuthStateChanged 搶先檢查綁定（原本會在綁定寫入前就判定「不是陪玩帳號」並登出，導致綁定被拒、帳號卡住） */
+    registering=true;
+    auth.createUserWithEmailAndPassword(toEmail(un),pw).catch(e=>{
+      /* v453: 帳號已存在（例如上次註冊時綁定失敗）→ 用同一組帳密登入，再用邀請碼綁定 */
+      if(String(e.code||e.message).includes("already")) return auth.signInWithEmailAndPassword(toEmail(un),pw).catch(()=>{throw new Error("這個帳號名已被使用，且密碼不對")});
+      throw e;
+    }).then(c=>{
+      return db.ref(ROOT+"/links/"+c.user.uid).once("value").then(ls=>{ if(ls.val()&&ls.val().type==="char") return null; return db.ref(ROOT+"/invites/"+code).once("value"); }).then(sv=>{
+        if(sv===null) return;
         const inv=sv.val();
         if(!inv||inv.type!=="char") throw new Error("邀請碼無效，或這不是陪玩邀請碼");
         /* v-sec1: 邀請碼只能用一次:同時寫入 links 與 invites/<碼>/usedBy,由資料庫規則一起驗證 */
         if(inv.usedBy) throw new Error("這組邀請碼已經被使用過,請向店長索取新的邀請碼");
         return db.ref(ROOT).update({["links/"+c.user.uid]:{type:"char",refId:inv.refId,code},["invites/"+code+"/usedBy"]:c.user.uid});
       });
-    }).then(()=>afterAuth()).catch(e=>{
-      if(String(e.message).includes("already")) alert("這個帳號名已被使用，換一個");
-      else alert(e.message);
+    }).then(()=>{registering=false;afterAuth();}).catch(e=>{
+      registering=false;
+      alert(e.message||String(e));
     });
   }else{
     auth.signInWithEmailAndPassword(toEmail(un),pw).then(()=>afterAuth())
@@ -601,11 +608,22 @@ function afterAuth(){
   const u=auth.currentUser; if(!u||booted) return;
   db.ref(ROOT+"/links/"+u.uid).once("value",sv=>{
     const l=sv.val();
-    if(!l||l.type!=="char"){alert("此帳號不是陪玩帳號");auth.signOut();return;}
+    if(!l||l.type!=="char"){
+      /* v453: 帳號還沒綁定角色 → 請他輸入店長給的邀請碼綁定，不再直接登出 */
+      const code=(prompt("這個帳號還沒有綁定冒險者角色。\n請輸入店長給的邀請碼（只需要一次）：")||"").trim().toUpperCase();
+      if(!code){alert("沒有邀請碼就無法開啟手札，請向店長索取。");auth.signOut();return;}
+      db.ref(ROOT+"/invites/"+code).once("value").then(iv=>{
+        const inv=iv.val();
+        if(!inv||inv.type!=="char") throw new Error("邀請碼無效，或這不是冒險者邀請碼");
+        if(inv.usedBy&&inv.usedBy!==u.uid) throw new Error("這組邀請碼已經被使用過，請向店長索取新的邀請碼");
+        return db.ref(ROOT).update({["links/"+u.uid]:{type:"char",refId:inv.refId,code},["invites/"+code+"/usedBy"]:u.uid});
+      }).then(()=>{booted=false;afterAuth();}).catch(e=>{alert((e&&e.message)||"綁定失敗");auth.signOut();});
+      return;
+    }
     cid=l.refId; boot();
   });
 }
-auth.onAuthStateChanged(u=>{ if(u&&!booted) afterAuth(); });
+auth.onAuthStateChanged(u=>{ if(u&&!booted&&!registering) afterAuth(); });
 function logout(){ auth.signOut().then(()=>location.reload()); }
 
 let staffRef=null;
@@ -1180,7 +1198,7 @@ function calAdd(){
   const rec={s,e,why:why||'不方便接單',at:Date.now()};
   db.ref(ROOT+'/staffCards/'+cid+'/busy').push(rec)
     .then(()=>{ ptNotify('已加到行事曆','客人預約時會看到這段是暗的'); })
-    .catch(()=>ptNotify('儲存失敗','請稍後再試'));
+    .catch(e=>ptNotify('儲存失敗',(String(e&&e.code||e&&e.message||'').includes('PERMISSION')?'這個帳號沒有修改「'+cid+'」行事曆的權限，請截圖給店長':'請稍後再試')+'（'+(e&&e.code||'錯誤')+'）'));
 }
 function calDel(id){
   if(!cid) return;
