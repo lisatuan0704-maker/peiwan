@@ -483,7 +483,7 @@ body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
       <button id="tb2" onclick="showTab(2)">🏷️ 價目表</button>
       <button id="tb3" onclick="showTab(3)">🎭 角色</button>
       <button id="tb4" onclick="showTab(4)" hidden>👤 客服</button><!-- v437 客服派單已淘汰（入口隱藏，資料保留） -->
-      <button id="tb5" onclick="showTab(5)">🚨 檢舉 <span id="repBadge" style="display:none;background:#E14E6B;color:#fff;padding:0 6px;border-radius:8px;font-size:11px"></span></button>
+      <button id="tb5" onclick="showTab(5)">🚨 檢舉／回饋 <span id="repBadge" style="display:none;background:#E14E6B;color:#fff;padding:0 6px;border-radius:8px;font-size:11px"></span></button>
       <button id="tb6" onclick="showTab(6)">🍻 客訂 <span id="coBadge" style="display:none;background:#C97B2B;color:#fff;padding:0 6px;border-radius:8px;font-size:11px"></span></button>
       <button id="tb7" onclick="showTab(7)">💗 客人</button>
       <button id="tb8" onclick="showTab(8)">🛍️ 商城</button>
@@ -1684,7 +1684,7 @@ function issueDel(id){ if(confirm('刪除這筆客訴紀錄?')) db.ref(ROOT+'/or
 let _issShowDone=false;
 function issToggleDone(){ _issShowDone=!_issShowDone; renderReports(); }
 function issuesCardHtml(){
-  const all=Object.entries(orderIssues||{}).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+  const all=Object.entries(orderIssues||{}).filter(([,x])=>x&&x.kind!=='feedback').sort((a,b)=>(b[1].at||0)-(a[1].at||0));
   if(!all.length) return '';
   const openN=all.filter(([,x])=>!x.done).length, doneN=all.length-openN;
   const list=_issShowDone?all:all.filter(([,x])=>!x.done);
@@ -1701,6 +1701,25 @@ function issuesCardHtml(){
     +'<button onclick="issueDone(\''+id+'\','+(x.done?'false':'true')+')" style="border:none;background:'+(x.done?'#DDD':'#7FC98F')+';color:#fff;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">'+(x.done?'重開':'已處理')+'</button>'
     +'<button onclick="issueDel(\''+id+'\')" style="border:none;background:#E8C7D4;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">刪除</button>'
     +'</div></div>').join('')+'</div>';
+}
+/* v464 意見回饋（Discord 酒館櫃檯「意見回饋」表單，後端寫入 orderIssues，kind=feedback） */
+let _fbShowDone=false;
+function fbToggleDone(){ _fbShowDone=!_fbShowDone; renderReports(); }
+function feedbackCardHtml(){
+  const all=Object.entries(orderIssues||{}).filter(([,x])=>x&&x.kind==='feedback').sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+  if(!all.length) return '<div class="card"><h2>💌 意見回饋(0 未讀)</h2><p style="color:var(--ink-soft);text-align:center;padding:10px 0">還沒有人留下意見 ✿</p></div>';
+  const openN=all.filter(([,x])=>!x.done).length, doneN=all.length-openN;
+  const list=_fbShowDone?all:all.filter(([,x])=>!x.done);
+  const toggle=doneN?'<button onclick="fbToggleDone()" style="border:none;cursor:pointer;font-family:inherit;font-size:12px;background:#EFE9F7;color:#6E58A6;padding:6px 12px;border-radius:9px;margin-bottom:10px">'+(_fbShowDone?'只看未讀':'顯示已讀的 '+doneN+' 筆')+'</button>':'';
+  return '<div class="card"><h2>💌 意見回饋('+openN+' 未讀)</h2>'+toggle+(list.length?list.map(([id,x])=>
+    '<div style="border:2px solid '+(x.done?'#D8D0D4':'#A9C7F0')+';border-radius:12px;background:'+(x.done?'#FAFAFA':'#F5F9FF')+';padding:10px 13px;margin-bottom:9px">'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline"><b>'+esc(x.name||'旅人')+'</b>'
+    +'<span style="font-size:12px;color:var(--ink-soft)">'+(x.discordName&&x.discordName!==x.name?'Discord：'+esc(x.discordName)+'・':'')+new Date(x.at||0).toLocaleString('zh-TW')+'</span></div>'
+    +'<div style="font-size:13px;color:#2E3560;background:#fff;border-left:3px solid #A9C7F0;padding:6px 10px;margin-top:6px;white-space:pre-wrap">'+esc(x.text||'')+'</div>'
+    +'<div style="display:flex;gap:6px;margin-top:8px">'
+    +'<button onclick="issueDone(\''+id+'\','+(x.done?'false':'true')+')" style="border:none;background:'+(x.done?'#DDD':'#7FC98F')+';color:#fff;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">'+(x.done?'標為未讀':'已讀')+'</button>'
+    +'<button onclick="issueDel(\''+id+'\')" style="border:none;background:#E8C7D4;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">刪除</button>'
+    +'</div></div>').join(''):'<p style="color:var(--ink-soft);text-align:center;padding:10px 0">沒有未讀的意見 ✿</p>')+'</div>';
 }
 /* ===== 寄信給客人(禁言通知/個別溝通) ===== */
 let _mailKey=null;
@@ -1760,7 +1779,7 @@ function renderReports(){
   const pending=openN + Object.values(orderIssues||{}).filter(x=>x&&!x.done).length;
   const badge=document.getElementById("repBadge");
   if(badge){ badge.style.display=pending?"inline":"none"; badge.textContent=pending; }
-  const pre=issuesCardHtml()+mutesCardHtml();
+  const pre=feedbackCardHtml()+issuesCardHtml()+mutesCardHtml();
   if(!all.length){ el.innerHTML=pre+'<div class="card"><p style="color:var(--ink-soft)">目前沒有檢舉紀錄 ✿</p></div>'; return; }
   const full = _repTab==='done'? all.filter(([,r])=>r.done) : all.filter(([,r])=>!r.done);
   const list = full.slice(0,_repShow);

@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## v464 應徵小房間分類、櫃檯意見回饋
+使用者：伺服器最下面開一個分類，入職申請的小房間都開那邊。recruit-desk.cjs：送出應徵後不再開討論串，改在「｡˙ ✦━━━━୨【🌙 應徵小房間】୧━━━━ ˙｡」分類（第一次需要時建立在最下面，@everyone 不可見，id 記在 recruitV1/category）開私人文字頻道「🌙｜應徵-稱呼」：@everyone 不可見、應徵者本人可看／發言／附檔（語音訊息沿用伺服器身分組權限）、TT 可發言，管理員本來就看得到；「結束應徵」改為本人改唯讀、改名「📦｜已結束-稱呼」，不刪除。v463 的舊討論串照舊封存。
+使用者：櫃檯多一個意見回饋，直接上傳到店長網頁、不開房間。counter-desk.cjs：「💌 意見回饋」按鈕跳表單（想對酒館說的話 必填 1000 字、稱呼選填），送出寫入 peiwan/orderIssues（kind=feedback、source=discord、text、name、discordName、discordId、at；沿用店長／店員可讀的既有路徑，不需改資料庫規則），回覆「收到你的意見了」並通知店方頻道；60 秒冷卻。admin.html：「🚨 檢舉／回饋」分頁新增「💌 意見回饋」卡片（未讀／已讀、刪除），客訴卡片排除 feedback。
+測試 recruit-desk 5、counter-desk 8，部署前 69 項通過。部署腳本 ops/deploy-v464.sh（security-v428）待執行。
+
 ## v462／v463 冒險者應徵頻道
 使用者：伺服器多一個冒險者應徵頻道，要徵第二批陪陪，讓應徵者進伺服器應徵；表單內容與須知經使用者確認（需年滿 18；服務類型拿掉；「為什麼選擇小小酒館」改在房間回覆）。後端 order-voice-bot/recruit-desk.cjs：找不到名稱含「冒險者應徵」的頻道時在門口分類建立「📝｜冒險者應徵ᵒ」（@everyone 可看、不能發言、可在討論串留言；TT 可開／管理私人討論串）。面板：招募說明＋入職須知（年滿 18、專屬陪玩店、店長出形象立繪＋像素小人、角色形象著作權屬小小酒館僅限本店使用、合法登記公司）＋「我要應徵」。表單 4 格：稱呼、年齡、擅長遊戲與段位、自認陪伴風格。送出後開私人討論串（只有應徵者與店方），貼表單（未滿 18 標示警告）與補充問題（60 秒語音訊息自介、為什麼選擇小小酒館、可上線時段、語音環境、陪玩／直播經驗），以 ORDER_NOTIFY webhook 通知店方（不 @）。一人同時一份（再按給連結）、30 秒冷卻、串內「結束應徵」封存鎖定。記在 orderVoiceV1/recruitV1（open／apps／panel）。測試 recruit-desk.test.cjs 4 項。
 v462 部署時 service-server 漏建立 recruit（插入條件判斷錯誤），健康檢查沒有檢查 RECRUIT_STARTED 而通過，期間互動在 recruit.handle 拋錯、揪團按鈕會失效（約 5 分鐘）。v463 補建立並在路由加保護，部署腳本健康檢查加入 RECRUIT_STARTED。部署 20261028-v463（Claude 於主機網頁主控台執行）：V463_DEPLOYED_AND_HEALTHY、RECRUIT_CHANNEL_CREATED、RECRUIT_PANEL_READY；腳本已從 security-v428 移除。
