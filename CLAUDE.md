@@ -1,7 +1,7 @@
 # 小小酒館修改紀錄
 
 ## v456 Discord 頻道權限整理（店規閘門）＋宣傳影片
-使用者：DC 頻道還沒整頓好，你幫我把伺服器該用的用一用。後端 order-voice-bot/server-layout.cjs（只改權限，不改名、不搬移、不刪除；每頻道只調幾個權限位元，其他保留；動之前備份到 orderVoiceV1/layoutV1/backup；做過一次記在 layoutV1/applied，旅人身分組還沒建好時每 2 分鐘重試）：公開唯讀＝旅人報到／酒館指南／酒館小報／酒館居民／認識冒險者／認識陪陪（所有人可看、不能發言）；旅人唯讀＝揪團佈告欄／組隊揪揪；櫃檯（酒館櫃檯／呼喚店員）只關 @everyone 檢視；其他頻道與分類只開給旅人／闆卡旅人（語音含連線／說話）。原本就私人的頻道、機器人語音分類（DISCORD_VOICE_CATEGORY_ID／PARTY_VOICE_CATEGORY_ID）與門口分類本身不動；每個頻道先給 TT 自己檢視與發言，再關 @everyone，避免把自己鎖在外面；分類先改。測試 server-layout.test.cjs 4 項（含重複套用不再寫入），全部 53 項通過。部署 ops/deploy-v456.sh（security-v428 31c1c60，含 v452，主機 v451 或 v452 皆可；取代 deploy-v452.sh）。
+使用者：DC 頻道還沒整頓好，你幫我把伺服器該用的用一用。後端 order-voice-bot/server-layout.cjs（只改權限，不改名、不搬移、不刪除；每頻道只調幾個權限位元，其他保留；動之前備份到 orderVoiceV1/layoutV1/backup；做過一次記在 layoutV1/applied，旅人身分組還沒建好時每 2 分鐘重試）：公開唯讀＝旅人報到／酒館指南／酒館小報／酒館居民／認識冒險者／認識陪陪（所有人可看、不能發言）；旅人唯讀＝揪團佈告欄／組隊揪揪；櫃檯（酒館櫃檯／呼喚店員）只關 @everyone 檢視；其他頻道與分類只開給旅人／闆卡旅人（語音含連線／說話）。原本就私人的頻道、機器人語音分類（DISCORD_VOICE_CATEGORY_ID／PARTY_VOICE_CATEGORY_ID）與門口分類本身不動；每個頻道先給 TT 自己檢視與發言，再關 @everyone，避免把自己鎖在外面；分類先改。測試 server-layout.test.cjs 4 項（含重複套用不再寫入），全部 53 項通過。部署 20261028-v456（含 v452，由 Claude 在主機網頁主控台執行）：V456_DEPLOYED_AND_HEALTHY，LAYOUT_DONE ok=10 fail=0（公開唯讀 4、旅人可見 6、未動 21＝原本私人或已符合），COUNTER／ROLES 面板就緒；部署腳本已從 security-v428 移除。
 宣傳影片：使用者發文招人進 DC。以網站繪製程式（drawDollTo＋套組 set＋season-display 展示色）畫六套時裝，左右各三套貼在原影片兩側（1560×730，人物輕微彈跳），輸出 /mnt/user-data/outputs/小小酒館-陪陪與店內時裝.mp4。使用者：正式貼文用「陪陪」，不硬用冒險者；語氣要溫暖、多一點顏文字。
 
 ## v455 匯款資訊不顯示戶名
