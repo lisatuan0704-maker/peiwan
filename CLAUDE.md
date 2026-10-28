@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v465 冒險者應徵面板上方放招募橫圖
+使用者：自己做的「第二批陪陪招募」橫圖（2576×1450 JPG）讓機器人放在應徵面板文字最上面。recruit-desk.cjs：assets/recruit-banner.jpg 先發一則（tavern-recruit.jpg），面板在下一則；BANNER_VERSION 1，記在 recruitV1/panel（bannerId、bannerVersion）；換圖或任一則被刪就兩則一起重發維持順序，舊 v464 面板會被刪除重發。測試 recruit-desk 8 項。部署腳本 ops/deploy-v465.sh（含 v464，取代 deploy-v464；主機需為 v463）待執行。
+另做招募橫圖草稿與角色去背圖（/mnt/user-data/outputs），使用者最後用自己做的版本。
+
 ## v464 應徵小房間分類、櫃檯意見回饋
 使用者：伺服器最下面開一個分類，入職申請的小房間都開那邊。recruit-desk.cjs：送出應徵後不再開討論串，改在「｡˙ ✦━━━━୨【🌙 應徵小房間】୧━━━━ ˙｡」分類（第一次需要時建立在最下面，@everyone 不可見，id 記在 recruitV1/category）開私人文字頻道「🌙｜應徵-稱呼」：@everyone 不可見、應徵者本人可看／發言／附檔（語音訊息沿用伺服器身分組權限）、TT 可發言，管理員本來就看得到；「結束應徵」改為本人改唯讀、改名「📦｜已結束-稱呼」，不刪除。v463 的舊討論串照舊封存。
 使用者：櫃檯多一個意見回饋，直接上傳到店長網頁、不開房間。counter-desk.cjs：「💌 意見回饋」按鈕跳表單（想對酒館說的話 必填 1000 字、稱呼選填），送出寫入 peiwan/orderIssues（kind=feedback、source=discord、text、name、discordName、discordId、at；沿用店長／店員可讀的既有路徑，不需改資料庫規則），回覆「收到你的意見了」並通知店方頻道；60 秒冷卻。admin.html：「🚨 檢舉／回饋」分頁新增「💌 意見回饋」卡片（未讀／已讀、刪除），客訴卡片排除 feedback。
