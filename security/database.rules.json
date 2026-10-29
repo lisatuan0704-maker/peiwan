@@ -11,7 +11,9 @@
       "mutes": {
         ".read": "((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (auth != null && root.child('secureV1/members').child(auth.uid).child('key').isString() && root.child('secureV1/members').child(auth.uid).child('active').val() != false))",
         ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
-        "$k": {}
+        "$k": {
+          ".validate": "!newData.exists() || $k.matches(/^[A-Za-z0-9_-]{1,200}$/)"
+        }
       },
       "renewReq": {
         ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (query.orderByChild == 'myKey' && query.equalTo != null && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(query.equalTo).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == query.equalTo))",
@@ -21,7 +23,8 @@
         ],
         "$id": {
           ".read": "((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(data.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == data.child('myKey').val())",
-          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && newData.exists() && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val()) && root.child('peiwan/clientOrders').child($id).child('myKey').val() == newData.child('myKey').val())"
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && newData.exists() && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val()) && root.child('peiwan/clientOrders').child($id).child('myKey').val() == newData.child('myKey').val())",
+          ".validate": "!newData.exists() || $id.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "cancelReq": {
@@ -32,7 +35,8 @@
         ],
         "$id": {
           ".read": "((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(data.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == data.child('myKey').val())",
-          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && newData.exists() && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val()) && root.child('peiwan/clientOrders').child($id).child('myKey').val() == newData.child('myKey').val())"
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && newData.exists() && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val()) && root.child('peiwan/clientOrders').child($id).child('myKey').val() == newData.child('myKey').val())",
+          ".validate": "!newData.exists() || $id.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "owned": {
@@ -80,7 +84,8 @@
               ".validate": false
             },
             ".read": true
-          }
+          },
+          ".validate": "!newData.exists() || $k.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "blocks": {
@@ -96,7 +101,8 @@
       "pos": {
         ".read": "((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (auth != null && root.child('secureV1/members').child(auth.uid).child('key').isString() && root.child('secureV1/members').child(auth.uid).child('active').val() != false))",
         "$k": {
-          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)"
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)",
+          ".validate": "!newData.exists() || $k.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "staffCards": {
@@ -116,7 +122,14 @@
         ],
         "$id": {
           ".write": "(!data.exists() && newData.exists() && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val()) && newData.child('myKey').isString() && newData.child('amount').isNumber() && newData.child('amount').val() >= 0 && newData.child('amount').val() % 1 == 0 && ((newData.child('paidBy').val() != 'wallet' && newData.child('status').val() == 'pending') || (newData.child('paidBy').val() == 'wallet' && (newData.child('status').val() == 'done' || newData.child('status').val() == 'confirmed') && ((!newData.child('groupId').exists() && newData.parent().parent().child('walletTx').child(newData.child('myKey').val()).child($id).child('amount').val() == -newData.child('amount').val() && !root.child('peiwan/walletTx').child(newData.child('myKey').val()).child($id).exists()) || (newData.child('groupId').isString() && newData.parent().parent().child('walletTx').child(newData.child('myKey').val()).child(newData.child('groupId').val()).exists() && !root.child('peiwan/walletTx').child(newData.child('myKey').val()).child(newData.child('groupId').val()).exists() && -newData.parent().parent().child('walletTx').child(newData.child('myKey').val()).child(newData.child('groupId').val()).child('amount').val() >= newData.child('amount').val()))))) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
-          ".read": "!data.exists() || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(data.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == data.child('myKey').val())"
+          ".read": "!data.exists() || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(data.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == data.child('myKey').val())",
+          ".validate": "!newData.exists() || $id.matches(/^[A-Za-z0-9_-]{1,200}$/)",
+          "coinAmount": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+          },
+          "amount": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
         }
       },
       "config": {
@@ -129,7 +142,8 @@
       "clientOrderProofs": {
         ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
         "$id": {
-          ".write": "(!data.exists() && newData.exists() && (((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.parent().parent().child('clientOrders').child($id).child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.parent().parent().child('clientOrders').child($id).child('myKey').val()))) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+          ".write": "(!data.exists() && newData.exists() && (((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.parent().parent().child('clientOrders').child($id).child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.parent().parent().child('clientOrders').child($id).child('myKey').val()))) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+          ".validate": "(!newData.exists() || $id.matches(/^[A-Za-z0-9_-]{1,200}$/)) && !newData.exists() || (newData.isString() && newData.val().length < 3000000 && newData.val().matches(/^data:image\\/(png|jpeg|jpg|webp|gif);base64,/))"
         }
       },
       "characters": {
@@ -140,7 +154,8 @@
         ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
         "$k": {
           ".read": "((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)",
-          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k) || (!data.exists() && newData.exists())"
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k) || (!data.exists() && newData.exists())",
+          ".validate": "!newData.exists() || $k.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "chat": {
@@ -183,7 +198,8 @@
       "reports": {
         ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
         "$id": {
-          ".write": "(!data.exists() && (auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true)) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+          ".write": "(!data.exists() && (auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true)) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+          ".validate": "!newData.exists() || $id.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "board": {
@@ -245,6 +261,9 @@
           "pub": {
             "frm": {
               ".validate": "newData.isString() && (!newData.val().matches(/^companion_/) || (auth != null && root.child('secureV1/owners').child($key).val() === auth.uid && root.child('secureV1/characters').child($key).child('pub/frm').val() === newData.val()))"
+            },
+            "dcav": {
+              ".validate": "newData.isString() && (newData.val() == '' || newData.val().matches(/^[0-9]{16,22}\\/(a_)?[a-f0-9]{32}$/))"
             }
           },
           ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($key).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $key) || (!data.exists() && newData.exists())",
@@ -268,7 +287,8 @@
           },
           "bd": {
             ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 31"
-          }
+          },
+          ".validate": "!newData.exists() || $key.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "orders": {
@@ -304,7 +324,11 @@
       "orderIssues": {
         ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
         "$id": {
-          ".write": "(!data.exists() && (auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true)) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+          ".write": "(!data.exists() && (auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true)) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+          ".validate": "!newData.exists() || $id.matches(/^[A-Za-z0-9_-]{1,200}$/)",
+          "amount": {
+            ".validate": "newData.isNumber()"
+          }
         }
       },
       "wallet": {
@@ -318,7 +342,8 @@
             ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k) && newData.isString() && newData.val() != data.val() && newData.parent().parent().parent().child('walletTx').child($k).child(newData.val()).exists() && !root.child('peiwan/walletTx').child($k).child(newData.val()).exists())",
             ".validate": "newData.isString() && newData.val().length <= 64"
           },
-          ".read": "((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)"
+          ".read": "((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)",
+          ".validate": "!newData.exists() || $k.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "tables": {
@@ -331,9 +356,11 @@
         "$k": {
           ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
           "$tx": {
-            ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k) && !data.exists() && newData.child('type').val() == 'spend' && newData.child('ref').val() == $tx && newData.child('amount').isNumber() && newData.child('amount').val() < 0 && newData.child('amount').val() % 1 == 0 && newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val() == $tx && newData.parent().parent().parent().child('wallet').child($k).child('balance').val() == root.child('peiwan/wallet').child($k).child('balance').val() + newData.child('amount').val())"
+            ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k) && !data.exists() && newData.child('type').val() == 'spend' && newData.child('ref').val() == $tx && newData.child('amount').isNumber() && newData.child('amount').val() < 0 && newData.child('amount').val() % 1 == 0 && newData.parent().parent().parent().child('wallet').child($k).child('lastTx').val() == $tx && newData.parent().parent().parent().child('wallet').child($k).child('balance').val() == root.child('peiwan/wallet').child($k).child('balance').val() + newData.child('amount').val())",
+            ".validate": "!newData.exists() || $tx.matches(/^[A-Za-z0-9_-]{1,200}$/)"
           },
-          ".read": "((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)"
+          ".read": "((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)",
+          ".validate": "!newData.exists() || $k.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },
       "accounts": {
@@ -341,7 +368,14 @@
         ".write": "auth != null && auth.uid == root.child('peiwan/config/adminUid').val()",
         "$id": {
           ".read": "(auth != null && auth.uid == 'discord_' + $id) || (auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
-          ".write": "auth != null && auth.uid == 'discord_' + $id && newData.exists() && newData.child('deleted').val() == data.child('deleted').val() && ((data.exists() && data.child('myKey').exists() && newData.child('myKey').val() == data.child('myKey').val()) || (!data.exists() && root.child('secureV1/members').child(auth.uid).child('active').val() == true && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val() && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid))"
+          ".write": "auth != null && auth.uid == 'discord_' + $id && newData.exists() && newData.child('deleted').val() == data.child('deleted').val() && ((data.exists() && data.child('myKey').exists() && newData.child('myKey').val() == data.child('myKey').val()) || (!data.exists() && root.child('secureV1/members').child(auth.uid).child('active').val() == true && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val() && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid))",
+          ".validate": "!newData.exists() || $id.matches(/^[0-9]{5,25}$/)",
+          "vip": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "spent": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
         },
         ".indexOn": [
           "myKey"

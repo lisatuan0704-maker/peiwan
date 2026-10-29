@@ -46,6 +46,15 @@ const cases=[
  ['生日月份不合理',null,'PUT','peiwan/lobby/newk4',{...card,bm:13},false],
  ['本人修改一句話','me','PUT','peiwan/lobby/k1/quote','新的一句話',true],
  ['不能覆蓋別人的闆卡',null,'PUT','peiwan/lobby/k1',card,false],
+ ['闆卡鑰匙含引號（拿來插入程式）',null,'PUT',"peiwan/lobby/x');alert(1);('",card,false],
+ ['闆卡鑰匙含空白與雙引號',null,'PUT','peiwan/lobby/x" autofocus onfocus="alert(1)',card,false],
+ ['客人卡片鑰匙含引號',null,'PUT',"peiwan/cards/a'b",{name:'x'},false],
+ ['Discord 頭貼欄位放網址','me','PUT','peiwan/lobby/k1/pub/dcav','x" onerror="alert(1)',false],
+ ['Discord 頭貼正常格式','me','PUT','peiwan/lobby/k1/pub/dcav','123456789012345678/0123456789abcdef0123456789abcdef',true],
+ ['用帶引號的編號送轉帳單','me','PUT',"peiwan/clientOrders/o');x('",{type:'topup',amount:100,coinAmount:100,myKey:'k1',status:'pending',createdAt:1},false],
+ ['轉帳單金幣數放文字','me','PUT','peiwan/clientOrders/t1',{type:'topup',amount:100,coinAmount:'<img src=x>',myKey:'k1',status:'pending',createdAt:1},false],
+ ['正常轉帳儲值單','me','PATCH','peiwan',{'clientOrders/t2':{type:'topup',amount:100,coinAmount:100,myKey:'k1',status:'pending',createdAt:1,name:'小明',last5:'12345',hasProof:true,payDue:2,bonus:0,planName:'儲值 100 金幣'},'clientOrderProofs/t2':'data:image/jpeg;base64,AAAA'},true],
+ ['付款截圖不是圖片','me','PATCH','peiwan',{'clientOrders/t3':{type:'topup',amount:100,coinAmount:100,myKey:'k1',status:'pending',createdAt:1,name:'小明',last5:'12345',hasProof:true,payDue:2,bonus:0,planName:'儲值 100 金幣'},'clientOrderProofs/t3':'x" onerror="alert(1)'},false],
 ];
 (async()=>{
  let pass=0,fail=0;

@@ -42,5 +42,23 @@ Object.assign(P.chat.$id,{
  t:{'.validate':'newData.isNumber() && newData.val() <= now + 300000'},
  $other:{'.validate':false}
 });
+
+// 4. 紀錄編號只能是英數字、底線、連字號（以前可以放引號或括號，拿來在店長頁插入程式）
+const KEY=v=>`${v}.matches(/^[A-Za-z0-9_-]{1,200}$/)`;
+const addV=(node,expr)=>{const cur=node['.validate'];if(cur&&cur.includes(expr))return;node['.validate']=cur?`(${cur}) && ${expr}`:expr;};
+for(const [n,w] of [['lobby','$key'],['cards','$k'],['clientOrders','$id'],['clientOrderProofs','$id'],['reports','$id'],['orderIssues','$id'],['cancelReq','$id'],['renewReq','$id'],['mutes','$k'],['walletTx','$k'],['wallet','$k'],['owned','$k'],['pos','$k']]){
+ if(!P[n]||!P[n][w])throw Error('missing '+n+'/'+w);
+ addV(P[n][w],`!newData.exists() || ${KEY(w)}`);
+}
+addV(P.walletTx.$k.$tx,`!newData.exists() || ${KEY('$tx')}`);
+P.accounts.$id=Object.assign(P.accounts.$id,{});
+addV(P.accounts.$id,`!newData.exists() || $id.matches(/^[0-9]{5,25}$/)`);
+// 5. 客人可寫、店長頁會顯示的欄位：型別限制
+P.lobby.$key.pub.dcav={'.validate':"newData.isString() && (newData.val() == '' || newData.val().matches(/^[0-9]{16,22}\\/(a_)?[a-f0-9]{32}$/))"};
+P.clientOrders.$id.coinAmount={'.validate':'newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0'};
+P.clientOrders.$id.amount=Object.assign(P.clientOrders.$id.amount||{},{'.validate':'newData.isNumber() && newData.val() >= 0'});
+addV(P.clientOrderProofs.$id,"!newData.exists() || (newData.isString() && newData.val().length < 3000000 && newData.val().matches(/^data:image\\/(png|jpeg|jpg|webp|gif);base64,/))");
+P.orderIssues.$id.amount={'.validate':'newData.isNumber()'};
+for(const f of ['vip','spent'])P.accounts.$id[f]={'.validate':'newData.isNumber() && newData.val() >= 0'};
 fs.writeFileSync(file,JSON.stringify(R,null,2)+'\n');
 console.log('phase5 applied');

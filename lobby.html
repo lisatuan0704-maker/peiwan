@@ -2803,7 +2803,8 @@ function drawFullCard(b){
   /* 標籤 */
   const tags=(b.tags||[]).map(t=>'<span class="pcTag">'+esc(t)+'</span>').join('');
   /* Discord */
-  const dcAv=pub.dcav?('https://cdn.discordapp.com/avatars/'+pub.dcav+'.png?size=32'):'';
+  /* v466: dcav 是別人可寫的欄位，只接受「Discord ID/頭貼雜湊」格式 */
+  const dcAv=(typeof pub.dcav==='string'&&/^\d{16,22}\/(a_)?[a-f0-9]{32}$/.test(pub.dcav))?('https://cdn.discordapp.com/avatars/'+pub.dcav+'.png?size=32'):'';
   const dcHtml=pub.dc
     ? '<div class="pcDc">'+(dcAv?'<img src="'+dcAv+'" alt="" onerror="this.onerror=null;this.src=\'img/avatar-fallback.svg\'">':'')+'@'+esc(pub.dc)+'</div>'
     : '<div class="pcDc" style="color:#BCA8CF">尚未綁定 Discord</div>';
@@ -3794,7 +3795,9 @@ document.getElementById('repSend').onclick=()=>{
       .catch(()=>pushLog('系統','檢舉送出失敗,請稍後再試',false));
   }
 };
-function esc(t){return String(t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+function esc(t){return String(t==null?'':t).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));}
+/* v466: 放進 onclick="f(...)" 的值用 ja()——JSON 字串再 HTML 跳脫，別人寫的鑰匙或 ID 不能跳出字串執行程式 */
+function ja(x){return esc(JSON.stringify(String(x==null?'':x)));}
 function sendChat(stickerCode){
   const el=document.getElementById('chatin');
   const sticker=typeof stickerCode==='string'&&window.TTChatStickers?.decode(stickerCode);
@@ -4642,7 +4645,7 @@ function renderMyOrders(){
     if(_ordTab==='history'){
       const open=_ordOpen.has(id);
       const cancelled=o.status==='cancelled';
-      const head='<div onclick="toggleOrd(\''+id+'\')" style="cursor:pointer;display:flex;align-items:center;gap:8px">'
+      const head='<div onclick="toggleOrd('+ja(id)+')" style="cursor:pointer;display:flex;align-items:center;gap:8px">'
         +'<span style="width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:'+(cancelled?'#C9B6C0':'#8FD3AE')+'"></span>'
         +'<b style="color:'+(cancelled?'#8E7AB0':'#5A4880')+';font-size:13.5px">'+esc(o.planName||'')+'</b>'
         +((o.staffCid||o.staffName)?'<span style="font-size:12px;color:#8E68C8">・'+esc(ttOrderStaffDisplayName(o))+'</span>':'')
@@ -4671,7 +4674,7 @@ function renderMyOrders(){
       const issued=issueSent()[id];
       const acts=(!cancelled)?('<div style="margin-top:10px;display:flex;align-items:center;gap:12px;justify-content:flex-end">'
         +(issued?'<span style="font-size:11.5px;color:#A5798D">已回報問題,店長處理中</span>'
-                :'<a href="#" onclick="openIssue(\''+id+'\');return false" style="font-size:11.5px;color:#B29AD0;text-decoration:underline">這筆有問題?</a>')
+                :'<a href="#" onclick="openIssue('+ja(id)+');return false" style="font-size:11.5px;color:#B29AD0;text-decoration:underline">這筆有問題?</a>')
         +((o.type==='play'||!o.type)?'<button onclick="reorderPlay()" style="border:none;background:linear-gradient(180deg,#FBB6D0,#F28FB2);color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;padding:6px 16px;border-radius:9px;cursor:pointer">再點一次</button>':'')
         +'</div>'):'';
       return '<div style="border:2px solid '+(open?'#F0B7C6':'#EDE4F7')+';border-radius:12px;padding:10px 13px;margin-bottom:8px;background:#fff">'+head+resv2+disc2+body+acts+'</div>';
@@ -4705,11 +4708,11 @@ function renderMyOrders(){
          : canSelfCancel(o)
          ? '<div style="margin-top:9px;background:#F7F3FC;border-radius:9px;padding:8px 11px;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'
            +'<span style="font-size:11.5px;color:#8E7AB0;flex:1;min-width:150px">還沒有陪陪接單,現在取消可以馬上拿回金幣。</span>'
-           +'<button onclick="selfCancel(\''+id+'\')" style="border:none;cursor:pointer;font-family:inherit;font-size:12px;background:#EFE4FB;color:#7A5FB0;padding:7px 13px;border-radius:8px">取消並退回金幣</button></div>'
+           +'<button onclick="selfCancel('+ja(id)+')" style="border:none;cursor:pointer;font-family:inherit;font-size:12px;background:#EFE4FB;color:#7A5FB0;padding:7px 13px;border-radius:8px">取消並退回金幣</button></div>'
          : '')
       +(issueSent()[id]
          ? '<div style="text-align:right;margin-top:8px;font-size:11.5px;color:#A5798D">已回報問題,店長處理中</div>'
-         : '<div style="text-align:right;margin-top:8px"><a href="#" onclick="openIssue(\''+id+'\');return false" style="font-size:11.5px;color:#B29AD0;text-decoration:underline">這筆有問題?回報店長</a></div>')
+         : '<div style="text-align:right;margin-top:8px"><a href="#" onclick="openIssue('+ja(id)+');return false" style="font-size:11.5px;color:#B29AD0;text-decoration:underline">這筆有問題?回報店長</a></div>')
       +'</div>';
   }).join('')||'<p style="color:#A5798D;font-size:13px">載入中…</p>';
   if(pages>1){
@@ -4902,7 +4905,7 @@ function openRenew(){
     h+='<div style="display:flex;flex-direction:column;gap:9px">'
       +opt.list.map(x=>{
         const afford=bal>=x.price;
-        return '<button '+(afford?'onclick="doRenew(\''+id+'\','+x.mins+','+x.price+')"':'disabled')
+        return '<button '+(afford?'onclick="doRenew('+ja(id)+','+x.mins+','+x.price+')"':'disabled')
           +' style="border:none;font-family:inherit;cursor:'+(afford?'pointer':'not-allowed')+';display:flex;align-items:center;gap:10px;'
           +'background:'+(afford?'linear-gradient(180deg,#FFF,#FDF2F7)':'#F2EDF5')+';border-radius:13px;padding:12px 14px;'
           +'box-shadow:'+(afford?'inset 0 0 0 2px #F7C9DA,0 3px 10px rgba(200,120,160,.16)':'inset 0 0 0 2px #E6DFEC')+'">'
@@ -5021,12 +5024,12 @@ function renderMailBox(){
     +'</div>';
   el.innerHTML=bar+list.map(([id,m])=>{
     const unread=!m.read;
-    return '<div onclick="readMail(\''+id+'\')" style="position:relative;cursor:pointer;border:2px solid '+(unread?'#F0B7C6':'#EDE4F7')+';border-radius:13px;background:'+(unread?'#FFF6F9':'#fff')+';padding:11px 13px;margin-bottom:9px">'
+    return '<div onclick="readMail('+ja(id)+')" style="position:relative;cursor:pointer;border:2px solid '+(unread?'#F0B7C6':'#EDE4F7')+';border-radius:13px;background:'+(unread?'#FFF6F9':'#fff')+';padding:11px 13px;margin-bottom:9px">'
       +'<div style="display:flex;align-items:center;gap:8px">'
       +(unread?'<span style="width:8px;height:8px;border-radius:50%;background:#E14E6B;flex:0 0 auto"></span>':'')
       +'<b style="color:#5A4880;font-size:14px;padding-right:4px">'+esc(m.title||'(無標題)')+'</b>'
       +'<span style="margin-left:auto;font-size:11px;color:#A5798D">'+new Date(m.at||0).toLocaleDateString('zh-TW')+'</span>'
-      +'<button onclick="event.stopPropagation();hideMail(\''+id+'\')" title="刪掉這封" style="flex:0 0 auto;border:none;cursor:pointer;font-family:inherit;font-size:14px;line-height:1;background:none;color:#C9B6D4;padding:2px 2px 2px 6px">×</button></div>'
+      +'<button onclick="event.stopPropagation();hideMail('+ja(id)+')" title="刪掉這封" style="flex:0 0 auto;border:none;cursor:pointer;font-family:inherit;font-size:14px;line-height:1;background:none;color:#C9B6D4;padding:2px 2px 2px 6px">×</button></div>'
       +'<div id="mailTx_'+id+'" style="display:'+(unread?'none':'block')+';font-size:13px;color:#6A5A82;line-height:1.8;margin-top:7px;white-space:pre-wrap">'+esc(m.text||'')+'</div>'
       +(unread?'<div style="font-size:11.5px;color:#B29AD0;margin-top:4px">點一下展開</div>':'')
       +'</div>';
@@ -5538,7 +5541,7 @@ function tryServeNudge(staff){
       const arr=getArr(); const so=shopOpts(sl);
       const ownN=so.length?so.length:arr.filter((p,idx)=>!lockedSets(map,sl,idx)).length;
       const tot=so.length?so.length:arr.length;
-      tabs+='<button class="wdTab'+(sl===_wcat?' on':'')+'" onclick="wardCat(\''+sl+'\')">'+label+'<i>'+ownN+'/'+tot+'</i></button>';
+      tabs+='<button class="wdTab'+(sl===_wcat?' on':'')+'" onclick="wardCat('+ja(sl)+')">'+label+'<i>'+ownN+'/'+tot+'</i></button>';
     });
     const cur=SLOTS.find(s=>s[0]===_wcat)||SLOTS[0];
     const sl=cur[0], arr=cur[2]();
@@ -5554,7 +5557,7 @@ function tryServeNudge(staff){
       const lk=lockedSets(map,sl,idx);
       const _k=SLOT2KEY[sl];
       const on=(_wd[sl]===idx)&&!(_k&&_wd.ps&&_wd.ps[_k])&&!(sl==='acc'&&_wd.ps&&Object.keys(_wd.ps).some(k=>/^acc\d*$/.test(k)));
-      grid+='<div class="wdCell'+(on?' on':'')+(lk?' lk':'')+'" onclick="wardPick(\''+sl+'\','+idx+')">'
+      grid+='<div class="wdCell'+(on?' on':'')+(lk?' lk':'')+'" onclick="wardPick('+ja(sl)+','+idx+')">'
         +'<div class="wdArt"><canvas class="wardChip" data-sl="'+sl+'" data-i="'+idx+'" width="64" height="64"></canvas>'
         +(on?'<span class="wdOk">✓</span>':'')+(lk?'<span class="wdLk"><img src="'+AICON.lock+'" alt="鎖"></span>':'')+'</div>'
         +'<span class="wdNm">'+esc(p.n||(cur[1]+' '+(idx+1)))+'</span></div>';
@@ -5562,7 +5565,7 @@ function tryServeNudge(staff){
     sops.forEach((o,si)=>{
       const _pos=_n++; if(_pos<_from||_pos>=_to) return;
       const on=!!(_wd.ps&&_wd.ps[o.key]===o.id);
-      grid+='<div class="wdCell'+(on?' on':'')+'" onclick="wardPickShop(\''+sl+'\','+si+')">'
+      grid+='<div class="wdCell'+(on?' on':'')+'" onclick="wardPickShop('+ja(sl)+','+si+')">'
         +'<div class="wdArt"><canvas class="wardShopChip" data-sl="'+sl+'" data-i="'+si+'" width="64" height="64"></canvas>'
         +(on?'<span class="wdOk">✓</span>':'')+'<span class="wdNew">新</span></div>'
         +'<span class="wdNm">'+esc(o.n)+'</span></div>';
@@ -6495,7 +6498,7 @@ function renderTbList(){ const box=document.getElementById('tbList'); if(!box) r
   if(!list.length){ box.innerHTML='<div style="font-size:13px;color:#8E7AB0;text-align:center;padding:14px 0">目前沒有開桌,追蹤 Discord 公告就不會錯過下一場 ✦</div>'; return; }
   box.innerHTML=list.map(([id,t])=>{
     const left=Math.max(0,(t.seats||0)-(t.taken||0)), full=left<=0;
-    return '<button class="planBtn" '+(full?'disabled style="opacity:.55;cursor:default"':('onclick="tbPick(\''+id+'\')"'))+'>'
+    return '<button class="planBtn" '+(full?'disabled style="opacity:.55;cursor:default"':('onclick="tbPick('+ja(id)+')"'))+'>'
       +'<b>'+esc(t.title||'酒館併桌')+'</b><span class="pp">'+(full?'已滿':'NT$'+(t.price||0)+'/席')+'</span><br>'
       +'<span style="font-size:12.5px;color:#A5798D">'+esc(t.game||'')+'・'+fmtTb(t.time)+(t.host?('・桌長:'+esc(t.host)):'')+'</span><br>'
       +'<span style="font-size:12.5px;color:'+(full?'#B29AD0':'#D96A8B')+';font-weight:700">'+(full?'本桌已滿':'剩 '+left+' 席/共 '+(t.seats||0)+' 席')+'</span>'
@@ -6612,8 +6615,8 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     if(!t||!t.myKey||!myKey||t.myKey===myKey) return;
     const k=t.myKey;
     if(BLK[k]){ box.innerHTML='<span style="font-size:12px;color:#B7A6C9">已封鎖這位老闆</span>'; return; }
-    if(FR[k]) box.innerHTML=rowBtn('傳私訊',"dmOpen('"+k+"');closeCard()")+rowBtn('刪除好友',"frRemove('"+k+"')",1);
-    else box.innerHTML=rowBtn('加好友',"frAdd('"+k+"','')");
+    if(FR[k]) box.innerHTML=rowBtn('傳私訊',"dmOpen("+ja(k)+");closeCard()")+rowBtn('刪除好友',"frRemove("+ja(k)+")",1);
+    else box.innerHTML=rowBtn('加好友',"frAdd("+ja(k)+",'')");
   };
 
   /* --- 私訊 --- */
@@ -7405,7 +7408,7 @@ function bkSlotHtml(id,name){
   const fb=id.startsWith('cloth')?P.dress:(id.startsWith('pet')?P.cat:P.gift);
   const inner=(BK_PETS[id]?bkPetArt(id,own):TTSeats.isSeat(id)?TTSeatUI.markup(id):(img?'<img src="'+img+'" alt="">':'<img src="'+fb+'" alt="">'))
     +'<span>'+esc(name)+'</span>';
-  return '<button class="bkSlot'+(own?'':' lk')+'" onclick="bkSlotTap(\''+id+'\',\''+esc(name)+'\','+(own?1:0)+')">'+inner+'</button>';
+  return '<button class="bkSlot'+(own?'':' lk')+'" onclick="bkSlotTap('+ja(id)+','+ja(name)+','+(own?1:0)+')">'+inner+'</button>';
 }
 function bkSlotTap(id,name,own){
   if(window.TTRetiredOutfits?.retired(id,window.__shopCfg?.[id])){toast('這項商品已下架');return;}
@@ -7468,7 +7471,7 @@ function bkPageMail(){
   const readN=list.filter(([,m])=>m.read).length;
   const rows=list.slice(0,20).map(([id,m])=>{
     const un=!m.read, open=_bkMailOpen.has(id);
-    return '<div class="bkMail" onclick="bkMailTap(\''+id+'\')"><div class="h">'+(un?'<i></i>':'')
+    return '<div class="bkMail" onclick="bkMailTap('+ja(id)+')"><div class="h">'+(un?'<i></i>':'')
       +'<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(m.title||'(無標題)')+'</span>'
       +'<em>'+bkFmt(m.at)+'</em></div>'
       +(open?'<p>'+esc(m.text||'')+'</p>':(un?'<p style="color:#B29AD0">點一下展開 ✦</p>':''))+'</div>';
@@ -7596,7 +7599,7 @@ function bkPaint(){
   if(!tabs||!sp) return;
   const unread=(typeof mailUnread==='function')?mailUnread():0;
   tabs.innerHTML=BK_TABS.map(([k,n,ic,side,small])=>'<button class="bkTab'+(k===_bkTab?' on':'')
-    +'" style="--side:url('+BKA[side]+');--small:url('+BKA[small]+')" onclick="bkGo(\''+k+'\')">'
+    +'" style="--side:url('+BKA[side]+');--small:url('+BKA[small]+')" onclick="bkGo('+ja(k)+')">'
     +'<img src="'+(BKA[ic]||'')+'" alt=""><span>'+n+'</span>'+(k==='mail'&&unread?'<span class="bkDot"></span>':'')+'</button>').join('');
   const tl=document.getElementById('bkTabsL');
   if(tl) tl.innerHTML=[

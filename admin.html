@@ -610,7 +610,7 @@ function coSet(id,st){
   /* 儲值訂單確認收款 → 金幣入帳。
      用 transaction 搶 credited 旗標,連點兩下 / 兩台裝置同時按都只會入帳一次 */
   if(o && o.type==='topup' && o.myKey && (st==='confirmed'||st==='done') && !o.credited){
-    const add=o.coinAmount||o.amount||0;
+    const add=topupCredit(o);
     db.ref(ROOT+"/clientOrders/"+id+"/credited").transaction(cur=>{ if(cur) return; return true; },
       (e2,ok2)=>{
         if(e2||!ok2) return;   // 別人已經入帳過了
@@ -635,7 +635,7 @@ function coCancelRefund(id){
   let msg='確定取消這筆訂單?';
   const isWallet=(o.paidBy==='wallet');
   const isTopup=(o.type==='topup');
-  const back=isTopup?(o.coinAmount||o.amount||0):(o.amount||0);
+  const back=isTopup?topupCredit(o):(Number(o.amount)||0);
   if(isWallet) msg='取消並退回 '+back+' 金幣給客人?';
   else if(isTopup&&o.credited) msg='這是已入帳的儲值單。取消將從客人錢包扣回 '+back+' 金幣,確定?';
   else msg='取消這筆訂單?(此單非金幣支付,款項請另行退還給客人)';
@@ -720,9 +720,9 @@ function renderTables(){
      +'<b>'+esc(t.title||'')+'</b>('+esc(t.game||'—')+')・'+fmt(t.time)+'・桌長:'+esc(t.host||'—')
      +'・NT$'+(t.price||0)+'/席<br>'
      +'席位:<b>'+(t.taken||0)+'/'+(t.seats||0)+'</b>(剩 '+left+')'
-     +' <button onclick="tbAdminTaken(\''+id+'\',-1)">-1</button> <button onclick="tbAdminTaken(\''+id+'\',1)">+1</button>'
-     +'　<label style="cursor:pointer"><input type="checkbox" '+(t.active?'checked':'')+' onchange="tbAdminSet(\''+id+'\',\'active\',this.checked)"> 上架中</label>'
-     +'　<button onclick="tbAdminDel(\''+id+'\')" style="color:#C0392B">刪除</button>'
+     +' <button onclick="tbAdminTaken('+ja(id)+',-1)">-1</button> <button onclick="tbAdminTaken('+ja(id)+',1)">+1</button>'
+     +'　<label style="cursor:pointer"><input type="checkbox" '+(t.active?'checked':'')+' onchange="tbAdminSet('+ja(id)+',\'active\',this.checked)"> 上架中</label>'
+     +'　<button onclick="tbAdminDel('+ja(id)+')" style="color:#C0392B">刪除</button>'
      +(t.note?'<br><span style="color:#8E7AB0;font-size:12.5px">備註:'+esc(t.note)+'</span>':'')
      +'</div>';
   });
@@ -1106,18 +1106,18 @@ function renderShop(){
       const hasImg=!!img;
       const open=shopOpenId===it.id;
       const lim=(c.end&&Date.now()<c.end);
-      html+='<div class="shopCell'+(open?' on':'')+'" onclick="toggleShopItem(\''+it.id+'\')">'
-        +'<div class="shopThumb" onclick="shopZoom(\''+it.id+'\',event)">'
+      html+='<div class="shopCell'+(open?' on':'')+'" onclick="toggleShopItem('+ja(it.id)+')">'
+        +'<div class="shopThumb" onclick="shopZoom('+ja(it.id)+',event)">'
         +(TTSeats.isSeat(it.id)?TTSeatUI.markup(it.id):(hasImg?'<img src="'+img+'" alt="">':'<span class="noimg">無圖<br>待繪師</span>'))
         +(lim?'<span class="shopTag">限時</span>':'')
         +'</div>'
         +'<div class="shopNm">'+esc(it.name)+'</div>'
         +'<div class="shopPr">'+(price==null?'尚未設定價格':'NT$'+price)+'</div>'
-        +'<button class="shopSw'+(active?' on':'')+'" onclick="quickToggleShop(\''+it.id+'\',event)">'+(active?'上架中':'未上架')+'</button>'
-        +(it.custom?'<div class="shopOps"><button onclick="renameShopItem(\''+it.id+'\',event)">改名</button><button class="del" onclick="delShopItem(\''+it.id+'\',event)">刪除</button></div>':'<div class="shopOps"><span class="built">內建款</span></div>')
+        +'<button class="shopSw'+(active?' on':'')+'" onclick="quickToggleShop('+ja(it.id)+',event)">'+(active?'上架中':'未上架')+'</button>'
+        +(it.custom?'<div class="shopOps"><button onclick="renameShopItem('+ja(it.id)+',event)">改名</button><button class="del" onclick="delShopItem('+ja(it.id)+',event)">刪除</button></div>':'<div class="shopOps"><span class="built">內建款</span></div>')
         +'</div>';
     });
-    html+='<button class="shopAdd" onclick="newShopItem(\''+type+'\')"><span>＋</span>新增'+type+'</button>';
+    html+='<button class="shopAdd" onclick="newShopItem('+ja(type)+')"><span>＋</span>新增'+type+'</button>';
     html+='</div>';
     const openIt=(groups[type]||[]).find(x=>x.id===shopOpenId);
     if(openIt){
@@ -1127,12 +1127,12 @@ function renderShop(){
       const hasImg=!!c.img;
       html+='<div class="shopEdit">'
         +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><b style="font-size:14px">編輯:'+esc(it.name)+'</b>'
-        +'<button onclick="toggleShopItem(\''+it.id+'\')" style="margin-left:auto;border:none;background:#EFE4FB;color:#6E58A6;font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">收起</button></div>'
+        +'<button onclick="toggleShopItem('+ja(it.id)+')" style="margin-left:auto;border:none;background:#EFE4FB;color:#6E58A6;font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">收起</button></div>'
         +'<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">'
         +'<div style="text-align:center">'
         +'<img id="spv_'+it.id+'" src="'+(c.img||SHOP_SHOWCASE[it.id]||'')+'" style="display:'+(hasImg||SHOP_SHOWCASE[it.id]?'block':'none')+';width:120px;height:120px;object-fit:contain;background:#fff;border-radius:12px;image-rendering:pixelated;border:2px solid #E8DDF3;margin-bottom:6px">'
-        +'<label style="display:inline-block;background:#F0E7FA;color:#6E58A6;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer">上傳商品圖<input id="sf_'+it.id+'" type="file" accept="image/*" onchange="onShopFile(\''+it.id+'\',this)" style="display:none"></label>'
-        +'<button id="srm_'+it.id+'" onclick="removeShopImg(\''+it.id+'\')" style="display:'+(hasImg?'inline-block':'none')+';margin-left:6px;border:none;background:none;color:#C2537D;font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit">移除</button>'
+        +'<label style="display:inline-block;background:#F0E7FA;color:#6E58A6;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer">上傳商品圖<input id="sf_'+it.id+'" type="file" accept="image/*" onchange="onShopFile('+ja(it.id)+',this)" style="display:none"></label>'
+        +'<button id="srm_'+it.id+'" onclick="removeShopImg('+ja(it.id)+')" style="display:'+(hasImg?'inline-block':'none')+';margin-left:6px;border:none;background:none;color:#C2537D;font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit">移除</button>'
         +'<div style="font-size:11px;color:#B29AD0;margin-top:5px;max-width:170px;line-height:1.5">封面圖(選填)。若有上傳部件,可按下方「用合成圖當封面」自動產生</div>'
         +'</div>'
         +'<div style="flex:1;min-width:230px;display:flex;flex-direction:column;gap:9px">'
@@ -1141,7 +1141,7 @@ function renderShop(){
         +'<label style="font-size:12.5px;display:flex;align-items:center;gap:6px">限時開始 <input id="ss_'+it.id+'" type="datetime-local" value="'+dtLocal(c.start)+'" style="font-size:12px;padding:4px;width:auto;max-width:210px"></label>'
         +'<label style="font-size:12.5px;display:flex;align-items:center;gap:6px">限時結束 <input id="se_'+it.id+'" type="datetime-local" value="'+dtLocal(c.end)+'" style="font-size:12px;padding:4px;width:auto;max-width:210px"></label>'
         +'<div style="display:flex;align-items:center;gap:12px;margin-top:4px">'
-        +'<button onclick="saveShopItem(\''+it.id+'\')" style="border:none;background:linear-gradient(180deg,#B79EE6,#9E86D6);color:#fff;padding:9px 22px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:9px">儲存並上架設定</button>'
+        +'<button onclick="saveShopItem('+ja(it.id)+')" style="border:none;background:linear-gradient(180deg,#B79EE6,#9E86D6);color:#fff;padding:9px 22px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:9px">儲存並上架設定</button>'
         +'<span id="sm_'+it.id+'" style="color:#2F8A5C;font-size:12px;font-weight:700"></span>'
         +'</div></div></div>'
         +partUnitsHtml(it.id,type)
@@ -1157,11 +1157,11 @@ function renderShop(){
             const key=pc[0], nm=pc[1], isAdd=!!pc[2], has=!!partsOf(it.id)[key];
             const selNow=(shopPartSel[it.id]===key);
             return '<label class="partSlot'+(has?' has':'')+(isAdd?' add':'')+(selNow?' sel':'')+'"'
-              +(has?' onclick="selectPart(\''+it.id+'\',\''+key+'\',event)"':'')+'>'
+              +(has?' onclick="selectPart('+ja(it.id)+','+ja(key)+',event)"':'')+'>'
               +(has?'<img src="'+partsOf(it.id)[key].d+'" alt="">':'<span class="pplus">＋</span>')
               +'<span class="pnm">'+((has&&partsOf(it.id)[key].n)?partsOf(it.id)[key].n:nm)+'</span>'
-              +'<input type="file" accept="image/*" onchange="onShopPart(\''+it.id+'\',\''+key+'\',this)" style="display:none">'
-              +(has?'<button class="pdel" onclick="event.preventDefault();event.stopPropagation();removeShopPart(\''+it.id+'\',\''+key+'\')">✕</button>':'')
+              +'<input type="file" accept="image/*" onchange="onShopPart('+ja(it.id)+','+ja(key)+',this)" style="display:none">'
+              +(has?'<button class="pdel" onclick="event.preventDefault();event.stopPropagation();removeShopPart('+ja(it.id)+','+ja(key)+')">✕</button>':'')
               +((has&&partsOf(it.id)[key].g)?'<span class="pgray">灰</span>':'')
               +'</label>';
           }).join('')
@@ -1173,18 +1173,18 @@ function renderShop(){
         +'<div class="nudgeBox">'
         +'<div id="nudge_'+it.id+'" class="nudgeLbl">先點上面的部件,再用方向鍵微調位置</div>'
         +'<div class="nudgePad">'
-        +'<button onclick="nudgePart(\''+it.id+'\',0,-1)">↑</button>'
-        +'<div><button onclick="nudgePart(\''+it.id+'\',-1,0)">←</button>'
-        +'<button onclick="resetPart(\''+it.id+'\')" class="rst">歸零</button>'
-        +'<button onclick="nudgePart(\''+it.id+'\',1,0)">→</button></div>'
-        +'<button onclick="nudgePart(\''+it.id+'\',0,1)">↓</button>'
+        +'<button onclick="nudgePart('+ja(it.id)+',0,-1)">↑</button>'
+        +'<div><button onclick="nudgePart('+ja(it.id)+',-1,0)">←</button>'
+        +'<button onclick="resetPart('+ja(it.id)+')" class="rst">歸零</button>'
+        +'<button onclick="nudgePart('+ja(it.id)+',1,0)">→</button></div>'
+        +'<button onclick="nudgePart('+ja(it.id)+',0,1)">↓</button>'
         +'</div>'
-        +'<button id="gray_'+it.id+'" class="grayBtn" onclick="toggleGray(\''+it.id+'\')">設為灰階可換色</button>'
-        +'<button class="grayBtn" style="margin-top:6px" onclick="renamePart(\''+it.id+'\')">幫這個部件命名</button>'
-        +'<button class="grayBtn" style="margin-top:6px" onclick="desaturatePart(\''+it.id+'\')">自動轉成灰階</button>'
+        +'<button id="gray_'+it.id+'" class="grayBtn" onclick="toggleGray('+ja(it.id)+')">設為灰階可換色</button>'
+        +'<button class="grayBtn" style="margin-top:6px" onclick="renamePart('+ja(it.id)+')">幫這個部件命名</button>'
+        +'<button class="grayBtn" style="margin-top:6px" onclick="desaturatePart('+ja(it.id)+')">自動轉成灰階</button>'
         +'<div style="margin-top:10px;text-align:left">'
         +'<div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:4px">配件畫在哪一層</div>'
-        +'<select id="pz_'+it.id+'" onchange="setPartZ(\''+it.id+'\',this.value)" '
+        +'<select id="pz_'+it.id+'" onchange="setPartZ('+ja(it.id)+',this.value)" '
         +'style="width:100%;font-family:inherit;font-size:12px;padding:6px 8px;border-radius:8px;border:1px solid #E1D3F0;background:#fff;color:#5A4880">'
         +'<option value="">自動(依名稱判斷)</option>'
         +ACC_Z.map(function(z){return '<option value="'+z[0]+'">'+z[1]+'</option>';}).join('')
@@ -1193,7 +1193,7 @@ function renderShop(){
         +'</div>'
         +'<div style="font-size:11px;color:var(--ink-soft);margin-top:5px;line-height:1.6">後髮／前髮上傳後<b>預設就是可換色</b>。若繪師給的是彩色圖,按「自動轉成灰階」救急。</div>'
         +'</div>'
-        +'<button onclick="useComposeAsCover(\''+it.id+'\')" style="margin-top:8px;border:none;background:#EFE4FB;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer">用合成圖當封面</button>'
+        +'<button onclick="useComposeAsCover('+ja(it.id)+')" style="margin-top:8px;border:none;background:#EFE4FB;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer">用合成圖當封面</button>'
         +'</div></div></div>'
         +'</details></div>';
     }
@@ -1273,7 +1273,7 @@ function paintHairTest(){
 }
 function hairTestHtml(){
   const sw=function(which,cur){ return HT_PRESET.map(function(pc){
-    return '<button class="htSw'+(cur===pc[0]?' on':'')+'" style="background:'+pc[0]+'" title="'+pc[1]+'" onclick="setHtColor(\''+which+'\',\''+pc[0]+'\')"></button>'; }).join(''); };
+    return '<button class="htSw'+(cur===pc[0]?' on':'')+'" style="background:'+pc[0]+'" title="'+pc[1]+'" onclick="setHtColor('+ja(which)+','+ja(pc[0])+')"></button>'; }).join(''); };
   return '<div class="card"><h2>🎨 灰階髮型上色測試</h2>'
     +'<p style="font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:10px">把繪師交來的<b>灰階髮型</b>丟進來,立刻看到系統上色後的樣子(演算法與客人端完全相同)。可以用來檢查對比夠不夠、要不要請繪師調整明暗。</p>'
     +'<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">'
@@ -1321,11 +1321,13 @@ function loadProof(id){
     .then(s=>{ proofCache[id]=s.val()||null; renderClientOrders(); })
     .catch(()=>{ proofCache[id]=null; renderClientOrders(); });
 }
+/* v466: 付款截圖只接受站內上傳的 data:image（客人可寫入，不能直接拼進 HTML） */
+function safeProof(v){ return (typeof v==='string'&&/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(v))?v:''; }
 function proofHtml(id,o){
-  if(o&&o.proof) return '<div style="margin-top:8px"><img src="'+o.proof+'" style="max-width:100%;max-height:340px;border:2px solid #E8C7D4"></div>';  // 舊單:圖還在訂單裡
+  if(o&&o.proof) return safeProof(o.proof)?'<div style="margin-top:8px"><img src="'+safeProof(o.proof)+'" style="max-width:100%;max-height:340px;border:2px solid #E8C7D4"></div>':'<div style="margin-top:8px;font-size:12.5px;color:#C0392B">截圖格式不正確，已略過顯示</div>';  // 舊單:圖還在訂單裡
   const v=proofCache[id];
   if(v==='LOADING') return '<div style="margin-top:8px;font-size:12.5px;color:var(--ink-soft)">截圖載入中…</div>';
-  if(v) return '<div style="margin-top:8px"><img src="'+v+'" style="max-width:100%;max-height:340px;border:2px solid #E8C7D4"></div>';
+  if(v) return safeProof(v)?'<div style="margin-top:8px"><img src="'+safeProof(v)+'" style="max-width:100%;max-height:340px;border:2px solid #E8C7D4"></div>':'<div style="margin-top:8px;font-size:12.5px;color:#C0392B">截圖格式不正確，已略過顯示</div>';
   if(v===null) return '<div style="margin-top:8px;font-size:12.5px;color:var(--ink-soft)">這筆沒有付款截圖(金幣付款或截圖已過期清除)</div>';
   return '';
 }
@@ -1517,17 +1519,17 @@ function urgentCardHtml(list){
       return '<div class="'+(late?'urgLate':'')+'" style="border:2px solid '+(late?'#E86A6A':(isT?'#F0D98A':'#E8C7D4'))+';background:'+(isT?'#FFFCF0':'#fff')+';border-radius:12px;padding:12px 14px;margin-bottom:10px">'
         +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline">'
         +(isT?'<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 9px;border-radius:7px">🪙 儲值</span>':'')
-        +'<b style="font-size:20px;color:#C2537D">NT$'+(o.amount||0)+'</b>'
+        +'<b style="font-size:20px;color:#C2537D">NT$'+(Number(o.amount)||0)+'</b>'
         +'<span style="font-size:15px;font-weight:700;color:#4A3B63">末五碼 '+esc(o.last5||'-----')+'</span>'
         +(late
           ?'<span style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:#E86A6A;padding:2px 9px;border-radius:7px">等了 '+mins+' 分鐘</span></div>'
           :'<span style="margin-left:auto;font-size:12px;color:var(--ink-soft)">'+mins+' 分鐘前</span></div>')
         +'<div style="font-size:12.5px;color:var(--ink-soft);margin-top:4px">'+esc(o.name||'?')
-        +(isT?('　→ 入帳 <b style="color:#B8860B">'+(o.coinAmount||o.amount||0)+'</b> 金幣'):('　'+esc(o.planName||'')))+'</div>'
+        +(isT?('　→ 入帳 <b style="color:#B8860B">'+topupCredit(o)+'</b> 金幣'+(topupTampered(o)?' <b style="color:#C0392B">⚠ 客人送出的金幣數（'+esc(o.coinAmount)+'）與方案不符，已改以方案計算</b>':'')):('　'+esc(o.planName||'')))+'</div>'
         +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
-        +'<button onclick="coSet(\''+id+'\',\'confirmed\')" style="flex:1;min-width:150px;border:none;background:linear-gradient(180deg,#8FD3AE,#57A87C);color:#fff;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:11px;cursor:pointer">✔ 確認收款</button>'
-        +'<button onclick="coToggle(\''+id+'\');showTab(6)" style="border:none;background:#F4E3E9;font-family:inherit;font-size:13px;padding:14px 16px;border-radius:11px;cursor:pointer">看截圖</button>'
-        +'<button onclick="coCancelRefund(\''+id+'\')" style="border:none;background:#F4D7DE;color:#B03A5B;font-family:inherit;font-size:13px;padding:14px 16px;border-radius:11px;cursor:pointer">取消</button>'
+        +'<button onclick="coSet('+ja(id)+',\'confirmed\')" style="flex:1;min-width:150px;border:none;background:linear-gradient(180deg,#8FD3AE,#57A87C);color:#fff;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:11px;cursor:pointer">✔ 確認收款</button>'
+        +'<button onclick="coToggle('+ja(id)+');showTab(6)" style="border:none;background:#F4E3E9;font-family:inherit;font-size:13px;padding:14px 16px;border-radius:11px;cursor:pointer">看截圖</button>'
+        +'<button onclick="coCancelRefund('+ja(id)+')" style="border:none;background:#F4D7DE;color:#B03A5B;font-family:inherit;font-size:13px;padding:14px 16px;border-radius:11px;cursor:pointer">取消</button>'
         +'</div></div>';
     }).join('')
     +'<p class="hint" style="margin-top:2px">提醒:截圖可以被修改,<b>請一律以你銀行 App 的實際入帳為準</b>再按確認。</p></div>';
@@ -1584,7 +1586,7 @@ function renderClientOrders(){
   const cnt={}; CO_TABS.forEach(([k])=>cnt[k]=0);
   all.forEach(([,o])=>{ cnt[coKind(o)]++; cnt.all++; });
   const tabsHtml='<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">'
-    +CO_TABS.map(([k,t])=>'<button onclick="coSetTab(\''+k+'\')" style="border:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;padding:9px 15px;border-radius:11px;'
+    +CO_TABS.map(([k,t])=>'<button onclick="coSetTab('+ja(k)+')" style="border:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;padding:9px 15px;border-radius:11px;'
       +(_coTab===k?'background:linear-gradient(180deg,#F19FBE,#D96A8B);color:#fff;box-shadow:0 3px 10px rgba(200,90,130,.28)':'background:#F2ECF9;color:#7A6A96')
       +'">'+t+' <span style="opacity:.8;font-weight:400">'+(cnt[k]||0)+'</span></button>').join('')+'</div>';
   let list=all.filter(([,o])=>(_coTab==='all'||coKind(o)===_coTab)&&coPass(o));
@@ -1605,8 +1607,8 @@ function renderClientOrders(){
     const adj=o.adjustments?Object.values(o.adjustments).sort((a,b)=>a.t-b.t):[];
     return '<div style="border:2px solid '+(o.status==='done'?'#D8D0D4':'#E8C7D4')+';padding:11px 13px;margin-bottom:10px;background:'+(o.status==='done'?'#FAFAFA':'#FFF')+'">'
       +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">'
-      +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">NT$'+(o.amount||0)+'</b>'
-      +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+((o.coinAmount||o.amount||0))+' 金幣'+(o.credited?'・已入帳':'')+'</span>':'')
+      +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">NT$'+(Number(o.amount)||0)+'</b>'
+      +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+topupCredit(o)+' 金幣'+(topupTampered(o)?' ⚠ 金幣數被改過':'')+(o.credited?'・已入帳':'')+'</span>':'')
       +(o.paidBy==='wallet'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">金幣支付</span>':'')
       +(o.staffName?'　<span style="background:#EFE4FB;color:#8E68C8;font-size:12px;font-weight:700;padding:2px 8px">指定:'+esc(TTStaffNames.display(o.staffName,o.staffCid))+'</span>':'')
       +(o.groupId?'<div style="font-size:12px;color:#856c94;margin-top:7px">同組 '+Number(o.groupSize)+' 位：'+esc((o.groupStaffNames||[]).join('、'))+'｜整組實付 NT$'+Number(o.groupAmount)+'，本筆分攤 NT$'+Number(o.amount)+'｜組別 '+esc(o.groupId)+'</div>':'')
@@ -1616,12 +1618,12 @@ function renderClientOrders(){
       +esc(o.name||'?')+'｜末五碼 <b>'+esc(o.last5||'-----')+'</b>｜'+new Date(o.createdAt||0).toLocaleString("zh-TW")+'</div>'
       +'<span style="color:'+st[1]+';font-size:13px;font-weight:700">● '+st[0]+'</span></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
-      +'<button onclick="coToggle(\''+id+'\')" style="border:none;background:#F4E3E9;padding:6px 10px;cursor:pointer;font-family:inherit">'+(open?'收合':'看截圖')+'</button>'
-      +(o.status==='pending'?'<button onclick="coSet(\''+id+'\',\'confirmed\')" style="border:none;background:#57A87C;color:#fff;padding:6px 10px;cursor:pointer;font-family:inherit">✔ 確認收款</button>':'')
-      +(o.status==='confirmed'?'<button onclick="coSet(\''+id+'\',\'done\')" style="border:none;background:#8E68C8;color:#fff;padding:6px 10px;cursor:pointer;font-family:inherit">完成</button>':'')
-      +'<button onclick="coAdjust(\''+id+'\')" style="border:none;background:#F6E2C8;padding:6px 10px;cursor:pointer;font-family:inherit">調整紀錄</button>'
-      +((o.status!=='cancelled'&&o.status!=='done')?'<button onclick="coCancelRefund(\''+id+'\')" style="border:none;background:#F4D7DE;color:#B03A5B;padding:6px 10px;cursor:pointer;font-family:inherit;font-weight:700">取消並退款</button>':'')
-      +((o.status==='cancelled'&&!o.refunded&&o.paidBy!=='wallet')?'<button onclick="coMarkRefunded(\''+id+'\')" style="border:none;background:#DCEFE3;color:#2F6B4C;padding:6px 10px;cursor:pointer;font-family:inherit;font-weight:700">標記已退款</button>':'')
+      +'<button onclick="coToggle('+ja(id)+')" style="border:none;background:#F4E3E9;padding:6px 10px;cursor:pointer;font-family:inherit">'+(open?'收合':'看截圖')+'</button>'
+      +(o.status==='pending'?'<button onclick="coSet('+ja(id)+',\'confirmed\')" style="border:none;background:#57A87C;color:#fff;padding:6px 10px;cursor:pointer;font-family:inherit">✔ 確認收款</button>':'')
+      +(o.status==='confirmed'?'<button onclick="coSet('+ja(id)+',\'done\')" style="border:none;background:#8E68C8;color:#fff;padding:6px 10px;cursor:pointer;font-family:inherit">完成</button>':'')
+      +'<button onclick="coAdjust('+ja(id)+')" style="border:none;background:#F6E2C8;padding:6px 10px;cursor:pointer;font-family:inherit">調整紀錄</button>'
+      +((o.status!=='cancelled'&&o.status!=='done')?'<button onclick="coCancelRefund('+ja(id)+')" style="border:none;background:#F4D7DE;color:#B03A5B;padding:6px 10px;cursor:pointer;font-family:inherit;font-weight:700">取消並退款</button>':'')
+      +((o.status==='cancelled'&&!o.refunded&&o.paidBy!=='wallet')?'<button onclick="coMarkRefunded('+ja(id)+')" style="border:none;background:#DCEFE3;color:#2F6B4C;padding:6px 10px;cursor:pointer;font-family:inherit;font-weight:700">標記已退款</button>':'')
       +'</div></div>'
       +(o.staffDeclined?(o.refunded
           ?'<div style="margin-top:7px;background:#EAF6EF;border-left:4px solid #57A87C;padding:7px 11px;font-size:12.5px;color:#2F6B4C;font-weight:700">✔ 陪玩回報無法接單'+(o.declineReason?'：'+esc(o.declineReason):'')+' —— <b>已自動退回 '+(o.amount||0)+' 金幣並通知客人</b>,你不用處理</div>'
@@ -1695,11 +1697,11 @@ function issuesCardHtml(){
   return '<div class="card"><h2>💬 客人訂單客訴('+openN+' 待處理)</h2>'+toggle+list.map(([id,x])=>
     '<div style="border:2px solid '+(x.done?'#D8D0D4':'#F0C98A')+';border-radius:12px;background:'+(x.done?'#FAFAFA':'#FFFBF2')+';padding:10px 13px;margin-bottom:9px">'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline"><b>'+esc(x.planName||'訂單')+'</b>'
-    +'<span style="font-size:12px;color:var(--ink-soft)">NT$'+(x.amount||0)+'・'+esc(x.name||'?')+'・'+new Date(x.at||0).toLocaleString('zh-TW')+'</span></div>'
+    +'<span style="font-size:12px;color:var(--ink-soft)">NT$'+(Number(x.amount)||0)+'・'+esc(x.name||'?')+'・'+new Date(x.at||0).toLocaleString('zh-TW')+'</span></div>'
     +'<div style="font-size:13px;color:#5A3D4E;background:#fff;border-left:3px solid #F0C98A;padding:5px 10px;margin-top:6px">'+esc(x.text||'')+'</div>'
     +'<div style="display:flex;gap:6px;margin-top:8px">'
-    +'<button onclick="issueDone(\''+id+'\','+(x.done?'false':'true')+')" style="border:none;background:'+(x.done?'#DDD':'#7FC98F')+';color:#fff;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">'+(x.done?'重開':'已處理')+'</button>'
-    +'<button onclick="issueDel(\''+id+'\')" style="border:none;background:#E8C7D4;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">刪除</button>'
+    +'<button onclick="issueDone('+ja(id)+','+(x.done?'false':'true')+')" style="border:none;background:'+(x.done?'#DDD':'#7FC98F')+';color:#fff;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">'+(x.done?'重開':'已處理')+'</button>'
+    +'<button onclick="issueDel('+ja(id)+')" style="border:none;background:#E8C7D4;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">刪除</button>'
     +'</div></div>').join('')+'</div>';
 }
 /* v464 意見回饋（Discord 酒館櫃檯「意見回饋」表單，後端寫入 orderIssues，kind=feedback） */
@@ -1717,8 +1719,8 @@ function feedbackCardHtml(){
     +'<span style="font-size:12px;color:var(--ink-soft)">'+(x.discordName&&x.discordName!==x.name?'Discord：'+esc(x.discordName)+'・':'')+new Date(x.at||0).toLocaleString('zh-TW')+'</span></div>'
     +'<div style="font-size:13px;color:#2E3560;background:#fff;border-left:3px solid #A9C7F0;padding:6px 10px;margin-top:6px;white-space:pre-wrap">'+esc(x.text||'')+'</div>'
     +'<div style="display:flex;gap:6px;margin-top:8px">'
-    +'<button onclick="issueDone(\''+id+'\','+(x.done?'false':'true')+')" style="border:none;background:'+(x.done?'#DDD':'#7FC98F')+';color:#fff;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">'+(x.done?'標為未讀':'已讀')+'</button>'
-    +'<button onclick="issueDel(\''+id+'\')" style="border:none;background:#E8C7D4;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">刪除</button>'
+    +'<button onclick="issueDone('+ja(id)+','+(x.done?'false':'true')+')" style="border:none;background:'+(x.done?'#DDD':'#7FC98F')+';color:#fff;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">'+(x.done?'標為未讀':'已讀')+'</button>'
+    +'<button onclick="issueDel('+ja(id)+')" style="border:none;background:#E8C7D4;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">刪除</button>'
     +'</div></div>').join(''):'<p style="color:var(--ink-soft);text-align:center;padding:10px 0">沒有未讀的意見 ✿</p>')+'</div>';
 }
 /* ===== 寄信給客人(禁言通知/個別溝通) ===== */
@@ -1764,7 +1766,7 @@ function mutesCardHtml(){
     +'<b>'+esc(m.name||k)+'</b>'
     +'<span style="font-size:12px;color:var(--ink-soft)">'+(m.until===-1?'永久':('至 '+new Date(m.until).toLocaleString('zh-TW')))+(m.reason?'・'+esc(m.reason):'')+'</span>'
     +'<button data-customer-key="'+customerAttr(k)+'" data-customer-name="'+customerAttr(m.name||'')+'" onclick="mailCompose(this.dataset.customerKey,this.dataset.customerName)" style="margin-left:auto;border:none;background:#DCEBFA;color:#3F6E9E;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">寄信</button>'
-    +'<button onclick="unmute(\''+k+'\')" style="border:none;background:#EADFF7;color:#6E58A6;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">解除</button>'
+    +'<button onclick="unmute('+ja(k)+')" style="border:none;background:#EADFF7;color:#6E58A6;padding:5px 12px;cursor:pointer;font-family:inherit;border-radius:8px">解除</button>'
     +'</div>').join('')+'</div>';
 }
 /* ===== 檢舉紀錄:未處理 / 已處理 分頁 + 分批載入 ===== */
@@ -1785,7 +1787,7 @@ function renderReports(){
   const list = full.slice(0,_repShow);
   const tabs='<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">'
     +[['open','待處理',openN],['done','已處理',doneN]].map(([k,t,n])=>
-      '<button onclick="repSetTab(\''+k+'\')" style="border:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;padding:9px 16px;border-radius:11px;'
+      '<button onclick="repSetTab('+ja(k)+')" style="border:none;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;padding:9px 16px;border-radius:11px;'
       +(_repTab===k?'background:linear-gradient(180deg,#F19FBE,#D96A8B);color:#fff;box-shadow:0 3px 10px rgba(200,90,130,.28)':'background:#F2ECF9;color:#7A6A96')
       +'">'+t+' <span style="opacity:.8;font-weight:400">'+n+'</span></button>').join('')
     +'</div>';
@@ -1814,12 +1816,12 @@ function renderReports(){
       +((r.byKey&&r.byKey!=='anon')||r.reporterKey?'(ID '+esc(shortId(r.byKey&&r.byKey!=='anon'?r.byKey:r.reporterKey))+')':'')
       +'｜'+new Date(r.at||0).toLocaleString("zh-TW")+'｜'+(r.map==='forest'?'森林':'酒館')+'</div></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
-      +'<button onclick="toggleRep(\''+id+'\')" style="border:none;background:#F4E3E9;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">'+(open?'收合':'看前後文')+'</button>'
-      +'<button onclick="repDone(\''+id+'\','+(r.done?'false':'true')+')" style="border:none;background:'+(r.done?'#DDD':'#7FC98F')+';color:#fff;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">'+(r.done?'重開':'已處理')+'</button>'
-      +'<select id="muSel_'+id+'" style="font-size:12px;padding:5px 6px;width:auto">'+MUTE_OPTS.map(o=>'<option value="'+o[0]+'"'+(o[0]==='24'?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>'
-      +'<button onclick="repMute(\''+id+'\')" style="border:none;background:#B85A78;color:#fff;padding:6px 11px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap;border-radius:8px">🔇 禁言</button>'
-      +'<button onclick="repDelMsg(\''+id+'\')" style="border:none;background:#F6E2C8;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">刪留言</button>'
-      +'<button onclick="repDel(\''+id+'\')" style="border:none;background:#E8C7D4;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">刪除</button>'
+      +'<button onclick="toggleRep('+ja(id)+')" style="border:none;background:#F4E3E9;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">'+(open?'收合':'看前後文')+'</button>'
+      +'<button onclick="repDone('+ja(id)+','+(r.done?'false':'true')+')" style="border:none;background:'+(r.done?'#DDD':'#7FC98F')+';color:#fff;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">'+(r.done?'重開':'已處理')+'</button>'
+      +'<select id="muSel_'+esc(id)+'" style="font-size:12px;padding:5px 6px;width:auto">'+MUTE_OPTS.map(o=>'<option value="'+o[0]+'"'+(o[0]==='24'?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>'
+      +'<button onclick="repMute('+ja(id)+')" style="border:none;background:#B85A78;color:#fff;padding:6px 11px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap;border-radius:8px">🔇 禁言</button>'
+      +'<button onclick="repDelMsg('+ja(id)+')" style="border:none;background:#F6E2C8;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">刪留言</button>'
+      +'<button onclick="repDel('+ja(id)+')" style="border:none;background:#E8C7D4;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap;border-radius:8px">刪除</button>'
       +'</div></div>'
       +(open?'<div style="margin-top:8px;max-height:280px;overflow-y:auto;background:#fff;border:1px solid #E8C7D4;padding:6px">'+ctx+'</div>':'')
       +'</div>';
@@ -1860,6 +1862,17 @@ function timelogRow(id,o,colspan){
 }
 function hmsShort(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return h?`${h}時${m}分`:`${m}分`;}
 function esc(x){return customerAttr(x);}
+/* v466: 放進 onclick="f(...)" 的值一律用 ja()——JSON 字串再 HTML 跳脫，客人寫的 ID 不能跳出字串執行程式 */
+function ja(x){return customerAttr(JSON.stringify(String(x==null?'':x)));}
+/* v466: 儲值入帳金幣由店長設定的方案計算，不信任客人送出的 coinAmount */
+function topupCredit(o){
+  const amt=Math.max(0,Math.floor(Number(o&&o.amount)||0));
+  const t=((topupCfg&&topupCfg.tiers)||[]).find(x=>x&&Number(x.amt)===amt);
+  const expect=t?amt+Math.max(0,Number(t.bonus)||0):amt;
+  const c=Number(o&&o.coinAmount);
+  return (Number.isSafeInteger(c)&&c>=0&&c<=expect)?c:expect;
+}
+function topupTampered(o){ const c=Number(o&&o.coinAmount); return o&&o.coinAmount!=null&&!(Number.isSafeInteger(c)&&c===topupCredit(o)); }
 function months(){
   const set=new Set(Object.values(orders).map(o=>o.month).filter(Boolean));
   const now=new Date(); set.add(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`);
@@ -2673,8 +2686,8 @@ function renderCustomers(){
   if(!rows.length) html+='<p style="color:var(--ink-soft)">找不到符合的客人。</p>';
   html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px">';
   rows.forEach(r=>{
-    html+='<div onclick="openCust(\''+r.k+'\')" style="cursor:pointer;text-align:center;background:#fff;border-radius:14px;padding:12px 6px 10px;box-shadow:inset 0 0 0 1.5px #E8DDF3,0 2px 6px rgba(110,88,166,.10)">'
-      +'<canvas class="cuAva" data-k="'+r.k+'" width="64" height="64" style="width:64px;height:64px;image-rendering:pixelated"></canvas>'
+    html+='<div onclick="openCust('+ja(r.k)+')" style="cursor:pointer;text-align:center;background:#fff;border-radius:14px;padding:12px 6px 10px;box-shadow:inset 0 0 0 1.5px #E8DDF3,0 2px 6px rgba(110,88,166,.10)">'
+      +'<canvas class="cuAva" data-k="'+esc(r.k)+'" width="64" height="64" style="width:64px;height:64px;image-rendering:pixelated"></canvas>'
       +'<div style="font-weight:700;font-size:13.5px;margin-top:4px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.nm)+'</div>'
       +'<div style="font-size:11px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.dcName?'@'+esc(r.dcName):'未綁 DC')+'</div>'
       +'<div style="margin-top:5px;min-height:16px">'
