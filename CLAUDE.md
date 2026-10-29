@@ -1,5 +1,14 @@
 # 小小酒館修改紀錄
 
+## v466 資安第五批：名冊不公開、店長頁程式注入、儲值入帳金幣
+線上實測（未登入、只讀）：v428 規則已生效，私人節點皆拒絕；但 lobby／pos／owned／chat／mutes 未登入可整包讀取，任何人都能下載全部客人的 Discord 名稱、Discord ID、生日與持有物。
+規則（tests/security-rules-v428/build/harden-phase5.cjs，可重複執行；套用前快照 rules-before-v466.json）：①lobby／pos／owned／chat／mutes 只有已登入且綁定闆卡的客人與店員能讀；lobby/<key>/name 與 owned/<key>/baseStart 仍公開（工房與入口在登入前判斷闆卡是否存在）。②聊天：禁言中（until=-1 或未到期）資料庫直接拒絕發言（以前只在網頁擋）；欄位限 key／name／text（1～200）／map／t（不可寫到未來），name 必須等於自己闆卡名字。③闆卡 name≤40、quote／games≤120、tags 每個≤20、bm 0～12、bd 0～31。④lobby、cards、clientOrders、clientOrderProofs、reports、orderIssues、cancelReq、renewReq、mutes、walletTx、wallet、owned、pos 的紀錄編號只能是英數字、底線、連字號（以前可放引號在店長頁執行程式）；accounts 編號限數字。⑤pub/dcav 限「Discord ID/頭貼雜湊」、clientOrders coinAmount／amount 限數字、付款截圖限 data:image、orderIssues amount、accounts vip／spent 限數字。
+網站：admin.html、lobby.html、partner.html、kefu.html 所有放進 onclick 的資料庫值改用 ja()（JSON 字串再 HTML 跳脫）；lobby／partner／kefu 的 esc 補上單引號（partner／kefu 原本只跳脫 <）；大廳闆卡 Discord 頭貼先驗證格式；店長頁付款截圖只顯示 data:image；VIP、金額欄位強制數字。
+儲值入帳：店長頁原本照客人送出的 coinAmount 入帳（客人可改成任意數字）。改為 topupCredit()：依 config/topup 方案（amount 對應 amt＋bonus），客人送的數字不超過方案時照用，否則以方案計算，並在待確認卡片顯示「⚠ 金幣數被改過」。退款同樣使用。
+card.html：未登入時只讀 lobby/<key>/name（新規則下整張闆卡不公開）。
+測試：GitHub Actions .github/workflows/security-tests.yml（分支 sec-ci/**，只測不部署；結果以標註回報，因本機無法下載模擬器）：第一～五批 32／36／58／12／42 全過，security-v428、base-parts-v434 通過。本機可執行的 13 個既有測試修改前後結果相同。
+上線順序：網站可先上線（新舊規則都能用）；規則需店長在 Firebase 主控台發布 security/database.rules.json。
+
 ## v465 冒險者應徵面板上方放招募橫圖
 使用者：自己做的「第二批陪陪招募」橫圖（2576×1450 JPG）讓機器人放在應徵面板文字最上面。recruit-desk.cjs：assets/recruit-banner.jpg 先發一則（tavern-recruit.jpg），面板在下一則；BANNER_VERSION 1，記在 recruitV1/panel（bannerId、bannerVersion）；換圖或任一則被刪就兩則一起重發維持順序，舊 v464 面板會被刪除重發。測試 recruit-desk 8 項。部署：主機當時已是 v464（使用者自行部署）。第一次 20261028-v465 測試失敗（圖檔權限 600，容器讀不到，EACCES），正式服務未變動；改 TAG 20261028-v465b 並 chmod 644 後部署，主機目前版本 20261028-v465b。腳本已從 security-v428 移除。
 另做招募橫圖草稿與角色去背圖（/mnt/user-data/outputs），使用者最後用自己做的版本。
