@@ -5,7 +5,7 @@ const [,,oldFile,newFile]=process.argv;
 const ME={uid:'discord_100000000000000001'},OTHER={uid:'discord_100000000000000002'},ADMIN={uid:'admin1'},STAFF={uid:'staff1'},STRANGER={uid:'email_stranger'};
 const now=()=>Date.now();
 const data=()=>({secureV1:{members:{discord_100000000000000001:{active:true,key:'k1'},discord_100000000000000002:{active:true,key:'k2'}},owners:{k1:'discord_100000000000000001',k2:'discord_100000000000000002'}},peiwan:{
- config:{adminUid:'admin1',services:{s1:{name:'特戰',price:350,active:true}}},tables:{t1:{title:'併桌',price:200,seats:4}},shopConfig:{cloth9:{price:350}},wallet:{k1:{balance:100000}},links:{staff1:{type:'char',cid:'c1'}},
+ config:{adminUid:'admin1',services:{s1:{name:'特戰',price:350,active:true}}},tables:{t1:{title:'併桌',price:200,seats:4}},shopConfig:{cloth9:{price:350},cloth0:{price:120,active:true},cloth8:{price:350,active:false}},wallet:{k1:{balance:100000}},links:{staff1:{type:'char',cid:'c1'}},
  lobby:{k1:{name:'小明',quote:'hi',bm:3,bd:4,pub:{dc:'ming'}},k2:{name:'小華'}},
  pos:{k1:{x:1,y:2}},owned:{k1:{cloth0:{name:'c0',ts:1},baseStart:{back:1,front:1,cloth:1,face:1,brow:1,at:1}}},
  chat:{m1:{key:'k2',name:'小華',text:'哈囉',t:1}},
@@ -15,7 +15,7 @@ const msg=(o={})=>({key:'k1',name:'小明',text:'大家好',map:'tavern',t:now()
 const card={name:'新來的',tags:['貓控'],quote:'你好',doll:{hair:1},bm:5,bd:6,games:'LOL',updatedAt:1};
 const inc=n=>({'.sv':{increment:n}});
 const pay=(id,o)=>({['clientOrders/'+id]:{myKey:'k1',paidBy:'wallet',status:o.type==='shop'?'done':'confirmed',createdAt:1,name:'小明',couponUsed:false,...o},['wallet/k1/balance']:inc(-o.amount),['wallet/k1/lastTx']:id,['walletTx/k1/'+id]:{type:'spend',amount:-o.amount,ref:id,ts:1}});
-const buyItem=(id,amt,cp)=>({...pay(id,{type:'shop',plan:'cloth9',itemId:'cloth9',amount:amt,couponUsed:!!cp}),['owned/k1/cloth9']:{name:'c9',ts:1,ref:id}});
+const buyItem=(id,amt,cp,item='cloth9')=>({...pay(id,{type:'shop',plan:item,itemId:item,amount:amt,couponUsed:!!cp}),['owned/k1/'+item]:{name:item,ts:1,ref:id}});
 const cases=[
  ['未登入讀整份名冊',null,'GET','peiwan/lobby',undefined,false],
  ['未登入讀別人闆卡全部',null,'GET','peiwan/lobby/k1',undefined,false],
@@ -41,7 +41,7 @@ const cases=[
  ['訊息超過 200 字','me','PUT','peiwan/chat/n6',msg({text:'哈'.repeat(201)}),false],
  ['空白訊息','me','PUT','peiwan/chat/n7',msg({text:''}),false],
  ['夾帶其他欄位','me','PUT','peiwan/chat/n8',msg({html:'<img>'}),false],
- ['時間戳記寫到未來','me','PUT','peiwan/chat/n9',msg({t:now()+86400000}),false],
+ ['時間戳記寫到明天','me','PUT','peiwan/chat/n9',msg({t:now()+86400000}),false],
  ['用別人的鑰匙發言','me','PUT','peiwan/chat/n10',msg({key:'k2',name:'小華'}),false],
  ['刪除 6 小時前的舊訊息','me','DELETE','peiwan/chat/m1',undefined,true],
  ['新闆卡（未登入，工房）',null,'PUT','peiwan/lobby/newk',card,true],
@@ -77,6 +77,9 @@ const cases=[
  ['冒險者帳號改客人 VIP','staff','PUT','peiwan/vipServer/k1',{lv:5,at:1},false],
  ['店長寫入 VIP 等級','admin','PUT','peiwan/vipServer/k1',{lv:2,at:1},true],
  ['本人讀自己的 VIP','me','GET','peiwan/vipServer/k1',undefined,true,'vip3'],
+ ['買版權測試時裝（已停用 cloth0）','me','PATCH','peiwan',buyItem('i4',120,false,'cloth0'),false],
+ ['買店長下架的商品','me','PATCH','peiwan',buyItem('i5',350,false,'cloth8'),false],
+ ['客人電腦時間快 30 分鐘仍可發言','me','PUT','peiwan/chat/n11',msg({t:now()+1800000}),true],
  ['讀別人的 VIP','other','GET','peiwan/vipServer/k1',undefined,false,'vip3'],
 ];
 (async()=>{

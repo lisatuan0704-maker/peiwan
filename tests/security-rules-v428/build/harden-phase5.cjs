@@ -39,7 +39,7 @@ Object.assign(P.chat.$id,{
  name:{'.validate':"newData.isString() && newData.val().length <= 40 && ("+STAFF+" || newData.val() == root.child('peiwan/lobby').child(newData.parent().child('key').val()).child('name').val() || newData.val() == '？')"},
  text:{'.validate':'newData.isString() && newData.val().length >= 1 && newData.val().length <= 200'},
  map:{'.validate':'newData.isString() && newData.val().length <= 30'},
- t:{'.validate':'newData.isNumber() && newData.val() <= now + 300000'},
+ t:{'.validate':'newData.isNumber() && newData.val() <= now + 3600000'},   // v466c: 容許客人電腦時間快一小時
  $other:{'.validate':false}
 });
 
@@ -92,5 +92,11 @@ if(!cw.includes("child('peiwan/tables').child(newData.child('itemId').val()).chi
  if(!cw.startsWith(anchor))throw Error('clientOrders anchor');
  P.clientOrders.$id['.write']=anchor+`${WALLETPRICE} && `+cw.slice(anchor.length);
 }
+
+// 7. v466c 下架與版權測試商品不能再買（以前規則只看價格，店長頁下架或網站停用的商品仍可用金幣買）
+const RETIRED=['cloth0','cloth1','cloth_mslu9a8o','seat0','seat1','seat2'];
+const notRetired='('+RETIRED.map(id=>`$item != '${id}' && !$item.beginsWith('${id}::')`).join(' && ')+')';
+const onSale=`root.child('peiwan/shopConfig').child($item).child('active').val() != false`;
+addV(P.owned.$k.$item,`!newData.exists() || data.exists() || ${STAFF} || (${notRetired} && ${onSale})`);
 fs.writeFileSync(file,JSON.stringify(R,null,2)+'\n');
 console.log('phase5 applied');
