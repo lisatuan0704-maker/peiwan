@@ -20,7 +20,7 @@ jobs:
         run: |
           npm i -g firebase-tools@13 >/dev/null
           mkdir -p ../../output/qa-runtime-v273
-          cd ../../output/qa-runtime-v273 && npm init -y >/dev/null && npm i @firebase/rules-unit-testing@2 firebase@9 >/dev/null
+          cd ../../output/qa-runtime-v273 && npm init -y >/dev/null && npm i @firebase/rules-unit-testing@latest firebase@latest >/dev/null
       - name: Start emulators (9000 for rule suites, 9273 for page-level tests)
         run: |
           for p in 9000 9273; do
