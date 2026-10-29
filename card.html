@@ -628,7 +628,8 @@ async function generate(){
        已有闆卡（重新製作）或已記錄過的不覆寫，舊老闆維持原本全部可用。寫入失敗不影響建卡。 */
     try{
       const d0=dollOut(),start={back:d0.back|0,front:d0.front|0,cloth:d0.cloth|0,face:d0.face|0,brow:d0.brow|0,at:firebase.database.ServerValue.TIMESTAMP};
-      Promise.all([db.ref(ROOT+'/lobby/'+key).once('value'),db.ref(ROOT+'/owned/'+key+'/baseStart').once('value')]).then(([l,b])=>{
+      /* v466: 未登入只能讀闆卡名字（名冊不公開），用名字判斷闆卡是否存在 */
+      Promise.all([db.ref(ROOT+'/lobby/'+key+'/name').once('value'),db.ref(ROOT+'/owned/'+key+'/baseStart').once('value')]).then(([l,b])=>{
         if(l.exists()||b.exists())return;
         return db.ref(ROOT+'/owned/'+key+'/baseStart').set(start);
       }).catch(e=>console.warn('baseStart save failed',e)).finally(()=>saveLobby());
@@ -711,7 +712,7 @@ renderTabs();renderOpts();renderTagBox();refresh();
 (function(){
   let k=null; try{ k=localStorage.getItem('tt_me'); }catch(e){}
   if(!k || typeof db==='undefined' || !db) return;
-  db.ref(ROOT+'/lobby/'+k).once('value',s=>{
+  db.ref(ROOT+'/lobby/'+k+'/name').once('value',s=>{   /* v466: 只讀名字（名冊不公開） */
     if(!s.val()) return;   /* 舊鑰匙但角色已被刪 → 放行重做 */
     const d=document.createElement('div');
     d.className='returning-guest';
