@@ -60,5 +60,37 @@ P.clientOrders.$id.amount=Object.assign(P.clientOrders.$id.amount||{},{'.validat
 addV(P.clientOrderProofs.$id,"!newData.exists() || (newData.isString() && newData.val().length < 3000000 && newData.val().matches(/^data:image\\/(png|jpeg|jpg|webp|gif);base64,/))");
 P.orderIssues.$id.amount={'.validate':'newData.isNumber()'};
 for(const f of ['vip','spent'])P.accounts.$id[f]={'.validate':'newData.isNumber() && newData.val() >= 0'};
+
+// 6. 優惠券與金幣訂單價格（以前優惠券只在網頁判斷，任何人都能每筆折 200；金幣付的陪玩／會員／併桌單沒有價格下限）
+// VIP 等級改由店長頁計算後寫入 peiwan/vipServer/<key>/lv（只有店長能寫），規則依等級決定可折金額。
+const ADMIN=`(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())`;
+P.vipServer={'.read':STAFF,'$k':{
+ '.read':`(auth != null && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)`,
+ '.write':ADMIN,
+ '.validate':`${KEY('$k')} && newData.hasChildren(['lv'])`,
+ lv:{'.validate':'newData.isNumber() && newData.val() >= 0 && newData.val() <= 5 && newData.val() % 1 == 0'},
+ at:{'.validate':'newData.isNumber()'},
+ $other:{'.validate':false}}};
+const LV=k=>`root.child('peiwan/vipServer').child(${k}).child('lv')`;
+const OFFBY=k=>`(${LV(k)}.isNumber() ? (${LV(k)}.val() >= 5 ? 200 : ${LV(k)}.val() >= 4 ? 120 : ${LV(k)}.val() >= 3 ? 80 : ${LV(k)}.val() >= 2 ? 50 : ${LV(k)}.val() >= 1 ? 30 : 0) : 0)`;
+// 6a. 商品（owned）價格檢查中的「優惠券 200」改為依 VIP 等級
+const fixOwned=str=>str.split(".child('couponUsed').val() == true ? 200 : 0)").join(".child('couponUsed').val() == true ? "+OFFBY('$k')+" : 0)");
+P.owned.$k.$item['.write']=fixOwned(P.owned.$k.$item['.write']);
+P.owned.$k.dyeTickets['.write']=fixOwned(P.owned.$k.dyeTickets['.write']);
+if((P.owned.$k.$item['.write']+P.owned.$k.dyeTickets['.write']).includes('? 200 : 0)'))throw Error('coupon 200 still present');
+// 6b. 金幣付款的陪玩／會員／併桌單：金額不得低於價目（店長價目表 config/services、會員方案、併桌每席價）減去可折金額
+const N="newData";
+const PLAN=`${N}.child('plan').val()`;
+const PRICE=`(${PLAN}.beginsWith('svc_') ? root.child('peiwan/config/services').child(${PLAN}.replace('svc_','')).child('price').val() : `+
+ `${PLAN} == 'm1200' ? 1200 : ${PLAN} == 'm3000' ? 3000 : ${PLAN} == 'm5000' ? 5000 : ${PLAN} == 'val2' ? 600 : (${PLAN} == 'val1' || ${PLAN} == 'chat1') ? 300 : `+
+ `${PLAN} == 'seat' ? root.child('peiwan/tables').child(${N}.child('itemId').val()).child('price').val() : 999999999)`;
+const OFFORD=`(${N}.child('couponUsed').val() == true ? ${OFFBY(N+".child('myKey').val()")} : 0)`;
+const WALLETPRICE=`(${N}.child('paidBy').val() != 'wallet' || ${N}.child('type').val() == 'shop' || (${N}.child('plan').isString() && ${N}.child('amount').val() >= ${PRICE} - ${OFFORD}))`;
+const cw=P.clientOrders.$id['.write'];
+const anchor="(!data.exists() && newData.exists() && ";
+if(!cw.includes("child('peiwan/tables').child(newData.child('itemId').val()).child('price')")){
+ if(!cw.startsWith(anchor))throw Error('clientOrders anchor');
+ P.clientOrders.$id['.write']=anchor+`${WALLETPRICE} && `+cw.slice(anchor.length);
+}
 fs.writeFileSync(file,JSON.stringify(R,null,2)+'\n');
 console.log('phase5 applied');

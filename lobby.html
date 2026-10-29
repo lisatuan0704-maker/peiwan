@@ -4270,9 +4270,17 @@ function coinsAvailable(){
   return hasTiers || (window.__wallet||0)>0;
 }
 /* 優惠券剩餘張數:VIP 等級配額 - 已用過的(取消的單不算用掉) */
+/* v466: 優惠券以店長頁確認過的 VIP 等級（peiwan/vipServer）為準；資料庫也依這個等級決定可折金額 */
+window.__vipServerLv=0;
+(function(){ let sub=null; function watch(){ if(typeof db==='undefined'||!db) return; const k=(typeof myKey!=='undefined')?myKey:null;
+  if(sub&&sub.k===k) return; if(sub) sub.ref.off('value',sub.h); sub=null; window.__vipServerLv=0; if(!k) return;
+  const ref=db.ref(ROOT+'/vipServer/'+k+'/lv'), h=s=>{ const v=s.val(); window.__vipServerLv=(typeof v==='number')?v:0; };
+  sub={k,ref,h}; ref.on('value',h,()=>{ window.__vipServerLv=0; }); }
+  try{ watch(); setInterval(watch,5000); }catch(e){} })();
 function couponsLeft(){
   let vi=null; try{ vi=window.__vipInfo&&window.__vipInfo(); }catch(e){}
   if(!vi||!vi.lv||!vi.cur) return 0;
+  if((window.__vipServerLv||0)<vi.lv) return 0;   // 店長頁尚未確認這個等級：先不能用券（避免付款被資料庫拒絕）
   let used=0; try{ const groups=new Set(); Object.entries(myOrdersCache||{}).forEach(([id,o])=>{ if(o&&o.couponUsed&&o.status!=='cancelled') groups.add(o.groupId||id); }); used=groups.size; }catch(e){}
   return Math.max(0,(vi.cur.cp||0)-used);
 }

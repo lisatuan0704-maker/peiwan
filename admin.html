@@ -572,7 +572,7 @@ function enter(){
   db.ref(ROOT+"/reports").on("value",s=>{reports=s.val()||{};sweepResolved();renderReports();});
   db.ref(ROOT+"/mutes").on("value",s=>{mutes=s.val()||{};renderReports();});
   db.ref(ROOT+"/orderIssues").on("value",s=>{orderIssues=s.val()||{};sweepResolved();renderReports();});
-  db.ref(ROOT+"/clientOrders").on("value",s=>{clientOrders=s.val()||{};sweepExpiredOrders();processCancelReqAdmin();renderClientOrders();renderCustomers();notifyPending();sweepTableSeats();});
+  db.ref(ROOT+"/clientOrders").on("value",s=>{clientOrders=s.val()||{};scheduleVipSync();sweepExpiredOrders();processCancelReqAdmin();renderClientOrders();renderCustomers();notifyPending();sweepTableSeats();});
   db.ref(ROOT+"/cancelReq").on("value",s=>{cancelReq=s.val()||{};processCancelReqAdmin();});
   db.ref(ROOT+"/renewReq").on("value",s=>{renewReq=s.val()||{};processRenewReqAdmin();});
   setInterval(()=>{ sweepExpiredOrders(); processCancelReqAdmin(); processRenewReqAdmin(); }, 60000);
@@ -582,6 +582,8 @@ function enter(){
   db.ref(ROOT+"/lobby").on("value",s=>{lobbyChars=s.val()||{};renderCustomers();});
   db.ref(ROOT+"/cards").on("value",s=>{cardsData=s.val()||{};renderCustomers();});
   db.ref(ROOT+"/accounts").on("value",s=>{accountsData=s.val()||{};renderCustomers();});
+  /* v466: 店長頁計算的 VIP 等級寫到 vipServer，資料庫依此決定優惠券可折金額（客人自己的網頁算的不算數） */
+  db.ref(ROOT+"/vipServer").on("value",s=>{vipServerData=s.val()||{};scheduleVipSync();});
   db.ref(ROOT+"/shopConfig").on("value",s=>{shopConfig=s.val()||{};window.__shopCfg=shopConfig;renderShop();renderCustomers&&renderCustomers();});
   db.ref(ROOT+"/tables").on("value",s=>{tablesCfg=s.val()||{};renderTables();sweepTableSeats();});
 }
@@ -1521,7 +1523,7 @@ function urgentCardHtml(list){
       return '<div class="'+(late?'urgLate':'')+'" style="border:2px solid '+(late?'#E86A6A':(isT?'#F0D98A':'#E8C7D4'))+';background:'+(isT?'#FFFCF0':'#fff')+';border-radius:12px;padding:12px 14px;margin-bottom:10px">'
         +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline">'
         +(isT?'<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 9px;border-radius:7px">🪙 儲值</span>':'')
-        +'<b style="font-size:20px;color:#C2537D">NT$'+(Number(o.amount)||0)+'</b>'
+        +'<b style="font-size:20px;color:#C2537D">NT$'+(Number(o.amount)||0)+'</b>'+lowPriceWarn(o)
         +'<span style="font-size:15px;font-weight:700;color:#4A3B63">末五碼 '+esc(o.last5||'-----')+'</span>'
         +(late
           ?'<span style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:#E86A6A;padding:2px 9px;border-radius:7px">等了 '+mins+' 分鐘</span></div>'
@@ -1609,7 +1611,7 @@ function renderClientOrders(){
     const adj=o.adjustments?Object.values(o.adjustments).sort((a,b)=>a.t-b.t):[];
     return '<div style="border:2px solid '+(o.status==='done'?'#D8D0D4':'#E8C7D4')+';padding:11px 13px;margin-bottom:10px;background:'+(o.status==='done'?'#FAFAFA':'#FFF')+'">'
       +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">'
-      +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">NT$'+(Number(o.amount)||0)+'</b>'
+      +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">NT$'+(Number(o.amount)||0)+'</b>'+lowPriceWarn(o)
       +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+topupCredit(o)+' 金幣'+(topupTampered(o)?' ⚠ 金幣數被改過':'')+(o.credited?'・已入帳':'')+'</span>':'')
       +(o.paidBy==='wallet'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">金幣支付</span>':'')
       +(o.staffName?'　<span style="background:#EFE4FB;color:#8E68C8;font-size:12px;font-weight:700;padding:2px 8px">指定:'+esc(TTStaffNames.display(o.staffName,o.staffCid))+'</span>':'')
@@ -1862,6 +1864,13 @@ function timelogRow(id,o,colspan){
   }).join("");
   return `<tr><td colspan="${colspan}" style="background:#FFF9EC;padding:8px 14px">${rows||'<span style="font-size:12px;color:var(--ink-soft)">尚無紀錄</span>'}</td></tr>`;
 }
+/* v466: 依價目推算方案價（與資料庫規則相同），轉帳單金額低於方案價時提醒 */
+function planFloor(o){ if(!o||o.type==='topup'||o.type==='shop') return null; const p=String(o.plan||'');
+  if(p.indexOf('svc_')===0){ const v=(svcs||{})[p.slice(4)]; return v&&Number(v.price)>0?Number(v.price):null; }
+  const fixed={m1200:1200,m3000:3000,m5000:5000,val1:300,val2:600,chat1:300}; if(fixed[p]) return fixed[p];
+  if(p==='seat'){ const t=(tablesCfg||{})[o.itemId]; return t&&Number(t.price)>0?Number(t.price):null; } return null; }
+function lowPriceWarn(o){ const f=planFloor(o), a=Number(o&&o.amount)||0, off=(o&&o.couponUsed)?200:0;
+  return (f!=null&&a<f-off)?' <b style="color:#C0392B;font-size:12px">⚠ 金額低於方案價 NT$'+f+'</b>':''; }
 function hmsShort(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return h?`${h}時${m}分`:`${m}分`;}
 function esc(x){return customerAttr(x);}
 /* v466: 放進 onclick="f(...)" 的值一律用 ja()——JSON 字串再 HTML 跳脫，客人寫的 ID 不能跳出字串執行程式 */
@@ -2628,6 +2637,18 @@ function custAgo(t){ const d=Date.now()-t; if(d<3600000) return Math.max(1,Math.
   if(d<86400000) return Math.round(d/3600000)+' 小時前'; if(d<86400000*30) return Math.round(d/86400000)+' 天前';
   return new Date(t).toLocaleDateString('zh-TW'); }
 function customerAttr(x){return String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let vipServerData={}, _vipSyncT=null;
+function scheduleVipSync(){ clearTimeout(_vipSyncT); _vipSyncT=setTimeout(syncVipServer,3000); }
+function syncVipServer(){
+  if(!entered||!adminUid||!auth.currentUser||auth.currentUser.uid!==adminUid) return;
+  const keys=new Set([...Object.keys(lobbyChars||{}),...Object.keys(cardsData||{})]);
+  keys.forEach(k=>{
+    if(!/^[A-Za-z0-9_-]{1,200}$/.test(k)) return;
+    let lv=0; try{ lv=custInfo(k).vip|0; }catch(e){ return; }
+    const cur=(vipServerData[k]&&typeof vipServerData[k].lv==='number')?vipServerData[k].lv:0;
+    if(cur!==lv&&!(lv===0&&!vipServerData[k])) db.ref(ROOT+'/vipServer/'+k).set({lv,at:Date.now()}).catch(e=>console.warn('vipServer',k,e&&e.code));
+  });
+}
 function custInfo(k){
   const lb=(lobbyChars||{})[k]||{}, cd=(cardsData||{})[k]||{};
   const accByKey={};
@@ -2645,7 +2666,7 @@ function custInfo(k){
     else if(o.type!=='topup'&&o.staffName){ const sn=TTStaffNames.display(o.staffName,o.staffCid); byStaff[sn]=(byStaff[sn]||0)+amt; }
     else if(o.type!=='topup'&&(o.planName||'').match(/會員|冠名|月費/)) mTot+=amt;
   });
-  const vip=(ac&&ac.vip)?ac.vip:vipFromSpend(total);
+  const vip=vipFromSpend(total);   /* v466: 只依已確認訂單計算（accounts.vip 是客人網頁寫的，不採用） */
   const bal=((wallets||{})[k]||{}).balance||0;
   const memOrd=paid.filter(([,o])=>(o.planName||'').match(/會員|月費|月卡/)).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0))[0];
   let mem=null;
