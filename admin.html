@@ -590,6 +590,8 @@ let openCO=new Set();
 const CO_ST={pending:['待付款確認','#C97B2B'],confirmed:['已確認','#57A87C'],done:['已完成','#8E68C8'],cancelled:['已取消','#9E8AA8']};
 function coSet(id,st){
   const o0=clientOrders[id];
+  /* v466: 儲值入帳金幣依方案計算，方案還沒載入時先不入帳，避免少算贈送 */
+  if(o0&&o0.type==='topup'&&!o0.credited&&(st==='confirmed'||st==='done')&&!((topupCfg&&topupCfg.tiers)||[]).length&&Number(o0.coinAmount)>Number(o0.amount)){ alert('儲值方案還在載入，請等一下再按確認收款'); return; }
   /* 儲值/會員:確認收款即全部完成(入帳/開通),直接結案進歷史 */
   if(o0&&st==='confirmed'&&(o0.type==='topup'||o0.type==='member')) st='done';
   db.ref(ROOT+"/clientOrders/"+id+"/status").set(st);
