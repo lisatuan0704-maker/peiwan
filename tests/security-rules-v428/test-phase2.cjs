@@ -5,7 +5,7 @@ const [,,liveFile,newFile]=process.argv;
 const OWNERMODE=process.env.OWNER==='1';const ADMIN={uid:'admin1'},ANON=OWNERMODE?{uid:'discord_100000000000000001'}:null,DISCORD={uid:'discord_123456789012345678'};
 const inc=n=>({'.sv':{increment:n}});
 const data=()=>({secureV1:{members:{discord_100000000000000001:{active:true,key:'k1'}},owners:{k1:'discord_100000000000000001'}},peiwan:{
-  config:{adminUid:'admin1',partPricing:{hair:100,face:100,cloth:100,acc:30}},
+  config:{adminUid:'admin1',partPricing:{hair:100,face:100,cloth:100,acc:30},services:{s1:{name:'特戰',price:300,active:true}}},
   links:{partnerA:{type:'char',refId:'cA',code:'OLD1'}},
   shopConfig:{cloth9:{price:300},season_x:{price:350,partPrices:{cloth:80}}},
   wallet:{k1:{balance:1000},k2:{balance:500}},vipServer:{k1:{lv:5,at:1}},  // v466: 優惠券改依店長確認的 VIP 等級
@@ -30,7 +30,7 @@ const cases=[
  ['偽造一筆交易紀錄','anon','PUT','peiwan/walletTx/k1/fake',{type:'spend',amount:-1,ref:'fake',ts:1},false],
  ['刪除別人的交易紀錄','anon','DELETE','peiwan/walletTx/k1/old1',undefined,false],
  ['重複使用舊交易編號','anon','PATCH','peiwan',{...order('o6',{itemId:'cloth9',amount:300}),'wallet/k1/balance':inc(-300),'wallet/k1/lastTx':'old1','walletTx/k1/old1':{type:'spend',amount:-300,ref:'old1',ts:1}},false],
- ['金幣訂單卻沒扣款（假裝已付）','anon','PUT','peiwan/clientOrders/o7',{type:'play',paidBy:'wallet',status:'confirmed',amount:600,myKey:'k1'},false],
+ ['金幣訂單卻沒扣款（假裝已付）','anon','PUT','peiwan/clientOrders/o7',{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:600,myKey:'k1'},false],
  ['轉帳訂單（待店長確認）','anon','PUT','peiwan/clientOrders/o8',{type:'play',paidBy:'transfer',status:'pending',amount:600,myKey:'k1'},true],
  ['轉帳訂單直接標成已確認','anon','PUT','peiwan/clientOrders/o9',{type:'play',paidBy:'transfer',status:'confirmed',amount:600,myKey:'k1'},false],
  ['儲值訂單（待店長確認）','anon','PUT','peiwan/clientOrders/o10',{type:'topup',status:'pending',amount:1000,myKey:'k1'},true],
@@ -47,8 +47,8 @@ const cases=[
  ['不保存染髮就把券扣掉/改掉','anon','PATCH','peiwan/owned/k1',{dyeTickets:0},false],
  ['沒用券就新增染髮組合','anon','PATCH','peiwan/owned/k1',{dyeLast:'r2','dyedHairSets/r2':{front:'a',back:'b',at:1}},false],
  ['憑空增加染髮券','anon','PUT','peiwan/owned/k1/dyeTickets',5,false],
- ['群組陪玩單（2 人共 600）','anon','PATCH','peiwan',{'clientOrders/g1a':{type:'play',paidBy:'wallet',status:'confirmed',amount:300,myKey:'k1',groupId:'g1'},'clientOrders/g1b':{type:'play',paidBy:'wallet',status:'confirmed',amount:300,myKey:'k1',groupId:'g1'},...spend('g1',600)},true],
- ['群組單金額比扣款多','anon','PATCH','peiwan',{'clientOrders/g2a':{type:'play',paidBy:'wallet',status:'confirmed',amount:900,myKey:'k1',groupId:'g2'},...spend('g2',100)},false],
+ ['群組陪玩單（2 人共 600）','anon','PATCH','peiwan',{'clientOrders/g1a':{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:300,myKey:'k1',groupId:'g1'},'clientOrders/g1b':{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:300,myKey:'k1',groupId:'g1'},...spend('g1',600)},true],
+ ['群組單金額比扣款多','anon','PATCH','peiwan',{'clientOrders/g2a':{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:900,myKey:'k1',groupId:'g2'},...spend('g2',100)},false],
  ['清空別人的背包','anon','PUT','peiwan/owned/k2',{},false],
  ['刪除別人背包的一件衣服','anon','DELETE','peiwan/owned/k2/cloth0',undefined,false],
  ['Discord 客人自己發商品','discord','PUT','peiwan/owned/k1/cloth9',{name:'x',ts:1},false],
