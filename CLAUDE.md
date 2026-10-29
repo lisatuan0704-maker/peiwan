@@ -6,6 +6,8 @@
 網站：admin.html、lobby.html、partner.html、kefu.html 所有放進 onclick 的資料庫值改用 ja()（JSON 字串再 HTML 跳脫）；lobby／partner／kefu 的 esc 補上單引號（partner／kefu 原本只跳脫 <）；大廳闆卡 Discord 頭貼先驗證格式；店長頁付款截圖只顯示 data:image；VIP、金額欄位強制數字。
 儲值入帳：店長頁原本照客人送出的 coinAmount 入帳（客人可改成任意數字）。改為 topupCredit()：依 config/topup 方案（amount 對應 amt＋bonus），客人送的數字不超過方案時照用，否則以方案計算，並在待確認卡片顯示「⚠ 金幣數被改過」。退款同樣使用。
 card.html：未登入時只讀 lobby/<key>/name（新規則下整張闆卡不公開）。
+v466b 優惠券與金幣訂單價格：原本優惠券只在網頁判斷，資料庫對任何人的 couponUsed 一律折 200（可無限次）；金幣付款的陪玩／會員／併桌單沒有價格下限（例如 1 金幣買尊榮會員且直接成立）。規則改為：①新節點 peiwan/vipServer/<key>/lv（0～5，只有店長能寫；本人與店員可讀），由店長頁依已確認訂單計算的 VIP 等級自動寫入（syncVipServer，開著店長頁時 3 秒內同步）；優惠券可折金額依此等級 30／50／80／120／200，未確認的等級不能用券。②金幣付款且非商品（shop）的訂單必須帶 plan，金額 ≥ 價目－可折金額：svc_<id> 讀 config/services/<id>/price、m1200／m3000／m5000、內建 val1／chat1 300、val2 600、seat 讀 tables/<itemId>/price，其他方案一律拒絕。網站：大廳 couponsLeft() 需 vipServer 等級 ≥ 網頁計算等級才顯示可用券；店長頁 VIP 改只依已確認訂單計算（不再採用客人網頁寫的 accounts.vip），轉帳單金額低於方案價時顯示「⚠ 金額低於方案價」。若之後改了會員方案價或新增內建方案，harden-phase5.cjs 的 PRICE 也要一起改。
+測試：第五批 61 項（含金幣陪玩只付 1、1 金幣買尊榮會員、不存在的方案、非 VIP 用券、VIP 3 想折 200、客人／冒險者改 VIP 等級），第二批優惠券案例改為「店長確認的 VIP 5」、群組單帶上 plan；security-v428 金幣陪玩單改用價目表方案。GitHub Actions 第一～五批 32／36／58／12／61、security-v428、base-parts-v434 全過。
 測試：GitHub Actions .github/workflows/security-tests.yml（分支 sec-ci/**，只測不部署；結果以標註回報，因本機無法下載模擬器）：第一～五批 32／36／58／12／42 全過，security-v428、base-parts-v434 通過。本機可執行的 13 個既有測試修改前後結果相同。
 上線順序：網站可先上線（新舊規則都能用）；規則需店長在 Firebase 主控台發布 security/database.rules.json。
 
