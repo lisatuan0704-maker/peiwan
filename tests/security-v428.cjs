@@ -35,7 +35,7 @@ const {setup}=require('./payment-safety-v273.cjs');
   const a=setup({db:pushIds(env.authenticatedContext(GUID).database())}),b=setup({db:pushIds(env.authenticatedContext(GUID).database())});
   for(const x of [a,b]){x.c.curKind='play';x.c.curPlan={id:'svc_s2',n:'特戰 1hr',p:300};price(x,300);}
   await Promise.allSettled([a.c.payWithCoins(),b.c.payWithCoins()]);d=await read();assert.equal(d.wallet.guest.balance,0);
-  assert.equal(Object.values(d.clientOrders).filter(o=>o.plan==='svc_s2').length,1,'同時送出只能成立一筆');
+  assert.equal(Object.values(d.clientOrders).filter(o=>o.plan==='svc_s2').length,1,'同時送出只能成立一筆 '+JSON.stringify(Object.values(d.clientOrders).map(o=>[o.plan,o.amount,o.status]))+' events '+a.events+' | '+b.events);
   // 6. 作弊手法直接寫資料庫
   await assertFails(guest.ref('peiwan/owned/guest/free').set({name:'free',ts:1}));
   await assertFails(guest.ref('peiwan/wallet/guest/balance').set(99999));
