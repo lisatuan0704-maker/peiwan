@@ -62,6 +62,13 @@ echo "  反向代理：$(systemctl is-active caddy 2>/dev/null)/caddy $(systemct
 say "對外 API 回應標頭"
 curl -s -o /dev/null -D - -X POST https://api.tinytavern.tw/v1/voice/session -H 'Origin: https://evil.example' -H 'Content-Type: application/json' -d '{}' 2>/dev/null | grep -i -E '^(HTTP|access-control|server|x-powered|strict-transport|retry-after|ratelimit)' | sed 's/^/  /'
 
+say "Discord 登入驗證（只檢查程式有沒有確認憑證屬於本店的 Discord 應用程式）"
+F="$REL/secure-social-v295/session-issuer.cjs"
+if [ -f "$F" ]; then
+  echo "  呼叫 /oauth2/@me：$(grep -c 'oauth2/@me' "$F") 處；比對 application id：$(grep -c -E 'application(\??\.)?id|applicationId' "$F") 處；呼叫 /users/@me：$(grep -c 'users/@me' "$F") 處"
+else echo "  找不到 $F"; fi
+F2="$REL/secure-social-v295/client-address.cjs"; [ -f "$F2" ] && echo "  客戶端 IP 判斷：$(grep -c -i 'x-forwarded-for' "$F2") 處讀 X-Forwarded-For；$(grep -c -E 'trust|127\.0\.0\.1|proxy' "$F2") 處限制信任來源"
+
 say "近一天服務錯誤"
 docker logs --since 24h tinytavern-service 2>&1 | grep -i -E 'error|exception|unhandled|EACCES|denied' | sed -E 's/[A-Za-z0-9_-]{24,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{20,}/***TOKEN***/g' | cut -c1-160 | sort | uniq -c | sort -rn | head -12
 echo
