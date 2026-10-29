@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           bash tests/security-rules-v428/run.sh > /tmp/rs.txt 2>&1; rc=$?
-          cat /tmp/rs.txt; echo "::notice title=rule suites::$(tr '\n' ' ' < /tmp/rs.txt | cut -c1-2000)"
+          cat /tmp/rs.txt; echo "::notice title=rule suites::$(grep -E 'passed|PASS|FAIL|✗|Error' /tmp/rs.txt | tr '\n' ' ' | sed 's/%/%25/g' | cut -c1-3000)"
           exit $rc
       - name: Phase 5 detail
         if: always()
