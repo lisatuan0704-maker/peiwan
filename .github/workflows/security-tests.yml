@@ -36,14 +36,14 @@ jobs:
       - name: Rule suites (phase 1-5)
         shell: bash
         run: |
-          bash tests/security-rules-v428/run.sh > /tmp/rs.txt 2>&1; rc=$?
+          rc=0; bash tests/security-rules-v428/run.sh > /tmp/rs.txt 2>&1 || rc=$?
           cat /tmp/rs.txt; echo "::notice title=rule suites::$(grep -E 'passed|PASS|FAIL|✗|Error' /tmp/rs.txt | tr '\n' ' ' | sed 's/%/%25/g' | cut -c1-3000)"
           exit $rc
       - name: Phase 5 detail
         if: always()
         shell: bash
         run: |
-          cd tests/security-rules-v428 && node test-phase5.cjs rules-before-v466.json ../../security/database.rules.json > /tmp/p5.txt 2>&1; rc=$?
+          cd tests/security-rules-v428 && rc=0; node test-phase5.cjs rules-before-v466.json ../../security/database.rules.json > /tmp/p5.txt 2>&1 || rc=$?
           echo "::notice title=phase5::$(tr '\n' ' ' < /tmp/p5.txt | cut -c1-3500)"; exit $rc
       - name: Page-level payment tests with new rules
         if: always()
