@@ -1,0 +1,45 @@
+name: Security rule tests
+# 只跑資料庫規則測試（Firebase Database Emulator），不部署任何東西。
+on:
+  push:
+    branches: ['sec-ci/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '21' }
+      - name: Install emulator tools
+        run: |
+          npm i -g firebase-tools@13 >/dev/null
+          mkdir -p ../../output/qa-runtime-v273
+          cd ../../output/qa-runtime-v273 && npm init -y >/dev/null && npm i @firebase/rules-unit-testing@3 firebase@10 >/dev/null
+      - name: Start emulators (9000 for rule suites, 9273 for page-level tests)
+        run: |
+          for p in 9000 9273; do
+            mkdir -p /tmp/emu$p && cd /tmp/emu$p
+            echo "{\"emulators\":{\"database\":{\"port\":$p,\"host\":\"127.0.0.1\"},\"ui\":{\"enabled\":false},\"hub\":{\"port\":$((p+400))},\"logging\":{\"port\":$((p+500))}},\"database\":{\"rules\":\"r.json\"}}" > firebase.json
+            echo '{"rules":{".read":false,".write":false}}' > r.json
+            nohup firebase emulators:start --only database --project demo-tt-$p > log.txt 2>&1 &
+          done
+          for p in 9000 9273; do
+            for i in $(seq 1 90); do curl -s -o /dev/null "http://127.0.0.1:$p/.json?ns=x" && break; sleep 2; done
+            curl -s -o /dev/null "http://127.0.0.1:$p/.json?ns=x" || { cat /tmp/emu$p/log.txt; exit 1; }
+          done
+      - name: Rule suites (phase 1-5)
+        run: bash tests/security-rules-v428/run.sh
+      - name: Phase 5 detail
+        if: always()
+        run: cd tests/security-rules-v428 && node test-phase5.cjs rules-before-v466.json ../../security/database.rules.json
+      - name: Page-level payment tests with new rules
+        if: always()
+        run: |
+          node tests/security-v428.cjs
+          node tests/base-parts-v434.cjs

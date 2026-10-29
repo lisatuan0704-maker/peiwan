@@ -9,8 +9,9 @@
         }
       },
       "mutes": {
-        ".read": true,
-        ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))"
+        ".read": "((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (auth != null && root.child('secureV1/members').child(auth.uid).child('key').isString() && root.child('secureV1/members').child(auth.uid).child('active').val() != false))",
+        ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
+        "$k": {}
       },
       "renewReq": {
         ".read": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (query.orderByChild == 'myKey' && query.equalTo != null && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(query.equalTo).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == query.equalTo))",
@@ -35,7 +36,7 @@
         }
       },
       "owned": {
-        ".read": true,
+        ".read": "((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (auth != null && root.child('secureV1/members').child(auth.uid).child('key').isString() && root.child('secureV1/members').child(auth.uid).child('active').val() != false))",
         ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
         "$k": {
           ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists()))",
@@ -77,7 +78,8 @@
             },
             "$other": {
               ".validate": false
-            }
+            },
+            ".read": true
           }
         }
       },
@@ -92,7 +94,7 @@
         }
       },
       "pos": {
-        ".read": true,
+        ".read": "((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (auth != null && root.child('secureV1/members').child(auth.uid).child('key').isString() && root.child('secureV1/members').child(auth.uid).child('active').val() != false))",
         "$k": {
           ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($k).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $k)"
         }
@@ -142,12 +144,31 @@
         }
       },
       "chat": {
-        ".read": true,
+        ".read": "((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (auth != null && root.child('secureV1/members').child(auth.uid).child('key').isString() && root.child('secureV1/members').child(auth.uid).child('active').val() != false))",
         ".indexOn": [
           "t"
         ],
         "$id": {
-          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('key').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('key').val())) || (!newData.exists() && (auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && data.child('t').val() < now - 21600000)"
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && (!root.child('peiwan/mutes').child(newData.child('key').val()).exists() || (root.child('peiwan/mutes').child(newData.child('key').val()).child('until').val() != -1 && root.child('peiwan/mutes').child(newData.child('key').val()).child('until').val() < now)) && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('key').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('key').val())) || (!newData.exists() && (auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && data.child('t').val() < now - 21600000)",
+          ".validate": "!newData.exists() || newData.hasChildren(['key','text','t'])",
+          "key": {
+            ".validate": "newData.isString() && newData.val().length <= 100"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 40 && ((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || newData.val() == root.child('peiwan/lobby').child(newData.parent().child('key').val()).child('name').val() || newData.val() == '？')"
+          },
+          "text": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200"
+          },
+          "map": {
+            ".validate": "newData.isString() && newData.val().length <= 30"
+          },
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() <= now + 300000"
+          },
+          "$other": {
+            ".validate": false
+          }
         }
       },
       "links": {
@@ -219,14 +240,35 @@
         }
       },
       "lobby": {
-        ".read": true,
+        ".read": "((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (auth != null && root.child('secureV1/members').child(auth.uid).child('key').isString() && root.child('secureV1/members').child(auth.uid).child('active').val() != false))",
         "$key": {
           "pub": {
             "frm": {
               ".validate": "newData.isString() && (!newData.val().matches(/^companion_/) || (auth != null && root.child('secureV1/owners').child($key).val() === auth.uid && root.child('secureV1/characters').child($key).child('pub/frm').val() === newData.val()))"
             }
           },
-          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($key).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $key) || (!data.exists() && newData.exists())"
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child($key).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == $key) || (!data.exists() && newData.exists())",
+          "name": {
+            ".read": true,
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "quote": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "games": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "tags": {
+            "$i": {
+              ".validate": "newData.isString() && newData.val().length <= 20"
+            }
+          },
+          "bm": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 12"
+          },
+          "bd": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 31"
+          }
         }
       },
       "orders": {
