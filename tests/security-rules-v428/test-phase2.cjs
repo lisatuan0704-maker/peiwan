@@ -8,7 +8,7 @@ const data=()=>({secureV1:{members:{discord_100000000000000001:{active:true,key:
   config:{adminUid:'admin1',partPricing:{hair:100,face:100,cloth:100,acc:30}},
   links:{partnerA:{type:'char',refId:'cA',code:'OLD1'}},
   shopConfig:{cloth9:{price:300},season_x:{price:350,partPrices:{cloth:80}}},
-  wallet:{k1:{balance:1000},k2:{balance:500}},
+  wallet:{k1:{balance:1000},k2:{balance:500}},vipServer:{k1:{lv:5,at:1}},  // v466: 優惠券改依店長確認的 VIP 等級
   walletTx:{k1:{old1:{type:'spend',amount:-10,ref:'old1',ts:1}}},
   clientOrders:{old1:{type:'shop',itemId:'x',amount:10,paidBy:'wallet',status:'done',myKey:'k1'}},
   owned:{k1:{cloth0:{name:'c0',ts:1},dyeTickets:1},k2:{cloth0:{name:'c0',ts:1}}},
@@ -22,7 +22,7 @@ const cases=[
  ['正常用金幣買衣服（300）','anon','PATCH','peiwan',buy('o1','cloth9',300),true],
  ['不付錢直接把衣服放進背包','anon','PUT','peiwan/owned/k1/cloth9',{name:'x',ts:1},false],
  ['只付 10 金幣買 300 的衣服','anon','PATCH','peiwan',buy('o2','cloth9',10),false],
- ['VIP 優惠券折 200（付 100）','anon','PATCH','peiwan',buy('o3','cloth9',100,{couponUsed:true}),true],
+ ['VIP 5（店長確認）優惠券折 200（付 100）','anon','PATCH','peiwan',buy('o3','cloth9',100,{couponUsed:true}),true],
  ['假優惠券折超過 200（付 99）','anon','PATCH','peiwan',buy('o4','cloth9',99,{couponUsed:true}),false],
  ['憑空把金幣變多','anon','PUT','peiwan/wallet/k1/balance',99999,false],
  ['扣金幣但沒有交易紀錄','anon','PATCH','peiwan',{'wallet/k1/balance':inc(-5)},false],
