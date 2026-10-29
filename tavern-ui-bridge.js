@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=461';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=467';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -271,7 +271,13 @@
     idlePose:now=>_hairMotionPreference.matches?{sqx:1,sqy:1}:ttIdlePose(now??performance.now(),me()?.seed||0),previewFoot:cv=>TTScene.metrics({cv}),
     collection:()=>ACH_DEF.filter(a=>TT_STATS.u.includes(a.id)||!!(a.k&&(TT_STATS[a.k]||0)>=a.need)).map(a=>({id:a.id,name:a.n,description:a.d,image:AICON[a.ic],source:'酒館成就',kind:'成就紀錄'})),
     calendar:cid=>calWeekHtml(cid),booked:cid=>new Promise(resolve=>staffBookedTimes(cid,resolve)),
-    draw:drawPreview,fx:{active:d=>window.TTOutfitFx?.active(d)||[],render:(src,t,list)=>window.TTOutfitFx.render(src,t,list)},   // v443 時裝特效
+    draw:drawPreview,fx:{active:d=>window.TTOutfitFx?.active(d)||[],render:(src,t,list)=>window.TTOutfitFx.render(src,t,list)},
+    // v467 闆卡手帳圖鑑：沒有展示圖的時裝改畫人物（整套部件＋當季展示髮色），特效由手帳自己播放
+    outfitDoll(id){const o=catalog().find(x=>x.id===id&&!x.retired&&!x.drink&&!x.pet&&!x.seat&&!x.baseUnit);if(!o?.parts?.length)return null;const sel={};
+      for(const p of o.parts){if(p.defaultEquipped===false)continue;const k=p.category==='acc'?accessoryKey(p):p.slot;if(p.category==='acc'||['front','back','cloth','eye','brow'].includes(p.slot))sel[k]={source:o.id,slot:p.slot};}
+      let d;try{d=makeDoll(normalizeSelection(sel),{hair:o.doll?.hair||0});}catch(e){return null;}
+      const c=window.TTSeasonDisplay?.[id],hex=v=>/^#[0-9a-f]{6}$/i.test(v||'');if(c&&hex(c.main)){d.hairHex=c.main;if(hex(c.tail))d.hairHex2=c.tail;else delete d.hairHex2;if(hex(c.highlight))d.hairHighlight=c.highlight;}
+      delete d.ps?.pet;if(d.uiBaseSlots&&!d.uiBaseSlots.includes('pet'))d.uiBaseSlots.push('pet');return d;},   // v443 時裝特效
 seatChoice:()=>window.TTSeatUI?.choice(),selectSeat:id=>window.TTSeatUI?.select(id),seatThumb:(id,cv)=>window.TTSeatUI?.thumb(id,cv),
     drawPart(cv,ref,color){if(ref.slot==='seat'&&Object.hasOwn(window.TTSeats?.CATALOG||{},ref.source)){TTSeatUI.thumb(ref.source,cv);return;}const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
       if(ref.slot==='pet'&&companionPets[ref.source]){const pet=companionPets[ref.source],src='img/companions-v352/'+pet.asset+'-pet.gif?v=356',img=csImg(src),[left,top,right,bottom]=pet.bounds;const draw=()=>{g.clearRect(0,0,cv.width,cv.height);if(!img.complete||!img.naturalWidth)return;const scale=Math.min((cv.width-8)/(right-left),(cv.height-8)/(bottom-top)),w=(right-left)*scale,h=(bottom-top)*scale;g.drawImage(img,left,top,right-left,bottom-top,(cv.width-w)/2,(cv.height-h)/2,w,h);};draw();afterPreviewImages(cv,[src],draw);return;}

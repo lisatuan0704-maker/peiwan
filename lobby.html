@@ -1053,6 +1053,8 @@ body.liteFX .gcard{animation:none!important}
 .bkSlot span{position:absolute;left:0;right:0;bottom:-1px;font-size:.74em;color:#7E5E6E;background:rgba(255,250,240,.92);padding:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW','Huninn',sans-serif}
 .bkSlot.lk{filter:saturate(.25) brightness(1.02)}
 .bkSlot.lk img{filter:grayscale(1);opacity:.4}
+.bkSlot canvas.bkOutfitCv{display:block;width:72%;height:auto;aspect-ratio:1;margin:0 auto 10%;image-rendering:pixelated}
+.bkSlot.lk canvas.bkOutfitCv{filter:grayscale(1);opacity:.45}
 .bkSlot .bkPetArt,.bkSlot .bkPetStill{position:relative;display:block;width:112px;height:112px;max-width:100%;margin:0 auto 8px;image-rendering:pixelated}
 .bkSlot .bkPetArt{overflow:hidden}.bkSlot .bkPetArt img{position:absolute;max-width:none;margin:0;object-fit:fill;image-rendering:pixelated!important}
 .bkSlot.lk .bkPetStill{filter:grayscale(1);opacity:.5}
@@ -1695,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v421</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v467</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -7408,13 +7410,27 @@ function bkPetArt(id,owned){
  return owned?'<div class="bkPetArt"><img alt="'+({pet_bubu:'布布',pet_dengdeng:'燈燈',pet_guigui:'鬼鬼'}[id])+'" src="img/companions-v352/'+p.asset+'-pet.gif?v=356" style="width:'+p.size[0]*scale+'px;height:'+p.size[1]*scale+'px;left:'+x+'px;top:'+y+'px"></div>':'<canvas class="bkPetStill" width="112" height="112" data-book-pet="'+id+'" aria-label="未解鎖寵物靜態預覽"></canvas>';
 }
 function bkPaintPets(){document.querySelectorAll('canvas[data-book-pet]').forEach(cv=>{const p=BK_PETS[cv.dataset.bookPet];if(!p||cv.dataset.painted)return;cv.dataset.painted='1';const img=new Image();img.onload=()=>{const [l,t,r,b]=p.bounds,scale=70/Math.max(r-l,b-t),w=(r-l)*scale,h=(b-t)*scale,g=cv.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(img,l,t,r-l,b-t,(112-w)/2,(112-h)/2,w,h);};img.src='img/companions-v352/'+p.asset+'-pet.gif?v=356';});}
+let _bkFxRaf=0,_bkFxLast=0;
+function bkFxTick(now){
+  _bkFxRaf=0;const book=document.getElementById('bookM');if(!book||!book.classList.contains('on'))return;
+  const cvs=[...document.querySelectorAll('canvas[data-book-outfit]')].filter(cv=>cv._fxList&&cv._fxBase&&cv.isConnected);if(!cvs.length||!window.TTOutfitFx)return;
+  const off=document.body.classList.contains('motion-off')||matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(now-_bkFxLast>=33){_bkFxLast=now;for(const cv of cvs){if(!cv.offsetParent)continue;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;g.clearRect(0,0,64,64);let src=cv._fxBase;if(!off&&!cv.closest('.lk')){try{src=TTOutfitFx.render(cv._fxBase,now,cv._fxList);}catch(e){src=cv._fxBase;}}g.drawImage(src,0,0,64,64);}}
+  if(!off)_bkFxRaf=requestAnimationFrame(bkFxTick);
+}
+function bkPaintOutfits(){
+  const ui=window.TinyTavernUI;if(!ui?.outfitDoll)return;
+  document.querySelectorAll('canvas[data-book-outfit]').forEach(cv=>{if(cv.dataset.painted)return;cv.dataset.painted='1';const d=ui.outfitDoll(cv.dataset.bookOutfit);if(!d){const P=window.PACKI||{},im=document.createElement('img');im.alt='';im.src=P.dress||P.gift||'';cv.replaceWith(im);return;}const list=ui.fx?.active(d)||[];
+    ui.draw(cv,d,src=>{if(!list.length)return;const b=document.createElement('canvas');b.width=b.height=64;const g=b.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(src,0,0);cv._fxBase=b;cv._fxList=list;if(!_bkFxRaf)_bkFxRaf=requestAnimationFrame(bkFxTick);});});
+}
 function bkSlotHtml(id,name){
   if(window.TTRetiredOutfits?.retired(id,window.__shopCfg?.[id]))return '';
   const own=!!((window.__owned||{})[id]);
   const img=((window.__shopCfg||{})[id]||{}).img||'';
   const P=window.PACKI||{};
   const fb=id.startsWith('cloth')?P.dress:(id.startsWith('pet')?P.cat:P.gift);
-  const inner=(BK_PETS[id]?bkPetArt(id,own):TTSeats.isSeat(id)?TTSeatUI.markup(id):(img?'<img src="'+img+'" alt="">':'<img src="'+fb+'" alt="">'))
+  const drawable=!img&&!BK_PETS[id]&&!TTSeats.isSeat(id)&&!!window.TinyTavernUI?.outfitDoll;   /* v467 沒有展示圖的時裝畫人物＋特效，不再顯示禮物盒 */
+  const inner=(BK_PETS[id]?bkPetArt(id,own):TTSeats.isSeat(id)?TTSeatUI.markup(id):(img?'<img src="'+img+'" alt="">':drawable?'<canvas class="bkOutfitCv" width="64" height="64" data-book-outfit="'+esc(id)+'" aria-label="'+esc(name)+'"></canvas>':'<img src="'+fb+'" alt="">'))
     +'<span>'+esc(name)+'</span>';
   return '<button class="bkSlot'+(own?'':' lk')+'" onclick="bkSlotTap('+ja(id)+','+ja(name)+','+(own?1:0)+')">'+inner+'</button>';
 }
@@ -7619,7 +7635,7 @@ function bkPaint(){
     +'<img src="'+(BKA[ic]||'')+'" alt=""></button>').join('');
   const p=BK_PAGES[_bkTab]();
   sp.innerHTML='<div class="bkPage l">'+p.l+'</div><div class="bkPage r"><span class="bkTag"></span>'+p.r+'</div><img id="bkFlipOv" alt="">';
-  bkPaintPets();
+  bkPaintPets();bkPaintOutfits();
   /* 頁名標籤 + 圓點 */
   const lb=document.getElementById('bkLabel');
   if(lb){ const t=BK_TABS.find(t=>t[0]===_bkTab); lb.textContent=t?t[1]:(BK_XTABS[_bkTab]||''); }
@@ -7804,7 +7820,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<script src="tavern-ui-bridge.js?v=461"></script>
+<script src="tavern-ui-bridge.js?v=467"></script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>

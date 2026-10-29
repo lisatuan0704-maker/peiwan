@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## v467 闆卡手帳圖鑑畫出時裝人物與特效、目前搭配底部按鈕
+使用者：手帳圖鑑的熊熊偵探／龐克搖滾狼／喵頻連線／疾風喵行變成禮物盒；喵頻連線／疾風喵行應該有特效。原因：圖鑑只用 shopConfig 的 img，這四套沒有展示圖就退回禮物盒。tavern-ui-bridge.js 新增 TinyTavernUI.outfitDoll(id)（整套部件＋當季展示髮色，不含寵物）；lobby.html bkSlotHtml 沒有展示圖的時裝改畫 64px 人物（bkPaintOutfits），有綁定特效的套組用 TTOutfitFx 約 30fps 播放（手帳開著且卡片在畫面上才播；未擁有的灰階卡、減少動態設定只畫靜態）。畫不出來才退回原本圖示。
+使用者：「已全部擁有」按鈕太下面、壓到外框。theme-shop.css 目前搭配底部留白 12px，停用按鈕改淺藍底深藍字。版本鏈 lobby 467、bridge 467→index 467→時裝間比較 467（theme-shop 467）。
+驗證：隔離模擬資料（四套當季、持有熊熊偵探與疾風喵行）手帳圖鑑四套皆畫出人物、喵頻連線／疾風喵行掛上特效、未持有灰階；商城目前搭配底部按鈕不貼邊。
+
 ## v466c 試營運前檢查
 線上檢查（店長身分唯讀）：config/basePricing 從未設定 → 工房部件單買整個沒開賣；已用店長頁「工房初始部件單買價格」表單填入使用者 v434 定的 頭髮100／臉50／衣服50／配件50。版權測試時裝 cloth0／cloth1／cloth_mslu9a8o 在 shopConfig 仍 active、價格 120（網站隱藏但資料庫會接受購買）。冒險者資訊卡：蕪沒有 staffCards、桃只有 busy／noBooking（客人看到的介紹與常玩遊戲是空的）；有一個冒險者帳號綁定到已不存在的角色（-P4rh_HgUEnDX7YS4pt7）。儲值方案 1000／320，皆無贈送。
 規則（harden-phase5.cjs 第 7 段）：owned/<key>/<item> 新增購買時，版權測試商品（cloth0、cloth1、cloth_mslu9a8o、seat0～2 及其 :: 部件）一律拒絕，shopConfig/<item>/active 為 false 的商品也拒絕（店員／店長不受限）；聊天 t 容許比伺服器快 1 小時（原本 5 分鐘，客人電腦時鐘不準會無法發言）。第五批 64 項，GitHub Actions 全過。

@@ -211,3 +211,8 @@ html body #dyeResume .dye-resume-actions .primary{flex:1.4;background:linear-gra
 /* v420 已下架、無法穿戴的舊染髮組合 */
 .saved-dye-bundle.is-unwearable canvas{filter:grayscale(.85);opacity:.55}
 .saved-dye-bundle.is-unwearable button:disabled{background:#EEF1FA!important;color:#8A90B8!important;border-color:#C3CBEE!important;box-shadow:none!important;cursor:not-allowed}
+
+/* v467 目前搭配底部按鈕（已全部擁有／確認選購）不再貼到外框：底部留白 */
+html body #lookSummary>footer{padding-bottom:12px!important}
+html body #lookSummary.is-expanded>footer{padding-bottom:12px!important}
+html body #lookSummary>footer button:disabled{background:#EEF1FA!important;color:#7A80AE!important;border-color:#C3CBEE!important;box-shadow:none!important;opacity:1!important;text-shadow:none!important}
