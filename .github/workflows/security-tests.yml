@@ -22,16 +22,16 @@ jobs:
           mkdir -p ../../output/qa-runtime-v273
           cd ../../output/qa-runtime-v273 && npm init -y >/dev/null && npm i @firebase/rules-unit-testing@latest firebase@latest >/dev/null
       - name: Start emulators (9000 for rule suites, 9273 for page-level tests)
+        shell: bash
         run: |
+          # 一個一個啟動，避免同時下載模擬器檔案互相干擾
           for p in 9000 9273; do
             mkdir -p /tmp/emu$p && cd /tmp/emu$p
             echo "{\"emulators\":{\"database\":{\"port\":$p,\"host\":\"127.0.0.1\"},\"ui\":{\"enabled\":false},\"hub\":{\"port\":$((p+400))},\"logging\":{\"port\":$((p+500))}},\"database\":{\"rules\":\"r.json\"}}" > firebase.json
             echo '{"rules":{".read":false,".write":false}}' > r.json
             nohup firebase emulators:start --only database --project demo-tt-$p > log.txt 2>&1 &
-          done
-          for p in 9000 9273; do
             for i in $(seq 1 90); do curl -s -o /dev/null "http://127.0.0.1:$p/.json?ns=x" && break; sleep 2; done
-            curl -s -o /dev/null "http://127.0.0.1:$p/.json?ns=x" || { cat /tmp/emu$p/log.txt; exit 1; }
+            curl -s -o /dev/null "http://127.0.0.1:$p/.json?ns=x" || { cat log.txt; exit 1; }
           done
       - name: Rule suites (phase 1-5)
         shell: bash
