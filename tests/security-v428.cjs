@@ -9,7 +9,7 @@ const {setup}=require('./payment-safety-v273.cjs');
  const env=await initializeTestEnvironment({projectId:'demo-tiny-tavern-v428',database:{host:'127.0.0.1',port:9273,rules}});
  const read=async()=>{let v;await env.withSecurityRulesDisabled(async c=>{v=(await c.database().ref('peiwan').once('value')).val();});return v;};
  const GUID='discord_100000000000000001';
- const reset=()=>env.withSecurityRulesDisabled(async c=>{await c.database().ref('secureV1').set({members:{[GUID]:{active:true,key:'guest'}},owners:{guest:GUID}});await c.database().ref('peiwan').set({config:{adminUid:'owner',services:{s1:{name:'特戰',price:300,active:true}}},links:{staff1:{type:'char',refId:'cA',code:'X'}},shopConfig:{dyeTicket:{price:100},cloth9:{price:300}},wallet:{guest:{balance:1000}},owned:{guest:{dyeTickets:2}}});});
+ const reset=()=>env.withSecurityRulesDisabled(async c=>{await c.database().ref('secureV1').set({members:{[GUID]:{active:true,key:'guest'}},owners:{guest:GUID}});await c.database().ref('peiwan').set({config:{adminUid:'owner',services:{s1:{name:'特戰',price:300,active:true},s2:{name:'特戰',price:300,active:true}}},links:{staff1:{type:'char',refId:'cA',code:'X'}},shopConfig:{dyeTicket:{price:100},cloth9:{price:300}},wallet:{guest:{balance:1000}},owned:{guest:{dyeTickets:2}}});});
  const price=(t,p)=>{t.c.payFinalAmount=()=>p;};
  const pushIds=db=>{let n=0;return {ref(p){const r=db.ref(p);if(p==='peiwan/clientOrders')return {push:()=>({key:'ord'+(++n)+'_'+Math.random().toString(36).slice(2,7)})};return r;}};};
  try{
@@ -33,9 +33,9 @@ const {setup}=require('./payment-safety-v273.cjs');
   d=await read();assert.equal(d.wallet.guest.balance,300);
   // 5. 兩個裝置同時花掉餘額：只有一筆成功，不會變負數
   const a=setup({db:pushIds(env.authenticatedContext(GUID).database())}),b=setup({db:pushIds(env.authenticatedContext(GUID).database())});
-  for(const x of [a,b]){x.c.curKind='play';x.c.curPlan={id:'svc_s1',n:'特戰 1hr',p:300};price(x,300);}
+  for(const x of [a,b]){x.c.curKind='play';x.c.curPlan={id:'svc_s2',n:'特戰 1hr',p:300};price(x,300);}
   await Promise.allSettled([a.c.payWithCoins(),b.c.payWithCoins()]);d=await read();assert.equal(d.wallet.guest.balance,0);
-  assert.equal(Object.values(d.clientOrders).filter(o=>o.plan==='play2').length,1,'同時送出只能成立一筆');
+  assert.equal(Object.values(d.clientOrders).filter(o=>o.plan==='svc_s2').length,1,'同時送出只能成立一筆');
   // 6. 作弊手法直接寫資料庫
   await assertFails(guest.ref('peiwan/owned/guest/free').set({name:'free',ts:1}));
   await assertFails(guest.ref('peiwan/wallet/guest/balance').set(99999));
