@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## v466c 試營運前檢查
+線上檢查（店長身分唯讀）：config/basePricing 從未設定 → 工房部件單買整個沒開賣；已用店長頁「工房初始部件單買價格」表單填入使用者 v434 定的 頭髮100／臉50／衣服50／配件50。版權測試時裝 cloth0／cloth1／cloth_mslu9a8o 在 shopConfig 仍 active、價格 120（網站隱藏但資料庫會接受購買）。冒險者資訊卡：蕪沒有 staffCards、桃只有 busy／noBooking（客人看到的介紹與常玩遊戲是空的）；有一個冒險者帳號綁定到已不存在的角色（-P4rh_HgUEnDX7YS4pt7）。儲值方案 1000／320，皆無贈送。
+規則（harden-phase5.cjs 第 7 段）：owned/<key>/<item> 新增購買時，版權測試商品（cloth0、cloth1、cloth_mslu9a8o、seat0～2 及其 :: 部件）一律拒絕，shopConfig/<item>/active 為 false 的商品也拒絕（店員／店長不受限）；聊天 t 容許比伺服器快 1 小時（原本 5 分鐘，客人電腦時鐘不準會無法發言）。第五批 64 項，GitHub Actions 全過。
+頁面實測：card.html、partner.html、admin.html 無程式錯誤；大廳以店長 Email 帳號開啟時 /v1/voice/inbox 回 403（ACCOUNT_REQUIRED，店長不是客人也不是冒險者，非本次變更造成）。
+
 ## v466b 後端（待部署）：闆卡認領、店方通知、Discord 驗證限流
 後端程式審查（以 security-v428 歷次部署包重建的快照）發現：①account-claim.cjs 以 lobby/cards 的 updatedAt「3 小時內」當作認領證據，且 updatedAt 不是建立時間——任何人知道尚未綁定的新闆卡鑰匙就能搶先認領；②handleMatches 比對 Discord 顯示名稱 global_name，任何人把顯示名稱改成對方 username 就能認領尚未用 Discord 登入過的舊闆卡。
 修正（ops/deploy-v466b.sh，security-v428 分支）：認領證據只剩「accounts/<Discord ID>.myKey 已指向此鑰匙」或「cards/<key>.dcid 與登入帳號 username／ID 相同，且鑰匙＝keyFor(username)（與 card.html 相同算法 btoa(encodeURIComponent('@'+username)) 去 =+/）」；其他情況回 ACCOUNT_REVIEW_REQUIRED 由店長審核。order-notify.cjs clip 去掉 []()<>`| 避免客人文字在店方頻道變成假連結或提及。rehearsal.cjs：送 Discord 驗證前擋格式錯誤的憑證、全站 10 分鐘驗證失敗達 300 次暫停（避免 Discord 封鎖主機 IP），限流表滿時淘汰最舊（以前會擋所有人）。新增 account-claim-v466.test.cjs 8 項、notify-v466.test.cjs 1 項。部署腳本會先核對主機上三個檔案的 sha256 與預期相同，不同就停止不做任何變動；已用模擬根目錄驗證檔案替換與核對失敗時停止。
