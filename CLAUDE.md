@@ -1,5 +1,11 @@
 # 小小酒館修改紀錄
 
+## v466b 後端（待部署）：闆卡認領、店方通知、Discord 驗證限流
+後端程式審查（以 security-v428 歷次部署包重建的快照）發現：①account-claim.cjs 以 lobby/cards 的 updatedAt「3 小時內」當作認領證據，且 updatedAt 不是建立時間——任何人知道尚未綁定的新闆卡鑰匙就能搶先認領；②handleMatches 比對 Discord 顯示名稱 global_name，任何人把顯示名稱改成對方 username 就能認領尚未用 Discord 登入過的舊闆卡。
+修正（ops/deploy-v466b.sh，security-v428 分支）：認領證據只剩「accounts/<Discord ID>.myKey 已指向此鑰匙」或「cards/<key>.dcid 與登入帳號 username／ID 相同，且鑰匙＝keyFor(username)（與 card.html 相同算法 btoa(encodeURIComponent('@'+username)) 去 =+/）」；其他情況回 ACCOUNT_REVIEW_REQUIRED 由店長審核。order-notify.cjs clip 去掉 []()<>`| 避免客人文字在店方頻道變成假連結或提及。rehearsal.cjs：送 Discord 驗證前擋格式錯誤的憑證、全站 10 分鐘驗證失敗達 300 次暫停（避免 Discord 封鎖主機 IP），限流表滿時淘汰最舊（以前會擋所有人）。新增 account-claim-v466.test.cjs 8 項、notify-v466.test.cjs 1 項。部署腳本會先核對主機上三個檔案的 sha256 與預期相同，不同就停止不做任何變動；已用模擬根目錄驗證檔案替換與核對失敗時停止。
+另有唯讀健檢 ops/check-v466.sh（只列印：更新、連接埠、防火牆、SSH、容器設定、設定檔權限、npm audit、憑證到期、Discord 登入驗證是否檢查應用程式 ID）。
+審查其他待辦（未改）：vip-outfit.cjs 的購買對整個 peiwan 節點做 transaction（人多時容易 NOT_SAVED、流量大）；rehearsal 對整個 orderVoiceV1 做 transaction；member-roles 以整份身分組清單 PATCH 可能覆蓋管理員剛加的身分組；secure-social-v295/session-issuer.cjs 未在快照中，需確認有比對 application id。
+
 ## v466 資安第五批：名冊不公開、店長頁程式注入、儲值入帳金幣
 線上實測（未登入、只讀）：v428 規則已生效，私人節點皆拒絕；但 lobby／pos／owned／chat／mutes 未登入可整包讀取，任何人都能下載全部客人的 Discord 名稱、Discord ID、生日與持有物。
 規則（tests/security-rules-v428/build/harden-phase5.cjs，可重複執行；套用前快照 rules-before-v466.json）：①lobby／pos／owned／chat／mutes 只有已登入且綁定闆卡的客人與店員能讀；lobby/<key>/name 與 owned/<key>/baseStart 仍公開（工房與入口在登入前判斷闆卡是否存在）。②聊天：禁言中（until=-1 或未到期）資料庫直接拒絕發言（以前只在網頁擋）；欄位限 key／name／text（1～200）／map／t（不可寫到未來），name 必須等於自己闆卡名字。③闆卡 name≤40、quote／games≤120、tags 每個≤20、bm 0～12、bd 0～31。④lobby、cards、clientOrders、clientOrderProofs、reports、orderIssues、cancelReq、renewReq、mutes、walletTx、wallet、owned、pos 的紀錄編號只能是英數字、底線、連字號（以前可放引號在店長頁執行程式）；accounts 編號限數字。⑤pub/dcav 限「Discord ID/頭貼雜湊」、clientOrders coinAmount／amount 限數字、付款截圖限 data:image、orderIssues amount、accounts vip／spent 限數字。
