@@ -1,15 +1,24 @@
-/* 同一角色由本人回報世界座標；觀看者只平滑顯示，不重新找路。 */
+/* 同一角色由本人回報世界座標；觀看者只平滑顯示，不重新找路。
+   v483：改成「追著目標走」——依發送端時間估出走路速度，維持約 0.6 個送達間隔的落後量；
+   封包晚到時放慢而不是停住，落後太多才加快（上限 320px/s），停下時直接走到最後位置。 */
 (function(root){
   'use strict';
+  const MAX=.32,MIN=.03;
   function advance(a,state,now){
     // Rendering can pause in a hidden tab, a modal, or on a slow device.
     // Consume at most one 50ms visual step, never all the wall-clock backlog.
-    state.elapsed+=Math.max(0,Math.min(50,now-state.renderedAt));
-    state.renderedAt=now;
-    const ratio=state.snap?1:Math.min(1,state.elapsed/state.duration);
-    a.x=state.from[0]+(state.to[0]-state.from[0])*ratio;
-    a.y=state.from[1]+(state.to[1]-state.from[1])*ratio;
-    return ratio;
+    const dt=Math.max(0,Math.min(50,now-state.renderedAt));state.renderedAt=now;
+    if(state.snap){a.x=state.to[0];a.y=state.to[1];return 0;}
+    const dx=(state.to[0]-a.x)*1600,dy=(state.to[1]-a.y)*900,rem=Math.hypot(dx,dy);
+    if(rem<.25){a.x=state.to[0];a.y=state.to[1];return 0;}
+    const lag=Math.max(4,state.vel*state.gap*1.0);
+    const floor=now-state.at>state.gap*1.3?1:.35;
+    let speed=state.walking?state.vel*Math.max(floor,Math.min(2,rem/lag)):Math.max(state.vel,rem/300);
+    speed=Math.max(MIN,Math.min(MAX,speed));
+    const step=Math.min(rem,speed*dt);
+    if(step>=rem){a.x=state.to[0];a.y=state.to[1];return 0;}
+    a.x+=dx/rem*step/1600;a.y+=dy/rem*step/900;
+    return rem-step;
   }
   function receive(a,p,now,legacyClamp){
     if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return false;
@@ -23,19 +32,21 @@
     if(!state||state.signature!==signature){
       // Reordered packets must not pull a moving character backwards.
       if(state&&Number.isFinite(p.t)&&Number.isFinite(state.time)&&p.t<state.time)return receive(a,state.packet,now,legacyClamp);
-      const distance=Math.hypot((point[0]-a.x)*1600,(point[1]-a.y)*900);
-      const gap=state?now-state.at:150;
-      const snap=!state||a.mapLoc!==map||distance<0.25;
-      // Slow acknowledgements can leave more than 96px between updates.
-      // Stay continuous within a map and adapt to the actual delivery cadence.
-      // v481 依實際送達間隔播完整段（原本 0.8 倍會提早到、停一下再衝，看起來像暴衝）；追趕速度上限 200px/s（本人走路約 150～180px/s）。
-      const duration=Math.max(120,Math.min(1200,gap),distance/.2);
-      state=a._remotePosition={signature,from:[a.x,a.y],to:point,at:now,snap,duration,time:p.t,packet:{...p},elapsed:0,renderedAt:now};
+      const snap=!state||a.mapLoc!==map||Math.hypot((point[0]-a.x)*1600,(point[1]-a.y)*900)<0.25;
+      let vel=state?.vel??.17,gap=state?.gap??150;
+      if(state&&!snap){
+        const arrive=now-state.at;if(arrive>0)gap=Math.max(80,Math.min(1200,gap*.7+arrive*.3));
+        const st=Number.isFinite(p.t)&&Number.isFinite(state.time)?p.t-state.time:arrive;
+        const moved=Math.hypot((point[0]-state.to[0])*1600,(point[1]-state.to[1])*900);
+        if(st>=40&&st<=3000)vel=Math.max(.04,Math.min(MAX,vel*.5+moved/st*.5));
+      }
+      state=a._remotePosition={signature,to:point,at:now,snap,vel,gap,walking:p.w===1,time:p.t,packet:{...p},renderedAt:now};
+      if(snap){a.x=point[0];a.y=point[1];state.snap=false;}
       a._sceneGoal=null;a._scenePath=null;a._sceneTransit=false;
     }
-    const ratio=advance(a,state,now);
+    const left=advance(a,state,now);
     a.tx=state.to[0];a.ty=state.to[1];a.mapLoc=map;a.sitting=!!p.s;
-    const moving=!a.sitting&&(ratio<1||(p.w===1&&now-state.at<Math.max(400,state.duration+150)));
+    const moving=!a.sitting&&(left>0||(p.w===1&&now-state.at<600));
     a.state=moving?'walk2':'idle';
     const face=p.f===1;if(face!==a.faceLeft){a.faceLeft=face;a.flipping=true;}
     return true;

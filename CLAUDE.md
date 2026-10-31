@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v483 遠端人物在下方走路一頓一頓
+使用者：大家在下方走路卡卡的。原因：本人點地板走路速度隨深度變快（下方約 190px/s），v481 觀看端是「播完一段就停在終點等下一包」，追趕上限 200px/s 幾乎追不回來；封包間隔只要比上一段長，人物就會停一下再走（模擬網路抖動下 120px/s 約 10% 畫格停住）。lobby-ui/presence.js 改為追著目標走：依發送端時間 t 估走路速度、以送達間隔估落後量（約一個間隔），落後多就加快（最多 2 倍、上限 320px/s）、快追上就放慢（最低 0.35 倍）而不是停住；超過 1.3 個間隔沒收到新位置就恢復正常速度走完；停下（w=0）時以 max(速度, 剩餘/300ms) 走到最後位置。每幀仍最多算 50ms、舊封包不倒退、換地圖直接定位。模擬：停住畫格 120px/s 10.1%→1.4%、190px/s 1.9%→0，沒有暴衝畫格；落後量約多 20～30px。lobby.html presence.js?v=483、verTag v483、lobby-view 483。
+驗證：presence-v353（穩定最大落後 23px）、presence-v354、movement-v278 通過。
+
 ## v482 399 系列寵物：水晶龍、甜甜犬（會動）
 使用者提供兩包寵物素材（128px，為 64px 像素 2 倍）：水晶龍（走路 5 格、等待 10 格）、甜甜犬（走路 4 格、趴下 6 格、睡覺 4 格、趴下＋睡覺 11 格、原始靜態 64px）。img/pets-v482/：crystal-walk／crystal-idle／crystal.png、sweet-walk／sweet-lie（拿掉循環標記，只播一次）／sweet-sleep／sweet-rest（趴下＋睡覺，商城試穿用）／sweet.png（64→128 最近鄰）。
 tavern-ui-bridge.js companionPets 加 pet_crystal／pet_sweet（src、still、anim），staffPetLayout 加 crystal／sweet（size 160＝與人物同像素密度、aspect 1、x -112／-100、y 34／36）；寵物框高改用 layout.aspect（舊寵物仍 112/96）。新增每 150ms 的狀態切換（只限玩家，不含冒險者 NPC）：主人走路（state 以 walk 開頭、未坐下）播走路，停下播待機；甜甜犬停下 4 秒後播趴下一次（1.3 秒）再循環睡覺，動了就回走路。商城縮圖用靜態圖，試穿用 src。live-wardrobe 寵物框高同樣讀 aspect。闆卡手帳圖鑑寵物加入兩隻。
