@@ -1,7 +1,7 @@
 {
   "name": "Tiny Tavern 小小酒館",
   "short_name": "小小酒館",
-  "description": "像素風虛擬角色陪玩小酒館 —— 走進大廳,找店員陪你打遊戲、語音聊天。",
+  "description": "像素風的小小酒館 —— 走進大廳，和冒險者一起打遊戲、語音聊天。",
   "start_url": "/lobby.html",
   "scope": "/",
   "display": "standalone",

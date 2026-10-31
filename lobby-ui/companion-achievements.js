@@ -7,8 +7,8 @@
  }
  function mount(parent,rewards,key){
   parent.querySelector('.companion-achievements')?.remove();
-  const section=document.createElement('section');section.className='companion-achievements';section.setAttribute('aria-label','陪玩十小時成就');
-  const heading=document.createElement('div');heading.className='companion-ach-heading';heading.innerHTML='<small>TOGETHER / 陪伴收藏</small><h2>一起玩的十小時</h2><p>與同一位陪玩累積完成 10 小時服務，獲得他的專屬頭像框。</p>';
+  const section=document.createElement('section');section.className='companion-achievements';section.setAttribute('aria-label','冒險者十小時成就');
+  const heading=document.createElement('div');heading.className='companion-ach-heading';heading.innerHTML='<small>TOGETHER / 陪伴收藏</small><h2>一起玩的十小時</h2><p>與同一位冒險者累積一起玩滿 10 小時，獲得他的專屬頭像框。</p>';
   const grid=document.createElement('div');grid.className='companion-ach-grid';
   for(const c of states(rewards,key)){
    const card=document.createElement('article');card.className='companion-ach-card'+(c.unlocked?' is-unlocked':'');card.dataset.reward=c.id;
@@ -21,7 +21,7 @@
    const button=document.createElement('button');button.type='button';button.textContent=c.unlocked?'前往使用頭像框 ↗':'查看獎勵頭像框 ↗';button.onclick=()=>root.__openFrames?.();
    card.append(art,title,description,status,button);grid.append(card);
   }
-  const note=document.createElement('p');note.className='companion-ach-note';note.textContent='依已結束服務的有效時數累積，暫停時間不計入；達成後自動解鎖，可至頭像框頁換上。';
+  const note=document.createElement('p');note.className='companion-ach-note';note.textContent='依已結束委託的有效時數累積，暫停時間不計入；達成後自動解鎖，可至頭像框頁換上。';
   section.append(heading,grid,note);parent.prepend(section);
  }
  const api={states,mount};root.TTCompanionAchievements=api;if(typeof module!=='undefined')module.exports=api;

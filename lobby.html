@@ -6,7 +6,7 @@
 <script src="lobby-ui/fixed-view.js?v=450"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
-<script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=428"></script>
+<script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=469"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>酒館大廳｜Tiny Tavern 小小酒館</title>
@@ -24,10 +24,10 @@
 <meta property="og:image" content="https://tinytavern.tw/og-lobby.png">
 <meta property="og:url" content="https://tinytavern.tw/lobby.html">
 <meta property="og:type" content="website">
-<meta name="description" content="推開酒館的門,看看今天誰在裡面 ✦ 像素風虛擬角色陪玩小酒館">
+<meta name="description" content="推開酒館的門，看看今天誰在裡面 ✦ 像素風的小小酒館，和冒險者一起打遊戲、聊聊天">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="酒館大廳｜Tiny Tavern 小小酒館">
-<meta name="twitter:description" content="推開酒館的門,看看今天誰在裡面 ✦ 像素風虛擬角色陪玩小酒館">
+<meta name="twitter:description" content="推開酒館的門，看看今天誰在裡面 ✦ 像素風的小小酒館，和冒險者一起打遊戲、聊聊天">
 <meta name="twitter:image" content="https://tinytavern.tw/og-lobby.png">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app" crossorigin>
@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v468</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v469</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3599,7 +3599,7 @@ function makeStaff(cid, st, idx){
     post, serveSpot:SERVE[idx%SERVE.length], mapLoc:'hall',
     state:'post',timer:0,seed:hash(cid)%10,
     faceLeft:STAFF_LAYOUT[cid]?.mirror??true,flipT:STAFF_LAYOUT[cid]?.mirror===false?1:-1,flipping:false,sitting:false,
-    staff:true,on:!!st.on,busy:false,cloakA:null,b:{name:ttStaffDisplayName(cid,st.name||'店員'),doll:look}};
+    staff:true,on:!!st.on,busy:false,cloakA:null,b:{name:ttStaffDisplayName(cid,st.name||'冒險者'),doll:look}};
   a.frames={};
   POSES.forEach(p=>{
     const f=document.createElement('canvas');f.width=64;f.height=64;
@@ -3614,7 +3614,7 @@ function makeStaff(cid, st, idx){
     cv.replaceWith(img);a.cv=img;a.frames=null;a._staffGif=true;a._headTop=art.top/114;a._sceneBottom=(art.bottom+2)/118;
     img.onerror=()=>{img.replaceWith(cv);a.cv=cv;a._staffGif=false;delete a._headTop;delete a._sceneBottom;a.frames={};POSES.forEach(p=>{const f=document.createElement('canvas');f.width=f.height=64;drawDollTo(f,look,p);a.frames[p]=f;});a.frame=null;setFrame(a,'idle');};
   }
-  tag.textContent='☆ '+(art?.name||ttStaffDisplayName(cid,st.name||'店員'));
+  tag.textContent='☆ '+(art?.name||ttStaffDisplayName(cid,st.name||'冒險者'));
   agents.set(a.key,a);
   return a;
 }
@@ -3670,7 +3670,7 @@ function syncResidentStaff(all){
     let a=agents.get(key);
     if(!a)a=makeStaff(cid,st,idx);
     a.on=!!st.on;
-    a.b.name=STAFF_GIF[cid]?.name||ttStaffDisplayName(cid,st.name||'店員');a.tag.textContent='☆ '+a.b.name;
+    a.b.name=STAFF_GIF[cid]?.name||ttStaffDisplayName(cid,st.name||'冒險者');a.tag.textContent='☆ '+a.b.name;
     setStaffServe(a,a.on&&!!st.busy);
     a.state='post';a.mapLoc='hall';a.sitting=false;a.chase=false;
     a.x=a.tx=a.post[0];a.y=a.ty=a.post[1];
@@ -3901,7 +3901,7 @@ function shopOpen(step, kind){
     const label = curKind==='shop'?'商品':(curKind==='table'?'桌次':'方案');
     document.getElementById('payInfo').innerHTML=
       `${label}:<b>${curPlan.n}</b><br>`+
-      (curKind==='play'?`指定陪玩:<b>${esc(ttSelectedStaffDisplayName())}</b><br>`:'')+
+      (curKind==='play'?`指定冒險者:<b>${esc(ttSelectedStaffDisplayName())}</b><br>`:'')+
       (curBooking&&curReserveAt?`預約時段:<b style="color:#8E68C8">${fmtRes(curReserveAt)}</b><br>`:'')+
       `金額:<b style="color:#D96A8B" id="payAmt">NT$${curPlan.p}</b><br>`+
       (curKind==='table'?`<div style="font-size:12px;color:#8E7AB0;margin:2px 0 4px">席位以「店長確認付款」的順序為準,確認後就是你的位子</div>`:'')+
@@ -3923,10 +3923,10 @@ function shopOpen(step, kind){
     const cd=document.getElementById('payCountdown');
     const tick=()=>{ if(!cd||!document.body.contains(cd)){ clearInterval(window.__payTick); return; }
       const left=dueMs-Date.now();
-      if(left<=0){ cd.textContent='已逾時,請重新下單'; cd.style.color='#B29AD0'; clearInterval(window.__payTick);
+      if(left<=0){ cd.textContent='已逾時,請重新點單'; cd.style.color='#B29AD0'; clearInterval(window.__payTick);
         /* 畫面說要重新下單,按鈕就真的要按不下去,不然會送出一張一開始就逾時的單 */
         const sb=document.getElementById('paySubmitBtn');
-        if(sb&&payMethod!=='coin'){ sb.disabled=true; sb.style.opacity='.5'; sb.textContent='已逾時・請重新下單'; }
+        if(sb&&payMethod!=='coin'){ sb.disabled=true; sb.style.opacity='.5'; sb.textContent='已逾時・請重新點單'; }
         return; }
       const mm=Math.floor(left/60000), ss=Math.floor((left%60000)/1000);
       cd.textContent='還有 '+mm+' 分 '+String(ss).padStart(2,'0')+' 秒'; };
@@ -4066,7 +4066,7 @@ function openReserve(next){
     if(nbOff){
       pbox.innerHTML='<b style="color:#B03A5B">'+esc(ttStaffDisplayName(ss.cid,ss.name))+' 目前暫停接受新預約</b>';
       bkBox.innerHTML='<div style="background:#FFF0DA;border-radius:10px;padding:10px 12px;color:#8A5A2B;font-weight:700;line-height:1.7">'
-        +esc(ttStaffDisplayName(ss.cid,ss.name))+' 目前暫停接受新預約(可能已滿檔或休假)。<br><span style="font-weight:400">可以改約其他陪玩,或選「即時單」看看誰在線上 ✦</span></div>';
+        +esc(ttStaffDisplayName(ss.cid,ss.name))+' 目前暫停接受新預約(可能已滿檔或休假)。<br><span style="font-weight:400">可以改約其他冒險者,或選「即時單」看看誰在線上 ✦</span></div>';
       curReserveAt=null; return;
     }
     curReserveAt=null;
@@ -4327,7 +4327,7 @@ function renderCoinInfo(){
   const ss=_selStaff();
   box.innerHTML=
     (curKind==='shop'?'商品:<b>'+esc(curPlan.n)+'</b><br>':'方案:<b>'+esc(curPlan.n)+'</b><br>')+
-    (curKind==='play'?'指定陪玩:<b>'+esc(ttSelectedStaffDisplayName())+'</b><br>':'')+
+    (curKind==='play'?'指定冒險者:<b>'+esc(ttSelectedStaffDisplayName())+'</b><br>':'')+
     (curBooking&&curReserveAt?'預約時段:<b style="color:#8E68C8">'+fmtRes(curReserveAt)+'</b><br>':'')+
     (canCoupon?'<label style="display:flex;align-items:center;gap:6px;margin:6px 0;font-size:13px;color:#8E68C8;cursor:pointer"><input type="checkbox" id="useCouponCoin" '+(_coinCoupon?'checked':'')+' style="transform:scale(1.2)"> 使用 VIP'+vi.lv+' 優惠券(折 $'+vi.cur.disc+'・剩 '+cLeft+' 張)</label>':'')+
     '應付:<b style="color:#D96A8B">'+amt+' 金幣</b><br>'+
@@ -4493,7 +4493,7 @@ window.tuPayOnline=async function(){
       ttNavigate(j.url); return;
     }
     toast('線上付款暫時忙線,可先用下方轉帳,或稍後再試');
-  }catch(e){ toast('連不上付款服務,可先用下方轉帳'); }
+  }catch(e){ toast('連不上付款頁面,可先用下方轉帳'); }
   if(btn){ btn.disabled=false; btn.textContent='線上付款(信用卡/超商)・自動入帳'; }
 };
 /* 從付款頁跳回來時的提示 */
@@ -4638,7 +4638,7 @@ function renderMyOrders(){
     tA.style.background=_ordTab==='active'?onS:'#F3EDFB'; tA.style.color=_ordTab==='active'?'#fff':'#8E7AB0';
     tH.style.background=_ordTab==='history'?onS:'#F3EDFB'; tH.style.color=_ordTab==='history'?'#fff':'#8E7AB0';
   }
-  if(!ids.length){ el.innerHTML='<div style="text-align:center;color:#A5798D;font-size:13px;padding:20px 0;line-height:1.9">還沒有訂單<br>點「我要點單」找陪玩,或逛逛商城 ✦</div>'; return; }
+  if(!ids.length){ el.innerHTML='<div style="text-align:center;color:#A5798D;font-size:13px;padding:20px 0;line-height:1.9">還沒有訂單<br>點「我要點單」找冒險者,或逛逛商城 ✦</div>'; return; }
   const STEPS=[['pending','待付款確認'],['confirmed','已確認'],['done','已完成']];
   const all=(_ordTab==='active'?actIds:hisIds).slice().reverse();
   const pages=Math.max(1,Math.ceil(all.length/ORD_PER));
@@ -4668,7 +4668,7 @@ function renderMyOrders(){
       let body='';
       if(cancelled){
         body='<div style="font-size:12.5px;color:#8E7AB0;margin-top:8px;font-weight:700">此訂單已取消'+(o.refunded?'<span style="color:#3E9E6B">・'+(o.amount||0)+' 金幣已退回錢包</span>':'')+'</div>'
-          +(o.declineReason?'<div style="font-size:12px;color:#A5798D;margin-top:5px;background:#FAF3F7;border-left:3px solid #E2B7CB;padding:6px 9px;border-radius:7px">陪玩無法接單:'+esc(o.declineReason)+'</div>':'');
+          +(o.declineReason?'<div style="font-size:12px;color:#A5798D;margin-top:5px;background:#FAF3F7;border-left:3px solid #E2B7CB;padding:6px 9px;border-radius:7px">冒險者無法接單:'+esc(o.declineReason)+'</div>':'');
       }else if(o.type==='shop'||o.type==='topup'||o.type==='member'){
         body='<div style="font-size:12.5px;color:#3E9E6B;margin-top:8px;font-weight:700">'
           +(o.type==='topup'?'儲值完成・'+(o.coinAmount||o.amount)+' 金幣已入帳 ✦':(o.type==='member'?'會員已開通 ✦':'購買完成・已收進背包 ✦'))+'</div>';
@@ -4969,7 +4969,7 @@ function doRenew(id,mins,price){
           sub:'延長到 '+hhmm(r.endAt)+',繼續玩吧 ✦',hold:8000}); }
         else {
           /* 沒有 ver = 陪玩那台跑的是舊版角色手札(舊版有已知的扣款誤判) */
-          const tail = r.ver ? '・金幣沒有扣' : '・請陪玩重新整理「角色手札」頁面後再試一次(他那邊是舊版)';
+          const tail = r.ver ? '・金幣沒有扣' : '・請冒險者重新整理「冒險者手札」頁面後再試一次(他那邊是舊版)';
           if(window.lobbyNotify) lobbyNotify({icon:'coupon',title:'這次沒辦法續單',sub:(r.why||'請稍後再試')+tail,hold:11000});
           else toast(r.why||'沒辦法續單'); }
         try{ updateCoinChip(); }catch(e){}
@@ -5989,7 +5989,7 @@ const SFX=(function(){
   }
   function openBoard(){
     const d=BOARD||{};
-    const today = d.today || '首次點單的闆闆,招待一杯店員特調飲品';
+    const today = d.today || '首次點單的闆闆,招待一杯冒險者特調飲品';
     const outfit = d.outfit || '啟程旅人 —— 酒館日常套,還能換 11 色髮色。';
     const evt = d.event || '開幕籌備中,敬請期待第一場酒館之夜';
     const body=document.getElementById('boardBody'); body.innerHTML='';
@@ -6007,10 +6007,10 @@ const SFX=(function(){
     body.appendChild(acc(false,'✦','活動公告','', '<p>'+esc(evt)+'</p>'));
     const staff=[...agents.entries()].filter(([k])=>k.indexOf('staff_')===0);
     body.appendChild(acc(false,'✦','現在在店', staff.length+' 位', null, bd=>{
-      if(!staff.length){ bd.innerHTML='<p class="lite">目前沒有陪玩名單</p>'; return; }
+      if(!staff.length){ bd.innerHTML='<p class="lite">目前沒有冒險者名單</p>'; return; }
       staff.forEach(([k,a])=>{ const busy=!!a.busy,offline=!a.on; const r=document.createElement('div'); r.className='staffRow';
         r.innerHTML='<span class="dot" style="background:'+(offline?'#999AA6':busy?'#E14E6B':'#5AE07C')+'"></span>'+
-          '<span class="nm">'+esc((a.b&&a.b.name)||'店員')+'</span>'+
+          '<span class="nm">'+esc((a.b&&a.b.name)||'冒險者')+'</span>'+
           '<span class="st" style="background:'+(offline?'#E9E9ED;color:#686875':busy?'#FBE0E6;color:#C0392B':'#DFF5E6;color:#2E8B57')+'">'+(offline?'離線中':busy?'接單中':'待接單')+'</span>';
         bd.appendChild(r); });
     }));
@@ -6102,7 +6102,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   /* v257:頭像框全部改為繪師圖。花圈框人人可用;VIP1~5 各解鎖一款(繪師交件),舊 CSS 框退役 */
   const FRAMES2=[
     {n:'花圈框',cls:'wr1',own:true},
-    ...['rira','kabuki','momo'].map(k=>({n:TTF_ART['companion_'+k].nm,cls:'companion_'+k,companion:true,req:'與該位陪玩累積 10 小時解鎖'})),
+    ...['rira','kabuki','momo'].map(k=>({n:TTF_ART['companion_'+k].nm,cls:'companion_'+k,companion:true,req:'與該位冒險者累積 10 小時解鎖'})),
     {n:TTF_ART.vip1.nm,cls:'vip1',vip:1},{n:TTF_ART.vip2.nm,cls:'vip2',vip:2},{n:TTF_ART.vip3.nm,cls:'vip3',vip:3},
     {n:TTF_ART.vip4.nm,cls:'vip4',vip:4},{n:TTF_ART.vip5.nm,cls:'vip5',vip:5}
   ];
@@ -6466,23 +6466,23 @@ function pkCardEl(cid,info,i){
 }
 function renderPicker(){
   const g=document.getElementById('pkGrid'); if(!g) return; g.innerHTML='';
-  g.appendChild(pkCardEl(null,{name:'不指定,都可以',sub:'放進公開單池,由在班的陪玩先接先得(通常最快)',st:null},-1));
+  g.appendChild(pkCardEl(null,{name:'不指定,都可以',sub:'放進公開單池,由在班的冒險者先接先得(通常最快)',st:null},-1));
   const ent=Object.entries(STAFF_ALL);
   /* 即時:只顯示「在班且空閒」的陪玩(接單中/暫停者不列入即時,需改預約) */
   const list= pkMode==='now'? ent.filter(([c,st])=>st&&st.on&&!st.busy) : ent.filter(([c,st])=>!!st);
   if(!list.length){
     const d=document.createElement('div');
     d.style.cssText='font-size:12.5px;color:#8E7AB0;text-align:center;padding:10px 0 4px;line-height:1.7';
-    d.textContent = pkMode==='now' ? '現在沒有空閒的陪玩(可能都在接單中)—— 可切到「預約」選人,或選不指定' : '名單暫時載入不到,選「不指定」也可以下單';
+    d.textContent = pkMode==='now' ? '現在沒有空閒的冒險者(可能都在接單中)—— 可切到「預約」選人,或選不指定' : '名單暫時載入不到,選「不指定」也可以點單';
     g.appendChild(d);
   }
   list.forEach(([cid,st],i)=>{
     const card=STAFF_CARDS[cid]||{};
-    const sub=card.games||'擅長與時段:資料由陪玩本人更新中';
+    const sub=card.games||'想玩的遊戲可以在點單時備註';
     const mood=(card.mood||card.intro||'').slice(0,40);
     /* 預約分頁:暫停接受預約的陪玩要一眼看得出來,不要讓客人走到最後才被擋 */
     const nb=(pkMode==='book')&&!!card.noBooking;
-    g.appendChild(pkCardEl(cid,{name:ttStaffDisplayName(cid,st.name||'店員'),sub,mood,nb,st: st.on?(st.busy?'busy':'free'):'off'},i));
+    g.appendChild(pkCardEl(cid,{name:ttStaffDisplayName(cid,st.name||'冒險者'),sub,mood,nb,st: st.on?(st.busy?'busy':'free'):'off'},i));
   });
 }
 
@@ -6888,7 +6888,7 @@ function openPcInfo(cid,info,i){
   const stCls= nbNow?'n':info.st==='free'?'g':info.st==='busy'?'b':'o';
   body.innerHTML='<div class="pcTop"><canvas id="pcCv" width="64" height="64"></canvas>'
     +'<div><div class="pcNm">'+esc(info.name)+'</div><span class="pst '+stCls+'" style="position:static;display:inline-block;margin-top:6px">'+stTxt+'</span></div></div>'
-    +'<div class="pcLine"><b>擅長遊戲與時段</b>'+esc(card.games||'資料由陪玩本人更新中')+'</div>'
+    +'<div class="pcLine"><b>擅長遊戲與時段</b>'+esc(card.games||'想玩的遊戲可以在點單時備註')+'</div>'
     +(function(){ const mo=(card.mood||card.intro||'').slice(0,40); if(!mo) return '';
         return '<div class="pcLine"><b>心情便利貼'+(card.moodAt?'<span style="font-weight:400;color:#B79ECB;font-size:11px">　'+moodAgo(card.moodAt)+'</span>':'')+'</b>'
           +'<span style="display:block;margin-top:4px;background:linear-gradient(180deg,#FFF6C9,#FCEBA0);color:#6B5A22;padding:8px 11px;border-radius:3px 12px 3px 3px;box-shadow:0 2px 7px rgba(120,100,40,.16);line-height:1.7">'+esc(mo)+'</span></div>'; })()
@@ -6897,9 +6897,9 @@ function openPcInfo(cid,info,i){
     +(nbNow
       ? '<div style="background:#FFF0DA;border-radius:11px;padding:11px 13px;margin-top:10px;font-size:12.5px;color:#8A5A2B;line-height:1.8;font-weight:700">'
         +esc(info.name)+' 目前<b style="color:#C0392B">暫停接受新預約</b>(可能已滿檔或休假)'
-        +'<br><span style="font-weight:400">可以改約其他陪玩,或切到「即時」看看誰現在有空 ✦</span></div>'
-        +'<button class="pcGo" disabled style="opacity:.45;cursor:not-allowed">目前無法預約這位陪玩</button>'
-      : '<button class="pcGo" onclick="pcPick()">選這位陪玩</button>')
+        +'<br><span style="font-weight:400">可以改約其他冒險者,或切到「即時」看看誰現在有空 ✦</span></div>'
+        +'<button class="pcGo" disabled style="opacity:.45;cursor:not-allowed">目前無法預約這位冒險者</button>'
+      : '<button class="pcGo" onclick="pcPick()">選這位冒險者</button>')
     +'<div class="pcNote">更精緻的立繪卡面即將登場,現為像素形象</div>';
   try{ drawDollTo(document.getElementById('pcCv'), STAFF_LOOKS[hash(cid)%STAFF_LOOKS.length], 'idle'); }catch(e){}
   /* 已被預約時段(近 7 天):讓客人點 NPC 就看得到、自己避開 */
@@ -7269,14 +7269,14 @@ window.lobbyNotify=lobbyNotify;
         if(st==='confirmed'){
           if(o.type==='topup') lobbyNotify({ok:true,icon:'coin',title:'金幣已入帳!',sub:(o.coinAmount||o.amount)+' 金幣進到錢包了'+(curPlan?',回去完成剛剛的點單吧 ✦':' ✦'),onclick:()=>{ if(curPlan){ shopOpen(3); } else openTopup(); },hold:9000});
           else if(o.booking) lobbyNotify({ok:true,icon:'star',title:'預約已確定!',sub:'「'+(o.planName||'訂單')+'」'+(o.reserveAt?('時段:'+fmtRes(o.reserveAt)):'店長會與你敲定時段'),onclick:openOrders,hold:9000});
-          else lobbyNotify({ok:true,icon:'star',title:'付款已確認!',sub:'「'+(o.planName||'訂單')+'」開始服務囉,好好享受 ✦',onclick:openOrders});
+          else lobbyNotify({ok:true,icon:'star',title:'付款已確認!',sub:'「'+(o.planName||'訂單')+'」成立囉,好好享受 ✦',onclick:openOrders});
         } else if(st==='done'){
           if(o.type==='topup') lobbyNotify({ok:true,icon:'coin',title:'金幣已入帳!',sub:(o.coinAmount||o.amount)+' 金幣進到錢包了'+(curPlan?',回去完成剛剛的點單吧 ✦':' ✦'),onclick:()=>{ if(curPlan){ shopOpen(3); } else openTopup(); },hold:9000});
           else if(o.type==='member') lobbyNotify({ok:true,icon:'crown',title:'會員已開通！',sub:'謝謝支持，會員權益即刻生效 ✦',onclick:openOrders,hold:9000});
           else if(o.type==='shop'){ /* 即買即得,購買當下已有慶祝,不再重複通知 */ }
           else lobbyNotify({ok:true,icon:'gift',title:'訂單已完成',sub:'謝謝光臨!期待下次再見 ✦',onclick:openOrders});
         } else if(st==='cancelled'){
-          lobbyNotify({icon:'coupon',title:o.staffDeclined?'陪玩臨時無法接單':'訂單已取消',sub:(o.refunded?((o.amount||0)+' 金幣已退回你的錢包,可以重新點單'):'店長已取消此訂單')+'・詳情看信箱',onclick:openOrders,hold:9000});
+          lobbyNotify({icon:'coupon',title:o.staffDeclined?'冒險者臨時無法接單':'訂單已取消',sub:(o.refunded?((o.amount||0)+' 金幣已退回你的錢包,可以重新點單'):'店長已取消此訂單')+'・詳情看信箱',onclick:openOrders,hold:9000});
         }
       }
     });
@@ -7503,7 +7503,7 @@ function bkPageMail(){
   const l='<div class="bkSec">信箱'+(list.length?('・共 '+list.length+' 封'):'')+'</div>'
     +(rows||'<div class="bkCard" style="text-align:center;color:#A88CA0;font-size:.97em">信箱空空的<br>通知和小紙條會寄到這裡 ✦</div>');
   const r='<div class="bkSec">整理</div>'
-    +'<div class="bkCard" style="font-size:.97em;color:#8A7B92;line-height:1.8">讀過的信可以一鍵收乾淨,未讀的會留著。</div>'
+    +'<div class="bkCard" style="font-size:.97em;color:#8A7B92;line-height:1.8">讀過的信可以一鍵收好,未讀的會留著。</div>'
     +'<div class="bkBtnRow">'+(readN?'<button class="bkBtn" onclick="clearReadMail();bkPaint()">清空已讀('+readN+')</button>':'')
     +'<button class="bkBtn" onclick="bookClose();renderMailBox();gOpen(\'mailBoxM\')">開啟完整信箱</button></div>';
   return {l,r};
@@ -7542,8 +7542,8 @@ window.bkEditInfo=function(){
     +'<div style="font-size:16.5px;font-weight:700;color:#5A4880;text-align:center;margin-bottom:12px">編輯我的闆卡資料</div>'
     +'<label style="font-size:12.5px;color:#8E7AB0">顯示名字(10 字內)</label>'
     +'<input id="beNm" maxlength="10" value="'+esc(b.name||'')+'" style="'+inp+'">'
-    +'<div style="font-size:11px;color:#A5798D;margin:4px 0 0">此暱稱是你在店裡活動的形象,也是冒險者(陪玩)稱呼你的名字。</div>'
-    +'<div style="font-size:11px;color:#C2537D;margin:2px 0 10px">請保持乾淨:不可使用色情、擦邊或其他不雅字詞。</div>'
+    +'<div style="font-size:11px;color:#A5798D;margin:4px 0 0">此暱稱是你在店裡活動的形象,也是冒險者稱呼你的名字。</div>'
+    +'<div style="font-size:11px;color:#C2537D;margin:2px 0 10px">請注意:不可使用色情、擦邊或其他不雅字詞。</div>'
     +'<label style="font-size:12.5px;color:#8E7AB0">一句話(20 字內)</label>'
     +'<input id="beQt" maxlength="20" value="'+esc(b.quote||'')+'" style="'+inp+';margin-bottom:10px">'
     +'<label style="font-size:12.5px;color:#8E7AB0">喜歡玩的遊戲(24 字內)</label>'
@@ -7826,7 +7826,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
-<script src="lobby-ui/companion-achievements.js?v=352"></script>
+<script src="lobby-ui/companion-achievements.js?v=469"></script>
 <script src="lobby-ui/live.js?v=461"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
@@ -7836,7 +7836,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/order-flow.js?v=373"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=450';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=469';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});

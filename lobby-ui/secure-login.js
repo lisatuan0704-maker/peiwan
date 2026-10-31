@@ -11,7 +11,7 @@ const MESSAGES={
   INVALID_SESSION:'Discord 授權已過期，請回大廳重新登入。',
   INVALID_REQUEST:'登入資料有誤，請回大廳重新登入。'
 };
-function message(code){return MESSAGES[code]||'登入服務暫時無法使用，請稍後再試；如果一直失敗，請到 Discord 聯絡店長。';}
+function message(code){return MESSAGES[code]||'登入暫時無法使用，請稍後再試；如果一直失敗，請到 Discord 聯絡店長。';}
 function read(){try{const v=JSON.parse(root.localStorage.getItem(STORE)||'null');return v&&typeof v.uid==='string'&&typeof v.key==='string'?v:null}catch{return null}}
 function remember(uid,key){try{root.localStorage.setItem(STORE,JSON.stringify({uid,key,at:Date.now()}))}catch{}}
 function forget(){try{root.localStorage.removeItem(STORE)}catch{}}
