@@ -687,8 +687,10 @@ html body #avM .bkBtn:first-child{background:linear-gradient(180deg,#FF6E9F,#FF3
 html body #ttHub .hub-header{z-index:6}
 html body .tt-live-ui .panel .panel-head{z-index:6}
 /* 標頭旋轉方塊：縮小並移到沒有字的位置 */
-html body .tt-live-ui .panel .panel-head{background-size:100% 7px,auto 52%,150px 66px,22px 22px,14px 14px,22px 22px,200px 82px,150px 100px,auto,auto!important;
-  background-position:0 0,40% 78%,58% 40%,54% 30%,58% 46%,66% 70%,46% 70%,right 0 top 0,0 0,0 0!important}
+/* v478 標頭裝飾精簡（使用者：上面的裝飾好擠）：拿掉幾何線框、橢圓軌道、小圖示群與穿過英文大字的粉色虛線，只留三顆星星與角落網點 */
+html body .tt-live-ui .panel .panel-head{background-size:100% 7px,0 0,0 0,22px 22px,14px 14px,16px 16px,0 0,150px 100px,auto,auto!important;
+  background-position:0 0,40% 78%,58% 40%,46% 30%,40% 62%,52% 72%,46% 70%,right 0 top 0,0 0,0 0!important}
+html body .tt-live-ui .panel .heading::after{display:none!important}
 
 @media(min-width:701px){
 /* 我的酒館：標頭與分頁變矮，內容區變大 */
