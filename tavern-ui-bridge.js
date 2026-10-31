@@ -61,7 +61,12 @@
       }else{
         /* v407 玩家跟隨寵物：沿用試穿與 NPC 的寵物比例（以 160px 人物為基準），面向改變時左右鏡像 */
         const layout=staffPetLayout[pet.asset],sz=parseFloat(a.cv?.style.width)||Math.round(TTScene.size(a.y)),scale=sz/160,dir=a.faceLeft?-1:1;
-        Object.assign(img.style,{width:layout.size*scale+'px',height:layout.size*(layout.aspect||112/96)*scale+'px',left:'calc(50% + '+layout.x*scale*dir+'px)',right:'auto',bottom:'auto',top:'calc(var(--tt-foot) + '+layout.y*scale+'px)'});
+        /* v488 寵物會走進牆裡／家具裡：預設那一側站不下時改站到主人另一側（再回到空地才換回來） */
+        let side=dir;
+        if(a.mapLoc!=='forest'&&TTScene.valid){const fx=a.x*1600,fy=a.y*900+layout.y*scale,w=22*scale,
+          fits=d=>{const px=fx+layout.x*scale*d;return TTScene.valid([px,fy])&&TTScene.valid([px-w,fy])&&TTScene.valid([px+w,fy]);};
+          if(!fits(dir)&&fits(-dir))side=-dir;}
+        Object.assign(img.style,{width:layout.size*scale+'px',height:layout.size*(layout.aspect||112/96)*scale+'px',left:'calc(50% + '+layout.x*scale*side+'px)',right:'auto',bottom:'auto',top:'calc(var(--tt-foot) + '+layout.y*scale+'px)'});
         img.style.transform='translate(-50%,-100%) scaleX('+dir+')';
       }
     }
