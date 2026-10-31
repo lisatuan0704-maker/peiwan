@@ -28,7 +28,8 @@
       const snap=!state||a.mapLoc!==map||distance<0.25;
       // Slow acknowledgements can leave more than 96px between updates.
       // Stay continuous within a map and adapt to the actual delivery cadence.
-      const duration=Math.max(120,Math.min(650,gap*.8),distance/.32);
+      // v481 依實際送達間隔播完整段（原本 0.8 倍會提早到、停一下再衝，看起來像暴衝）；追趕速度上限 200px/s（本人走路約 150～180px/s）。
+      const duration=Math.max(120,Math.min(1200,gap),distance/.2);
       state=a._remotePosition={signature,from:[a.x,a.y],to:point,at:now,snap,duration,time:p.t,packet:{...p},elapsed:0,renderedAt:now};
       a._sceneGoal=null;a._scenePath=null;a._sceneTransit=false;
     }

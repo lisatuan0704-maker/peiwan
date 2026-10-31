@@ -7,7 +7,7 @@ const distance=(a,b)=>Math.hypot((a.x-b.x)*1600,(a.y-b.y)*900);
 let a=actor();P.receive(a,packet(200,0),0);P.receive(a,packet(340,700),700);
 assert.equal(a.x*1600,200,'same-map delayed update must not snap');
 P.receive(a,packet(340,700),716);assert(a.x*1600>200&&a.x*1600<210);
-for(let t=732;t<=1300;t+=16)P.receive(a,packet(340,700),t);assert.equal(a.x*1600,340);
+for(let t=732;t<=1500;t+=16)P.receive(a,packet(340,700),t);assert.equal(a.x*1600,340); // v481 播完整個送達間隔（700ms）
 // Irregular deliveries and a large reconnect correction remain continuous.
 for(const gap of [150,350,700,1100]){
  a=actor();P.receive(a,packet(200,0),0);let last=0,latest=packet(200,0),peak=0;
