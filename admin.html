@@ -2309,7 +2309,10 @@ const ACCS=[
 function drawSnapTo(cv,src){
   const im=new Image();im.onload=()=>{const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,cv.width,cv.height);c.drawImage(im,0,0,cv.width,cv.height);};im.src=src;
 }
+function retiredWorn(doll){try{return !!doll&&!!window.TTRetiredOutfits&&JSON.stringify(TTRetiredOutfits.sanitize(doll,shopConfig||{}))!==JSON.stringify(doll);}catch(e){return false;}}
 function drawDollTo(cv, doll, pose){
+  /* v468 版權測試時裝不畫，改用可用的基本部件 */
+  try{ if(window.TTRetiredOutfits) doll=TTRetiredOutfits.sanitize(doll,shopConfig||{}); }catch(e){}
   const ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   ctx.clearRect(0,0,64,64);
@@ -2734,7 +2737,7 @@ function renderCustomers(){
   /* 畫頭像 */
   el.querySelectorAll('canvas.cuAva').forEach(cv=>{
     const r=rows.find(x=>x.k===cv.dataset.k);
-    try{ if(r&&r.snap) drawSnapTo(cv,r.snap);
+    try{ if(r&&r.snap&&!retiredWorn(r.doll)) drawSnapTo(cv,r.snap);
       else if(r&&r.doll) drawDollTo(cv,r.doll,'idle');
       else{ const c=cv.getContext('2d'); c.fillStyle='#EADFF7'; c.beginPath(); c.arc(32,32,26,0,7); c.fill(); } }catch(e){}
   });
@@ -2783,7 +2786,7 @@ function openCust(k){
     +'</div>';
   m.style.display='flex';
   try{ const cv=document.getElementById('custAva');
-    if(r.snap) drawSnapTo(cv,r.snap); else if(r.doll) drawDollTo(cv,r.doll,'idle'); }catch(e){}
+    if(r.snap&&!retiredWorn(r.doll)) drawSnapTo(cv,r.snap); else if(r.doll) drawDollTo(cv,r.doll,'idle'); }catch(e){}
 }
 
 </script>
