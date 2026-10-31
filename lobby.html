@@ -6611,7 +6611,11 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     const box=document.getElementById('pcSocial'); if(!box) return;
     box.innerHTML='';
     const t=popTarget;
-    if(!t||!t.myKey||!myKey||t.myKey===myKey) return;
+    if(t&&t.myKey&&myKey&&t.myKey===myKey){   /* v471: 自己的闆卡可以隨時編輯資料 */
+      box.innerHTML=rowBtn('編輯我的資料',"closeCard();bkEditInfo()");
+      return;
+    }
+    if(!t||!t.myKey||!myKey) return;
     const k=t.myKey;
     if(BLK[k]){ box.innerHTML='<span style="font-size:12px;color:#B7A6C9">已封鎖這位老闆</span>'; return; }
     if(FR[k]) box.innerHTML=rowBtn('傳私訊',"dmOpen("+ja(k)+");closeCard()")+rowBtn('刪除好友',"frRemove("+ja(k)+")",1);
@@ -7565,12 +7569,20 @@ window.bkEditInfo=function(){
     const upd={ name:nm.slice(0,10), quote:document.getElementById('beQt').value.trim().slice(0,20),
       games:document.getElementById('beGm').value.trim().slice(0,24), tags:tags.slice(0,5),
       bm:+document.getElementById('beBm').value||0, bd:+document.getElementById('beBd').value||0 };
-    try{ db.ref(ROOT+'/lobby/'+myKey).update(upd); db.ref(ROOT+'/cards/'+myKey).update(upd); }catch(e){}
-    try{ Object.assign(a.b,upd); }catch(e){}
-    m.remove();
-    toast('資料已更新 ✦');
-    try{ bkPaint(); }catch(e){}
-    setTimeout(function(){ try{ location.reload(); }catch(e){} },1100);
+    /* v471: 等資料庫確認寫入成功才說更新好了；失敗時保留視窗讓老闆重試 */
+    const btn=this; if(btn.disabled) return; btn.disabled=true; const label=btn.textContent; btn.textContent='儲存中…';
+    db.ref(ROOT+'/lobby/'+myKey).update(upd).then(function(){
+      return db.ref(ROOT+'/cards/'+myKey).update(upd).catch(function(){});   // 舊闆卡可能沒有 cards 資料，不影響
+    }).then(function(){
+      try{ Object.assign(a.b,upd); }catch(e){}
+      m.remove();
+      toast('資料已更新 ✦');
+      try{ bkPaint(); }catch(e){}
+      try{ if(typeof closeCard==='function') closeCard(); }catch(e){}
+    }).catch(function(e){
+      btn.disabled=false; btn.textContent=label;
+      toast((e&&/permission/i.test(e.code||e.message||''))?'儲存失敗：請先用 Discord 登入酒館再編輯':'儲存失敗，請稍後再試');
+    });
   };
 };
 function bkPageWard(){

@@ -1,5 +1,8 @@
 # 小小酒館修改紀錄
 
+## v471 闆卡資料隨時可編輯
+使用者：資料卡讓客人隨時可以編輯。原本只有闆卡手帳裡的「編輯資料」（v205 bkEditInfo），且寫入沒等資料庫回覆就顯示「已更新」並重新整理頁面。自己的闆卡（pcSocialRender，點自己的角色）新增「編輯我的資料」按鈕，開同一個編輯視窗；儲存改為等 lobby 寫入成功才關閉並顯示「資料已更新」（cards 舊闆卡沒有資料時忽略），失敗保留視窗並提示（權限不足時請先用 Discord 登入），不再重新整理頁面（名冊監聽會自動更新名字）。欄位與限制不變：名字 10、一句話 20、遊戲 24、標籤 5 個、生日（皆在 v466 規則上限內）。lobby-view 版本 471。
+
 ## v467b 後端（待部署）：應徵表、櫃檯歡迎訊息發不出去
 使用者回報：應徵小房間（🌙｜應徵-小玟）只有頻道開頭，看不到填寫資料。原因：Discord 訊息 nonce 上限 25 字，recruit-desk.cjs 用 'tt-recruit-'＋頻道 ID（共 30 字），送出被 Discord 拒絕（400），之後的通知也沒發；v464 起所有應徵都這樣（資料已存 orderVoiceV1/recruitV1/apps/<頻道>）。counter-desk.cjs 的 'tt-counter-'＋討論串 ID 同樣過長，櫃檯私人討論串的歡迎訊息與「結束這次詢問」按鈕沒貼出（討論串本身可正常聊天）。
 修正（ops/deploy-v467b.sh，security-v428）：nonceOf(kind,id) 限 25 字；應徵表與補充問題抽成 postForm，送出成功後寫 apps/<頻道>/posted；啟動 15 秒後 backfill：posted 未設定的應徵記錄，房間裡沒有機器人的「應徵表」就補貼並通知店方，已有就只標記，房間已刪（404／403）標 posted=-1。新增 recruit-nonce-v467.test.cjs 3 項（對修改前版本 3 項皆失敗），recruit-desk 8、counter-desk 8 通過。部署腳本先核對主機 recruit-desk.cjs（cf2b34…）與 counter-desk.cjs（45761b…）。已移除已部署的 deploy-v466b.sh。
