@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v477 冒險者手札夜間模式字太深
+使用者：冒險者說名字與很多字在夜間模式太黑，改淺紫色。原因：v412 整站主題只套白天（body:not(.dark)），之後新增的卡片、說明、名字等寫死深藍字，夜間深色底上看不清。新增 lobby-ui/partner-dark-fix.js（partner.html 最後載入）：只在 body.dark 時，找出深色底（含漸層第一色）上的深色文字（亮度皆偏低），改成淺紫 #DCD0FF；畫面變動時重新檢查（120ms 合併），切回白天還原原本的顏色（保留原本行內顏色與優先級）。淺色底（例如黃色提醒框）上的深字不動。
+驗證：測試頁（深底深字→淺紫、黃底深字不變、淺字不變、漸層底深字→淺紫、切回白天恢復原色）。
+
 ## v476 冒險者手札不把大廳的 Discord 客人登入當成工作帳號
 使用者回報：冒險者開手札跳出「請輸入邀請碼」，之後「陪玩 Discord 綁定」顯示「此工作帳號尚未開放綁定」。原因：同一個瀏覽器先在大廳用 Discord 登入（Firebase 身分 discord_…，同網域共用登入狀態），打開 partner.html 時 onAuthStateChanged 直接以客人身分 afterAuth，找不到 links 就跳出邀請碼框；輸入後客人帳號被綁成冒險者（links/discord_1383378428186595408 → 縭 -OxY7C，invites/T9FX81 usedBy 被占用），但後端 orderVoiceV1/staffAccounts 只核准原本的工作帳號 authUid，Discord 綁定回 PARTNER_ACCOUNT_REQUIRED。三位冒險者原本的工作帳號（Nh0dY1／nr95X3／tXb1ph）與 staffBindings 都還在。
 修正：partner.html afterAuth 遇到 discord_ 開頭的身分直接略過，等使用工作帳號密碼登入（會換掉目前登入身分）再檢查。錯誤綁定的 links/discord_1383378428186595408 需由店長在 Firebase 主控台刪除（Claude 不刪資料）。
