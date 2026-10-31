@@ -38,7 +38,15 @@ function bindAfterCreate(key){
  if(!tok||!key||!window.TTSecureLogin||!window.firebase?.auth)return Promise.resolve(false);
  return TTSecureLogin.login(firebase.auth(),tok,key).then(()=>{try{sessionStorage.removeItem(TOKEN);}catch{}return true;}).catch(()=>false);
 }
+// v485: 這個 Discord 已經有闆卡時，直接用剛才的登入找回那張闆卡並回大廳（不用再按一次 Discord 登入）。
+async function recover(key){
+ let tok=null;try{tok=sessionStorage.getItem(TOKEN);}catch{}
+ if(!tok||!key||!window.TTSecureLogin||!window.firebase?.auth)return false;
+ try{const r=await TTSecureLogin.login(firebase.auth(),tok,key);try{sessionStorage.removeItem(TOKEN);}catch{}
+  return r.key||key;}
+ catch(e){if(e&&e.code==='INVALID_SESSION'){try{sessionStorage.removeItem(TOKEN);}catch{}}throw e;}
+}
 function boot(){paint();gate();}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-window.TTCardDiscord={login,paint,bindAfterCreate,profile};
+window.TTCardDiscord={login,paint,bindAfterCreate,profile,recover};
 })();

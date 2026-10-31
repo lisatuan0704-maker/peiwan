@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## v485 開店清資料後 Discord 登入找不回闆卡（變訪客、工房又說已經有闆卡）
+客人回報：DC 登入後沒存到闆卡、DC 伺服器綁不進去；無痕重做又顯示這個 DC 已經做過闆卡。原因：清測試資料只刪了 peiwan 的闆卡，secureV1/members／owners 與 accounts/<ID>.myKey 舊紀錄還指向已刪除的闆卡；後端 account-claim 只要有 members 就回傳舊鑰匙（大廳顯示訪客，DC 身分組也判定未綁定），工房則因 lobby/<@username 鑰匙> 已有名字擋下重做。
+後端（ops/deploy-v485.sh，security-v428；只替換 account-claim.cjs，核對主機檔案為 v466b 19f77a…或更早 fd0023…）：綁定的闆卡已不存在且有可認領的新闆卡（本機鑰匙或 keyFor(username)）時，先解除舊 members／owners 再走一般認領；候選順序 帳號紀錄 myKey → 本機鑰匙 → keyFor(username)，已不存在的闆卡跳過，某個候選認領失敗再試下一個；認領證據不變（帳號紀錄相符，或闆卡 dcid＝登入 username 且鑰匙＝keyFor(username)）。新增 account-claim-v485.test.cjs 11 項（舊程式 7 項失敗），v466 8 項照過；部署腳本已用模擬根目錄驗證替換與核對不符時停止。
+網站：card.html 遇到已有闆卡時改呼叫 TTCardDiscord.recover（card-ui/discord-login.js 485）用剛才的 Discord 登入直接找回並回大廳；失敗才提示回大廳用 Discord 登入（拿掉「改成自己的 Discord ID」，欄位已自動帶入）。
+
 ## v484 甜甜犬商城縮圖縮小
 使用者：甜甜犬太大，參考布布。商城縮圖依可見範圍填滿畫布，甜甜犬（54×40）在 112px 畫布顯得比布布大；shop-layout.css 把 pet_sweet 加入布布／鬼鬼的 82px 規則，兩隻畫出大小相同。大廳與試穿大小不變（與人物同像素密度，已比布布小）。版本鏈 shop-layout 484→時裝間比較 484→index 484→bridge 484→lobby 484、lobby-view 484。
 

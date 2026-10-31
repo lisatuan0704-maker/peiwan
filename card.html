@@ -596,7 +596,11 @@ async function generate(){
     const k=btoa(encodeURIComponent(dcid)).replace(/[=+/]/g,'');
     let taken=false;try{taken=!!(await db.ref(ROOT+'/lobby/'+k+'/name').once('value')).val();}catch(e){}
     if(taken){
-      alert('這個 Discord ID 已經做過闆卡了（闆卡每人一張）。\n如果是你本人，請到大廳用 Discord 登入，就會找回原本的闆卡。\n如果填錯了，請改成你自己的 Discord ID。');
+      /* v485: 這個 Discord 帳號已經有闆卡 → 直接用剛才的 Discord 登入找回那張闆卡、回大廳（以前只跳提示，客人會卡住） */
+      let back=false,why='';
+      try{back=await window.TTCardDiscord?.recover?.(k);}catch(e){why=e&&e.message||'';}
+      if(back){ alert('你已經有闆卡了，幫你找回來囉！現在帶你回大廳。'); location.href='lobby.html'; return; }
+      alert('這個 Discord 帳號已經有闆卡了（闆卡每人一張）。\n請回大廳按「用 Discord 登入酒館」，就會回到你原本的闆卡。'+(why?'\n\n'+why:''));
       return;
     }
   }
@@ -740,6 +744,6 @@ document.addEventListener('pointerdown',function(e){
 </script>
 <div style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:rgba(110,88,166,.45)">v240</div>
 <script src="card-ui/workshop.js?v=233"></script>
-<script src="card-ui/discord-login.js?v=438"></script>
+<script src="card-ui/discord-login.js?v=485"></script>
 </body>
 </html>
