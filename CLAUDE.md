@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v467b 後端（待部署）：應徵表、櫃檯歡迎訊息發不出去
+使用者回報：應徵小房間（🌙｜應徵-小玟）只有頻道開頭，看不到填寫資料。原因：Discord 訊息 nonce 上限 25 字，recruit-desk.cjs 用 'tt-recruit-'＋頻道 ID（共 30 字），送出被 Discord 拒絕（400），之後的通知也沒發；v464 起所有應徵都這樣（資料已存 orderVoiceV1/recruitV1/apps/<頻道>）。counter-desk.cjs 的 'tt-counter-'＋討論串 ID 同樣過長，櫃檯私人討論串的歡迎訊息與「結束這次詢問」按鈕沒貼出（討論串本身可正常聊天）。
+修正（ops/deploy-v467b.sh，security-v428）：nonceOf(kind,id) 限 25 字；應徵表與補充問題抽成 postForm，送出成功後寫 apps/<頻道>/posted；啟動 15 秒後 backfill：posted 未設定的應徵記錄，房間裡沒有機器人的「應徵表」就補貼並通知店方，已有就只標記，房間已刪（404／403）標 posted=-1。新增 recruit-nonce-v467.test.cjs 3 項（對修改前版本 3 項皆失敗），recruit-desk 8、counter-desk 8 通過。部署腳本先核對主機 recruit-desk.cjs（cf2b34…）與 counter-desk.cjs（45761b…）。已移除已部署的 deploy-v466b.sh。
+
 ## v470 網站圖示換成線條吉祥物
 使用者：原本的奶油杯網站圖示是 AI 做的（其他小圖示是購買的授權素材，保留），換成我們的線條吉祥物當 logo，可以加背景，下面用像素字寫酒館英文。使用者選定藍紫漸層底（與原圖示同色）＋ lobby-ui/assets/theme/brand-cat.png（內部填白、淡紫陰影）＋手繪 5×7 像素字「TINY TAVERN」（深藍字、白邊、粉色錯位陰影，整數倍放大不模糊）。覆蓋 icon-512.png、icon-192.png、apple-touch-icon.png；新增 favicon.png（64px，只有貓、線條加粗，分頁太小放不下字；全站一直引用 /favicon.png 但檔案原本不存在）。manifest 與各頁 apple-touch-icon 加 ?v=470 避免舊圖快取；admin／card／partner 的 apple-touch-icon 原本指向不存在的 favicon.png，改指 apple-touch-icon.png；lobby-view.html（電腦版實際開的頁）補上圖示連結。
 
