@@ -606,6 +606,9 @@ function login(){
 }
 function afterAuth(){
   const u=auth.currentUser; if(!u||booted) return;
+  /* v476: 同一個瀏覽器先在大廳用 Discord 登入（客人帳號 discord_…），開手札時不能把客人帳號當成工作帳號綁邀請碼；
+     等他用工作帳號密碼登入（會換掉目前的登入身分）再檢查。 */
+  if(/^discord_/.test(u.uid)) return;
   db.ref(ROOT+"/links/"+u.uid).once("value",sv=>{
     const l=sv.val();
     if(!l||l.type!=="char"){
