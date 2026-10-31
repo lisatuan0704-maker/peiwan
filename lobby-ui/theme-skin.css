@@ -1017,7 +1017,7 @@ html body #dmM #dmLog .dm-time,html body #dmM #dmLog time{color:var(--sk-mute)!i
 html body #dmM .dm-composer{background:#fff!important;border-top:2px solid #D3D8F2!important}
 html body #dmM #dmIn{border:2px solid #B9C2EE!important;background:#fff!important;color:var(--sk-ink)!important}
 html body #dmM .dm-composer button{border:3px solid var(--sk-ink)!important;background:linear-gradient(180deg,#FF8DB5,#FF4F8B)!important;color:#fff!important;font-weight:900;box-shadow:0 3px 0 var(--sk-ink)!important}
-html body #dmM .dm-composer .dm-sticker-toggle{background:#fff!important;color:var(--sk-pink)!important}
+html body #dmM .dm-composer .dm-sticker-toggle{display:grid!important;place-items:center!important;flex:0 0 auto;width:40px!important;height:40px!important;padding:0!important;border:2.5px solid var(--sk-ink)!important;border-radius:9px!important;outline:0;background:linear-gradient(180deg,#fff,#FFEAF3)!important;color:var(--sk-pink)!important;box-shadow:0 2px 0 rgba(28,33,86,.2)!important}html body #dmM .dm-composer .dm-sticker-toggle svg{display:block;width:24px;height:24px}html body #dmM .dm-composer .dm-sticker-toggle[aria-expanded=true]{background:var(--sk-pink)!important;color:#fff!important}html body #dmM .dm-composer .dm-sticker-toggle:focus-visible{outline:3px solid #C4ADEC;outline-offset:2px}
 html body #dmM .dm-count{color:var(--sk-mute)!important}
 html body #dmM .dm-footer{background:#F4FAFF!important;border-top:2px solid #D3D8F2!important}
 html body #dmM .dm-footer span{color:var(--sk-mute)!important}

@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v487 私訊貼圖按鈕圖示
+使用者：私訊視窗輸入列左邊的貼圖按鈕不對（只有一個小小的 ☺ 字元擠在框底、外面還有一圈淡紫框）。lobby-ui/social-design.js 改用大廳聊天貼圖按鈕同一個貼圖 SVG 圖示；theme-skin.css 改成與大廳聊天貼圖鈕相同的主題樣式（40px 方鈕、深藍框、白到淡粉漸層、粉色圖示，打開時粉底白圖示），只在鍵盤操作時顯示淡紫焦點框。social-design.js 487、theme-skin.css 487、verTag v487、lobby-view 487。
+驗證：獨立測試頁截圖，圖示置中、與送出鈕同高。
+
 ## v486 三隻寵物正式名稱
 使用者：桃的寵物叫鈴、蕪的寵物叫雪球、縭的寵物叫啵幽。tavern-ui-bridge.js companionPets：pet_bubu 布布→雪球、pet_guigui 鬼鬼→啵幽、pet_dengdeng 燈燈→鈴；商城商品名與寵物格名稱改為優先用 companionPets 名稱（shopConfig 裡的舊名不再蓋過，店長頁仍顯示舊名，可在店長頁自行改）。lobby.html 闆卡手帳寵物圖鑑名稱同步。bridge 486、lobby-view 486、verTag v486。
 驗證：本機隔離商城寵物分類截圖顯示 雪球／啵幽／鈴／水晶龍／甜甜犬。
