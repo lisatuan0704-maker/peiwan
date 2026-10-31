@@ -1481,13 +1481,13 @@ body.artBub.bub3s .npc .bub{
 <div id="hall"><div id="hallBackdrop" aria-hidden="true"><div class="tt-mirror-side tt-mirror-left"></div><div class="tt-mirror-side tt-mirror-right"></div></div><div id="world"><div id="worldbg"></div></div><div id="hallShade" aria-hidden="true"></div></div>
 <div id="vig"></div>
 <button id="gearBtn" title="設定"><svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" stroke="#6E58A6" stroke-width="1.6"/><path d="M12 2.6l1.5 2.1 2.5-.5.6 2.5 2.3 1.1-.7 2.5 1.6 2-1.6 2 .7 2.5-2.3 1.1-.6 2.5-2.5-.5L12 21.4l-1.5-2.1-2.5.5-.6-2.5-2.3-1.1.7-2.5-1.6-2 1.6-2-.7-2.5 2.3-1.1.6-2.5 2.5.5z" stroke="#9E86D6" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
-<div id="musicbox" style="display:none"><button id="sndBtn">🔈</button><input type="range" id="volSl" min="0" max="100" value="50"><span id="volN">50</span></div>
+<div id="musicbox" style="display:none"><button id="sndBtn">🔈</button><input type="range" id="volSl" min="0" max="100" value="20"><span id="volN">20</span></div>
 
 <div class="gwin" id="setM"><div class="gcard" style="max-width:340px">
   <div class="gtop"><span class="gt">設定</span><button class="gx" onclick="gClose('setM')">✕</button></div>
   <div class="gin">
     <div class="setRow"><div class="setL"><div class="setT">背景音樂</div><div class="setD">酒館的環境音樂</div></div><button class="tgl" id="tglMusic"><i></i></button></div>
-    <div class="setRow" id="volRow"><div class="setL"><div class="setT">音樂音量</div></div><input type="range" id="volSl2" min="0" max="100" value="50" style="flex:1;max-width:150px"></div>
+    <div class="setRow" id="volRow"><div class="setL"><div class="setT">音樂音量</div></div><input type="range" id="volSl2" min="0" max="100" value="20" style="flex:1;max-width:150px"></div>
     <div class="setRow"><div class="setL"><div class="setT">點擊音效</div><div class="setD">按鈕的音效回饋</div></div><button class="tgl on" id="tglSfx"><i></i></button></div>
     <div class="setRow"><div class="setL"><div class="setT">掛機亂走</div><div class="setD">閒置時小人自己逛(大家看得到)</div></div><button class="tgl" id="tglWander"><i></i></button></div>
     <div class="setRow"><div class="setL"><div class="setT">特效品質</div><div class="setD">電腦不順就選「輕量」;「華麗」會另外開啟手帳翻頁動畫(很吃顯示卡)</div></div>
@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v479</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v480</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2899,7 +2899,7 @@ window.addEventListener('pageshow',e=>{
     try{ last=performance.now(); }catch(err){}
     /* 音樂續播:跳頁會被瀏覽器暫停,回來若原本是開的就自動接續 */
     const a=document.getElementById('bgm');
-    let on=false; try{ on=localStorage.getItem('tt_music')==='1'; }catch(err){}
+    let on=true; try{ on=localStorage.getItem('tt_music')!=='0'; }catch(err){}
     if(a&&on){
       const p=a.play();
       if(p&&p.catch) p.catch(()=>{
@@ -6040,12 +6040,12 @@ function tryServeNudge(staff){
   w.appendChild(cat);
 })();
 
-/* ================= 🔊 大廳背景音樂(bgm.mp3,預設關閉,點 🔈 才播)================= */
+/* ================= 🔊 大廳背景音樂(bgm.mp3；v480 預設開啟、音量 20，瀏覽器規定第一次點畫面後才開始播；關過的人維持關閉)================= */
 (function(){
   const btn=document.getElementById('sndBtn'), a=document.getElementById('bgm');
   if(!btn||!a) return;
-  a.loop=true; a.volume=0.5;
-  let on=false; try{ on=localStorage.getItem('tt_music')==='1'; }catch(e){}
+  a.loop=true; a.volume=0.2;
+  let on=true; try{ on=localStorage.getItem('tt_music')!=='0'; }catch(e){}
   function icon(){ btn.textContent = on ? '🔊' : '🔈'; }
   function play(){ const p=a.play(); if(p&&p.catch) p.catch(()=>{}); }
   function setOn(v){
@@ -6208,8 +6208,8 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   /* --- 音量拉桿 --- */
   const a=document.getElementById('bgm'), sl=document.getElementById('volSl'), vn=document.getElementById('volN');
   if(a&&sl){
-    let v=50; try{ v=parseInt(localStorage.getItem('tt_vol')||'50',10); }catch(e){}
-    if(isNaN(v)) v=50; sl.value=v; vn.textContent=v; a.volume=v/100;
+    let v=20; try{ v=parseInt(localStorage.getItem('tt_vol')||'20',10); }catch(e){}
+    if(isNaN(v)) v=20; sl.value=v; vn.textContent=v; a.volume=v/100;
     sl.addEventListener('input',()=>{ const x=parseInt(sl.value,10); a.volume=x/100; vn.textContent=x;
       try{localStorage.setItem('tt_vol',String(x));}catch(e){} });
   }
@@ -7957,12 +7957,12 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
   const tM=document.getElementById('tglMusic'), tS=document.getElementById('tglSfx'), tW=document.getElementById('tglWander');
   const v2=document.getElementById('volSl2');
   function syncSettings(){
-    let m=false; try{ m=localStorage.getItem('tt_music')==='1'; }catch(e){}
+    let m=true; try{ m=localStorage.getItem('tt_music')!=='0'; }catch(e){}
     tM.classList.toggle('on',m);
     tS.classList.toggle('on', window.__sfxOn!==false);
     let w=false; try{ w=localStorage.getItem('tt_wander')==='1'; }catch(e){}
     tW.classList.toggle('on',w);
-    let vol=50; try{ vol=parseInt(localStorage.getItem('tt_vol')||'50',10); }catch(e){}
+    let vol=20; try{ vol=parseInt(localStorage.getItem('tt_vol')||'20',10); }catch(e){}
     v2.value=vol;
   }
   /* 音樂:轉呼叫原本 sndBtn 的邏輯 */
