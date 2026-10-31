@@ -229,3 +229,10 @@ html body .cast-select:disabled{opacity:.6!important;cursor:not-allowed!importan
 /* v411 冒險者資訊頁「私訊」按鈕 */
 #profileWindow .profile-foot .dm-cast{margin-left:auto;margin-right:10px;border:3px solid var(--sk-ink)!important;border-radius:12px!important;background:#fff!important;color:var(--sk-ink)!important;font-weight:900!important;padding:9px 16px!important;box-shadow:0 3px 0 var(--sk-ink)!important;cursor:pointer}
 #profileWindow .profile-foot .dm-cast:hover{background:#FFF0F6!important}
+
+/* v478 目前搭配移到主框外側：主框窄 144px（拿掉中間清單欄），iframe 往右多 186px 透明區放外掛框；整組置中 */
+@media(min-width:601px){
+  #shopWindow{width:min(1016px,calc(96vw - 186px))!important;translate:-93px 0}
+  #shopWindow .shop-content{overflow:visible!important}
+  #shopWindow #shopFrame{width:calc(100% + 186px)!important;max-width:none}
+}

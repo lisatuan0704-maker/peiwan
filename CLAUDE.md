@@ -1,5 +1,12 @@
 # 小小酒館修改紀錄
 
+## v478 陪陪介紹卡（網站＋Discord 酒館居民）、商城目前搭配外掛框
+使用者：三張陪陪介紹卡（縭／蕪／桃，繪師白露立繪＋PSD 原圖物件裝飾，製作檔在 /tmp/claude-0/cards）放到 Discord 酒館居民由機器人發，網站點兩下像素小人跳出自己的卡。
+網站：img/staff-cards-v478/<rira|kabuki|momo>.webp（2400×1500）；lobby-ui/staff-card.js／.css（TTStaffCard.open(asset)，整站主題視窗、Esc／點外面關閉）；lobby.html makeStaff 加上點擊：300ms 內點兩下開卡（STAFF_GIF[cid].asset），點一下走過去。換人或換卡時更新圖片與版本號。
+後端（ops/deploy-v478.sh，security-v428，取代未部署的 v467b 並包含其修正）：order-voice-bot/resident-cards.cjs：找名稱含「酒館居民」的頻道（不自動建立），發開頭說明（使用者確認文字：「這是我們首批迎接試營運的陪陪們～」、#酒館櫃檯 連結、前往酒館點單按鈕）＋依序三則「# 縭」「# 蕪」「# 桃」附介紹卡 PNG。記在 orderVoiceV1/residentV1 {channelId,ids,version}；任一則被刪或 VERSION 改變就刪掉自己發過的幾則、照順序重發（頻道其他訊息不動）；發到一半失敗會收回這次發出的訊息，2 分鐘後重試。人事變動：改 RESIDENTS／assets 圖片並把 VERSION 加 1。service-server.cjs 在 lounge 後啟動。測試 resident-cards 6 項；部署腳本核對主機 recruit-desk（cf2b34…）、counter-desk（45761b…）、service-server（91e2dc…），已用模擬根目錄驗證替換與核對失敗時停止。
+商城（使用者：目前搭配用橋接方式，像跟主框連上下桿子架出去的框，主框左右拉近）：桌面版主框寬度少 144px（拿掉中間清單欄），iframe 往右多 186px 透明區；目前搭配改 position:fixed 放在主框右外側（150px 寬），上下兩根桿子（::after）接回主框；整組往左 93px 置中，iframe 內置中對話框同樣往左 93px。試穿框改為 position:relative（迴紋針與白星原本以整頁右緣定位）。手機版不變。theme-shop.css、theme-window.css 478，版本鏈 lobby→bridge 478→index 478→時裝間比較 478、lobby-view 478。
+驗證：本機隔離大廳 1685／1366／1024 桌面與 390 手機截圖（當季、頭髮、座椅、背包），點兩下三位冒險者各自開出正確卡片、Esc 關閉、點一下不開卡。
+
 ## v477 冒險者手札夜間模式字太深
 使用者：冒險者說名字與很多字在夜間模式太黑，改淺紫色。原因：v412 整站主題只套白天（body:not(.dark)），之後新增的卡片、說明、名字等寫死深藍字，夜間深色底上看不清。新增 lobby-ui/partner-dark-fix.js（partner.html 最後載入）：只在 body.dark 時，找出深色底（含漸層第一色）上的深色文字（亮度皆偏低），改成淺紫 #DCD0FF；畫面變動時重新檢查（120ms 合併），切回白天還原原本的顏色（保留原本行內顏色與優先級）。淺色底（例如黃色提醒框）上的深字不動。
 驗證：測試頁（深底深字→淺紫、黃底深字不變、淺字不變、漸層底深字→淺紫、切回白天恢復原色）。
