@@ -458,7 +458,7 @@ const TACCP=[
   {n:'草莓鈴鐺', t:[['最上方配件','草莓鈴鐺']]},
 ];
 /* v233:初次做闆卡不提供 露亞/小莓(版權測試套)與付費套裝的配件;資料保留,只是不顯示 */
-const FIRST_HIDE=/露亞|小莓/;
+const FIRST_HIDE=/露亞|小莓|閉眼/;   /* v473 閉眼是眨眼動畫用的圖，不給選 */
 const ACC_HIDE=TACCP.filter(p=>p.n!=='無').map(p=>p.n);   /* 配件全部是付費時裝,初次闆卡不提供(配件分頁也不顯示) */
 function accLayer(g,list,hi,hx){ (list||[]).forEach(([c2,n2])=>tpDraw(g,tpFind(c2,n2),hi,hx)); }
 if(TEST_MODE){

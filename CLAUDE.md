@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v473 閉眼不能選
+使用者：工房眼睛選項的閉眼拿掉，那是眨眼動畫用的。card.html FIRST_HIDE 加入「閉眼」（工房眼睛只剩藍色銳利眼、棕色杏眼）；lobby.html 工房部件單買移除 base_face_4「閉眼」，背包／商城工房部件清單（baseList）與舊換裝間都不列名稱含「閉眼」的眼睛。眨眼動畫（_tpCE）照常使用這張圖。已經穿著閉眼的人資料不改，可到背包換眼睛。
+驗證：大廳 TTBaseUnits 不含閉眼、__allBaseParts／__ownedParts 眼睛只剩兩款；工房（390 寬）眼睛選項只剩兩款。
+
 ## v472 開幕禮 350 金幣：信箱通知＋本人領取（需發布新規則）
 使用者：註冊成功就跳出信件通知，從信箱領取 350 金幣（活動 11/1～11/7）；選「直接做完整版」。
 規則（tests/security-rules-v428/build/harden-phase6.cjs，可重複執行；套用前快照 rules-before-v472.json）：新節點 peiwan/welcomeGift/<key> {tx,at,amount:350}，本人與店員可讀；本人只能在 now < 2026-11-08 00:00（台灣時間）且尚未領過時新增一次，必須同一次寫入 walletTx/<key>/<tx>（type welcome、amount 350、ref＝tx）＋ wallet/<key>/lastTx＝tx ＋ wallet/<key>/balance 剛好加 350（沒有錢包時＝350）。walletTx 與 wallet.balance 各多一個 OR 分支，原本的消費、店長調整規則不變。
