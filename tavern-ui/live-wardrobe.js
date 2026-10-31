@@ -193,7 +193,7 @@
   let left=previewSource.width,top=previewSource.height,right=0,bottom=0;
   for(let cy=0;cy<previewSource.height;cy++)for(let cx=0;cx<previewSource.width;cx++)if(pixels[(cy*previewSource.width+cx)*4+3]>0){left=Math.min(left,cx);top=Math.min(top,cy);right=Math.max(right,cx+1);bottom=Math.max(bottom,cy+1);}
   if(!bottom)return;
-  const foot=previewFoot*reference,petHeight=size*112/96;
+  const foot=previewFoot*reference,petHeight=size*(pet.layout.aspect||112/96);
   // Keep the same 160px reference and foot-relative placement as the adjustment page.
   Object.assign(avatar.style,{left:-reference/2+'px',top:-foot+'px'});
   Object.assign(img.style,{width:size+'px',height:petHeight+'px',left:x-size/2+'px',top:y-petHeight+'px'});

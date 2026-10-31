@@ -1,0 +1,41 @@
+{
+ "format": "tiny-tavern-season-import",
+ "version": 1,
+ "season": 482,
+ "products": {
+  "pet_crystal": {
+   "custom": 1,
+   "type": "寵物",
+   "name": "水晶龍",
+   "price": 399,
+   "active": true,
+   "img": "https://tinytavern.tw/img/pets-v482/crystal.png",
+   "parts": {
+    "pet": {
+     "n": "水晶龍",
+     "d": "https://tinytavern.tw/img/pets-v482/crystal.png",
+     "g": 0,
+     "x": 0,
+     "y": 0
+    }
+   }
+  },
+  "pet_sweet": {
+   "custom": 1,
+   "type": "寵物",
+   "name": "甜甜犬",
+   "price": 399,
+   "active": true,
+   "img": "https://tinytavern.tw/img/pets-v482/sweet.png",
+   "parts": {
+    "pet": {
+     "n": "甜甜犬",
+     "d": "https://tinytavern.tw/img/pets-v482/sweet.png",
+     "g": 0,
+     "x": 0,
+     "y": 0
+    }
+   }
+  }
+ }
+}

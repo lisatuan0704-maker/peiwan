@@ -1,5 +1,11 @@
 # 小小酒館修改紀錄
 
+## v482 399 系列寵物：水晶龍、甜甜犬（會動）
+使用者提供兩包寵物素材（128px，為 64px 像素 2 倍）：水晶龍（走路 5 格、等待 10 格）、甜甜犬（走路 4 格、趴下 6 格、睡覺 4 格、趴下＋睡覺 11 格、原始靜態 64px）。img/pets-v482/：crystal-walk／crystal-idle／crystal.png、sweet-walk／sweet-lie（拿掉循環標記，只播一次）／sweet-sleep／sweet-rest（趴下＋睡覺，商城試穿用）／sweet.png（64→128 最近鄰）。
+tavern-ui-bridge.js companionPets 加 pet_crystal／pet_sweet（src、still、anim），staffPetLayout 加 crystal／sweet（size 160＝與人物同像素密度、aspect 1、x -112／-100、y 34／36）；寵物框高改用 layout.aspect（舊寵物仍 112/96）。新增每 150ms 的狀態切換（只限玩家，不含冒險者 NPC）：主人走路（state 以 walk 開頭、未坐下）播走路，停下播待機；甜甜犬停下 4 秒後播趴下一次（1.3 秒）再循環睡覺，動了就回走路。商城縮圖用靜態圖，試穿用 src。live-wardrobe 寵物框高同樣讀 aspect。闆卡手帳圖鑑寵物加入兩隻。
+上架：season-shop-import.js 新增 482（type 寵物、不需 seasonFeatured、每隻 399，檔案 img/pets-v482/products.json），店長頁按「載入寵物：水晶龍／甜甜犬（399）」→ 上架；shopConfig 有這兩筆後商城才會出現（資料庫規則照 shopConfig 售價檢查付款）。
+驗證：本機隔離商城寵物分類、兩隻試穿畫面；大廳以兩個測試角色確認 待機→走路→停下 4.5 秒（甜甜犬趴下）→6 秒（睡覺）切換正確。版本鏈 lobby→bridge 482→index 482→時裝間比較 482→live-wardrobe 482、season-shop-import 482、lobby-view 482。
+
 ## v481 客人卡在高腳椅裡、遠端人物暴衝
 使用者：客人被卡住（截圖：站在吧台高腳椅中間、被椅子蓋住）、人物暴衝。原因①：繪師遮罩只擋高腳椅的椅面與四支椅腳，椅腳之間有約 14px 寬的可走空隙（y 448～463），點地板或方向鍵會走進椅子底下，椅子圖層畫在人物前面、左右又被椅腳擋住，看起來卡住。lobby-ui/scene.js validInt 加上四張高腳椅整塊（x 670-749／803-881／935-1013／1067-1145 左右各多 3px、y 440～465）不可站；已在裡面的人會被 nearest 移到椅子下方。地圖連通檢查仍只有一塊、沒有走不出去的區域。原因②：觀看端以送達間隔的 0.8 倍播完一段（提早到、停一下、下一段再以最高 320px/s 追），走路看起來一衝一停。lobby-ui/presence.js 改為播滿實際送達間隔（上限 1200ms）、追趕上限 200px/s（本人走路約 150～180px/s）。presence-v353 第 10 行等待時間由 1300 改 1500（700ms 間隔現在會用 700ms 播完）。scene.js／presence.js 481、lobby-view 481。
 驗證：scene-v265、movement-v278、presence-v353（穩定最大落後 15px）、presence-v354 通過。

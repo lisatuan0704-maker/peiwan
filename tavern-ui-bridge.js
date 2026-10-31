@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=478';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=482';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -35,9 +35,15 @@
     return 'hand';
   }
   // Visible bounds cover all 16 original GIF frames, including the floating effects.
-  const companionPets={pet_bubu:{name:'布布',asset:'kabuki',bounds:[6,44,68,90]},pet_guigui:{name:'鬼鬼',asset:'rira',bounds:[14,10,78,88]},pet_dengdeng:{name:'燈燈',asset:'momo',bounds:[8,16,88,112]}};
-  const staffPetLayout={kabuki:{size:123,x:86,y:22},rira:{size:133,x:-93,y:-4},momo:{size:125,x:-89,y:-51}};
-  function followingPet(d){if(d?.uiBaseSlots?.includes('pet'))return null;const id=d?.ps?.pet||d?.set,pet=companionPets[id];return pet?{...pet,id,layout:{reference:160,...staffPetLayout[pet.asset]},src:'img/companions-v352/'+pet.asset+'-pet.gif?v=356'}:null;}
+  const companionPets={pet_bubu:{name:'布布',asset:'kabuki',bounds:[6,44,68,90]},pet_guigui:{name:'鬼鬼',asset:'rira',bounds:[14,10,78,88]},pet_dengdeng:{name:'燈燈',asset:'momo',bounds:[8,16,88,112]},
+    // v482 399 系列寵物（繪師 128px 原圖＝64px 像素 2 倍）：走路／停下各有動畫；甜甜犬停下一陣子會趴下睡覺
+    pet_crystal:{name:'水晶龍',asset:'crystal',bounds:[20,48,104,100],src:'img/pets-v482/crystal-idle.gif?v=482',still:'img/pets-v482/crystal.png?v=482',
+      anim:{walk:'img/pets-v482/crystal-walk.gif?v=482',idle:'img/pets-v482/crystal-idle.gif?v=482'}},
+    pet_sweet:{name:'甜甜犬',asset:'sweet',bounds:[44,60,98,100],src:'img/pets-v482/sweet-rest.gif?v=482',still:'img/pets-v482/sweet.png?v=482',
+      anim:{walk:'img/pets-v482/sweet-walk.gif?v=482',idle:'img/pets-v482/sweet.png?v=482',lie:'img/pets-v482/sweet-lie.gif?v=482',sleep:'img/pets-v482/sweet-sleep.gif?v=482',lieAfter:4000,lieMs:1300}}};
+  const staffPetLayout={kabuki:{size:123,x:86,y:22},rira:{size:133,x:-93,y:-4},momo:{size:125,x:-89,y:-51},crystal:{size:160,x:-112,y:34,aspect:1},sweet:{size:160,x:-100,y:36,aspect:1}};
+  const petSrc=pet=>pet.src||'img/companions-v352/'+pet.asset+'-pet.gif?v=356';
+  function followingPet(d){if(d?.uiBaseSlots?.includes('pet'))return null;const id=d?.ps?.pet||d?.set,pet=companionPets[id];return pet?{...pet,id,layout:{reference:160,...staffPetLayout[pet.asset]},src:petSrc(pet)}:null;}
   const staffPets={'-OxY7C4vDkgsr1zcyWbk':'pet_guigui','-OxY46ezlpnRt64hUIw9':'pet_bubu','-OzbfbQcF6J6fIR6YYGh':'pet_dengdeng'};
   const previousSetFrame=setFrame;setFrame=function(a,p){
     const staffPet=a.staff&&staffPets[a.cid];
@@ -46,21 +52,26 @@
     else if(a.el){
       let img=a._companionPet;
       if(!img){img=document.createElement('img');img.className='companion-follower';img.style.cssText='position:absolute;width:32px;height:42px;right:-17px;bottom:7px;pointer-events:none;image-rendering:pixelated;object-fit:contain';a.el.append(img);a._companionPet=img;}
-      if(img.dataset.pet!==pet.id){img.dataset.pet=pet.id;img.src=pet.src;img.alt=pet.name;}
+      if(img.dataset.pet!==pet.id){img.dataset.pet=pet.id;img.dataset.anim='';img.src=pet.src;img.alt=pet.name;}
       if(staffPet){
         const layout=staffPetLayout[pet.asset],scale=Math.round(TTScene.size(a.y))/160;
-        Object.assign(img.style,{width:layout.size*scale+'px',height:layout.size*112/96*scale+'px',left:'calc(50% + '+layout.x*scale+'px)',right:'auto',bottom:'auto',top:'calc(var(--tt-foot) + '+layout.y*scale+'px)'});
+        Object.assign(img.style,{width:layout.size*scale+'px',height:layout.size*(layout.aspect||112/96)*scale+'px',left:'calc(50% + '+layout.x*scale+'px)',right:'auto',bottom:'auto',top:'calc(var(--tt-foot) + '+layout.y*scale+'px)'});
         const step=a._staffWalking?Math.sin(performance.now()/1000*17+a.seed+1):0;
         img.style.transform='translate(-50%,-100%) translateY('+Math.round(-Math.abs(step)*3)+'px) scaleX('+(a.faceLeft?-1:1)+')';
       }else{
         /* v407 玩家跟隨寵物：沿用試穿與 NPC 的寵物比例（以 160px 人物為基準），面向改變時左右鏡像 */
         const layout=staffPetLayout[pet.asset],sz=parseFloat(a.cv?.style.width)||Math.round(TTScene.size(a.y)),scale=sz/160,dir=a.faceLeft?-1:1;
-        Object.assign(img.style,{width:layout.size*scale+'px',height:layout.size*112/96*scale+'px',left:'calc(50% + '+layout.x*scale*dir+'px)',right:'auto',bottom:'auto',top:'calc(var(--tt-foot) + '+layout.y*scale+'px)'});
+        Object.assign(img.style,{width:layout.size*scale+'px',height:layout.size*(layout.aspect||112/96)*scale+'px',left:'calc(50% + '+layout.x*scale*dir+'px)',right:'auto',bottom:'auto',top:'calc(var(--tt-foot) + '+layout.y*scale+'px)'});
         img.style.transform='translate(-50%,-100%) scaleX('+dir+')';
       }
     }
     return previousSetFrame(a,p);
   };
+  /* v482 會動的寵物：主人走路時播走路，停下播待機；甜甜犬停下 4 秒後趴下（播一次）再睡覺。每 150ms 檢查一次。 */
+  setInterval(()=>{if(typeof agents==='undefined')return;const now=Date.now();agents.forEach(a=>{const img=a._companionPet,pet=img&&companionPets[img.dataset.pet];if(!pet?.anim||a.staff)return;
+    const moving=/^walk/.test(a.state||'')&&!a.sitting;let want;
+    if(moving){a._petIdleAt=0;want='walk';}else{if(!a._petIdleAt)a._petIdleAt=now;const t=now-a._petIdleAt,an=pet.anim;want=an.lie&&t>=an.lieAfter?(t<an.lieAfter+an.lieMs?'lie':'sleep'):'idle';}
+    if(img.dataset.anim!==want){img.dataset.anim=want;img.src=pet.anim[want]+(want==='lie'?'&t='+now:'');}});},150);
   let drinkCounts={},drinkUid=null;
   const drinkCompanions={pet_drink_ghost:{name:'縭',asset:'rira'},pet_drink_blue:{name:'蕪',asset:'kabuki'},pet_drink_sakura:{name:'桃',asset:'momo'}};
   const isDrink=id=>['pet_drink_blue','pet_drink_sakura','pet_drink_ghost'].includes(id);
@@ -280,7 +291,7 @@
       delete d.ps?.pet;if(d.uiBaseSlots&&!d.uiBaseSlots.includes('pet'))d.uiBaseSlots.push('pet');return d;},   // v443 時裝特效
 seatChoice:()=>window.TTSeatUI?.choice(),selectSeat:id=>window.TTSeatUI?.select(id),seatThumb:(id,cv)=>window.TTSeatUI?.thumb(id,cv),
     drawPart(cv,ref,color){if(ref.slot==='seat'&&Object.hasOwn(window.TTSeats?.CATALOG||{},ref.source)){TTSeatUI.thumb(ref.source,cv);return;}const g=cv.getContext('2d');g.clearRect(0,0,64,64);g.imageSmoothingEnabled=false;
-      if(ref.slot==='pet'&&companionPets[ref.source]){const pet=companionPets[ref.source],src='img/companions-v352/'+pet.asset+'-pet.gif?v=356',img=csImg(src),[left,top,right,bottom]=pet.bounds;const draw=()=>{g.clearRect(0,0,cv.width,cv.height);if(!img.complete||!img.naturalWidth)return;const scale=Math.min((cv.width-8)/(right-left),(cv.height-8)/(bottom-top)),w=(right-left)*scale,h=(bottom-top)*scale;g.drawImage(img,left,top,right-left,bottom-top,(cv.width-w)/2,(cv.height-h)/2,w,h);};draw();afterPreviewImages(cv,[src],draw);return;}
+      if(ref.slot==='pet'&&companionPets[ref.source]){const pet=companionPets[ref.source],src=pet.still||petSrc(pet),img=csImg(src),[left,top,right,bottom]=pet.bounds;const draw=()=>{g.clearRect(0,0,cv.width,cv.height);if(!img.complete||!img.naturalWidth)return;const scale=Math.min((cv.width-8)/(right-left),(cv.height-8)/(bottom-top)),w=(right-left)*scale,h=(bottom-top)*scale;g.drawImage(img,left,top,right-left,bottom-top,(cv.width-w)/2,(cv.height-h)/2,w,h);};draw();afterPreviewImages(cv,[src],draw);return;}
       if(ref.base!==undefined&&ref.slot==='acc'){const ap=TACCP[ref.base];if(ap)['b','m','f','t'].forEach(k=>accLayer(g,ap[k],color?.hair||0,color?.hairHex));}
       else if(ref.base!==undefined){const key={front:'前髮',back:'後髮',cloth:'衣服',eye:'眼睛',brow:'眉毛'}[ref.slot];const p=TP.parts[key]?.[ref.base];if(p)tpDraw(g,p,color?.hair||0);}
       else{const p=partsFor(ref.source)[ref.slot];if(p){const preview=ref.slot==='pet'&&p.preview?{...p,d:p.preview,x:0,y:0}:p;const draw=()=>{g.clearRect(0,0,64,64);const previousHighlight=activeHighlight;activeHighlight=Number.isInteger(color?.highlight)?HAIRS[color.highlight]?.[0]:color?.keepOriginal?me()?.b?.doll?.hairHighlight:null;try{csDrawV(g,preview,color?.hair||0,color?.hairHex,color?.hairHex2);}finally{activeHighlight=previousHighlight;}};draw();afterPreviewImages(cv,[preview.d,...(p.highlight?.d?[p.highlight.d]:[])],draw);}}
