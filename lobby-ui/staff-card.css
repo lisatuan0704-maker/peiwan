@@ -1,12 +1,11 @@
-/* v478 冒險者介紹卡視窗（整站主題：白紙深藍框、粉藍錯位紙頁） */
+/* v478 冒險者介紹卡視窗：只放卡片本身（卡片已有外框，不再加框） */
 #staffCardM{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:3vh 3vw;background:rgba(28,33,86,.42);backdrop-filter:blur(3px)}
 #staffCardM[hidden]{display:none}
-#staffCardM .scm-card{position:relative;width:min(1100px,92vw,calc((88vh - 40px) * 1.6));padding:12px 12px 10px;border-radius:22px;background:#fff;
-  box-shadow:0 0 0 3px #1C2156,inset 0 0 0 3px #fff,inset 0 0 0 5px #CFEFFF,8px 9px 0 -1px #FFD6E6,8px 9px 0 2px #1C2156,0 18px 40px rgba(28,33,86,.35);
+#staffCardM .scm-card{position:relative;width:min(1100px,92vw,calc((88vh - 40px) * 1.6));padding:0;background:none;
   transform:translateY(10px) scale(.97);opacity:0;transition:transform .22s ease,opacity .22s ease}
 #staffCardM.on .scm-card{transform:none;opacity:1}
-#staffCardM img{display:block;width:100%;aspect-ratio:1.6;height:auto;border-radius:14px;background:#F4F6FF}
-#staffCardM .scm-tip{margin:8px 4px 0;text-align:center;font-size:14px;font-weight:700;color:#4A4F86}
-#staffCardM .scm-x{position:absolute;right:-14px;top:-16px;width:44px;height:44px;border:3px solid #1C2156;border-radius:12px;background:#fff;color:#1C2156;font-size:26px;line-height:1;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #1C2156}
+#staffCardM img{display:block;width:100%;aspect-ratio:1.6;height:auto;filter:drop-shadow(0 14px 30px rgba(28,33,86,.35))}
+#staffCardM .scm-tip{margin:10px 4px 0;text-align:center;font-size:15px;font-weight:700;color:#fff;text-shadow:0 1px 0 #1C2156,0 0 6px rgba(28,33,86,.6)}
+#staffCardM .scm-x{position:absolute;z-index:2;right:-14px;top:-16px;width:44px;height:44px;border:3px solid #1C2156;border-radius:12px;background:#fff;color:#1C2156;font-size:26px;line-height:1;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #1C2156}
 #staffCardM .scm-x:hover{transform:translate(-1px,-1px) rotate(-5deg)}
 @media (prefers-reduced-motion:reduce){#staffCardM .scm-card{transition:none}}

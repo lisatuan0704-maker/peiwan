@@ -6,6 +6,7 @@
 後端（ops/deploy-v478.sh，security-v428，取代未部署的 v467b 並包含其修正）：order-voice-bot/resident-cards.cjs：找名稱含「酒館居民」的頻道（不自動建立），發開頭說明（使用者確認文字：「這是我們首批迎接試營運的陪陪們～」、#酒館櫃檯 連結、前往酒館點單按鈕）＋依序三則「# 縭」「# 蕪」「# 桃」附介紹卡 PNG。記在 orderVoiceV1/residentV1 {channelId,ids,version}；任一則被刪或 VERSION 改變就刪掉自己發過的幾則、照順序重發（頻道其他訊息不動）；發到一半失敗會收回這次發出的訊息，2 分鐘後重試。人事變動：改 RESIDENTS／assets 圖片並把 VERSION 加 1。service-server.cjs 在 lounge 後啟動。測試 resident-cards 6 項；部署腳本核對主機 recruit-desk（cf2b34…）、counter-desk（45761b…）、service-server（91e2dc…），已用模擬根目錄驗證替換與核對失敗時停止。
 商城（使用者：目前搭配用橋接方式，像跟主框連上下桿子架出去的框，主框左右拉近）：桌面版主框寬度少 144px（拿掉中間清單欄），iframe 往右多 186px 透明區；目前搭配改 position:fixed 放在主框右外側（150px 寬），上下兩根桿子（::after）接回主框；整組往左 93px 置中，iframe 內置中對話框同樣往左 93px。試穿框改為 position:relative（迴紋針與白星原本以整頁右緣定位）。手機版不變。theme-shop.css、theme-window.css 478，版本鏈 lobby→bridge 478→index 478→時裝間比較 478、lobby-view 478。
 驗證：本機隔離大廳 1685／1366／1024 桌面與 390 手機截圖（當季、頭髮、座椅、背包），點兩下三位冒險者各自開出正確卡片、Esc 關閉、點一下不開卡。
+v478b 使用者：卡片視窗不用再加框（卡片本身已有外框）。staff-card.css 拿掉白紙框，只留卡片圖（淡陰影）、右上關閉鈕（z-index 在圖片之上）與下方白字提示；lobby.html 載入 staff-card.css?v=478b。
 
 ## v477 冒險者手札夜間模式字太深
 使用者：冒險者說名字與很多字在夜間模式太黑，改淺紫色。原因：v412 整站主題只套白天（body:not(.dark)），之後新增的卡片、說明、名字等寫死深藍字，夜間深色底上看不清。新增 lobby-ui/partner-dark-fix.js（partner.html 最後載入）：只在 body.dark 時，找出深色底（含漸層第一色）上的深色文字（亮度皆偏低），改成淺紫 #DCD0FF；畫面變動時重新檢查（120ms 合併），切回白天還原原本的顏色（保留原本行內顏色與優先級）。淺色底（例如黃色提醒框）上的深字不動。
