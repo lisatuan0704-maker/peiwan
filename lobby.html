@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v471</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v472</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -4444,7 +4444,7 @@ function renderWalletTx(){
     if(!rows.length){ box.innerHTML='<div style="color:#A5798D;font-size:12px;text-align:center;padding:8px">還沒有交易紀錄</div>'; return; }
     box.innerHTML='<div style="margin-top:10px;border-top:1px dashed #E0D3F0;padding-top:8px">'+rows.map(t=>{
       const pos=(t.amount||0)>0; const d=new Date(t.ts||0);
-      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='refund'?'退款':'調整')));
+      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':(t.type==='refund'?'退款':'調整'))));
       return '<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;color:#6A5A82"><span>'+label+(t.note?'・'+esc(t.note):'')+'<br><span style="font-size:10.5px;color:#A5798D">'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+'</span></span>'
         +'<b style="color:'+(pos?'#3E9E6B':'#D96A8B')+'">'+(pos?'+':'')+t.amount+'</b></div>';
     }).join('')+'</div>';
@@ -5012,7 +5012,7 @@ function submitIssue(){
 
 /* ================= 大廳信箱(店長寄信) ================= */
 let __mail={};
-function mailUnread(){ return Object.values({...(__mail||{}),...(window.TTSupportInbox||{})}).filter(m=>m&&!m.read&&!m.hid).length; }
+function mailUnread(){ return Object.values({...(__mail||{}),...(window.TTSupportInbox||{}),...(window.TTWelcomeInbox||{})}).filter(m=>m&&!m.read&&!m.hid).length; }
 function updateMailBadge(){
   const n=mailUnread();
   const b=document.getElementById('mailBadge');
@@ -5021,7 +5021,7 @@ function updateMailBadge(){
 }
 /* 收進來的信:已被客人清掉(hid)的不再顯示 */
 function mailList(){
-  return Object.entries({...(__mail||{}),...(window.TTSupportInbox||{})}).filter(([,m])=>m&&!m.hid).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+  return Object.entries({...(__mail||{}),...(window.TTSupportInbox||{}),...(window.TTWelcomeInbox||{})}).filter(([,m])=>m&&!m.hid).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
 }
 function renderMailBox(){
   const el=document.getElementById('mailBody2'); if(!el) return;
@@ -5041,12 +5041,14 @@ function renderMailBox(){
       +'<span style="margin-left:auto;font-size:11px;color:#A5798D">'+new Date(m.at||0).toLocaleDateString('zh-TW')+'</span>'
       +'<button onclick="event.stopPropagation();hideMail('+ja(id)+')" title="刪掉這封" style="flex:0 0 auto;border:none;cursor:pointer;font-family:inherit;font-size:14px;line-height:1;background:none;color:#C9B6D4;padding:2px 2px 2px 6px">×</button></div>'
       +'<div id="mailTx_'+id+'" style="display:'+(unread?'none':'block')+';font-size:13px;color:#6A5A82;line-height:1.8;margin-top:7px;white-space:pre-wrap">'+esc(m.text||'')+'</div>'
-      +(unread?'<div style="font-size:11.5px;color:#B29AD0;margin-top:4px">點一下展開</div>':'')
+      +(unread&&!m.act?'<div style="font-size:11.5px;color:#B29AD0;margin-top:4px">點一下展開</div>':'')
+      +(m.act?'<button type="button" class="ttWgBtn" onclick="event.stopPropagation();window.TTWelcome&&TTWelcome.claim()"'+(m.act.busy?' disabled':'')+' style="margin-top:10px;width:100%;border:2px solid #1C2156;border-radius:12px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:800;color:#fff;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C);padding:10px 12px;box-shadow:0 3px 0 #1C2156'+(m.act.busy?';opacity:.6;cursor:wait':'')+'">'+esc(m.act.label)+'</button>':'')
       +'</div>';
   }).join('');
 }
 /* 清掉信件:只是從你的信箱收起來(標記 hid),不會動到別人的信 */
 function hideMail(id){
+  if(window.TTWelcome?.handles(id)) return window.TTWelcome.hide(id);
   if(window.TTSupport?.handles(id)) return window.TTSupport.hide(id);
   const m=(__mail||{})[id]; if(!m) return;
   m.hid=Date.now();
@@ -5058,6 +5060,7 @@ function clearReadMail(){
   if(!done.length) return;
   if(!confirm('要清掉 '+done.length+' 封已讀信件嗎?\n(還沒讀的會留著)')) return;
   done.forEach(([id])=>{
+    if(window.TTWelcome?.handles(id)){window.TTWelcome.hide(id);return;}
     if(window.TTSupport?.handles(id)){window.TTSupport.hide(id);return;}
     const m=__mail[id]; if(!m) return; m.hid=Date.now();
     try{ if(myKey&&typeof db!=='undefined'&&db) db.ref(ROOT+'/mail/'+myKey+'/'+id+'/hid').set(m.hid); }catch(e){}
@@ -5066,6 +5069,7 @@ function clearReadMail(){
   if(window.toast) toast('已清空 '+done.length+' 封');
 }
 function readMail(id){
+  if(window.TTWelcome?.handles(id)) return window.TTWelcome.read(id);
   if(window.TTSupport?.handles(id)) return window.TTSupport.read(id);
   const m=__mail[id]; if(!m) return;
   if(!m.read){
@@ -5096,6 +5100,87 @@ function readMail(id){
   if(typeof claimMe==='function'){ const _c=claimMe; claimMe=function(k){ _c(k); setTimeout(watchMail,300); }; }
   const btn=document.getElementById('h2mail');
   if(btn) btn.addEventListener('click',()=>{ renderMailBox(); gOpen('mailBoxM'); });
+})();
+/* v472 開幕禮：已用 Discord 登入並綁定闆卡、還沒領過的人，信箱出現一封開幕禮信件，按「領取」由本人一次寫入
+   領取紀錄＋開幕禮交易＋錢包加 350（資料庫規則 harden-phase6 把關：活動期間、每張闆卡一次、剛好 350）。
+   規則還沒發布或沒登入時讀不到 welcomeGift，就不顯示信件，不影響其他功能。 */
+(function(){
+  if(typeof db==='undefined'||!db||typeof firebase==='undefined') return;
+  const END=Date.parse('2026-11-08T00:00:00+08:00'),AMT=350,ID='welcome_gift_v472';
+  const SKEY='tt_welcome_gift_v472';
+  let key=null,ref=null,cb=null,state='none',at=0,notified=false;
+  window.TTWelcomeInbox={};
+  const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);sessionStorage.setItem(k,v);}catch(e){}return null;};
+  function paint(){
+    const box={};
+    if(state==='avail'||state==='busy'){
+      box[ID]={title:'開幕禮物：350 金幣',at,read:ss(SKEY+'_read_'+key)==='1',hid:ss(SKEY+'_hid_'+key)==='1'?1:0,
+        text:'歡迎來到小小酒館！\n開幕活動期間（11/1～11/7）做好闆卡的闆闆，送你 350 站內金幣，可以用在點單和商城。\n按下面的按鈕，金幣會直接存進你的錢包。',
+        act:{label:state==='busy'?'領取中…':'領取 350 金幣',busy:state==='busy'}};
+    }else if(state==='done'){
+      box[ID]={title:'開幕禮物：350 金幣',at,read:1,text:'350 金幣已經存進你的錢包囉！祝你在酒館玩得開心。'};
+    }
+    window.TTWelcomeInbox=box;
+    try{updateMailBadge();const mm=document.getElementById('mailBoxM');if(mm&&mm.classList.contains('on'))renderMailBox();}catch(e){}
+  }
+  function watch(){
+    const u=firebase.auth&&firebase.auth().currentUser;
+    const k=(u&&typeof myKey!=='undefined')?myKey:null;
+    if(k===key&&ref) return;
+    if(ref&&cb){try{ref.off('value',cb);}catch(e){}}
+    ref=null;cb=null;key=k;
+    if(state!=='done')state='none';
+    paint();
+    if(!k||Date.now()>=END) return;
+    ref=db.ref(ROOT+'/welcomeGift/'+k);
+    cb=s=>{
+      if(key!==k) return;
+      if(s.exists()){ if(state!=='done') state='claimed'; }
+      else if(state!=='busy'){
+        state='avail'; at=at||Date.now();
+        if(!notified&&ss(SKEY+'_hid_'+k)!=='1'){
+          notified=true;
+          setTimeout(()=>{ if(state==='avail'&&window.lobbyNotify) lobbyNotify({icon:'coin',title:'開幕禮物送到信箱囉',sub:'打開信箱領取 350 金幣 ✦',onclick:()=>{ renderMailBox(); gOpen('mailBoxM'); },hold:12000}); },2500);
+        }
+      }
+      paint();
+    };
+    ref.on('value',cb,()=>{ if(key===k){ state='none'; paint(); } });
+  }
+  async function claim(){
+    const k=key;
+    if(!k||state!=='avail') return;
+    if(Date.now()>=END){ state='none'; paint(); if(window.toast) toast('開幕活動已經結束囉'); return; }
+    state='busy'; paint();
+    const SV=firebase.database.ServerValue;
+    const tx=db.ref(ROOT+'/walletTx/'+k).push().key;
+    const ch={};
+    ch['welcomeGift/'+k]={tx,at:SV.TIMESTAMP,amount:AMT};
+    ch['walletTx/'+k+'/'+tx]={type:'welcome',amount:AMT,ref:tx,note:'開幕禮',ts:SV.TIMESTAMP};
+    ch['wallet/'+k+'/balance']=SV.increment(AMT);
+    ch['wallet/'+k+'/lastTx']=tx;
+    try{
+      await db.ref(ROOT).update(ch);
+      if(key!==k) return;
+      state='done'; paint();
+      if(window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'領到 350 金幣了！',sub:'已經存進錢包，可以用在點單和商城 ✦',hold:8000});
+    }catch(e){
+      if(key!==k) return;
+      try{ const s=await db.ref(ROOT+'/welcomeGift/'+k).once('value'); if(s.exists()){ state='done'; paint(); return; } }catch(_){}
+      state='avail'; paint();
+      if(window.toast) toast('領取沒有成功，請稍後再試；一直不行請到 Discord 聯絡店長');
+    }
+  }
+  window.TTWelcome={
+    handles:id=>id===ID,
+    claim,
+    read(){ if(key) ss(SKEY+'_read_'+key,'1'); paint(); renderMailBox(); },
+    hide(){ if(state==='avail'&&!confirm('收起來之後，這次就看不到這封信了（重新整理後會再出現）。\n還沒領的 350 金幣要先領嗎？按「取消」回去領取。')) return;
+      if(key) ss(SKEY+'_hid_'+key,'1'); if(state==='done') state='claimed'; paint(); renderMailBox(); }
+  };
+  try{ firebase.auth().onAuthStateChanged(()=>setTimeout(watch,0)); }catch(e){}
+  setInterval(watch,3000);
+  watch();
 })();
 /* 訂單紅點 = 「有新變化而且你還沒看過」的筆數。
    看過(打開我的訂單)就歸零;已完成/已取消的舊單不會一直掛著數字。 */
@@ -5992,7 +6077,7 @@ const SFX=(function(){
     const body=document.getElementById('boardBody'); body.innerHTML='';
     /* 開幕活動 11/1～11/7（台灣時間 11/8 00:00 結束後自動不顯示） */
     if(Date.now()<Date.parse('2026-11-08T00:00:00+08:00'))
-      body.appendChild(acc(true,'✦','新店開幕慶祝','11/1～11/7', '<p><b>首次註冊闆卡即送 350 站內金幣</b></p><p>活動期間 11/1～11/7，第一次做好闆卡、用 Discord 登入酒館，就送你 350 金幣，可以用在點單和商城。</p>'));
+      body.appendChild(acc(true,'✦','新店開幕慶祝','11/1～11/7', '<p><b>首次註冊闆卡即送 350 站內金幣</b></p><p>活動期間 11/1～11/7，做好闆卡、用 Discord 登入酒館後，信箱會收到開幕禮物，按「領取」350 金幣就會存進錢包，可以用在點單和商城。</p>'));
     body.appendChild(acc(true,'✦','每日任務','新登場', '<p><b>每天完成就送 10 金幣</b></p><p>每日登入打卡，並在大廳聊天室發送至少一則訊息，當天就能拿到 10 金幣。</p>'));
     const staff=[...agents.entries()].filter(([k])=>k.indexOf('staff_')===0);
     body.appendChild(acc(false,'✦','現在在店', staff.length+' 位', null, bd=>{
@@ -7459,7 +7544,7 @@ function bkPageLog(){
   let txHtml='<div style="color:#A88CA0;font-size:.97em;text-align:center;padding:8px 0">載入中…</div>';
   if(_bkTx){
     txHtml=_bkTx.length?_bkTx.map(t=>{ const pos=(t.amount||0)>0;
-      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='refund'?'退款':'調整')));
+      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':(t.type==='refund'?'退款':'調整'))));
       return '<div class="bkAct"><img src="'+BKA.icWallet+'" alt=""><span class="t">'+label+(t.note?'・'+esc(t.note):'')+'</span>'
         +'<span class="g" style="color:'+(pos?'#3E9E6B':'#D96A8B')+';font-weight:700">'+(pos?'+':'')+t.amount+'</span></div>'; }).join('')
       :'<div class="bkCard" style="text-align:center;color:#A88CA0;font-size:.97em">還沒有金幣紀錄 ✦</div>';
@@ -7849,7 +7934,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=432"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=454">
-<script src="lobby-ui/mobile-app.js?v=455"></script>
+<script src="lobby-ui/mobile-app.js?v=472"></script>
 </body>
 </html>
 
