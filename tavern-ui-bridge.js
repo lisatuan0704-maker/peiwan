@@ -35,7 +35,7 @@
     return 'hand';
   }
   // Visible bounds cover all 16 original GIF frames, including the floating effects.
-  const companionPets={pet_bubu:{name:'布布',asset:'kabuki',bounds:[6,44,68,90]},pet_guigui:{name:'鬼鬼',asset:'rira',bounds:[14,10,78,88]},pet_dengdeng:{name:'燈燈',asset:'momo',bounds:[8,16,88,112]},
+  const companionPets={pet_bubu:{name:'雪球',asset:'kabuki',bounds:[6,44,68,90]},pet_guigui:{name:'啵幽',asset:'rira',bounds:[14,10,78,88]},pet_dengdeng:{name:'鈴',asset:'momo',bounds:[8,16,88,112]},
     // v482 399 系列寵物（繪師 128px 原圖＝64px 像素 2 倍）：走路／停下各有動畫；甜甜犬停下一陣子會趴下睡覺
     pet_crystal:{name:'水晶龍',asset:'crystal',bounds:[20,48,104,100],src:'img/pets-v482/crystal-idle.gif?v=482',still:'img/pets-v482/crystal.png?v=482',
       anim:{walk:'img/pets-v482/crystal-walk.gif?v=482',idle:'img/pets-v482/crystal-idle.gif?v=482'}},
@@ -159,8 +159,8 @@
       return !d.hideUntilLive||(shopCfg[id]?.custom&&Number.isSafeInteger(shopCfg[id]?.price)&&shopCfg[id].price>0);});
     return [...base,...pets,...drafts.map(id=>({id}))].map(o=>{
       const c=cfg[o.id]||{},retired=!!window.TTRetiredOutfits?.retired(o.id,{...o,...c}),sale=!retired&&(c.active===undefined?true:!!c.active)&&(!c.start||now>=c.start)&&(!c.end||now<c.end);
-      const prod={id:o.id,name:isDrink(o.id)?drinkCompanions[o.id].name+'的飲料':initialOutfitNames[o.id]||c.name||o.nm,companion:drinkCompanions[o.id]||null,type:isDrink(o.id)?'其他':c.type||'時裝',drink:isDrink(o.id),pet:!!companionPets[o.id],price:c.price??o.pr,quantity:isDrink(o.id)&&drinkUid===window.TTVoiceOrders?.userId?.()?(drinkCounts[o.id]||0):0,owned:isDrink(o.id)?(drinkUid===window.TTVoiceOrders?.userId?.()&&(drinkCounts[o.id]||0)>0):o.id==='cloth0'||!!own[o.id],sale,retired,previewOnly:!!c.previewOnly,highlightHair:!!c.highlightHair,
-        doll:c.doll||o.doll||null,img:c.img||null,featured:c.seasonFeatured||0,sourceLayerCount:c.sourceLayerCount||0,parts:Object.entries(partsFor(o.id)).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:displayPartName(p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件'))),category:isDrink(o.id)||c.type==='其他'?'other':category(k),group:category(k)==='acc'?group(p,o.id,k):null,independent:!!p.independent,requiresHair:p.requiresHair,requiresPart:p.requiresPart,requirement:p.requirement,note:p.note,defaultEquipped:p.defaultEquipped,splitFrom:p.splitFrom}))};
+      const prod={id:o.id,name:isDrink(o.id)?drinkCompanions[o.id].name+'的飲料':initialOutfitNames[o.id]||companionPets[o.id]?.name||c.name||o.nm,companion:drinkCompanions[o.id]||null,type:isDrink(o.id)?'其他':c.type||'時裝',drink:isDrink(o.id),pet:!!companionPets[o.id],price:c.price??o.pr,quantity:isDrink(o.id)&&drinkUid===window.TTVoiceOrders?.userId?.()?(drinkCounts[o.id]||0):0,owned:isDrink(o.id)?(drinkUid===window.TTVoiceOrders?.userId?.()&&(drinkCounts[o.id]||0)>0):o.id==='cloth0'||!!own[o.id],sale,retired,previewOnly:!!c.previewOnly,highlightHair:!!c.highlightHair,
+        doll:c.doll||o.doll||null,img:c.img||null,featured:c.seasonFeatured||0,sourceLayerCount:c.sourceLayerCount||0,parts:Object.entries(partsFor(o.id)).filter(([k,p])=>category(k)&&p?.d).map(([k,p])=>({id:o.id+'::'+k,source:o.id,slot:k,name:k==='pet'&&companionPets[o.id]?.name?companionPets[o.id].name:displayPartName(p.n||((c.name||o.nm)+'・'+(slotLabel[k]||'配件'))),category:isDrink(o.id)||c.type==='其他'?'other':category(k),group:category(k)==='acc'?group(p,o.id,k):null,independent:!!p.independent,requiresHair:p.requiresHair,requiresPart:p.requiresPart,requirement:p.requirement,note:p.note,defaultEquipped:p.defaultEquipped,splitFrom:p.splitFrom}))};
       if(c.vipOnly){prod.vipOnly=c.vipOnly;prod.vipLocked=vipLv<c.vipOnly;prod.vipClaimable=!prod.vipLocked&&!prod.owned&&!own.vip3Outfit;prod.vipBuyable=!prod.vipLocked&&!prod.owned&&!!own.vip3Outfit;prod.price=500;prod.previewOnly=false;prod.sale=false;}   // v450 VIP 限定：價格 500 由伺服器收費，不走一般結帳
       if(c.noParts)prod.noParts=true;
       return withPartSale(prod,c,own);

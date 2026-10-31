@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v484</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v486</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -7446,7 +7446,7 @@ let _bkTab='me', _bkMailOpen=new Set(), _bkTx=null;
 const BK_TABS=[['me','個人','icStar','tabO','stabP'],['bag','圖鑑','icHeart','tabP','stabY'],['log','紀錄','icSpark','tabB','stabG'],['ach','成就','icCloud','tabG','stabP']];
 const BK_ITEMS={
   cloth:{label:'時裝', ids:['cloth0','cloth1','cloth2','cloth3'], names:['露亞經典裝','小莓甜心裝','啟程旅人','微風日常']},
-  pet:{label:'寵物', ids:['pet_bubu','pet_dengdeng','pet_guigui','pet_crystal','pet_sweet'], names:['布布','燈燈','鬼鬼','水晶龍','甜甜犬']},
+  pet:{label:'寵物', ids:['pet_bubu','pet_dengdeng','pet_guigui','pet_crystal','pet_sweet'], names:['雪球','鈴','啵幽','水晶龍','甜甜犬']},
   seat:{label:'座椅', ids:Object.keys(TTSeats.CATALOG), names:Object.values(TTSeats.CATALOG).map(c=>c.name)}
 };
 function bkCat(k){
@@ -7563,7 +7563,7 @@ const BK_PETS={pet_bubu:{asset:'kabuki',bounds:[6,44,68,90],size:[88,105]},pet_d
   pet_crystal:{src:'img/pets-v482/crystal-idle.gif?v=482',still:'img/pets-v482/crystal.png?v=482',bounds:[20,48,104,100],size:[128,128],name:'水晶龍'},pet_sweet:{src:'img/pets-v482/sweet-rest.gif?v=482',still:'img/pets-v482/sweet.png?v=482',bounds:[44,60,98,100],size:[128,128],name:'甜甜犬'}};   // v482
 function bkPetArt(id,owned){
  const p=BK_PETS[id];if(!p)return '';const [l,t,r,b]=p.bounds,scale=70/Math.max(r-l,b-t),x=(112-(r-l)*scale)/2-l*scale,y=(112-(b-t)*scale)/2-t*scale;
- return owned?'<div class="bkPetArt"><img alt="'+(p.name||{pet_bubu:'布布',pet_dengdeng:'燈燈',pet_guigui:'鬼鬼'}[id])+'" src="'+(p.src||'img/companions-v352/'+p.asset+'-pet.gif?v=356')+'" style="width:'+p.size[0]*scale+'px;height:'+p.size[1]*scale+'px;left:'+x+'px;top:'+y+'px"></div>':'<canvas class="bkPetStill" width="112" height="112" data-book-pet="'+id+'" aria-label="未解鎖寵物靜態預覽"></canvas>';
+ return owned?'<div class="bkPetArt"><img alt="'+(p.name||{pet_bubu:'雪球',pet_dengdeng:'鈴',pet_guigui:'啵幽'}[id])+'" src="'+(p.src||'img/companions-v352/'+p.asset+'-pet.gif?v=356')+'" style="width:'+p.size[0]*scale+'px;height:'+p.size[1]*scale+'px;left:'+x+'px;top:'+y+'px"></div>':'<canvas class="bkPetStill" width="112" height="112" data-book-pet="'+id+'" aria-label="未解鎖寵物靜態預覽"></canvas>';
 }
 function bkPaintPets(){document.querySelectorAll('canvas[data-book-pet]').forEach(cv=>{const p=BK_PETS[cv.dataset.bookPet];if(!p||cv.dataset.painted)return;cv.dataset.painted='1';const img=new Image();img.onload=()=>{const [l,t,r,b]=p.bounds,scale=70/Math.max(r-l,b-t),w=(r-l)*scale,h=(b-t)*scale,g=cv.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(img,l,t,r-l,b-t,(112-w)/2,(112-h)/2,w,h);};img.src=p.still||'img/companions-v352/'+p.asset+'-pet.gif?v=356';});}
 let _bkFxRaf=0,_bkFxLast=0;
@@ -7984,7 +7984,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=484"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=486"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=416"></script>

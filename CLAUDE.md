@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v486 三隻寵物正式名稱
+使用者：桃的寵物叫鈴、蕪的寵物叫雪球、縭的寵物叫啵幽。tavern-ui-bridge.js companionPets：pet_bubu 布布→雪球、pet_guigui 鬼鬼→啵幽、pet_dengdeng 燈燈→鈴；商城商品名與寵物格名稱改為優先用 companionPets 名稱（shopConfig 裡的舊名不再蓋過，店長頁仍顯示舊名，可在店長頁自行改）。lobby.html 闆卡手帳寵物圖鑑名稱同步。bridge 486、lobby-view 486、verTag v486。
+驗證：本機隔離商城寵物分類截圖顯示 雪球／啵幽／鈴／水晶龍／甜甜犬。
+
 ## v485 開店清資料後 Discord 登入找不回闆卡（變訪客、工房又說已經有闆卡）
 客人回報：DC 登入後沒存到闆卡、DC 伺服器綁不進去；無痕重做又顯示這個 DC 已經做過闆卡。原因：清測試資料只刪了 peiwan 的闆卡，secureV1/members／owners 與 accounts/<ID>.myKey 舊紀錄還指向已刪除的闆卡；後端 account-claim 只要有 members 就回傳舊鑰匙（大廳顯示訪客，DC 身分組也判定未綁定），工房則因 lobby/<@username 鑰匙> 已有名字擋下重做。
 後端（ops/deploy-v485.sh，security-v428；只替換 account-claim.cjs，核對主機檔案為 v466b 19f77a…或更早 fd0023…）：綁定的闆卡已不存在且有可認領的新闆卡（本機鑰匙或 keyFor(username)）時，先解除舊 members／owners 再走一般認領；候選順序 帳號紀錄 myKey → 本機鑰匙 → keyFor(username)，已不存在的闆卡跳過，某個候選認領失敗再試下一個；認領證據不變（帳號紀錄相符，或闆卡 dcid＝登入 username 且鑰匙＝keyFor(username)）。新增 account-claim-v485.test.cjs 11 項（舊程式 7 項失敗），v466 8 項照過；部署腳本已用模擬根目錄驗證替換與核對不符時停止。
