@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v474</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v475</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3820,7 +3820,7 @@ function sendChat(stickerCode){
   try{ statInc('chat'); }catch(err){}
   if(db){
     const ref=db.ref(ROOT+'/chat').push();
-    TTWorldScope.write(()=>ref.set(msg)).catch(e=>console.warn('chat',e));
+    TTWorldScope.write(()=>ref.set(msg)).then(()=>{ try{ window.TTDaily&&TTDaily.afterChat(ref.key); }catch(e){} }).catch(e=>console.warn('chat',e));
     pushLog(msg.name, msg.text, true, {id:ref.key, t:msg.t, key:myKey});
   }else pushLog(msg.name, msg.text, true, {t:msg.t, key:myKey});
   return true;
@@ -4444,7 +4444,7 @@ function renderWalletTx(){
     if(!rows.length){ box.innerHTML='<div style="color:#A5798D;font-size:12px;text-align:center;padding:8px">還沒有交易紀錄</div>'; return; }
     box.innerHTML='<div style="margin-top:10px;border-top:1px dashed #E0D3F0;padding-top:8px">'+rows.map(t=>{
       const pos=(t.amount||0)>0; const d=new Date(t.ts||0);
-      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':(t.type==='refund'?'退款':'調整'))));
+      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':t.type==='daily'?'每日任務':(t.type==='refund'?'退款':'調整'))));
       return '<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;color:#6A5A82"><span>'+label+(t.note?'・'+esc(t.note):'')+'<br><span style="font-size:10.5px;color:#A5798D">'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+'</span></span>'
         +'<b style="color:'+(pos?'#3E9E6B':'#D96A8B')+'">'+(pos?'+':'')+t.amount+'</b></div>';
     }).join('')+'</div>';
@@ -5177,6 +5177,49 @@ function readMail(id){
     hide(){ if(state==='avail'&&!confirm('收起來之後，這次就看不到這封信了（重新整理後會再出現）。\n還沒領的 350 金幣要先領嗎？按「取消」回去領取。')) return;
       if(key) ss(SKEY+'_hid_'+key,'1'); if(state==='done') state='claimed'; paint(); renderMailBox(); }
   };
+  try{ firebase.auth().onAuthStateChanged(()=>setTimeout(watch,0)); }catch(e){}
+  setInterval(watch,3000);
+  watch();
+})();
+/* v475 每日任務：已用 Discord 登入並綁定闆卡的人，每天（台灣時間）第一次在大廳發言成功後，自動領 10 金幣。
+   由本人一次寫入 dailyTask/<key>（day＝今天、chat＝剛發的訊息）＋交易＋錢包加 10（資料庫規則 harden-phase7 把關）。
+   規則還沒發布時讀不到 dailyTask，就不嘗試，不影響發言。 */
+(function(){
+  if(typeof db==='undefined'||!db||typeof firebase==='undefined') return;
+  const AMT=10;
+  let key=null,ref=null,cb=null,day=null,ok=false,busy=false;
+  const today=()=>{const t=Date.now()+28800000;return (t-t%86400000)/86400000;};
+  function watch(){
+    const u=firebase.auth&&firebase.auth().currentUser;
+    const k=(u&&typeof myKey!=='undefined')?myKey:null;
+    if(k===key&&(ref||!k)) return;
+    if(ref&&cb){try{ref.off('value',cb);}catch(e){}}
+    ref=null;cb=null;key=k;day=null;ok=false;
+    if(!k) return;
+    ref=db.ref(ROOT+'/dailyTask/'+k);
+    cb=s=>{ if(key!==k) return; const v=s.val(); day=v&&typeof v.day==='number'?v.day:null; ok=true; };
+    ref.on('value',cb,()=>{ if(key===k) ok=false; });
+  }
+  async function afterChat(chatId){
+    const k=key;
+    if(!k||!ok||busy||!chatId) return;
+    const d=today();
+    if(day!=null&&day>=d) return;
+    busy=true;
+    const SV=firebase.database.ServerValue;
+    const tx=db.ref(ROOT+'/walletTx/'+k).push().key;
+    const ch={};
+    ch['dailyTask/'+k]={day:d,tx,chat:chatId,at:SV.TIMESTAMP,amount:AMT};
+    ch['walletTx/'+k+'/'+tx]={type:'daily',amount:AMT,ref:tx,note:'每日任務',ts:SV.TIMESTAMP};
+    ch['wallet/'+k+'/balance']=SV.increment(AMT);
+    ch['wallet/'+k+'/lastTx']=tx;
+    try{
+      await db.ref(ROOT).update(ch);
+      if(key===k){ day=d; if(window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'每日任務完成！',sub:'今天的打卡＋發言，送你 '+AMT+' 金幣 ✦',hold:6000}); }
+    }catch(e){ console.warn('daily task',e&&e.code||e); }
+    finally{ busy=false; }
+  }
+  window.TTDaily={afterChat};
   try{ firebase.auth().onAuthStateChanged(()=>setTimeout(watch,0)); }catch(e){}
   setInterval(watch,3000);
   watch();
@@ -6078,7 +6121,7 @@ const SFX=(function(){
     /* 開幕活動 11/1～11/7（台灣時間 11/8 00:00 結束後自動不顯示） */
     if(Date.now()<Date.parse('2026-11-08T00:00:00+08:00'))
       body.appendChild(acc(true,'✦','新店開幕慶祝','11/1～11/7', '<p><b>首次註冊闆卡即送 350 站內金幣</b></p><p>活動期間 11/1～11/7，做好闆卡、用 Discord 登入酒館後，350 金幣會自動存進錢包，可以用在點單和商城。</p>'));
-    body.appendChild(acc(true,'✦','每日任務','新登場', '<p><b>每天完成就送 10 金幣</b></p><p>每日登入打卡，並在大廳聊天室發送至少一則訊息，當天就能拿到 10 金幣。</p>'));
+    body.appendChild(acc(true,'✦','每日任務','新登場', '<p><b>每天完成就送 10 金幣</b></p><p>每日登入打卡，並在大廳聊天室發送至少一則訊息，10 金幣會自動存進錢包（每天一次，以台灣時間計算）。</p>'));
     const staff=[...agents.entries()].filter(([k])=>k.indexOf('staff_')===0);
     body.appendChild(acc(false,'✦','現在在店', staff.length+' 位', null, bd=>{
       if(!staff.length){ bd.innerHTML='<p class="lite">目前沒有冒險者名單</p>'; return; }
@@ -7544,7 +7587,7 @@ function bkPageLog(){
   let txHtml='<div style="color:#A88CA0;font-size:.97em;text-align:center;padding:8px 0">載入中…</div>';
   if(_bkTx){
     txHtml=_bkTx.length?_bkTx.map(t=>{ const pos=(t.amount||0)>0;
-      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':(t.type==='refund'?'退款':'調整'))));
+      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':t.type==='daily'?'每日任務':(t.type==='refund'?'退款':'調整'))));
       return '<div class="bkAct"><img src="'+BKA.icWallet+'" alt=""><span class="t">'+label+(t.note?'・'+esc(t.note):'')+'</span>'
         +'<span class="g" style="color:'+(pos?'#3E9E6B':'#D96A8B')+';font-weight:700">'+(pos?'+':'')+t.amount+'</span></div>'; }).join('')
       :'<div class="bkCard" style="text-align:center;color:#A88CA0;font-size:.97em">還沒有金幣紀錄 ✦</div>';
@@ -7934,7 +7977,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=432"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=454">
-<script src="lobby-ui/mobile-app.js?v=472"></script>
+<script src="lobby-ui/mobile-app.js?v=475"></script>
 </body>
 </html>
 

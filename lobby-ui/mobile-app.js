@@ -149,7 +149,7 @@ const wallet=(()=>{
  function loadTx(){
   const box=page.querySelector('#ttmTx');if(!box||typeof db==='undefined'||!myKey)return;box.textContent='載入中…';
   db.ref(ROOT+'/walletTx/'+myKey).limitToLast(20).once('value').then(s=>{const rows=[];s.forEach(c=>{rows.push(c.val());});rows.reverse();
-   const label=t=>({topup:'儲值',spend:'消費',bonus:'贈送',welcome:'開幕禮',refund:'退款'}[t]||'調整');
+   const label=t=>({topup:'儲值',spend:'消費',bonus:'贈送',welcome:'開幕禮',daily:'每日任務',refund:'退款'}[t]||'調整');
    box.innerHTML=rows.length?rows.map(t=>{const d=new Date(t.ts||0),pos=(t.amount||0)>0;return '<div class="ttm-txr"><span>'+label(t.type)+(t.note?'・'+esc(t.note):'')+'<small>'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+'</small></span><b class="'+(pos?'in':'out')+'">'+(pos?'+':'')+fmt(t.amount)+'</b></div>';}).join(''):'<p class="ttm-sub ttm-center">還沒有交易紀錄</p>';
   }).catch(()=>{box.textContent='交易紀錄暫時讀不到，請稍後再試';});
  }
