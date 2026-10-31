@@ -606,6 +606,9 @@ function login(){
 }
 function afterAuth(){
   const u=auth.currentUser; if(!u||booted) return;
+  /* v476: 同一個瀏覽器先在大廳用 Discord 登入（客人帳號 discord_…），開手札時不能把客人帳號當成工作帳號綁邀請碼；
+     等他用工作帳號密碼登入（會換掉目前的登入身分）再檢查。 */
+  if(/^discord_/.test(u.uid)) return;
   db.ref(ROOT+"/links/"+u.uid).once("value",sv=>{
     const l=sv.val();
     if(!l||l.type!=="char"){
@@ -1597,5 +1600,5 @@ const openLogs=new Set();
 import {mountBinding} from './lobby-ui/partner-binding.mjs?v=427';
 let binding;const timer=setInterval(()=>{if(auth.currentUser&&cid){clearInterval(timer);binding=mountBinding({root:document.getElementById('partnerDiscordBinding'),getUser:()=>auth.currentUser,getCid:()=>cid})}},500);
 window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
-</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=427';import {installBookingSound} from './lobby-ui/booking-sound.mjs?v=308';const bookingSound=installBookingSound({root:document.getElementById('bookingSoundControl'),getUser:()=>auth.currentUser,notice:ptNotify});const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});const {createServiceTimer}=await import('./lobby-ui/service-timer.mjs?v=427');Object.assign(window,createServiceTimer({getOrder:id=>orders[id],request:(path,body)=>orderVoice.serviceTime(body),originals:{startTimer,pauseTimer,resumeTimer,endTimer},confirm:msg=>window.confirm(msg),notify:msg=>ptNotify(msg,'')}));mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>{orderVoice.update(items);bookingSound.update(items)},notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script></body>
+</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=427';import {installBookingSound} from './lobby-ui/booking-sound.mjs?v=308';const bookingSound=installBookingSound({root:document.getElementById('bookingSoundControl'),getUser:()=>auth.currentUser,notice:ptNotify});const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});const {createServiceTimer}=await import('./lobby-ui/service-timer.mjs?v=427');Object.assign(window,createServiceTimer({getOrder:id=>orders[id],request:(path,body)=>orderVoice.serviceTime(body),originals:{startTimer,pauseTimer,resumeTimer,endTimer},confirm:msg=>window.confirm(msg),notify:msg=>ptNotify(msg,'')}));mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>{orderVoice.update(items);bookingSound.update(items)},notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script><script src="lobby-ui/partner-dark-fix.js?v=477"></script></body>
 </html>

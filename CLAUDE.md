@@ -1,5 +1,31 @@
 # 小小酒館修改紀錄
 
+## v478 陪陪介紹卡（網站＋Discord 酒館居民）、商城目前搭配外掛框
+使用者：三張陪陪介紹卡（縭／蕪／桃，繪師白露立繪＋PSD 原圖物件裝飾，製作檔在 /tmp/claude-0/cards）放到 Discord 酒館居民由機器人發，網站點兩下像素小人跳出自己的卡。
+網站：img/staff-cards-v478/<rira|kabuki|momo>.webp（2400×1500）；lobby-ui/staff-card.js／.css（TTStaffCard.open(asset)，整站主題視窗、Esc／點外面關閉）；lobby.html makeStaff 加上點擊：300ms 內點兩下開卡（STAFF_GIF[cid].asset），點一下走過去。換人或換卡時更新圖片與版本號。
+後端（ops/deploy-v478.sh，security-v428，取代未部署的 v467b 並包含其修正）：order-voice-bot/resident-cards.cjs：找名稱含「酒館居民」的頻道（不自動建立），發開頭說明（使用者確認文字：「這是我們首批迎接試營運的陪陪們～」、#酒館櫃檯 連結、前往酒館點單按鈕）＋依序三則「# 縭」「# 蕪」「# 桃」附介紹卡 PNG。記在 orderVoiceV1/residentV1 {channelId,ids,version}；任一則被刪或 VERSION 改變就刪掉自己發過的幾則、照順序重發（頻道其他訊息不動）；發到一半失敗會收回這次發出的訊息，2 分鐘後重試。人事變動：改 RESIDENTS／assets 圖片並把 VERSION 加 1。service-server.cjs 在 lounge 後啟動。測試 resident-cards 6 項；部署腳本核對主機 recruit-desk（cf2b34…）、counter-desk（45761b…）、service-server（91e2dc…），已用模擬根目錄驗證替換與核對失敗時停止。
+商城（使用者：目前搭配用橋接方式，像跟主框連上下桿子架出去的框，主框左右拉近）：桌面版主框寬度少 144px（拿掉中間清單欄），iframe 往右多 186px 透明區；目前搭配改 position:fixed 放在主框右外側（150px 寬），上下兩根桿子（::after）接回主框；整組往左 93px 置中，iframe 內置中對話框同樣往左 93px。試穿框改為 position:relative（迴紋針與白星原本以整頁右緣定位）。手機版不變。theme-shop.css、theme-window.css 478，版本鏈 lobby→bridge 478→index 478→時裝間比較 478、lobby-view 478。
+驗證：本機隔離大廳 1685／1366／1024 桌面與 390 手機截圖（當季、頭髮、座椅、背包），點兩下三位冒險者各自開出正確卡片、Esc 關閉、點一下不開卡。
+v478b 使用者：卡片視窗不用再加框（卡片本身已有外框）。staff-card.css 拿掉白紙框，只留卡片圖（淡陰影）、右上關閉鈕（z-index 在圖片之上）與下方白字提示；lobby.html 載入 staff-card.css?v=478b。
+
+## v477 冒險者手札夜間模式字太深
+使用者：冒險者說名字與很多字在夜間模式太黑，改淺紫色。原因：v412 整站主題只套白天（body:not(.dark)），之後新增的卡片、說明、名字等寫死深藍字，夜間深色底上看不清。新增 lobby-ui/partner-dark-fix.js（partner.html 最後載入）：只在 body.dark 時，找出深色底（含漸層第一色）上的深色文字（亮度皆偏低），改成淺紫 #DCD0FF；畫面變動時重新檢查（120ms 合併），切回白天還原原本的顏色（保留原本行內顏色與優先級）。淺色底（例如黃色提醒框）上的深字不動。
+驗證：測試頁（深底深字→淺紫、黃底深字不變、淺字不變、漸層底深字→淺紫、切回白天恢復原色）。
+
+## v476 冒險者手札不把大廳的 Discord 客人登入當成工作帳號
+使用者回報：冒險者開手札跳出「請輸入邀請碼」，之後「陪玩 Discord 綁定」顯示「此工作帳號尚未開放綁定」。原因：同一個瀏覽器先在大廳用 Discord 登入（Firebase 身分 discord_…，同網域共用登入狀態），打開 partner.html 時 onAuthStateChanged 直接以客人身分 afterAuth，找不到 links 就跳出邀請碼框；輸入後客人帳號被綁成冒險者（links/discord_1383378428186595408 → 縭 -OxY7C，invites/T9FX81 usedBy 被占用），但後端 orderVoiceV1/staffAccounts 只核准原本的工作帳號 authUid，Discord 綁定回 PARTNER_ACCOUNT_REQUIRED。三位冒險者原本的工作帳號（Nh0dY1／nr95X3／tXb1ph）與 staffBindings 都還在。
+修正：partner.html afterAuth 遇到 discord_ 開頭的身分直接略過，等使用工作帳號密碼登入（會換掉目前登入身分）再檢查。錯誤綁定的 links/discord_1383378428186595408 需由店長在 Firebase 主控台刪除（Claude 不刪資料）。
+
+## v475 每日任務 10 金幣自動發放（需發布新規則）
+使用者：布告欄的每日任務（每日登入打卡＋大廳發送至少一則訊息送 10 金幣）要自動發放（v471b 原本寫店長手動）。
+規則（tests/security-rules-v428/build/harden-phase7.cjs，可重複執行；套用前快照 rules-before-v475.json）：新節點 peiwan/dailyTask/<key> {day,tx,chat,at,amount:10}，本人與店員可讀；day＝台灣時間第幾天（(now+8h) 整除一天），本人只能在今天還沒領過時寫入（舊紀錄 day 小於今天），chat 必須是 peiwan/chat 裡自己（key＝本人）今天（台灣 00:00 之後）發的訊息，同一次寫入要有 walletTx（type daily、amount 10、ref＝tx）＋ wallet.lastTx＝tx ＋ balance 剛好加 10（沒有錢包時＝10）。不能刪除紀錄重領、不能把 day 寫成明天。walletTx 與 wallet.balance 各多一個 OR 分支。
+網站（lobby.html TTDaily）：登入綁定後監聽 dailyTask/<key>；大廳發言（含貼圖）寫入成功後，今天還沒領就一次寫入四個路徑，成功跳通知「每日任務完成！送你 10 金幣」；同一天之後發言不再寫。私人房間（TTRoomSession）的發言不在 peiwan/chat，不算。規則未發布時讀取被拒，不嘗試領取。錢包交易明細顯示「每日任務」（電腦版兩處、手機 mobile-app.js 475）。布告欄說明改「10 金幣會自動存進錢包（每天一次，以台灣時間計算）」。lobby-view 475。
+測試：test-phase7.cjs 25 項（第一次領有／無錢包、今天再領、昨天領過今天領、領 20、加 100、改餘額、用昨天的訊息、用別人的訊息、沒發言、日期寫明天、今天領過寫明天、類型 topup、紀錄指向別筆、只加錢、只寫紀錄、幫別人領、未登入、Email 帳號、讀自己／別人／店長讀、刪紀錄重領、客人自己加 10、店長調整），run.sh 加入第七批。網站以模擬資料庫跑首次、昨天領過、今天領過、規則拒絕四種。
+
+## v474 開幕禮改為自動發放
+使用者：註冊就自動發放 350，不用自己按領取。lobby.html v472 開幕禮：登入並綁定闆卡、讀到 welcomeGift/<key> 不存在時，1.5 秒後自動以同一組四個路徑寫入一次（規則與 v472 相同，不需改規則），成功跳通知「開幕禮物：送你 350 金幣！」，信箱留一封已存入的信；自動寫入失敗（例如規則還沒發布）才顯示原本的「開幕禮物送到信箱囉」與信內領取按鈕。布告欄文字改「350 金幣會自動存進錢包」。lobby-view 版本 474。
+驗證：語法檢查；以模擬資料庫跑自動領取（寫入一次、四個路徑、通知與已存入信件）與寫入失敗（不寫入、留信件按鈕與通知）。
+
 ## v473 閉眼不能選
 使用者：工房眼睛選項的閉眼拿掉，那是眨眼動畫用的。card.html FIRST_HIDE 加入「閉眼」（工房眼睛只剩藍色銳利眼、棕色杏眼）；lobby.html 工房部件單買移除 base_face_4「閉眼」，背包／商城工房部件清單（baseList）與舊換裝間都不列名稱含「閉眼」的眼睛。眨眼動畫（_tpCE）照常使用這張圖。已經穿著閉眼的人資料不改，可到背包換眼睛。
 驗證：大廳 TTBaseUnits 不含閉眼、__allBaseParts／__ownedParts 眼睛只剩兩款；工房（390 寬）眼睛選項只剩兩款。

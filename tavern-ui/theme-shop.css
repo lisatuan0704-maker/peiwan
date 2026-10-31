@@ -216,3 +216,28 @@ html body #dyeResume .dye-resume-actions .primary{flex:1.4;background:linear-gra
 html body #lookSummary>footer{padding-bottom:12px!important}
 html body #lookSummary.is-expanded>footer{padding-bottom:12px!important}
 html body #lookSummary>footer button:disabled{background:#EEF1FA!important;color:#7A80AE!important;border-color:#C3CBEE!important;box-shadow:none!important;opacity:1!important;text-shadow:none!important}
+
+/* v478 目前搭配改為「架出去」的外掛框：主框不再留中間一欄（主框左右拉近），
+   清單放在主框右側外面，上下兩根桿子接回主框。iframe 由外層加寬 --look-out，多出來的部分透明。 */
+@media(min-width:601px){
+  html{--look-out:186px}
+  html body{padding-right:var(--look-out)!important;background:linear-gradient(90deg,#FBFCFF calc(100% - var(--look-out)),transparent 0)!important}
+  html body.has-look-summary #wardrobeWorkspace{grid-template-columns:minmax(0,1fr) 280px!important}
+  html body.has-look-summary #wardrobeWorkspace>.preview{grid-area:1/2/2/3!important}
+  /* 迴紋針、白星貼紙原本以整頁右緣定位（試穿框剛好貼右邊才對齊），改回以試穿框定位 */
+  html body[data-area] #wardrobeWorkspace>aside.preview{position:relative!important;top:0!important}
+  html body.has-look-summary #wardrobeWorkspace>#lookSummary{position:fixed!important;right:12px;left:auto;top:16px;bottom:14px;width:150px!important;max-width:150px!important;
+    padding:10px 10px 10px!important;border-radius:16px!important;
+    background:var(--ht-sky-tr) right 2px top 2px/90px 60px no-repeat,linear-gradient(170deg,#fff,#F7F9FF)!important;
+    box-shadow:0 0 0 2.5px var(--sk-ink),inset 0 0 0 2px #fff,inset 0 0 0 4px #CFEFFF,5px 6px 0 -1px #fff,5px 6px 0 1.5px var(--sk-ink),0 4px 0 2.5px rgba(28,33,86,.18)!important}
+  html body #lookSummary .look-item strong{font-size:11px}
+  /* 上下兩根桿子：從試穿框右緣穿過主框邊，接到外掛框 */
+  html body #lookSummary::after,html body #lookSummary>footer::after{content:"";position:absolute;left:-38px;width:38px;height:14px;z-index:-1;pointer-events:none;border-radius:7px;
+    background:radial-gradient(circle at 12px 50%,var(--sk-ink) 0 2.2px,#fff 2.6px 4px,transparent 4.4px),radial-gradient(circle at calc(100% - 14px) 50%,var(--sk-ink) 0 2.2px,#fff 2.6px 4px,transparent 4.4px),linear-gradient(180deg,#fff 0 42%,#DCE8FF 43% 100%);
+    box-shadow:0 0 0 2.5px var(--sk-ink),0 3px 0 2px rgba(28,33,86,.16)}
+  html body #lookSummary::after{top:44px}
+  html body #lookSummary>footer{position:static!important}
+  html body #lookSummary>footer::after{bottom:44px}
+  /* 置中的對話框扣掉外掛區，仍對齊主框中央 */
+  html body dialog[open]{translate:calc(var(--look-out) / -2) 0}
+}
