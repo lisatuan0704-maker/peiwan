@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v488</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v489</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -6774,7 +6774,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     box.innerHTML='';
     const t=popTarget;
     if(t&&t.myKey&&myKey&&t.myKey===myKey){   /* v471: 自己的闆卡可以隨時編輯資料 */
-      box.innerHTML=rowBtn('編輯我的資料',"closeCard();bkEditInfo()");
+      box.innerHTML=rowBtn('編輯我的資料',"closeCard();bkEditInfo()")+rowBtn('保存闆卡圖片',"ttSaveCardImage()");
       return;
     }
     if(!t||!t.myKey||!myKey) return;
@@ -6782,6 +6782,44 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     if(BLK[k]){ box.innerHTML='<span style="font-size:12px;color:#B7A6C9">已封鎖這位老闆</span>'; return; }
     if(FR[k]) box.innerHTML=rowBtn('傳私訊',"dmOpen("+ja(k)+");closeCard()")+rowBtn('刪除好友',"frRemove("+ja(k)+")",1);
     else box.innerHTML=rowBtn('加好友',"frAdd("+ja(k)+",'')");
+  };
+
+  /* v489 保存闆卡圖片：用闆卡工房同一個闆卡樣式（card-ui/tavern-scene.js TTTavernCard.render，1280×1410）
+     畫出自己現在的闆卡；顯示預覽，電腦可下載、手機可長按存到相簿。只讀自己的資料，不寫資料庫。 */
+  window.ttSaveCardImage=async function(){
+    if(window.__ttCardImgBusy) return;
+    const a=(popTarget&&popTarget.myKey&&popTarget.myKey===myKey)?popTarget:(typeof me==='function'?me():null);
+    const b=a&&a.b; if(!b||!myKey){ toast('先做一張闆卡，才能保存闆卡圖片'); return; }
+    window.__ttCardImgBusy=true; toast('闆卡圖片準備中…');
+    try{
+      if(!window.TTTavernCard) await new Promise((res,rej)=>{const s=document.createElement('script');s.src='card-ui/tavern-scene.js?v=256';s.onload=res;s.onerror=()=>rej(new Error('load'));document.head.appendChild(s);});
+      await TTTavernCard.ready();
+      const pub=b.pub||{},name=String(b.name||''),dc=pub.dc?('@'+String(pub.dc).replace(/^@/,'')):'';
+      const birthday=(b.bm&&b.bd)?(b.bm+' 月 '+b.bd+' 日'):'—',games=String(b.games||'').trim()||'—',quote=String(b.quote||'').trim();
+      const tags=Array.isArray(b.tags)?b.tags.filter(Boolean).map(String):[];
+      const txt='酒館闆卡生日常玩遊戲月日「」'+name+games+quote+tags.join('');
+      try{ await Promise.all([document.fonts.load('40px "TT Huninn"',txt),document.fonts.load('40px "Tavern Numerals"','0123456789'),document.fonts.load('40px "TT Latin"','TINY TAVERN'+txt+dc)]); }catch(e){}
+      const doll=document.createElement('canvas');doll.width=doll.height=64;
+      drawDollTo(doll,b.doll||{},'idle');
+      await new Promise(r=>setTimeout(r,250));drawDollTo(doll,b.doll||{},'idle');   // 部件圖第一次載入時再畫一次
+      const out=document.createElement('canvas');out.width=1280;out.height=1410;
+      TTTavernCard.render(out,{name,dcid:dc,birthday,games,tags,quote},doll);
+      const url=out.toDataURL('image/png'),file='闆卡_'+(name.replace(/[\\/:*?"<>|]/g,'')||'tinytavern')+'.png';
+      let m=document.getElementById('ttCardImgM');
+      if(!m){ m=document.createElement('div');m.id='ttCardImgM';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','保存闆卡圖片');
+        m.style.cssText='position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(28,33,86,.45)';
+        m.addEventListener('click',e=>{ if(e.target===m) m.remove(); });document.body.appendChild(m); }
+      m.innerHTML='<div style="width:min(440px,100%);max-height:100%;overflow:auto;background:#fff;border:3px solid #1C2156;border-radius:18px;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px #CFEFFF,6px 6px 0 #FFB3CD,6px 6px 0 3px #1C2156;padding:16px;display:flex;flex-direction:column;gap:12px;font-family:inherit;color:#1C2156">'
+        +'<div style="display:flex;align-items:center;gap:8px"><b style="font-size:17px">保存闆卡圖片</b><button type="button" data-x aria-label="關閉" style="margin-left:auto;width:34px;height:34px;border:2.5px solid #1C2156;border-radius:10px;background:#fff;color:#1C2156;font-size:18px;font-weight:900;cursor:pointer">×</button></div>'
+        +'<img alt="我的闆卡" style="width:100%;height:auto;border-radius:10px;border:2px solid #1C2156;display:block;-webkit-touch-callout:default">'
+        +'<p style="margin:0;font-size:12.5px;font-weight:700;color:#6A7199;line-height:1.7">手機可以長按圖片存到相簿；電腦按下面的按鈕下載。</p>'
+        +'<a data-dl style="display:block;text-align:center;text-decoration:none;border:2.5px solid #1C2156;border-radius:12px;padding:10px;font-weight:900;font-size:15px;color:#fff;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C);box-shadow:0 3px 0 #1C2156">下載闆卡圖片</a></div>';
+      m.querySelector('img').src=url;
+      const dl=m.querySelector('[data-dl]');dl.href=url;dl.download=file;
+      m.querySelector('[data-x]').onclick=()=>m.remove();
+      try{ if(typeof closeCard==='function'&&cardOpen) closeCard(); }catch(e){}
+    }catch(e){ toast('闆卡圖片做不出來，請稍後再試一次'); }
+    finally{ window.__ttCardImgBusy=false; }
   };
 
   /* --- 私訊 --- */
@@ -8012,7 +8050,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=432"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=454">
-<script src="lobby-ui/mobile-app.js?v=475"></script>
+<script src="lobby-ui/mobile-app.js?v=489"></script>
 </body>
 </html>
 
