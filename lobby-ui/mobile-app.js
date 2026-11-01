@@ -28,6 +28,7 @@ app.innerHTML='<header class="ttm-top" id="ttmTop">'
  +'<div class="ttm-who"><small>我的闆卡</small><b id="ttmName">小小酒館</b></div>'
  +'<button type="button" class="ttm-coins" id="ttmCoins" aria-label="金幣餘額，點一下儲值"><i aria-hidden="true"></i><b id="ttmCoinN">0</b><small>金幣</small></button></div>'
  +'<div class="ttm-actions" id="ttmActions"><button type="button" class="ttm-order" id="ttmTopup"><span aria-hidden="true">＋</span>儲值金幣</button>'
+ +'<button type="button" class="ttm-help" id="ttmCardImg" style="font-family:inherit;cursor:pointer">存闆卡圖</button>'
  +'<a class="ttm-help" href="lobby.html?contact=1" data-contact-support>聯絡客服</a></div>'
  +'<p class="ttm-note" id="ttmNote">手機版可儲值、查看訂單與私訊；點單請使用電腦版。</p>'
  +'</header><div class="ttm-empty" id="ttmEmpty">載入中…</div>'
@@ -62,6 +63,7 @@ function show(key,{remember=true}={}){
 tabBar.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)show(b.dataset.tab);});
 $('ttmCoins').onclick=()=>show('wallet');
 $('ttmTopup').onclick=()=>show('wallet');
+$('ttmCardImg').onclick=()=>{try{window.ttSaveCardImage?.();}catch(e){}};
 // 手機版不開放點單：點單入口一律改成提示（訂單查詢 shopOpen(4)、取消、續單、回報問題照常）。
 const NO_ORDER='手機版目前只開放儲值金幣，點單請使用電腦版 ✦';
 function block(name,allow){const f=window[name];if(typeof f!=='function')return;window[name]=function(...a){if(allow&&allow(...a))return f.apply(this,a);say(NO_ORDER);};}
