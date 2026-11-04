@@ -1,5 +1,12 @@
 # 小小酒館修改紀錄
 
+## v491 VIP 優惠券改成回饋金幣（需發布新規則）
+使用者：VIP1 送 150、VIP2 500、VIP3 800、VIP4 1200、VIP5 1500 回饋金幣，把優惠券改掉。每升一級送一次（跳級每一級都領），以店長頁確認的 vipServer 等級為準。
+規則（tests/security-rules-v428/build/harden-phase8.cjs，可重複執行；套用前快照 rules-before-v491.json）：新節點 peiwan/vipGift/<key>/<1～5> {tx,at,amount}，本人與店員可讀；本人只能在 vipServer/<key>/lv ≥ 該等級、該等級還沒領過時新增一次，同一次寫入要有 walletTx（type vipgift、lv、amount 剛好該級金額、ref＝tx）＋ wallet.lastTx＝tx ＋ balance 剛好加該金額（沒有錢包時＝該金額）；walletTx 與 wallet.balance 各多一個 OR 分支。所有價格檢查中 v466 依 VIP 等級可折 30～200 的優惠券改為 0（38 處），帶 couponUsed 少付一律拒絕。金額改了要同步 lobby.html VIP_CFG.gift 與 harden-phase8.cjs GIFT。
+網站：lobby.html VIP_CFG 每級第一項改「回饋金幣 N」（gift 欄位，cp／disc 歸 0）；couponsLeft() 一律 0（結帳不再出現優惠券勾選）；新增 TTVipGift：登入綁定後監聽 vipGift/<key> 與 vipServer/<key>/lv，有已達到未領的等級就逐級寫入，成功跳通知「VIP N 回饋：送你 X 金幣！」。背包「優惠券」改「VIP 回饋金幣」（已領金額、確認等級後自動存入）；闆卡手帳「優惠券」欄改「回饋金幣 已領 N」；升級慶祝文字、VIP 視窗說明、新手指南、訂單「優惠券與收藏」按鈕改字。錢包交易明細顯示「VIP 回饋」（電腦版兩處、手機 mobile-app.js 491）。live.js 491、mobile-app.js 491、verTag v491、lobby-view 491。
+測試：test-phase8.cjs 29 項（各等級首次領、超過等級、重領、領過再領下一級、金額竄改、交易與紀錄不一致、只加錢／只寫紀錄、幫別人領、未登入、Email 帳號、沒有 vipServer、客人改 vipServer、讀寫權限、刪紀錄重領、店長調整、優惠券少付陪玩／時裝被拒、原價照常），第二、五批的優惠券成功案例改為預期拒絕；run.sh 加入第八批。網站以模擬資料跑 VIP 3 已領 1 級 → 自動補領 2、3 級共 1300、重複觸發不再寫。
+上線順序：網站先上線無妨（規則未發布時讀不到 vipGift，不嘗試；優惠券已不顯示）；GitHub Actions 規則測試全過後，店長在 Firebase 主控台發布 security/database.rules.json。等級要店長頁開著同步 vipServer 後才會發放。
+
 ## v490 私訊送不出時講清楚原因
 使用者：好友離線也要能留訊息（截圖：私訊貼圖顯示「貼圖未送出，請確認連線及好友狀態後再試」）。檢查程式與 v428 規則：私訊本來就不檢查對方是否在線（直接寫 dm／dmMeta，離線也收得到、上線看到未讀），舊提示的「好友狀態」容易誤會。lobby.html window.dmSend 每種失敗都回報原因（window.__dmFail＋提示＋console.warn('[dm] 未送出',代碼)）：私人房間、未登入、貼圖無法使用、禁言、非進階會員私訊冒險者、已不是好友、對方封鎖（原本無提示）、資料庫拒絕（登入狀態失效，請重新整理或用 Discord 再登入）、網路不穩。social-design.js 貼圖失敗改顯示同一原因。social-design.js 490、verTag v490、lobby-view 490。
 真正原因尚未確認（需使用者再送一次看新提示）。

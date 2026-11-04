@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v490</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v491</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -1752,7 +1752,7 @@ body.artBub.bub3s .npc .bub{
 <div class="gwin" id="vipM"><div class="gcard">
   <div class="gtop"><span class="gt">VIP 等級與獎勵</span><button class="gx" onclick="gClose('vipM')">✕</button></div>
   <div class="gin">
-    <div class="ghint">依累積支持升級（儲值與月卡都算，儲值當下就計入）。每升一級解鎖：點單優惠券、專屬時裝、寵物、椅子、限定對話框，最高階送實體周邊。</div>
+    <div class="ghint">依累積支持升級（儲值與月卡都算，儲值當下就計入）。每升一級解鎖：回饋金幣、專屬時裝、寵物、椅子、限定對話框，最高階送實體周邊。</div>
     <div id="vipList"></div>
   </div>
 </div></div>
@@ -4288,7 +4288,8 @@ window.__vipServerLv=0;
   const ref=db.ref(ROOT+'/vipServer/'+k+'/lv'), h=s=>{ const v=s.val(); window.__vipServerLv=(typeof v==='number')?v:0; };
   sub={k,ref,h}; ref.on('value',h,()=>{ window.__vipServerLv=0; }); }
   try{ watch(); setInterval(watch,5000); }catch(e){} })();
-function couponsLeft(){
+function couponsLeft(){ return 0; /* v491 優惠券停用，改送 VIP 回饋金幣 */
+  
   let vi=null; try{ vi=window.__vipInfo&&window.__vipInfo(); }catch(e){}
   if(!vi||!vi.lv||!vi.cur) return 0;
   if((window.__vipServerLv||0)<vi.lv) return 0;   // 店長頁尚未確認這個等級：先不能用券（避免付款被資料庫拒絕）
@@ -4453,7 +4454,7 @@ function renderWalletTx(){
     if(!rows.length){ box.innerHTML='<div style="color:#A5798D;font-size:12px;text-align:center;padding:8px">還沒有交易紀錄</div>'; return; }
     box.innerHTML='<div style="margin-top:10px;border-top:1px dashed #E0D3F0;padding-top:8px">'+rows.map(t=>{
       const pos=(t.amount||0)>0; const d=new Date(t.ts||0);
-      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':t.type==='daily'?'每日任務':(t.type==='refund'?'退款':'調整'))));
+      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':t.type==='daily'?'每日任務':t.type==='vipgift'?'VIP 回饋':(t.type==='refund'?'退款':'調整'))));
       return '<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;color:#6A5A82"><span>'+label+(t.note?'・'+esc(t.note):'')+'<br><span style="font-size:10.5px;color:#A5798D">'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+'</span></span>'
         +'<b style="color:'+(pos?'#3E9E6B':'#D96A8B')+'">'+(pos?'+':'')+t.amount+'</b></div>';
     }).join('')+'</div>';
@@ -5186,6 +5187,48 @@ function readMail(id){
     hide(){ if(state==='avail'&&!confirm('收起來之後，這次就看不到這封信了（重新整理後會再出現）。\n還沒領的 350 金幣要先領嗎？按「取消」回去領取。')) return;
       if(key) ss(SKEY+'_hid_'+key,'1'); if(state==='done') state='claimed'; paint(); renderMailBox(); }
   };
+  try{ firebase.auth().onAuthStateChanged(()=>setTimeout(watch,0)); }catch(e){}
+  setInterval(watch,3000);
+  watch();
+})();
+/* v491 VIP 回饋金幣（取代點單優惠券）：VIP 1～5 各送一次 150／500／800／1200／1500。等級以店長頁確認的 peiwan/vipServer/<key>/lv 為準；
+   每個已達到、還沒領的等級由本人一次寫入 vipGift/<key>/<等級>＋交易（type vipgift）＋錢包加金額（資料庫規則 harden-phase8 把關）。
+   規則還沒發布時讀不到 vipGift，就不嘗試。跳級的人每一級都會領到。 */
+(function(){
+  if(typeof db==='undefined'||!db||typeof firebase==='undefined') return;
+  let key=null,giftRef=null,lvRef=null,gcb=null,lcb=null,got=null,svLv=0,busy=false;
+  window.TTVipGift={got:()=>got||{}};
+  const cfg=()=>window.__vipCfg||[];
+  function off(){try{giftRef&&gcb&&giftRef.off('value',gcb);lvRef&&lcb&&lvRef.off('value',lcb);}catch(e){}giftRef=lvRef=gcb=lcb=null;got=null;svLv=0;}
+  function watch(){
+    const u=firebase.auth&&firebase.auth().currentUser;
+    const k=(u&&typeof myKey!=='undefined')?myKey:null;
+    if(k===key&&giftRef) return;
+    off();key=k;if(!k) return;
+    giftRef=db.ref(ROOT+'/vipGift/'+k);lvRef=db.ref(ROOT+'/vipServer/'+k+'/lv');
+    gcb=s=>{if(key!==k)return;got={};const v=s.val()||{};Object.keys(v).forEach(l=>got[+l]=true);run();};
+    lcb=s=>{if(key!==k)return;svLv=+s.val()||0;run();};
+    giftRef.on('value',gcb,()=>{if(key===k)got=null;});
+    lvRef.on('value',lcb,()=>{});
+  }
+  async function run(){
+    if(busy||!got||!key) return;
+    const k=key,todo=cfg().filter(t=>t.lv<=svLv&&!got[t.lv]&&t.gift>0);
+    if(!todo.length) return;
+    busy=true;let sum=0,last=0;
+    try{
+      for(const t of todo){
+        if(key!==k) break;
+        const SV=firebase.database.ServerValue,tx=db.ref(ROOT+'/walletTx/'+k).push().key,ch={};
+        ch['vipGift/'+k+'/'+t.lv]={tx,at:SV.TIMESTAMP,amount:t.gift};
+        ch['walletTx/'+k+'/'+tx]={type:'vipgift',lv:String(t.lv),amount:t.gift,ref:tx,note:'VIP '+t.lv+' 回饋金幣',ts:SV.TIMESTAMP};
+        ch['wallet/'+k+'/balance']=SV.increment(t.gift);
+        ch['wallet/'+k+'/lastTx']=tx;
+        try{await db.ref(ROOT).update(ch);got[t.lv]=true;sum+=t.gift;last=t.lv;}catch(e){break;}
+      }
+    }finally{busy=false;}
+    if(sum&&key===k&&window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'VIP '+last+' 回饋：送你 '+sum.toLocaleString()+' 金幣！',sub:'已經存進錢包，謝謝你一直來酒館 ✦',hold:10000});
+  }
   try{ firebase.auth().onAuthStateChanged(()=>setTimeout(watch,0)); }catch(e){}
   setInterval(watch,3000);
   watch();
@@ -6329,13 +6372,14 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   window.__buildFrames2=buildFrames2;
   window.addEventListener('tt-companion-rewards',()=>{buildFrames2();applyFrame();});
   document.getElementById('h2ava').addEventListener('click',()=>{ if(window.bookOpen) bookOpen(); else window.__openFrames(); });
-  /* --- VIP 系統(v407 門檻定案:3000/10000/15000/22000/30000;改 VIP_CFG 的 need,admin.html VIP_TIERS_ADMIN 同步) --- */
+  /* --- VIP 系統(v407 門檻定案:3000/10000/15000/22000/30000;改 VIP_CFG 的 need,admin.html VIP_TIERS_ADMIN 同步)
+     v491 點單優惠券停用，改為每升一級送一次回饋金幣 gift（金額改這裡要同步 harden-phase8.cjs 的 GIFT 並重新發布規則） --- */
   const VIP_CFG=[
-    {lv:1,cls:'vc1',hex:'#7E9FDC',nm:'迎賓',need:3000, cp:1,disc:30, rw:[['coupon','優惠券 1 張・折 $30'],['chat','奶霜小貓'],['frame','頭像框・藍調樂手']]},
-    {lv:2,cls:'vc2',hex:'#61B98A',nm:'熟客',need:10000,cp:2,disc:50, rw:[['coupon','優惠券 2 張・折 $50'],['chair','限定坐墊椅'],['chat','花茶小兔'],['frame','頭像框・酒館饗宴']]},
-    {lv:3,cls:'vc3',hex:'#E67FA6',nm:'常客',need:15000,cp:3,disc:80, rw:[['coupon','優惠券 3 張・折 $80'],['dress','VIP 專屬時裝'],['chat','蜜桃小鳥'],['frame','頭像框・薔薇緞帶']]},
-    {lv:4,cls:'vc4',hex:'#A183DE',nm:'摯友',need:22000,cp:5,disc:120,rw:[['coupon','優惠券 5 張・折 $120'],['cat','VIP 限定寵物'],['chat','VIP 4 氣泡・設計中'],['frame','頭像框・星夜魔法']]},
-    {lv:5,cls:'vc5',hex:'#E9B028',nm:'貴賓',need:30000,cp:8,disc:200,rw:[['coupon','優惠券 8 張・折 $200'],['dress','貴賓時裝＋坐椅'],['chat','VIP 5 氣泡・設計中'],['frame','頭像框・甜心派對'],['gift','實體周邊禮物']]}
+    {lv:1,cls:'vc1',hex:'#7E9FDC',nm:'迎賓',need:3000, cp:0,disc:0,gift:150,rw:[['coin','回饋金幣 150'],['chat','奶霜小貓'],['frame','頭像框・藍調樂手']]},
+    {lv:2,cls:'vc2',hex:'#61B98A',nm:'熟客',need:10000,cp:0,disc:0,gift:500,rw:[['coin','回饋金幣 500'],['chair','限定坐墊椅'],['chat','花茶小兔'],['frame','頭像框・酒館饗宴']]},
+    {lv:3,cls:'vc3',hex:'#E67FA6',nm:'常客',need:15000,cp:0,disc:0,gift:800,rw:[['coin','回饋金幣 800'],['dress','VIP 專屬時裝'],['chat','蜜桃小鳥'],['frame','頭像框・薔薇緞帶']]},
+    {lv:4,cls:'vc4',hex:'#A183DE',nm:'摯友',need:22000,cp:0,disc:0,gift:1200,rw:[['coin','回饋金幣 1200'],['cat','VIP 限定寵物'],['chat','VIP 4 氣泡・設計中'],['frame','頭像框・星夜魔法']]},
+    {lv:5,cls:'vc5',hex:'#E9B028',nm:'貴賓',need:30000,cp:0,disc:0,gift:1500,rw:[['coin','回饋金幣 1500'],['dress','貴賓時裝＋坐椅'],['chat','VIP 5 氣泡・設計中'],['frame','頭像框・甜心派對'],['gift','實體周邊禮物']]}
   ];
   window.__vipCfg=VIP_CFG;
   function vipSpent(){
@@ -6364,7 +6408,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
     /* 升級慶祝(僅在載入後、等級真的上升時) */
     if(_lastVip===null || !_vipArmed){ _lastVip=info.lv; }
     else if(info.lv>_lastVip){ _lastVip=info.lv;
-      if(window.celebrate) window.celebrate('升上 VIP '+info.lv+'!', '解鎖「'+info.cur.nm+'」等級獎勵 — 優惠券已可使用');
+      if(window.celebrate) window.celebrate('升上 VIP '+info.lv+'!', '解鎖「'+info.cur.nm+'」等級獎勵 — 回饋金幣確認後會自動存進錢包');
       if(info.lv>=3)setTimeout(()=>window.TTVipOutfit?.maybePrompt(true),2600); }   /* v445 達到 VIP3 時請他選一套 VIP 時裝 */
     try{window.TTVipOutfit?.maybePrompt(false);}catch(e){}
     try{ const dc=JSON.parse(localStorage.getItem('tt_dc')||'null');
@@ -7276,21 +7320,23 @@ function buildBag(){
       +'</div>';
   });
   el.innerHTML=
-    '<div class="ghint">你擁有的東西都收在這裡。購買的時裝與獲得的優惠券會自動出現。</div>'
+    '<div class="ghint">你擁有的東西都收在這裡。購買的時裝與獲得的獎勵會自動出現。</div>'
     +'<div class="vnm2" style="font-size:13px;margin-bottom:6px">時裝 · 共 '+ownedList.length+' 款</div>'
     +clothHtml
     +'<div class="ghint" style="margin:4px 0 12px">想要新造型?到<b>商城</b>逛逛,購買後會永久收進背包。 <a href="#" id="bagToDress" style="color:#E27FA6;text-decoration:underline">去商城 →</a> <a href="#" id="bagToWard" style="color:#8E68C8;text-decoration:underline">自由搭配 →</a></div>'
 
     +'<div class="vnm2" style="font-size:13px;margin-bottom:6px">頭像框</div>'
     +'<div class="ach2"><img src="'+AICON.star+'" alt=""><div style="flex:1"><div class="an2">'+frOwnNames.join('・')+'</div><div class="ad2">目前使用:'+(FR[owned]||owned)+'(點左上角頭像更換;VIP 升級會解鎖更多)</div></div><span class="st2 ok">'+frOwnN+' 款</span></div>'
-    +'<div class="vnm2" style="font-size:13px;margin:12px 0 6px">優惠券</div>'
-    +(function(){
+    +'<div class="vnm2" style="font-size:13px;margin:12px 0 6px">VIP 回饋金幣</div>'
+    +(function(){ /* v491 優惠券停用，改為每升一級送一次回饋金幣 */
        let info=null; try{ info=window.__vipInfo&&window.__vipInfo(); }catch(e){}
+       const got=(window.TTVipGift&&window.TTVipGift.got())||{};
        if(info&&info.lv){
-         const left=(typeof couponsLeft==='function')?couponsLeft():info.cur.cp;
-         return '<div class="ach2"><img src="'+AICON.coupon+'" alt=""><div style="flex:1"><div class="an2">VIP '+info.lv+' 點單優惠券</div><div class="ad2">每張折抵 $'+info.cur.disc+',點單時可折抵</div></div><span class="st2'+(left?' ok':'')+'">剩 '+left+' 張</span></div>';
+         const n=(window.__vipCfg||[]).filter(t=>t.lv<=info.lv&&got[t.lv]).reduce((a,t)=>a+t.gift,0);
+         const wait=(window.__vipCfg||[]).filter(t=>t.lv<=info.lv&&!got[t.lv]).length;
+         return '<div class="ach2"><img src="'+AICON.coin+'" alt=""><div style="flex:1"><div class="an2">VIP '+info.lv+' 回饋金幣</div><div class="ad2">'+(wait?'確認等級後會自動存進錢包':'已經存進你的錢包')+'</div></div><span class="st2'+(n?' ok':'')+'">已領 '+n.toLocaleString()+'</span></div>';
        }
-       return '<div class="ach2"><img src="'+AICON.coupon+'" alt=""><div style="flex:1"><div class="an2">目前沒有優惠券</div><div class="ad2">累積消費升上 VIP 後,每級贈點單優惠券</div></div><span class="st2">0 張</span></div>';
+       return '<div class="ach2"><img src="'+AICON.coin+'" alt=""><div style="flex:1"><div class="an2">還沒有回饋金幣</div><div class="ad2">累積支持升上 VIP 後，每升一級送一次回饋金幣</div></div><span class="st2">0</span></div>';
      })();
   /* 畫出每件時裝的小人預覽 */
   el.querySelectorAll('canvas.bagCv').forEach(cv=>{
@@ -7577,7 +7623,7 @@ function bkPageMe(){
     +'<div class="bkCard"><dl class="bkMeta">'
     +'<dt>會員等級</dt><dd>'+(vi.lv?('VIP '+vi.lv+'・'+(vi.cur?vi.cur.nm:'')):'尚未升級,儲值即計入')+'</dd>'
     +'<dt>累積支持</dt><dd>NT$'+(vi.spent||0)+(vi.next?('<span style="font-weight:400;color:#A88CA0">・距下一級還差 '+(vi.next.need-vi.spent)+'</span>'):'')+'</dd>'
-    +'<dt>優惠券</dt><dd>'+((typeof couponsLeft==='function')?('剩 '+couponsLeft()+' 張'):'—')+'</dd>'
+    +'<dt>回饋金幣</dt><dd>'+(function(){const g=(window.TTVipGift&&window.TTVipGift.got())||{};const n=(window.__vipCfg||[]).filter(t=>g[t.lv]).reduce((a,t)=>a+t.gift,0);return '已領 '+n.toLocaleString();})()+'</dd>'
     +'</dl></div>'
     +'<div class="bkBtnRow bkQuickRow">'
     +'<button class="bkBtn" onclick="bkEditInfo()">編輯資料</button>'
@@ -7660,7 +7706,7 @@ function bkPageLog(){
   let txHtml='<div style="color:#A88CA0;font-size:.97em;text-align:center;padding:8px 0">載入中…</div>';
   if(_bkTx){
     txHtml=_bkTx.length?_bkTx.map(t=>{ const pos=(t.amount||0)>0;
-      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':t.type==='daily'?'每日任務':(t.type==='refund'?'退款':'調整'))));
+      const label=t.type==='topup'?'儲值':(t.type==='spend'?'消費':(t.type==='bonus'?'贈送':(t.type==='welcome'?'開幕禮':t.type==='daily'?'每日任務':t.type==='vipgift'?'VIP 回饋':(t.type==='refund'?'退款':'調整'))));
       return '<div class="bkAct"><img src="'+BKA.icWallet+'" alt=""><span class="t">'+label+(t.note?'・'+esc(t.note):'')+'</span>'
         +'<span class="g" style="color:'+(pos?'#3E9E6B':'#D96A8B')+';font-weight:700">'+(pos?'+':'')+t.amount+'</span></div>'; }).join('')
       :'<div class="bkCard" style="text-align:center;color:#A88CA0;font-size:.97em">還沒有金幣紀錄 ✦</div>';
@@ -8029,7 +8075,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=461"></script>
+<script src="lobby-ui/live.js?v=491"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
@@ -8050,7 +8096,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=432"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=454">
-<script src="lobby-ui/mobile-app.js?v=489"></script>
+<script src="lobby-ui/mobile-app.js?v=491"></script>
 </body>
 </html>
 

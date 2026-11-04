@@ -155,7 +155,7 @@
       +'<p class="body-note">1 金幣 = 1 元，可用於點單與時裝購買。<br>儲值由店長核對，入帳時會收到通知。</p><div class="text-links"><a class="text-btn" href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener">找店長幫忙 ↗</a><button type="button" class="text-btn" id="ttWalletTx">查看交易紀錄 →</button></div><div id="walletTxBox"></div>';
     $('topupBody').querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>pickTier(Number(b.dataset.tier)));
     $('ttWalletTx').onclick=()=>renderWalletTx();
-    const collection=document.createElement('button');collection.type='button';collection.className='text-btn';collection.textContent='優惠券與收藏 →';
+    const collection=document.createElement('button');collection.type='button';collection.className='text-btn';collection.textContent='獎勵與收藏 →';
     collection.onclick=()=>{gClose('topupM');buildBag();gOpen('bagM');};$('topupBody').querySelector('.text-links').append(collection);
   };
 

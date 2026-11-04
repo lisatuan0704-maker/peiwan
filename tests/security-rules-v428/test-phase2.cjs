@@ -22,7 +22,7 @@ const cases=[
  ['正常用金幣買衣服（300）','anon','PATCH','peiwan',buy('o1','cloth9',300),true],
  ['不付錢直接把衣服放進背包','anon','PUT','peiwan/owned/k1/cloth9',{name:'x',ts:1},false],
  ['只付 10 金幣買 300 的衣服','anon','PATCH','peiwan',buy('o2','cloth9',10),false],
- ['VIP 5（店長確認）優惠券折 200（付 100）','anon','PATCH','peiwan',buy('o3','cloth9',100,{couponUsed:true}),true],
+ ['v491 優惠券停用：VIP 5 自稱用券付 100','anon','PATCH','peiwan',buy('o3','cloth9',100,{couponUsed:true}),false],
  ['假優惠券折超過 200（付 99）','anon','PATCH','peiwan',buy('o4','cloth9',99,{couponUsed:true}),false],
  ['憑空把金幣變多','anon','PUT','peiwan/wallet/k1/balance',99999,false],
  ['扣金幣但沒有交易紀錄','anon','PATCH','peiwan',{'wallet/k1/balance':inc(-5)},false],
