@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v489</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v490</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -6866,26 +6866,26 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     _dmWith=null;
     if(silent!==true){ const m=document.getElementById('dmM'); if(m) m.classList.remove('on'); }
   };
-  window.dmSend=async function(stickerCode){if(window.TTLegacySocial?.isolated||_dmSending)return false;
-    const i=document.getElementById('dmIn');if(!i||!_dmWith||!myKey)return false;
+  window.dmSend=async function(stickerCode){window.__dmFail='';const fail=(code,msg)=>{window.__dmFail=msg||'';if(msg)toast(msg);try{console.warn('[dm] 未送出',code);}catch{}return false;};if(window.TTLegacySocial?.isolated)return fail('isolated','私人房間裡不能傳私訊，回到大廳再試。');if(_dmSending)return false;
+    const i=document.getElementById('dmIn');if(!i||!_dmWith)return false;if(!myKey)return fail('nokey','請先用 Discord 登入酒館再傳訊息。');
     const sticker=typeof stickerCode==='string'&&window.TTChatStickers?.decode(stickerCode);
-    if(stickerCode!==undefined&&!sticker)return false;
+    if(stickerCode!==undefined&&!sticker)return fail('sticker','這張貼圖暫時不能用，換一張試試。');
     const t=sticker?stickerCode:(i.value||'').trim();if(!t)return false;
-    if(window.__mute){toast('你目前被禁言中,暫時無法傳私訊');return false;}
+    if(window.__mute)return fail('mute','你目前被禁言中，暫時無法傳私訊。');
     const isStaff=/^staff_/.test(_dmWith);
-    if(isStaff&&ttMemberTier()<2){toast('進階會員以上才能私訊冒險者');return false;}
-    if(!isStaff&&!FR[_dmWith]){toast('你們已不是好友');return false;}
+    if(isStaff&&ttMemberTier()<2)return fail('tier','進階會員以上才能私訊冒險者。');
+    if(!isStaff&&!FR[_dmWith])return fail('friend','你們已不是好友，重新加好友後才能私訊。');
     const k=_dmWith,sender=myKey,senderName=myName(),recipientName=isStaff?_dmStaffName:(FR[_dmWith]?.name||'');
     _dmSending=true;const sendButton=i.parentElement.querySelector('button:not(.dm-sticker-toggle)');if(sendButton){sendButton.disabled=true;sendButton.setAttribute('aria-busy','true');}
     try{const s=isStaff?null:await db.ref(ROOT+'/blocks/'+k+'/'+sender).once('value');
       if(window.TTLegacySocial?.isolated||myKey!==sender||_dmWith!==k||(!isStaff&&!FR[k])||window.__mute)return false;
-      if(s&&s.val())return false;
+      if(s&&s.val())return fail('blocked','對方目前無法接收你的私訊。');
       await db.ref(ROOT+'/dm/'+pairKey(sender,k)).push({f:sender,x:t.slice(0,200),at:Date.now()});
       if(!sticker&&myKey===sender&&_dmWith===k&&i.value.trim()===t){i.value='';i.dispatchEvent(new Event('input',{bubbles:true}));}
       const last=sticker?'[貼圖] '+sticker.name:t.slice(0,40),at=Date.now();
       await Promise.allSettled([db.ref(ROOT+'/dmMeta/'+sender+'/'+k).update(isStaff?{last,lastAt:at,name:recipientName,staff:true}:{last,lastAt:at,name:recipientName}),db.ref(ROOT+'/dmMeta/'+k+'/'+sender).update({last,lastAt:at,name:senderName}),db.ref(ROOT+'/dmMeta/'+k+'/'+sender+'/unread').transaction(c=>(c||0)+1)]);
       try{SFX.tap&&SFX.tap();}catch{}return true;
-    }catch{toast('訊息未送出，請稍後再試。');return false;}
+    }catch(e){const c=String(e&&(e.code||e.message)||'');if(/permission/i.test(c))return fail('denied','登入狀態失效了，重新整理頁面，或用 Discord 再登入一次。');return fail('net:'+c,'網路不穩，訊息沒送出，稍後再試一次。');}
     finally{_dmSending=false;if(sendButton){sendButton.disabled=false;sendButton.removeAttribute('aria-busy');}}
   };
   window.dmBlockCur=function(){ if(_dmWith){ const k=_dmWith; if(/^staff_/.test(k)){toast('冒險者私訊無法封鎖，可以檢舉這段對話');return;} frBlock(k); dmClose(); } };
@@ -8033,7 +8033,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
-<script src="lobby-ui/social-design.js?v=487"></script>
+<script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=427"></script>
 <script src="lobby-ui/order-flow.js?v=373"></script>
 <script type="module">
