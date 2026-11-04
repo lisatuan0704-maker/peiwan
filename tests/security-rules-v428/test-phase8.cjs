@@ -18,7 +18,7 @@ const claim=(k,lv,tx,o={})=>{const a=o.amount??GIFT[lv];return {
  ['wallet/'+k+'/balance']:o.balance??inc(o.add??a),
  ['wallet/'+k+'/lastTx']:tx};};
 const drop=(o,key)=>{const c={...o};delete c[key];return c;};
-const pay=(id,o)=>({['clientOrders/'+id]:{myKey:'k1',paidBy:'wallet',status:o.type==='shop'?'done':'confirmed',createdAt:1,name:'小明',couponUsed:false,...o},['wallet/k1/balance']:inc(-o.amount),['wallet/k1/lastTx']:'t'+id,['walletTx/k1/t'+id]:{type:'spend',amount:-o.amount,ref:id,ts:TS}});
+const pay=(id,o)=>({['clientOrders/'+id]:{myKey:'k1',paidBy:'wallet',status:o.type==='shop'?'done':'confirmed',createdAt:1,name:'小明',couponUsed:false,...o},['wallet/k1/balance']:inc(-o.amount),['wallet/k1/lastTx']:id,['walletTx/k1/'+id]:{type:'spend',amount:-o.amount,ref:id,ts:1}});
 const buyItem=(id,amt,cp)=>({...pay(id,{type:'shop',plan:'cloth9',itemId:'cloth9',amount:amt,couponUsed:!!cp}),['owned/k1/cloth9']:{name:'cloth9',ts:1,ref:id}});
 const rich=d=>{d.peiwan.wallet.k1={balance:5000,lastTx:'x0'};d.peiwan.walletTx.k1={x0:{type:'topup',amount:5000,ref:'x0'}};};
 const cases=[
