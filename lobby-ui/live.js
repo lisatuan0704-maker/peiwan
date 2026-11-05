@@ -9,7 +9,7 @@
   const definitions = {
     boardM: ['board', '店長布告欄', '酒館的新鮮事，翻開看看。', 'THE TAVERN JOURNAL', 'JOURNAL'],
     achM: ['achievements', '成就收藏冊', '把一起度過的小日子，收藏起來。', 'THE LITTLE COLLECTION', 'COLLECT'],
-    topupM: ['wallet', '金幣錢包', '為下一段陪伴，留一點期待。', 'TAVERN WALLET', 'WALLET'],
+    topupM: ['wallet', '我的錢包', '為下一段陪伴，留一點期待。', 'TAVERN WALLET', 'WALLET'],
     topupPayM: ['wallet', '儲值付款', '選擇付款方式，金額與入帳金幣都在這裡。', 'TAVERN WALLET', 'PAYMENT'],
     vipM: ['wallet', 'VIP 等級與獎勵', '謝謝你，讓酒館的日常更熱鬧。', 'TAVERN MEMBERSHIP', 'MEMBER'],
     setM: ['settings', '酒館設定', '調成你喜歡的節奏。', 'MAKE YOURSELF AT HOME', 'TUNE IN'],
@@ -92,11 +92,17 @@
   avatar.setAttribute('aria-label','開啟我的手帳與頭像框');
   avatar.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();avatar.click();}});
   const funds=document.createElement('div');funds.className='tt-funds';
-  funds.innerHTML='<span>持有金幣</span><strong><img src="'+asset('coin')+'" alt=""><span id="ttWalletCount"></span></strong>';
+  // v492 雙幣：金幣（點單）＋貓貓幣（時裝間），點一下打開錢包
+  funds.innerHTML='<strong class="tt-fund" title="金幣：點冒險者一起玩"><img src="'+asset('coin')+'" alt=""><span id="ttWalletCount"></span><small>金幣</small></strong>'
+    +'<strong class="tt-fund tt-fund-cat" title="貓貓幣：時裝間購物">'+TTCat.coin(32,'c','data-cat-pop')+'<span id="ttCatCount"></span><small>貓貓幣</small></strong>';
+  funds.setAttribute('role','button');funds.tabIndex=0;funds.setAttribute('aria-label','打開錢包：金幣與貓貓幣');
+  funds.addEventListener('click',e=>{e.stopPropagation();openTopup();});
+  funds.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTopup();}});
   hud.append(funds);
-  const balance=$('coinBal'); const syncBalance=()=>{$('ttWalletCount').textContent=balance.textContent;};syncBalance();
+  const balance=$('coinBal'); const syncBalance=()=>{$('ttWalletCount').textContent=Number(balance.textContent||0).toLocaleString('zh-TW');};syncBalance();
   new MutationObserver(syncBalance).observe(balance,{childList:true,subtree:true,characterData:true});
-  const bookHint=document.createElement('span');bookHint.className='tt-book-hint';bookHint.textContent='個人手帳 ↗';hud.querySelector('.h2who').append(bookHint);
+  TTCat.onChange(v=>{const n=$('ttCatCount');if(n)n.textContent=TTCat.fmt(v);});
+  const bookHint=document.createElement('span');bookHint.className='tt-book-hint';bookHint.title='個人手帳';bookHint.setAttribute('aria-label','個人手帳');bookHint.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C6.5 4.3 9.3 4.3 12 6c2.7-1.7 5.5-1.7 8-.5V19c-2.5-1.2-5.3-1.2-8 .5-2.7-1.7-5.5-1.7-8-.5z"/><path d="M12 6v13.5"/></svg>';/* 使用者：個人手帳不用字，只留圖示 */hud.querySelector('.h2who').append(bookHint);bookHint.setAttribute('role','button');bookHint.tabIndex=0;bookHint.onclick=e=>{e.stopPropagation();window.bookOpen?.();};bookHint.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();bookHint.click();}};
   const hudAnchor=document.createComment('個人名片原位置');hud.before(hudAnchor);
   function placeHud(){
     const hero=document.querySelector('#mHome .mhHero');
@@ -147,12 +153,17 @@
   window.addEventListener('tt-companion-rewards',()=>{if(document.getElementById('achM')?.classList.contains('on'))TTCompanionAchievements.mount(shells.achM.content,window.TTCompanionRewards,myKey);});
 
   // 金額、方案與付款按鈕均沿用既有函式提供的真實設定。
+  // v492 貓貓幣區塊（餘額＋金幣兌換）用同一個節點，錢包重畫時搬回去，輸入中的數量與訊息不會不見。
+  let catHost=null;
   renderTopup=function(){
     const cfg=window.__topupCfg||{},tiers=(cfg.tiers||[]).filter(t=>t&&t.amt>0),bal=Number(window.__wallet)||0;
     $('topupBody').innerHTML='<div class="purse-summary framed-motion"><div class="wallet-balance"><small>目前可用金幣</small><strong>'+bal.toLocaleString()+'<span>金幣</span></strong><p>為下一次相聚，存一點期待。</p></div><div class="coin-scene" aria-hidden="true"><span class="coin-orbit"></span><img src="'+asset('coin')+'" alt=""><i class="coin-spark">✦</i><span class="coin-label">TAVERN COINS</span></div>'+motion(3)+'</div>'
+      +'<div class="section-caption"><b>時裝間用的貓貓幣</b><span>CAT COINS</span></div><div id="ttCatSlot"></div>'
       +(cfg.note?'<p class="body-note">'+text(cfg.note)+'</p>':'')+'<div class="section-caption"><b>補充一點快樂</b><span>TOP UP</span></div><div class="packages">'
       +(tiers.length?tiers.map((t,i)=>'<button type="button" class="package framed-motion" data-tier="'+i+'"><span class="coupon-id">'+String(i+1).padStart(2,'0')+' / 儲值</span><strong>'+Number(t.amt+(t.bonus||0)).toLocaleString()+' <small>金幣</small></strong>'+(t.bonus>0?'<small class="tt-bonus">含贈送 '+text(t.bonus)+' 金幣</small>':'')+'<p>NT$ '+Number(t.amt).toLocaleString()+'</p><span class="coupon-arrow">↗</span>'+motion(i%2)+'</button>').join(''):'<p class="body-note">目前尚未開放儲值，敬請期待。</p>')+'</div>'
-      +'<p class="body-note">1 金幣 = 1 元，可用於點單與時裝購買。<br>儲值由店長核對，入帳時會收到通知。</p><div class="text-links"><a class="text-btn" href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener">找店長幫忙 ↗</a><button type="button" class="text-btn" id="ttWalletTx">查看交易紀錄 →</button></div><div id="walletTxBox"></div>';
+      +'<p class="body-note">1 金幣 = 1 元，可以點冒險者一起玩，也能換成貓貓幣。<br>儲值由店長核對，入帳時會收到通知。</p><div class="text-links"><a class="text-btn" href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener">找店長幫忙 ↗</a><button type="button" class="text-btn" id="ttWalletTx">查看交易紀錄 →</button></div><div id="walletTxBox"></div>';
+    if(!catHost){catHost=document.createElement('div');catHost.className='tt-cat-slot';TTCat.mount(catHost);}
+    $('ttCatSlot').replaceWith(catHost);
     $('topupBody').querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>pickTier(Number(b.dataset.tier)));
     $('ttWalletTx').onclick=()=>renderWalletTx();
     const collection=document.createElement('button');collection.type='button';collection.className='text-btn';collection.textContent='獎勵與收藏 →';
@@ -207,7 +218,7 @@
     const current=done?2:o.status==='confirmed'?1:0;
     let status=cancelled?'此訂單已取消':done?(o.type==='topup'?'儲值完成・'+Number(o.coinAmount||o.amount||0).toLocaleString()+' 金幣已入帳':o.type==='shop'?'購買完成・已收進背包':o.type==='member'?'會員已開通':'已完成這次陪伴'):o.status==='confirmed'?'訂單已確認':'等待店長確認付款';
     if(!done&&!cancelled&&o.booking&&o.status==='confirmed')status=o.staffDeclined?'冒險者無法接單，店長正在協助退款或改期':o.accepted?'冒險者已確認，準時赴約。':'等待冒險者確認時段';
-    if(cancelled&&o.refunded)status+='・'+(Number(o.amount)||0)+' 金幣已退回錢包';
+    if(cancelled&&o.refunded)status+=o.paidBy==='cat'?'・'+TTCat.fmt(o.catAmount)+' 貓貓幣已退回':'・'+(Number(o.amount)||0)+' 金幣已退回錢包';
     const steps=cancelled?'':'<div class="steps" aria-label="'+attr(status)+'">'+[current>0?'已付款':'待付款確認',current>0?'已確認':'待確認',done?'已完成':'待完成'].map((lb,i)=>'<span class="'+(done||i<current?'done':i===current?'current':'future')+'">'+(!done&&i===current?'<i aria-hidden="true"></i>':'')+lb+(!done&&i===current?'<small>目前進度</small>':'')+'</span>').join('')+'</div>';
     const controls=[];const voice=(!done&&!cancelled&&o.type==='play')?'<div class="ticket-voice" data-voice-order="'+attr(id)+'" hidden></div>':'';
     const assist=cancelled?'':'<button class="order-assist ticket-report" '+(issued?'disabled':'data-order-action="issue" data-order="'+attr(id)+'"')+' aria-label="'+(issued?'問題已回報，店長處理中':'回報這筆訂單的問題')+'" title="'+(issued?'店長處理中':'回報訂單問題')+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V4m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0"/><path d="M12 7v4m0 2v.1"/></svg></button>';
@@ -215,7 +226,7 @@
     if(o.cancelPending)controls.push('<p class="tt-order-note">取消處理中，金幣會退回你的錢包。</p>');
     else if(!done&&!cancelled&&canSelfCancel(o))controls.push('<div class="tt-cancel"><span>尚未接單，可取消並退回金幣。</span><button data-order-action="cancel" data-order="'+attr(id)+'">取消並退回金幣</button></div>');
     if(done&&(o.type==='play'||!o.type))controls.push('<button class="text-btn order-reorder" data-order-action="reorder">再點一次 <span aria-hidden="true">↗</span></button>');
-    return '<article class="order '+(done?'is-complete':issued?'needs-help':'is-upcoming')+'"><div class="ticket-date"><small>'+(o.reserveAt?'約定日期':'訂單日期')+'</small><b>'+date+'</b><span>'+time+'</span></div><div class="ticket-body"><div class="order-top"><div><h2>'+text(o.planName||'訂單')+'</h2>'+((o.staffCid||o.staffName)?'<small>與 '+text(staffName)+' 一起玩</small>':'')+'</div><strong>NT$ '+Number(o.amount||0).toLocaleString()+'</strong></div><p class="order-status">'+text(status)+'</p>'+(o.groupId?'<p class="tt-order-note">同組 '+Number(o.groupSize)+' 位冒險者・整組實付 NT$ '+Number(o.groupAmount).toLocaleString()+'；這張為 '+text(staffName)+' 的委託紀錄。</p>':'')+(o.couponUsed&&o.couponDisc?'<p class="tt-order-note">已使用優惠券折抵 NT$ '+text(o.couponDisc)+'</p>':'')+(o.declineReason?'<p class="tt-order-note">冒險者無法接單：'+text(o.declineReason)+'</p>':'')+steps+'<div class="ticket-bottom"><div class="tt-order-actions">'+controls.join('')+'</div><div class="ticket-footer">'+identity(backendNumber(o),id)+assist+'</div>'+voice+'</div></div></article>';
+    return '<article class="order '+(done?'is-complete':issued?'needs-help':'is-upcoming')+'"><div class="ticket-date"><small>'+(o.reserveAt?'約定日期':'訂單日期')+'</small><b>'+date+'</b><span>'+time+'</span></div><div class="ticket-body"><div class="order-top"><div><h2>'+text(o.planName||'訂單')+'</h2>'+((o.staffCid||o.staffName)?'<small>與 '+text(staffName)+' 一起玩</small>':'')+'</div><strong>'+(o.paidBy==='cat'?TTCat.fmt(o.catAmount)+' 貓貓幣':'NT$ '+Number(o.amount||0).toLocaleString())+'</strong></div><p class="order-status">'+text(status)+'</p>'+(o.groupId?'<p class="tt-order-note">同組 '+Number(o.groupSize)+' 位冒險者・整組實付 NT$ '+Number(o.groupAmount).toLocaleString()+'；這張為 '+text(staffName)+' 的委託紀錄。</p>':'')+(o.couponUsed&&o.couponDisc?'<p class="tt-order-note">已使用優惠券折抵 NT$ '+text(o.couponDisc)+'</p>':'')+(o.declineReason?'<p class="tt-order-note">冒險者無法接單：'+text(o.declineReason)+'</p>':'')+steps+'<div class="ticket-bottom"><div class="tt-order-actions">'+controls.join('')+'</div><div class="ticket-footer">'+identity(backendNumber(o),id)+assist+'</div>'+voice+'</div></div></article>';
   }
   renderMyOrders=function(){
     const ids=myOrderIds(),active=ids.filter(id=>myOrdersCache[id]&&!['done','cancelled'].includes(myOrdersCache[id].status)),history=ids.filter(id=>myOrdersCache[id]&&['done','cancelled'].includes(myOrdersCache[id].status));

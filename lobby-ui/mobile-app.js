@@ -26,7 +26,7 @@ const app=document.createElement('div');app.id='ttM';
 app.innerHTML='<header class="ttm-top" id="ttmTop">'
  +'<div class="ttm-card"><canvas id="ttmDoll" width="64" height="64" aria-hidden="true"></canvas>'
  +'<div class="ttm-who"><small>我的闆卡</small><b id="ttmName">小小酒館</b></div>'
- +'<button type="button" class="ttm-coins" id="ttmCoins" aria-label="金幣餘額，點一下儲值"><i aria-hidden="true"></i><b id="ttmCoinN">0</b><small>金幣</small></button></div>'
+ +'<button type="button" class="ttm-coins" id="ttmCoins" aria-label="金幣與貓貓幣餘額，點一下打開錢包"><i aria-hidden="true"></i><b id="ttmCoinN">0</b><small>金幣</small>'+TTCat.coin(18,'c','data-cat-pop')+'<b id="ttmCatN">0</b><small>貓貓幣</small></button></div>'
  +'<div class="ttm-actions" id="ttmActions"><button type="button" class="ttm-order" id="ttmTopup"><span aria-hidden="true">＋</span>儲值金幣</button>'
  +'<button type="button" class="ttm-help" id="ttmCardImg" style="font-family:inherit;cursor:pointer">存闆卡圖</button>'
  +'<a class="ttm-help" href="lobby.html?contact=1" data-contact-support>聯絡客服</a></div>'
@@ -82,7 +82,7 @@ setInterval(()=>{
 /* ===== 儲值金幣（銀行轉帳＋上傳截圖） ===== */
 const wallet=(()=>{
  const page=$('ttmWallet');
- let tier=-1,proof=null,proofBusy=false,sending=false,done=null,txOpen=false;
+ let tier=-1,proof=null,proofBusy=false,sending=false,done=null,txOpen=false,catHost=null;
  const tiers=()=>(((window.__topupCfg||{}).tiers)||[]).filter(t=>t&&t.amt>0);
  function account(){
   const raw=String((typeof PAY_ACCOUNT!=='undefined'&&PAY_ACCOUNT)||'').trim();
@@ -110,8 +110,9 @@ const wallet=(()=>{
    +'<button type="button" class="ttm-primary" data-act="orders">查看儲值進度</button><button type="button" class="ttm-ghost" data-act="again">再儲值一筆</button></div>';bind();return;}
   const keep={name:page.querySelector('#ttmTuName')?.value,last5:page.querySelector('#ttmTuLast5')?.value};
   const t=list[tier];
-  page.innerHTML='<div class="ttm-balance"><small>目前金幣</small><b>'+fmt(bal)+'</b><span>1 金幣＝1 元，可用於點單與商城</span><button type="button" class="ttm-link" data-act="tx">'+(txOpen?'收起交易紀錄':'查看交易紀錄')+'</button></div>'
+  page.innerHTML='<div class="ttm-balance"><small>目前金幣</small><b>'+fmt(bal)+'</b><span>1 金幣＝1 元，可以點冒險者一起玩，也能換成貓貓幣</span><button type="button" class="ttm-link" data-act="tx">'+(txOpen?'收起交易紀錄':'查看交易紀錄')+'</button></div>'
    +'<div id="ttmTx" class="ttm-tx"'+(txOpen?'':' hidden')+'></div>'
+   +'<div id="ttmCatSlot"></div>'
    +(list.length?(
    '<section class="ttm-step" data-step="1"><h3><i><u>1</u></i><span class="hl">選一個儲值方案</span></h3>'
    +'<p class="ttm-guide">儲值金額由酒館固定提供，不用自己輸入，點一下想要的方案就好。</p><div class="ttm-tiers" role="radiogroup" aria-label="儲值方案">'
@@ -133,6 +134,8 @@ const wallet=(()=>{
   ):'<div class="ttm-done"><b>目前尚未開放儲值</b><p class="ttm-sub">敬請期待；有需要請按上方「聯絡客服」。</p></div>');
   const nameEl=page.querySelector('#ttmTuName');if(nameEl)nameEl.value=keep.name??dcName();
   const lastEl=page.querySelector('#ttmTuLast5');if(lastEl&&keep.last5)lastEl.value=keep.last5;
+  // v492 貓貓幣區塊：同一個節點重複使用，重畫時搬回去
+  const slot=page.querySelector('#ttmCatSlot');if(slot){if(!catHost){catHost=document.createElement('div');catHost.className='ttm-cat';TTCat.mount(catHost);}slot.replaceWith(catHost);}
   bind();sync();if(txOpen)loadTx();
  }
  function bind(){
@@ -151,7 +154,7 @@ const wallet=(()=>{
  function loadTx(){
   const box=page.querySelector('#ttmTx');if(!box||typeof db==='undefined'||!myKey)return;box.textContent='載入中…';
   db.ref(ROOT+'/walletTx/'+myKey).limitToLast(20).once('value').then(s=>{const rows=[];s.forEach(c=>{rows.push(c.val());});rows.reverse();
-   const label=t=>({topup:'儲值',spend:'消費',bonus:'贈送',welcome:'開幕禮',daily:'每日任務',vipgift:'VIP 回饋',refund:'退款'}[t]||'調整');
+   const label=t=>({topup:'儲值',spend:'消費',bonus:'贈送',welcome:'開幕禮',daily:'每日任務',vipgift:'VIP 回饋',refund:'退款',exchange:'兌換貓貓幣'}[t]||'調整');
    box.innerHTML=rows.length?rows.map(t=>{const d=new Date(t.ts||0),pos=(t.amount||0)>0;return '<div class="ttm-txr"><span>'+label(t.type)+(t.note?'・'+esc(t.note):'')+'<small>'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+'</small></span><b class="'+(pos?'in':'out')+'">'+(pos?'+':'')+fmt(t.amount)+'</b></div>';}).join(''):'<p class="ttm-sub ttm-center">還沒有交易紀錄</p>';
   }).catch(()=>{box.textContent='交易紀錄暫時讀不到，請稍後再試';});
  }
@@ -175,6 +178,7 @@ function paintCard(){
  try{const a=typeof me==='function'?me():null;const b=a&&a.b;
   if(b?.name)$('ttmName').textContent=b.name;
   if(b?.doll&&typeof drawDollTo==='function')drawDollTo($('ttmDoll'),b.doll,'idle');}catch{}
+ const k=fmt(window.__cat);if($('ttmCatN')&&$('ttmCatN').textContent!==k)$('ttmCatN').textContent=k;   // v492
  const c=fmt(window.__wallet);if($('ttmCoinN').textContent!==c){$('ttmCoinN').textContent=c;if(current==='wallet'&&!document.activeElement?.closest?.('#ttmWallet'))wallet.render();}
 }
 function paintBadges(){

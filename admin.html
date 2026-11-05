@@ -579,6 +579,7 @@ function enter(){
   db.ref(ROOT+"/config/pay").on("value",s=>{payCfg=s.val()||{};renderClientOrders();});
   db.ref(ROOT+"/config/topup").on("value",s=>{ const v=s.val()||{}; topupCfg={tiers:(v.tiers||[]).slice(),note:v.note||''}; renderClientOrders(); });
   db.ref(ROOT+"/wallet").on("value",s=>{ wallets=s.val()||{}; renderCustomers&&renderCustomers(); });
+  db.ref(ROOT+"/cat").on("value",s=>{ cats=s.val()||{}; renderCustomers&&renderCustomers(); });   /* v492 貓貓幣 */
   db.ref(ROOT+"/lobby").on("value",s=>{lobbyChars=s.val()||{};renderCustomers();});
   db.ref(ROOT+"/cards").on("value",s=>{cardsData=s.val()||{};renderCustomers();});
   db.ref(ROOT+"/accounts").on("value",s=>{accountsData=s.val()||{};renderCustomers();});
@@ -637,14 +638,14 @@ function coCancelRefund(id){
   if(o.accepted && !confirm('⚠ 這筆單陪玩已經接了'+(o.workOrderId?'(甚至可能正在服務中)':'')+'。\n\n'
       +'直接取消會跟陪玩那邊的工單對不起來,建議先跟陪玩確認。\n仍要取消嗎?')) return;
   let msg='確定取消這筆訂單?';
-  const isWallet=(o.paidBy==='wallet');
+  const isWallet=(o.paidBy==='wallet'),isCat=(o.paidBy==='cat');   /* v492 貓貓幣訂單退回貓貓幣 */
   const isTopup=(o.type==='topup');
-  const back=isTopup?topupCredit(o):(Number(o.amount)||0);
-  if(isWallet) msg='取消並退回 '+back+' 金幣給客人?';
+  const back=isTopup?topupCredit(o):isCat?(Number(o.catAmount)||0):(Number(o.amount)||0),unit=isCat?'貓貓幣':'金幣';
+  if(isWallet||isCat) msg='取消並退回 '+back+' '+unit+'給客人?';
   else if(isTopup&&o.credited) msg='這是已入帳的儲值單。取消將從客人錢包扣回 '+back+' 金幣,確定?';
   else msg='取消這筆訂單?(此單非金幣支付,款項請另行退還給客人)';
   if(!confirm(msg)) return;
-  const needCoin = !!o.myKey && (isWallet || (isTopup&&o.credited));
+  const needCoin = !!o.myKey && (isWallet || isCat || (isTopup&&o.credited));
   if(!needCoin){
     db.ref(ROOT+'/clientOrders/'+id).update({status:'cancelled', cancelledAt:Date.now()});
     coMailCancel(o,false,back);
@@ -659,23 +660,23 @@ function coCancelRefund(id){
       if(e||!ok){ alert('這筆剛剛已經退過款了(可能是陪玩那邊同時處理)'); return; }
       db.ref(ROOT+'/clientOrders/'+id).update({status:'cancelled', cancelledAt:Date.now()});
       const delta = isTopup ? -back : back;   // 儲值取消=扣回;消費取消=退回
-      db.ref(ROOT+'/wallet/'+o.myKey+'/balance').transaction(cur=>Math.max(0,(cur||0)+delta),(err,ok2,snap)=>{
+      db.ref(ROOT+'/'+(isCat?'cat':'wallet')+'/'+o.myKey+'/balance').transaction(cur=>Math.max(0,(cur||0)+delta),(err,ok2,snap)=>{
         if(!err&&ok2){ const balAfter=(snap&&snap.val())||0;
-          db.ref(ROOT+'/walletTx/'+o.myKey).push({type:isTopup?'adjust':'refund',amount:delta,balAfter,ref:id,note:(isTopup?'儲值取消扣回':'訂單取消退款')+'・'+(o.planName||''),ts:Date.now()}); }
+          db.ref(ROOT+'/'+(isCat?'catTx':'walletTx')+'/'+o.myKey).push({type:isTopup?'adjust':'refund',amount:delta,balAfter,ref:id,note:(isTopup?'儲值取消扣回':'訂單取消退款')+'・'+(o.planName||''),ts:Date.now()}); }
       });
-      coMailCancel(o,!isTopup,back);
+      coMailCancel(o,!isTopup,back,unit);
       if(o.type==='shop'&&o.itemId==='dyeTicket'&&o.myKey){ if(o.status==='confirmed'||o.status==='done') db.ref(ROOT+'/owned/'+o.myKey+'/dyeTickets').transaction(function(c){ return Math.max(0,(Number.isSafeInteger(c)?c:0)-1); }); }
       else if(o.type==='shop'&&o.itemId&&o.myKey){ db.ref(ROOT+'/owned/'+o.myKey+'/'+o.itemId).remove(); }
     if(o.type==='table'&&o.itemId&&o.seated){ db.ref(ROOT+'/tables/'+o.itemId+'/taken').transaction(c=>Math.max(0,(c||0)-1)); db.ref(ROOT+'/clientOrders/'+id+'/seated').set(null); }
     });
 }
 /* 取消一律通知客人,不要讓他自己發現訂單不見了 */
-function coMailCancel(o,refunded,amt){
+function coMailCancel(o,refunded,amt,unit='金幣'){
   if(!o||!o.myKey) return;
   db.ref(ROOT+'/mail/'+o.myKey).push({
-    title:'『'+(o.planName||'訂單')+'』已取消'+(refunded?',金幣已退回':''),
+    title:'『'+(o.planName||'訂單')+'』已取消'+(refunded?','+unit+'已退回':''),
     text:'不好意思,這筆訂單由店長取消了。\n\n方案:'+(o.planName||'')+'\n'
-      +(refunded?('已退回 '+(amt||0)+' 金幣到你的錢包,可以重新點單 ✦'):'如需退款或有任何疑問,請直接聯絡店長,我們會盡快處理。')
+      +(refunded?('已退回 '+(amt||0)+' '+unit+'到你的錢包,可以重新選購 ✦'):'如需退款或有任何疑問,請直接聯絡店長,我們會盡快處理。')
       +'\n\n造成不便真的很抱歉!',
     from:'店長', at:Date.now()});
 }
@@ -694,6 +695,17 @@ function walletAdjust(myKey,name){
   db.ref(ROOT+"/wallet/"+myKey+"/balance").transaction(cur=>Math.max(0,(cur||0)+n), (err,committed,snap)=>{
     if(!err&&committed){ const balAfter=(snap&&snap.val())||0;
       db.ref(ROOT+"/walletTx/"+myKey).push({type:'adjust',amount:n,balAfter,note:'店長手動調整',ts:Date.now()}); }
+  });
+}
+/* v492 手動調整貓貓幣（補償、活動獎勵）：餘額 transaction＋catTx 紀錄 */
+function catAdjust(myKey,name){
+  const v=prompt('調整「'+(name||myKey)+'」的貓貓幣(正數加、負數扣,例:+500 或 -100)');
+  if(v===null) return; const n=parseInt(v.replace(/[^\-\d]/g,''),10);
+  if(!n){ return; }
+  const note=(prompt('備註(客人看得到,例:活動獎勵、補償)','店長發放')||'店長發放').slice(0,40);
+  db.ref(ROOT+"/cat/"+myKey+"/balance").transaction(cur=>Math.max(0,(cur||0)+n), (err,committed,snap)=>{
+    if(!err&&committed){ const balAfter=(snap&&snap.val())||0;
+      db.ref(ROOT+"/catTx/"+myKey).push({type:n>0?'event':'adjust',amount:n,balAfter,note,ts:Date.now()}); }
   });
 }
 /* ===== 🛍️ 商城上架管理 ===== */
@@ -1450,6 +1462,7 @@ function payCardHtml(){
 }
 let topupCfg={tiers:[],note:''};
 var wallets={};
+var cats={};   /* v492 貓貓幣餘額 cat/<key>/balance */
 function tuAddTier(){ topupCfg.tiers.push({amt:0,bonus:0}); renderClientOrders(); }
 function tuDelTier(i){ topupCfg.tiers.splice(i,1); renderClientOrders(); }
 function tuSet(i,k,v){ if(topupCfg.tiers[i]) topupCfg.tiers[i][k]=parseInt(v,10)||0; }
@@ -1611,9 +1624,10 @@ function renderClientOrders(){
     const adj=o.adjustments?Object.values(o.adjustments).sort((a,b)=>a.t-b.t):[];
     return '<div style="border:2px solid '+(o.status==='done'?'#D8D0D4':'#E8C7D4')+';padding:11px 13px;margin-bottom:10px;background:'+(o.status==='done'?'#FAFAFA':'#FFF')+'">'
       +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">'
-      +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">NT$'+(Number(o.amount)||0)+'</b>'+lowPriceWarn(o)
+      +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">'+(o.paidBy==='cat'?(Number(o.catAmount)||0)+' 貓貓幣（金幣等值 '+(Number(o.amount)||0)+'）':'NT$'+(Number(o.amount)||0))+'</b>'+lowPriceWarn(o)
       +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+topupCredit(o)+' 金幣'+(topupTampered(o)?' ⚠ 金幣數被改過':'')+(o.credited?'・已入帳':'')+'</span>':'')
       +(o.paidBy==='wallet'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">金幣支付</span>':'')
+      +(o.paidBy==='cat'?'　<span style="background:#FCE8DA;color:#B5643C;font-size:12px;font-weight:700;padding:2px 8px">貓貓幣支付</span>':'')
       +(o.staffName?'　<span style="background:#EFE4FB;color:#8E68C8;font-size:12px;font-weight:700;padding:2px 8px">指定:'+esc(TTStaffNames.display(o.staffName,o.staffCid))+'</span>':'')
       +(o.groupId?'<div style="font-size:12px;color:#856c94;margin-top:7px">同組 '+Number(o.groupSize)+' 位：'+esc((o.groupStaffNames||[]).join('、'))+'｜整組實付 NT$'+Number(o.groupAmount)+'，本筆分攤 NT$'+Number(o.amount)+'｜組別 '+esc(o.groupId)+'</div>':'')
       +(o.booking&&o.reserveAt?'　<span style="background:#FFF0DA;color:#C97B2B;font-size:12px;font-weight:700;padding:2px 8px">預約:'+(function(t){const d=new Date(t);const W=["日","一","二","三","四","五","六"];return (d.getMonth()+1)+"/"+d.getDate()+"(週"+W[d.getDay()]+") "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");})(o.reserveAt)+'</span>':(o.booking?'　<span style="background:#FFF0DA;color:#C97B2B;font-size:12px;padding:2px 8px">預約·時段待定</span>':''))
@@ -1627,7 +1641,7 @@ function renderClientOrders(){
       +(o.status==='confirmed'?'<button onclick="coSet('+ja(id)+',\'done\')" style="border:none;background:#8E68C8;color:#fff;padding:6px 10px;cursor:pointer;font-family:inherit">完成</button>':'')
       +'<button onclick="coAdjust('+ja(id)+')" style="border:none;background:#F6E2C8;padding:6px 10px;cursor:pointer;font-family:inherit">調整紀錄</button>'
       +((o.status!=='cancelled'&&o.status!=='done')?'<button onclick="coCancelRefund('+ja(id)+')" style="border:none;background:#F4D7DE;color:#B03A5B;padding:6px 10px;cursor:pointer;font-family:inherit;font-weight:700">取消並退款</button>':'')
-      +((o.status==='cancelled'&&!o.refunded&&o.paidBy!=='wallet')?'<button onclick="coMarkRefunded('+ja(id)+')" style="border:none;background:#DCEFE3;color:#2F6B4C;padding:6px 10px;cursor:pointer;font-family:inherit;font-weight:700">標記已退款</button>':'')
+      +((o.status==='cancelled'&&!o.refunded&&o.paidBy!=='wallet'&&o.paidBy!=='cat')?'<button onclick="coMarkRefunded('+ja(id)+')" style="border:none;background:#DCEFE3;color:#2F6B4C;padding:6px 10px;cursor:pointer;font-family:inherit;font-weight:700">標記已退款</button>':'')
       +'</div></div>'
       +(o.staffDeclined?(o.refunded
           ?'<div style="margin-top:7px;background:#EAF6EF;border-left:4px solid #57A87C;padding:7px 11px;font-size:12.5px;color:#2F6B4C;font-weight:700">✔ 陪玩回報無法接單'+(o.declineReason?'：'+esc(o.declineReason):'')+' —— <b>已自動退回 '+(o.amount||0)+' 金幣並通知客人</b>,你不用處理</div>'
@@ -2220,12 +2234,12 @@ function coIndex(){
 }
 function custOrders(key){ return coIndex()[key]||[]; }
 function delCustomer(key,nm){
-  if(!confirm('確定刪除「'+nm+'」的帳號?\n\n將一併移除:大廳角色、闆卡、錢包與金幣、背包、好友關係、信箱、DC 綁定。\n(訂單與檢舉紀錄會保留;對方下次整理頁面會被登出,可重新從入口開始)')) return;
+  if(!confirm('確定刪除「'+nm+'」的帳號?\n\n將一併移除:大廳角色、闆卡、錢包(金幣與貓貓幣)、背包、好友關係、信箱、DC 綁定。\n(訂單與檢舉紀錄會保留;對方下次整理頁面會被登出,可重新從入口開始)')) return;
   /* DC 綁定:找到指向這隻角色的帳號,蓋上 deleted 旗標 → 客人端讀到會自動清除本機登入 */
   Object.entries(accountsData||{}).forEach(([dcid,a])=>{
     if(a&&a.myKey===key) db.ref(ROOT+'/accounts/'+dcid).set({deleted:true,deletedAt:Date.now()});
   });
-  ['lobby','cards','pos','wallet','walletTx','owned','dmMeta','friendReq','blocks','mail'].forEach(n=>{
+  ['lobby','cards','pos','wallet','walletTx','cat','catTx','owned','dmMeta','friendReq','blocks','mail'].forEach(n=>{
     db.ref(ROOT+'/'+n+'/'+key).remove();
   });
   /* 好友是互寫的:把他從每個好友的名單裡也移掉 */
@@ -2668,20 +2682,20 @@ function custInfo(k){
   let total=0; const byStaff={}; let mTot=0,sTot=0;
   paid.forEach(([,o])=>{ const amt=+o.amount||0;
     if(o.type==='topup') total+=amt;
-    else if(o.paidBy!=='wallet') total+=amt;
+    else if(o.paidBy!=='wallet'&&o.paidBy!=='cat') total+=amt;   /* v492 貓貓幣訂單不算實付 */
     if(o.type==='shop') sTot+=amt;
     else if(o.type!=='topup'&&o.staffName){ const sn=TTStaffNames.display(o.staffName,o.staffCid); byStaff[sn]=(byStaff[sn]||0)+amt; }
     else if(o.type!=='topup'&&(o.planName||'').match(/會員|冠名|月費/)) mTot+=amt;
   });
   const vip=vipFromSpend(total);   /* v466: 只依已確認訂單計算（accounts.vip 是客人網頁寫的，不採用） */
-  const bal=((wallets||{})[k]||{}).balance||0;
+  const bal=((wallets||{})[k]||{}).balance||0, catBal=((cats||{})[k]||{}).balance||0;
   const memOrd=paid.filter(([,o])=>(o.planName||'').match(/會員|月費|月卡/)).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0))[0];
   let mem=null;
   if(memOrd){ const o=memOrd[1]; const exp=(o.createdAt||0)+31*86400000;
     mem={kind:(o.planName||'').match(/699|尊榮|進階|套餐|冠名/)?'套餐月卡':'月卡', exp, live:Date.now()<exp}; }
   const last=ords.length?Math.max(...ords.map(([,o])=>o.createdAt||0)):0;
   return {k,nm,doll:lb.doll||cd.doll||null,snap:(cd.snap&&typeof cd.snap.img==='string'&&cd.snap.img.indexOf('data:image/png;base64,')===0)?cd.snap.img:null,ac,dcName:ac?(ac.global_name||ac.username||''):'',
-    ords,paidN:paid.length,total,byStaff,mTot,sTot,vip,bal,mem,last,
+    ords,paidN:paid.length,total,byStaff,mTot,sTot,vip,bal,catBal,mem,last,
     seen:(ac&&ac.seenAt)||0, dcid:cd.dcid||'', made:(cd.t||0),
     tags:lb.tags||cd.tags||[], quote:lb.quote||cd.quote||'', games:lb.games||cd.games||'',
     bm:+(lb.bm||cd.bm||0), bd:+(lb.bd||cd.bd||0), muted:(typeof mutes==='object'&&mutes&&mutes[k])?mutes[k]:null};
@@ -2724,6 +2738,7 @@ function renderCustomers(){
       +(r.vip?'<span style="background:linear-gradient(180deg,#FBDD79,#EFB733);color:#7A4E12;font-size:10px;font-weight:700;padding:1px 7px;border-radius:7px">VIP'+r.vip+'</span> ':'')
       +(r.mem&&r.mem.live?'<span style="background:#F6E9C8;color:#B8860B;font-size:10px;font-weight:700;padding:1px 7px;border-radius:7px">月卡</span> ':'')
       +(r.bal>0?'<span style="background:#FBEFC0;color:#B8860B;font-size:10px;font-weight:700;padding:1px 7px;border-radius:7px">🪙'+r.bal+'</span>':'')
+      +(r.catBal>0?' <span style="background:#FCE8DA;color:#B5643C;font-size:10px;font-weight:700;padding:1px 7px;border-radius:7px">貓'+r.catBal+'</span>':'')
       +'</div>'
       +'<div style="font-size:10.5px;color:#8E7AB0;margin-top:4px">NT$'+r.total+' ・ '+(r.seen?custAgo(r.seen):'未上線')+'</div>'
       +'<div style="font-size:10px;color:#B9A8C9">ID #'+esc(String(r.k).slice(-5).toUpperCase())+(r.muted?' ・ <b style=&quot;color:#B03A5B&quot;>禁言中</b>':'')+'</div>'
@@ -2768,7 +2783,7 @@ function openCust(k){
     +(r.mem?'<span style="background:'+(r.mem.live?'#F6E9C8':'#EEE')+';color:'+(r.mem.live?'#B8860B':'#999')+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px">'+r.mem.kind+(r.mem.live?'・至 '+new Date(r.mem.exp).toLocaleDateString('zh-TW'):'已到期')+'</span>':'')
     +'</div></div></div>'
     +'<div style="background:#fff;border-radius:12px;padding:11px 13px;font-size:13px;line-height:2;color:var(--ink)">'
-    +'🪙 金幣餘額:<b style="color:#B8860B">'+r.bal+'</b><br>'
+    +'🪙 金幣餘額:<b style="color:#B8860B">'+r.bal+'</b>　貓貓幣:<b style="color:#B5643C">'+r.catBal+'</b><br>'
     +'💰 累積支持:<b style="color:#C2537D">NT$'+r.total+'</b>(儲值+月卡實付)<br>'
     +'📄 訂單:<b>'+r.ords.length+'</b> 筆・已入帳 <b>'+r.paidN+'</b> 筆'+(r.last?'・最近 '+new Date(r.last).toLocaleDateString('zh-TW'):'')+'<br>'
     +(catTxt?'<span style="font-size:12px;color:var(--ink-soft)">'+catTxt+'</span><br>':'')
@@ -2784,6 +2799,7 @@ function openCust(k){
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">'
     +'<button data-customer-key="'+customerAttr(r.k)+'" data-customer-name="'+customerAttr(r.nm)+'" onclick="mailCompose(this.dataset.customerKey,this.dataset.customerName)" style="flex:1;border:none;background:#DCEBFA;color:#3F6E9E;padding:10px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:10px">寄信</button>'
     +'<button data-customer-key="'+customerAttr(r.k)+'" data-customer-name="'+customerAttr(r.nm)+'" onclick="walletAdjust(this.dataset.customerKey,this.dataset.customerName)" style="flex:1;border:none;background:#FBEFC0;color:#B8860B;padding:10px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:10px">調整金幣</button>'
+    +'<button data-customer-key="'+customerAttr(r.k)+'" data-customer-name="'+customerAttr(r.nm)+'" onclick="catAdjust(this.dataset.customerKey,this.dataset.customerName)" style="flex:1;border:none;background:#FCE8DA;color:#B5643C;padding:10px;cursor:pointer;font-family:inherit;font-weight:700;border-radius:10px">調整貓貓幣</button>'
     +'<button data-customer-key="'+customerAttr(r.k)+'" data-customer-name="'+customerAttr(r.nm)+'" onclick="delCustomer(this.dataset.customerKey,this.dataset.customerName)" style="border:none;background:#F4D7DE;color:#B03A5B;padding:10px 14px;cursor:pointer;font-family:inherit;border-radius:10px">刪除角色</button>'
     +'</div>'
     +'<button onclick="document.getElementById(\'custM\').style.display=\'none\'" style="display:block;width:100%;border:none;background:#EADFF7;color:#6E58A6;font-family:inherit;font-size:13.5px;padding:11px;border-radius:10px;cursor:pointer;margin-top:10px">關閉</button>'

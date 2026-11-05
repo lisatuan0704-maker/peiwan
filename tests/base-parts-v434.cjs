@@ -15,11 +15,11 @@ const {setup}=require('./payment-safety-v273.cjs');
 
  try{
   await env.clearDatabase();
-  await env.withSecurityRulesDisabled(async c=>{await c.database().ref('secureV1').set({members:{[GUID]:{active:true,key:'guest'}},owners:{guest:GUID}});await c.database().ref('peiwan').set({config:{adminUid:'owner',basePricing:{hair:100,face:50,cloth:50,acc:50}},lobby:{guest:{name:'客'}},wallet:{guest:{balance:500}},owned:{guest:{cloth0:{name:'c',ts:1}}}});});
+  await env.withSecurityRulesDisabled(async c=>{await c.database().ref('secureV1').set({members:{[GUID]:{active:true,key:'guest'}},owners:{guest:GUID}});await c.database().ref('peiwan').set({config:{adminUid:'owner',basePricing:{hair:100,face:50,cloth:50,acc:50}},lobby:{guest:{name:'客'}},wallet:{guest:{balance:500}},cat:{guest:{balance:5000}},owned:{guest:{cloth0:{name:'c',ts:1}}}});});
   const guest=env.authenticatedContext(GUID).database();
   let t=setup({db:pushIds(guest)});t.c.curPlan={id:'base_hair_3',n:'工房部件・妹妹頭（前髮＋後髮）',p:100,itemId:'base_hair_3',itemName:'工房部件・妹妹頭'};price(t,100);await t.c.payWithCoins();
   assert(t.events.includes('success'),'買工房頭髮應成功 '+t.events);
-  let d=await read();assert.equal(d.wallet.guest.balance,400);assert(d.owned.guest.base_hair_3&&d.clientOrders[d.owned.guest.base_hair_3.ref].amount===100);
+  let d=await read();assert.equal(d.cat.guest.balance,4000);assert.equal(d.wallet.guest.balance,500);   // v492 工房部件付貓貓幣assert(d.owned.guest.base_hair_3&&d.clientOrders[d.owned.guest.base_hair_3.ref].amount===100);
   t=setup({db:pushIds(guest)});t.c.curPlan={id:'base_face_2',n:'工房部件',p:10,itemId:'base_face_2',itemName:'工房部件'};price(t,10);const before=await read();await t.c.payWithCoins();
   assert(!t.events.includes('success'),'竄改工房部件價格不應成功');assert.deepEqual(await read(),before);
   await assertSucceeds(env.unauthenticatedContext().database().ref('peiwan/owned/brandnew/baseStart').set({back:3,front:3,cloth:3,face:2,brow:1,at:1}));

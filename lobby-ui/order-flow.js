@@ -63,8 +63,9 @@
  };
  renderCoinInfo=function(){
    const out=previous.coinInfo();if(curKind!=='play'&&curKind!=='shop')return out;
-   const box=$('payCoinInfo'),label=box.querySelector('label'),topup=box.querySelector('a')?.closest('div'),balance=window.__wallet||0,amount=payFinalAmount();
-   box.innerHTML=(curKind==='shop'?'<div class="of-product-line"><span>選購商品</span><b>'+esc(curPlan.n)+'</b></div>':'')+'<div class="of-payment-line"><span>本次應付</span><strong>'+money(amount)+' <small>金幣</small></strong></div><div class="of-wallet-line">持有 '+money(balance)+' 金幣 · 付款後剩 '+money(Math.max(0,balance-amount))+' 金幣</div>';
+   // v492 時裝類付貓貓幣（payDue＝金幣等值價×10）
+   const box=$('payCoinInfo'),label=box.querySelector('label'),topup=box.querySelector('a')?.closest('div'),cat=payCurrency()==='cat',unit=cat?'貓貓幣':'金幣',balance=payBalance(),amount=payDue();
+   box.innerHTML=(curKind==='shop'?'<div class="of-product-line"><span>選購商品</span><b>'+esc(curPlan.n)+'</b></div>':'')+'<div class="of-payment-line"><span>本次應付</span><strong>'+(cat?TTCat.coin(32,'c')+' ':'')+money(amount)+' <small>'+unit+'</small></strong></div><div class="of-wallet-line">持有 '+money(balance)+' '+unit+' · 付款後剩 '+money(Math.max(0,balance-amount))+' '+unit+'</div>';
    if(label)box.append(label);if(topup)box.append(topup);checkout();return out;
  };
  async function bookings(list){

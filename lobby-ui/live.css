@@ -252,3 +252,44 @@ body.tt214 #chatlog{font-size:14px;line-height:1.7}body.tt214 #chatin{font-size:
 .companion-ach-card button:focus-visible{outline:3px solid #9c7ca8;outline-offset:3px}
 @media(max-width:900px){.companion-ach-art{gap:4px}.companion-ach-doll{width:80px}.companion-ach-frame{width:75px;height:75px}}
 @media(max-width:620px){.companion-ach-grid{grid-template-columns:1fr}.companion-ach-card{padding:16px}.companion-ach-art{float:left;width:145px;height:140px;margin-right:12px}.companion-ach-card:after{content:'';display:block;clear:both}.companion-ach-card h3{font-size:19px}.companion-ach-card button{clear:both;width:100%}.companion-ach-heading h2{font-size:24px}}
+/* v492 雙幣：HUD 金幣＋貓貓幣並排，點一下開錢包 */
+body.tt214 #hud2 .tt-funds{cursor:pointer}
+body.tt214 #hud2 .tt-funds .tt-fund{display:flex;align-items:center;gap:4px;white-space:nowrap}
+body.tt214 #hud2 .tt-funds .tt-fund small{font-size:10px;font-weight:700;opacity:.75;margin-left:1px;font-family:inherit}
+body.tt214 #hud2 .tt-funds .tt-fund-cat img{image-rendering:auto}
+body.tt214 #hud2 .tt-funds:focus-visible{outline:2px solid #e27fa6;outline-offset:2px}
+.tt-cat-slot{margin:4px 0 14px}
+/* 名牌加寬，金幣、貓貓幣同一行，只用圖示＋數字（名稱在滑鼠提示） */
+body.tt214 #hud2{width:372px}
+body.tt214 #hud2 .tt-funds{flex-direction:row;align-items:center;justify-content:flex-start;gap:18px}
+body.tt214 #hud2 .tt-funds .tt-fund{font-size:17px;gap:6px}
+body.tt214 #hud2 .tt-funds .tt-fund small{display:none}
+body.tt214 #hud2 .tt-funds .tt-fund img{width:24px;height:24px}
+/* 名牌：頭像框＋頭像最大（左邊整欄），名字、VIP、Discord、手帳、金幣與貓貓幣都排在右欄 */
+body.tt214 #hud2{width:420px;grid-template-columns:152px minmax(0,1fr);column-gap:14px}
+body.tt214 #hud2 .h2ava,body.tt214 #hud2 .h2ava.wr{width:152px;height:152px;grid-row:1/3;align-self:center}
+body.tt214 #hud2 .h2ava:not(.wr) canvas{width:142px;height:142px;left:5px;top:5px}
+body.tt214 #hud2 .tt-funds .nyan{margin:0 1px}
+/* 名牌（使用者 11/06）：頭像框不要底、單獨放；旁邊一塊剛好包住資訊的小白卡（白卡樣式從 theme-skin 搬到 ::after，只蓋右欄） */
+html body.tt214 #hud2#hud2{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:0!important;width:auto!important;max-width:none!important;grid-template-columns:152px auto;column-gap:0}
+html body.tt214 #hud2#hud2::after{content:"";position:absolute;z-index:-1;left:126px;top:10px;right:0;bottom:10px;pointer-events:none;
+ background:var(--sk-orbit) right 6px top 40px/88px 40px no-repeat,linear-gradient(118deg,rgba(140,215,248,.3) 0 9%,transparent 9% 90%,rgba(255,175,212,.32) 90%),linear-gradient(160deg,#fff,#F6FAFF 60%,#FBF4FF);
+ border:3px solid #1C2156;border-radius:16px;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 4px #CFEFFF,6px 7px 0 -3px #FFE3EF,6px 7px 0 0 #1C2156,rgba(18,14,48,.25) 0 10px 20px}
+html body.tt214 #hud2#hud2::before{top:20px;right:16px}
+body.tt214 #hud2 .h2who{padding:22px 18px 0 22px}
+body.tt214 #hud2 .tt-funds{padding:6px 18px 22px 22px!important;margin:0!important}
+html body.tt214 #hud2#hud2::before{display:none}
+/* 名牌 v3（使用者 11/06）：白卡橫長只有兩列，左邊上下角收在頭像框底下；
+   第一列名字，第二列「綁定 Discord」＋VIP 等級＋手帳圖示；最右邊金幣、貓貓幣上下兩行 */
+html body.tt214 #hud2#hud2{grid-template-columns:152px auto auto;grid-template-rows:auto;align-items:center!important}
+html body.tt214 #hud2#hud2::after{left:92px;top:calc(50% - 44px);bottom:calc(50% - 44px)}
+body.tt214 #hud2 .h2ava,body.tt214 #hud2 .h2ava.wr{grid-row:1;grid-column:1}
+body.tt214 #hud2 .h2who{grid-column:2;grid-row:1;display:grid!important;grid-template-columns:auto auto auto;grid-template-areas:"nm nm nm" "dc vip bk";justify-content:start;align-items:center;gap:7px 8px;padding:0 4px 0 14px!important;margin:0!important;min-width:0}
+body.tt214 #hud2 .h2who .h2nm{grid-area:nm;margin:0!important;white-space:nowrap}
+body.tt214 #hud2 .h2who .h2dcRow{grid-area:dc;margin:0!important}
+body.tt214 #hud2 .h2who .h2row{grid-area:vip;margin:0!important}
+html body.tt214 #hud2 .h2who .tt-book-hint{grid-area:bk;display:flex;align-items:center;justify-content:center;width:26px;height:26px;margin:0!important;border:2px solid #1C2156;border-radius:8px;background:#fff;box-shadow:0 2px 0 #1C2156;font-size:0!important;cursor:pointer}
+body.tt214 #hud2 .tt-book-hint svg{width:16px;height:16px;fill:#FFE3EF;stroke:#1C2156;stroke-width:2;stroke-linejoin:round}
+html body.tt214 #hud2#hud2 .tt-funds{grid-column:3;grid-row:1;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:6px!important;padding:0 22px 0 14px!important;margin:0!important;border:0!important;border-left:2px dashed #D9CDEA!important;align-self:center}
+html body.tt214 #hud2#hud2::after{left:78px;background:linear-gradient(118deg,rgba(140,215,248,.3) 0 9%,transparent 9% 90%,rgba(255,175,212,.32) 90%),linear-gradient(160deg,#fff,#F6FAFF 60%,#FBF4FF)}
+body.tt214 #hud2 .h2who .h2nm{max-width:11em;overflow:hidden;text-overflow:ellipsis}

@@ -9,7 +9,7 @@ const {setup}=require('./payment-safety-v273.cjs');
  const env=await initializeTestEnvironment({projectId:'demo-tiny-tavern-v428',database:{host:'127.0.0.1',port:9273,rules}});
  const read=async()=>{let v;await env.withSecurityRulesDisabled(async c=>{v=(await c.database().ref('peiwan').once('value')).val();});return v;};
  const GUID='discord_100000000000000001';
- const reset=()=>env.withSecurityRulesDisabled(async c=>{await c.database().ref('secureV1').set({members:{[GUID]:{active:true,key:'guest'}},owners:{guest:GUID}});await c.database().ref('peiwan').set({config:{adminUid:'owner',services:{s1:{name:'特戰',price:300,active:true},s2:{name:'特戰',price:300,active:true}}},links:{staff1:{type:'char',refId:'cA',code:'X'}},shopConfig:{dyeTicket:{price:100},cloth9:{price:300}},wallet:{guest:{balance:1000}},owned:{guest:{dyeTickets:2}}});});
+ const reset=()=>env.withSecurityRulesDisabled(async c=>{await c.database().ref('secureV1').set({members:{[GUID]:{active:true,key:'guest'}},owners:{guest:GUID}});await c.database().ref('peiwan').set({config:{adminUid:'owner',services:{s1:{name:'特戰',price:300,active:true},s2:{name:'特戰',price:300,active:true}}},links:{staff1:{type:'char',refId:'cA',code:'X'}},shopConfig:{dyeTicket:{price:100},cloth9:{price:300}},wallet:{guest:{balance:600}},cat:{guest:{balance:4000}},owned:{guest:{dyeTickets:2}}});});   // v492 時裝類付貓貓幣（金幣等值價×10）
  const price=(t,p)=>{t.c.payFinalAmount=()=>p;};
  const pushIds=db=>{let n=0;return {ref(p){const r=db.ref(p);if(p==='peiwan/clientOrders')return {push:()=>({key:'ord'+(++n)+'_'+Math.random().toString(36).slice(2,7)})};return r;}};};
  try{
@@ -19,11 +19,11 @@ const {setup}=require('./payment-safety-v273.cjs');
   let t0=setup({db:pushIds(env.unauthenticatedContext().database())});await t0.c.payWithCoins();assert(!t0.events.includes('success'),'未登入不應能付款');
   // 1. 實際結帳：染髮券（掌櫃設定 100）
   let t=setup({db:pushIds(guest)});await t.c.payWithCoins();assert(t.events.includes('success'),'買染髮券應成功 '+t.events);
-  let d=await read();assert.equal(d.wallet.guest.balance,900);assert.equal(d.owned.guest.dyeTickets,3);
-  const id1=Object.keys(d.clientOrders)[0];assert.equal(d.wallet.guest.lastTx,id1);assert.equal(d.walletTx.guest[id1].amount,-100);
+  let d=await read();assert.equal(d.cat.guest.balance,3000);assert.equal(d.wallet.guest.balance,600);assert.equal(d.owned.guest.dyeTickets,3);
+  const id1=Object.keys(d.clientOrders)[0];assert.equal(d.cat.guest.lastTx,id1);assert.equal(d.catTx.guest[id1].amount,-1000);assert.equal(d.clientOrders[id1].paidBy,'cat');
   // 2. 實際結帳：時裝 300
   t=setup({db:pushIds(guest)});t.c.curPlan={id:'p2',n:'衣服',p:300,itemId:'cloth9',itemName:'衣服'};price(t,300);await t.c.payWithCoins();assert(t.events.includes('success'),'買衣服應成功 '+t.events);
-  d=await read();assert.equal(d.wallet.guest.balance,600);assert(d.owned.guest.cloth9&&d.clientOrders[d.owned.guest.cloth9.ref].itemId==='cloth9');
+  d=await read();assert.equal(d.cat.guest.balance,0);assert(d.owned.guest.cloth9&&d.clientOrders[d.owned.guest.cloth9.ref].itemId==='cloth9');
   // 3. 竄改前端價格（300 的衣服改成 10）：整筆被拒，什麼都沒變
   await env.withSecurityRulesDisabled(c=>c.database().ref('peiwan/owned/guest/cloth9').remove());const before=await read();
   t=setup({db:pushIds(guest)});t.c.curPlan={id:'p3',n:'衣服',p:10,itemId:'cloth9',itemName:'衣服'};price(t,10);await t.c.payWithCoins();assert(!t.events.includes('success'),'竄改價格不應成功');
