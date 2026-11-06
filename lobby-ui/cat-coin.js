@@ -1,10 +1,14 @@
-/* v492 貓貓幣：時裝、部件、座椅、染髮券、聊天氣泡用的幣；金幣維持點單、會員、併桌。
+/* v492 貓貓幣；v493 使用者更正：付費商品（時裝、寵物、座椅、染髮券、聊天氣泡、工房部件）一律金幣，
+   貓貓幣只用在之後的小屋家具與店長送的免費時裝（商品標 cur:'cat' → forItem）。來源：每日任務（11/7 起）、活動、店長發放。
+   兌換（EXCHANGE_ON）先關閉：目前沒有能用貓貓幣買的東西，金幣換過去也換不回來。
    資料 cat/<key>/{balance,lastTx}＋catTx/<key>/<tx>，資料庫規則見 tests/security-rules-v428/build/harden-phase9.cjs。
    金幣可單向換成貓貓幣：1 金幣＝10 貓貓幣，剛好 350 加送 200、剛好 1000 加送 1000（三個數字要跟規則一致）。
    商品價格仍以「金幣等值價」存在 shopConfig／basePricing，顯示與扣款時 ×10。 */
 (function(root){
 'use strict';
 const RATE=10,DAILY=100,DAILY_FROM=1793980800000,ICON='img/cat-coin-px48.png',PACKS=[100,350,1000],MAX=100000;
+const EXCHANGE_ON=false;   // v493：有貓貓幣商品上架後再打開
+const forItem=p=>!!(p&&p.cur==='cat');   // 商品幣別：只有標 cur:'cat' 的才付貓貓幣
 const bonus=c=>c===350?200:c===1000?1000:0;
 const gain=c=>c*RATE+bonus(c);
 const price=p=>Math.round(Number(p)||0)*RATE;
@@ -72,20 +76,20 @@ function mount(host,opt={}){
   const cat=root.__cat||0,wal=root.__wallet||0,c=pick,valid=Number.isSafeInteger(c)&&c>=1&&c<=MAX,enough=valid&&c<=wal;
   host.innerHTML='<div class="tt-cat-box">'
    +'<div class="tt-cat-head">'+coin(48,'s')+'<div><small>貓貓幣</small><strong>'+fmt(cat)+'</strong></div>'
-   +'<p>時裝、部件、座椅、染髮券和聊天氣泡都用貓貓幣。<br>'+(dailyOn()?'每天在大廳說說話、待一會兒，也會收到貓貓幣。':'11/7 起，每天在大廳說說話、待一會兒，也會收到貓貓幣。')+'</p></div>'
-   +'<div class="tt-cat-cap"><b>用金幣兌換</b><span>1 金幣 ＝ 10 貓貓幣</span></div>'
+   +'<p>酒館送你的小心意。<br>'+(dailyOn()?'每天在大廳說說話、待一會兒，就會收到貓貓幣。':'11/7 起，每天在大廳說說話、待一會兒，就會收到貓貓幣。')+'</p></div>'
+   +(EXCHANGE_ON?'<div class="tt-cat-cap"><b>用金幣兌換</b><span>1 金幣 ＝ 10 貓貓幣</span></div>'
    +'<div class="tt-cat-packs">'+PACKS.map(p=>'<button type="button" data-pack="'+p+'" aria-pressed="'+(p===c)+'"'+(p>wal?' class="short"':'')+'><span>'+fmt(p)+' 金幣</span><strong>'+tag(gain(p),20)+'</strong><small>'+(bonus(p)?'含加送 '+fmt(bonus(p)):'&nbsp;')+'</small></button>').join('')+'</div>'
    +'<label class="tt-cat-own">自訂數量<input type="number" inputmode="numeric" min="1" max="'+MAX+'" step="1" placeholder="輸入金幣數" value="'+(c&&!PACKS.includes(c)?c:'')+'"><span>金幣</span></label>'
    +'<div class="tt-cat-sum">'+(valid?'用 <b>'+fmt(c)+'</b> 金幣 → 得到 <b class="g">'+tag(gain(c),18)+'</b>':'選一個方案，或輸入想換的金幣數')+'<small>持有 '+fmt(wal)+' 金幣'+(valid&&!enough?'・還差 '+fmt(c-wal)+' 金幣':'')+'</small></div>'
    +(confirming&&enough
      ?'<div class="tt-cat-confirm"><p>確定用 <b>'+fmt(c)+' 金幣</b>換 <b>'+fmt(gain(c))+' 貓貓幣</b>嗎？<br><small>貓貓幣不能換回金幣。</small></p><div><button type="button" class="tt-cat-go" data-act="yes"'+(busy?' disabled':'')+'>'+(busy?'兌換中…':'確定兌換')+'</button><button type="button" class="tt-cat-ghost" data-act="no"'+(busy?' disabled':'')+'>再想想</button></div></div>'
-     :'<button type="button" class="tt-cat-go" data-act="ask"'+(enough?'':' disabled')+'>兌換貓貓幣</button>')
+     :'<button type="button" class="tt-cat-go" data-act="ask"'+(enough?'':' disabled')+'>兌換貓貓幣</button>'):'')
    +'<p class="tt-cat-msg" role="status"></p>'
    +'<button type="button" class="tt-cat-link" data-act="tx">'+(txOpen?'收起貓貓幣紀錄':'查看貓貓幣紀錄 →')+'</button><div class="tt-cat-tx"'+(txOpen?'':' hidden')+'></div>'
    +'</div>';
   host.querySelectorAll('[data-pack]').forEach(b=>b.onclick=()=>{pick=+b.dataset.pack;confirming=false;render();});
   const inp=host.querySelector('.tt-cat-own input');
-  inp.oninput=()=>{const v=inp.value.trim();pick=/^\d+$/.test(v)?Math.min(+v,MAX):0;confirming=false;const keep=inp.value;render();const n=host.querySelector('.tt-cat-own input');n.value=keep;n.focus();};
+  if(inp)inp.oninput=()=>{const v=inp.value.trim();pick=/^\d+$/.test(v)?Math.min(+v,MAX):0;confirming=false;const keep=inp.value;render();const n=host.querySelector('.tt-cat-own input');n.value=keep;n.focus();};
   host.querySelector('[data-act="ask"]')?.addEventListener('click',()=>{confirming=true;render();});
   host.querySelector('[data-act="no"]')?.addEventListener('click',()=>{confirming=false;render();});
   host.querySelector('[data-act="yes"]')?.addEventListener('click',go);
@@ -95,7 +99,7 @@ function mount(host,opt={}){
  async function go(){
   if(busy)return;busy=true;render();
   try{const r=await exchange(pick);busy=false;confirming=false;pick=0;render();say('兌換完成！收到 '+fmt(r.got)+' 貓貓幣',true);
-   try{root.lobbyNotify?.({ok:true,icon:'coin',title:'兌換完成！',sub:'收到 '+fmt(r.got)+' 貓貓幣，可以去時裝間逛逛了',hold:6000});}catch(_){}
+   try{root.lobbyNotify?.({ok:true,icon:'coin',title:'兌換完成！',sub:'收到 '+fmt(r.got)+' 貓貓幣，已經存進錢包了',hold:6000});}catch(_){}
    opt.onDone?.(r);}
   catch(e){busy=false;confirming=false;render();say(e.message||'兌換沒有完成，請稍後再試');}
  }
@@ -165,6 +169,6 @@ const css=`.tt-cat-box{display:grid;gap:12px;margin-top:6px}
 function injectCss(doc=root.document){if(!doc||doc.getElementById('ttCatCss'))return;const s=doc.createElement('style');s.id='ttCatCss';s.textContent=css;(doc.head||doc.documentElement).append(s);}
 if(root.document.readyState==='loading')root.document.addEventListener('DOMContentLoaded',()=>injectCss());else injectCss();
 
-root.TTCat={RATE,DAILY,DAILY_FROM,ICON,PACKS,bonus,gain,price,fmt,dailyOn,exchange,mount,onChange,loadTx,tag,coin,pop,injectCss,watch};
+root.TTCat={RATE,DAILY,DAILY_FROM,ICON,PACKS,EXCHANGE_ON,forItem,bonus,gain,price,fmt,dailyOn,exchange,mount,onChange,loadTx,tag,coin,pop,injectCss,watch};
 setInterval(watch,3000);setTimeout(watch,0);
 })(window);

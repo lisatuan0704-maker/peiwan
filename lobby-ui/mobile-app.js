@@ -110,7 +110,7 @@ const wallet=(()=>{
    +'<button type="button" class="ttm-primary" data-act="orders">查看儲值進度</button><button type="button" class="ttm-ghost" data-act="again">再儲值一筆</button></div>';bind();return;}
   const keep={name:page.querySelector('#ttmTuName')?.value,last5:page.querySelector('#ttmTuLast5')?.value};
   const t=list[tier];
-  page.innerHTML='<div class="ttm-balance"><small>目前金幣</small><b>'+fmt(bal)+'</b><span>1 金幣＝1 元，可以點冒險者一起玩，也能換成貓貓幣</span><button type="button" class="ttm-link" data-act="tx">'+(txOpen?'收起交易紀錄':'查看交易紀錄')+'</button></div>'
+  page.innerHTML='<div class="ttm-balance"><small>目前金幣</small><b>'+fmt(bal)+'</b><span>1 金幣＝1 元，可以點冒險者一起玩，也能在商城購物</span><button type="button" class="ttm-link" data-act="tx">'+(txOpen?'收起交易紀錄':'查看交易紀錄')+'</button></div>'
    +'<div id="ttmTx" class="ttm-tx"'+(txOpen?'':' hidden')+'></div>'
    +'<div id="ttmCatSlot"></div>'
    +(list.length?(

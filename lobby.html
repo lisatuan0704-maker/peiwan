@@ -1460,7 +1460,7 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/presence.js?v=483"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/payment-safety.js?v=492"></script>
-<script src="lobby-ui/cat-coin.js?v=492"></script>
+<script src="lobby-ui/cat-coin.js?v=493"></script>
 <script src="lobby-ui/cancel-reason.js?v=432"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=274">
@@ -1698,7 +1698,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v492</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v493</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -4277,7 +4277,7 @@ function ttOrderStaffDisplayName(o){return ttStaffDisplayName(o.staffCid,o.staff
 function ttSelectedStaffDisplayName(){const s=_selStaff();return s?(s.members||[s]).map(p=>ttStaffDisplayName(p.cid,p.name)).join('、'):'不指定';}
 function coinsAvailable(){
   if(!((curKind==='play'||curKind==='shop') && !!myKey)) return false;
-  if(curKind==='shop') return true;   // v492 時裝類一律用貓貓幣，不受儲值方案設定影響
+  if(curKind==='shop'&&payCurrency()==='cat') return true;   // 貓貓幣商品不受儲值方案設定影響
   /* 防呆:店長還沒設任何儲值方案時,金幣買不到 → 自動退回轉帳流程,店才不會整個付不了錢 */
   const hasTiers=(((window.__topupCfg||{}).tiers)||[]).some(t=>t&&t.amt>0);
   return hasTiers || (window.__wallet||0)>0;
@@ -4330,8 +4330,9 @@ function setPayMethod(m){
   if(coin){ renderCoinInfo(); if(btn) btn.textContent=payCurrency()==='cat'?'用貓貓幣支付':'用金幣支付'; }
   else { if(btn){ btn.textContent='送出訂單'; btn.disabled=false; btn.style.opacity='1'; } }
 }
-/* v492 雙幣：時裝類（curKind 'shop'）付貓貓幣＝金幣等值價×10；其餘付金幣 */
-function payCurrency(){ return curKind==='shop'?'cat':'wallet'; }
+/* v493 雙幣：付費商品（時裝、寵物、座椅、染髮券、氣泡、工房部件）一律金幣（使用者 11/06 更正 v492）；
+   只有商品標 cur:'cat'（TTCat.forItem）才付貓貓幣＝金幣等值價×10，目前沒有這類商品 */
+function payCurrency(){ return curKind==='shop'&&TTCat.forItem(curPlan)?'cat':'wallet'; }
 function payBalance(){ return payCurrency()==='cat'?(window.__cat||0):(window.__wallet||0); }
 function payDue(){ const a=payFinalAmount(); return payCurrency()==='cat'?TTCat.price(a):a; }
 function renderCoinInfo(){
@@ -4397,8 +4398,8 @@ async function payWithCoins(){
  if(!myKey||!curPlan){toast('請先使用闆卡並重新選擇方案');return;}
  const key=myKey,kind=curKind,plan={...curPlan},amt=payFinalAmount(),ss=_selStaff();
  if(!Number.isSafeInteger(amt)||amt<0){toast('金額有誤，請重新選擇');return;}
- // v492 時裝類用貓貓幣：訂單 amount 照舊記金幣等值價（背包規則照這個比價），catAmount＝×10 才是實際扣的貓貓幣
- const useCat=kind==='shop',catAmt=useCat?TTCat.price(amt):0;
+ // 貓貓幣商品（TTCat.forItem，v493 起付費商品一律金幣）：訂單 amount 照舊記金幣等值價（背包規則照這個比價），catAmount＝×10 才是實際扣的貓貓幣
+ const useCat=kind==='shop'&&TTCat.forItem(plan),catAmt=useCat?TTCat.price(amt):0;
  if(useCat?(window.__cat||0)<catAmt:(window.__wallet||0)<amt){toast(useCat?'貓貓幣不夠，可以先到錢包用金幣兌換':'餘額不足');return;}
  const couponUsed=!!(_coinCoupon&&couponsLeft()>0);let couponDisc=0;
  if(couponUsed){const vi=window.__vipInfo?.();if(vi?.lv)couponDisc=vi.cur.disc;}
@@ -6244,8 +6245,8 @@ const SFX=(function(){
     /* 開幕活動 11/1～11/7（台灣時間 11/8 00:00 結束後自動不顯示） */
     if(Date.now()<Date.parse('2026-11-08T00:00:00+08:00'))
       body.appendChild(acc(true,'✦','新店開幕慶祝','11/1～11/7', '<p><b>首次註冊闆卡即送 350 站內金幣</b></p><p>活動期間 11/1～11/7，做好闆卡、用 Discord 登入酒館後，350 金幣會自動存進錢包，可以用在點單和商城。</p>'));
-    /* v492 雙幣：11/07 起每日任務改送貓貓幣；貓貓幣介紹常駐 */
-    body.appendChild(acc(true,'✦','貓貓幣登場','11/7 起', '<p><b>時裝間的新朋友：貓貓幣</b></p><p>時裝、部件、座椅、染髮券和聊天氣泡，之後都用貓貓幣購買。手上的金幣可以在錢包換成貓貓幣：1 金幣＝10 貓貓幣，一次換 350 加送 200、換 1000 加送 1000。</p><p>金幣照樣可以點冒險者一起玩，原本的金幣都會留著。</p>'));
+    /* v493 雙幣：11/07 起每日任務改送貓貓幣；付費商品照舊用金幣（使用者 11/06 更正） */
+    body.appendChild(acc(true,'✦','貓貓幣登場','11/7 起', '<p><b>酒館送你的小心意：貓貓幣</b></p><p>11/7 起，每日任務改送貓貓幣，活動也會送。收到的貓貓幣會存在錢包裡，名牌上的小硬幣也會轉一圈告訴你。</p><p>時裝、寵物、座椅、染髮券和聊天氣泡照樣用金幣購買，原本的金幣都會好好留著。</p>'));
     if(TTCat.dailyOn()) body.appendChild(acc(true,'✦','每日任務','每天', '<p><b>每天完成就送 100 貓貓幣</b></p><p>每日登入打卡，在大廳聊天室發送至少一則訊息，並在大廳待滿 10 分鐘，100 貓貓幣會自動存進錢包（每天一次，以台灣時間計算）。</p>'));
     else body.appendChild(acc(true,'✦','每日任務','新登場', '<p><b>每天完成就送 10 金幣</b></p><p>每日登入打卡，在大廳聊天室發送至少一則訊息，並在大廳待滿 10 分鐘，10 金幣會自動存進錢包（每天一次，以台灣時間計算）。11/7 起改送 100 貓貓幣。</p>'));
     const staff=[...agents.entries()].filter(([k])=>k.indexOf('staff_')===0);
@@ -7900,17 +7901,17 @@ function bkPageFrames(){
 }
 /* v363: white basic, six 50-coin skins, VIP 1-3 companions. */
 const BUB_CATALOG=TTChatSkins.catalog;
-function bkPageBubbles(){return {l:'<div class="bkSec">聊天氣泡</div><div class="ghint">選一款，讓聊天多一點自己的顏色。</div><div id="bkBubList"></div>',r:'<div class="bkSec">怎麼獲得</div><div class="bkCard">白色基本框免費使用。<br>六款漸層氣泡各 500 貓貓幣，購買一次永久持有。<br>奶霜小貓：VIP 1<br>花茶小兔：VIP 2<br>蜜桃小鳥：VIP 3<br><br>VIP 4、5 專屬款設計中。</div>'};}
+function bkPageBubbles(){return {l:'<div class="bkSec">聊天氣泡</div><div class="ghint">選一款，讓聊天多一點自己的顏色。</div><div id="bkBubList"></div>',r:'<div class="bkSec">怎麼獲得</div><div class="bkCard">白色基本框免費使用。<br>六款漸層氣泡各 50 金幣，購買一次永久持有。<br>奶霜小貓：VIP 1<br>花茶小兔：VIP 2<br>蜜桃小鳥：VIP 3<br><br>VIP 4、5 專屬款設計中。</div>'};}
 function bkBubbleRender(){const box=document.getElementById('bkBubList');if(!box)return;const lv=window.__vipInfo?.()?.lv||0;
-box.innerHTML=BUB_CATALOG.map((c,i)=>{const own=TTChatSkins.owns(c.k,window.__owned,lv),sel=own&&c.k===bubActiveKey();return '<article class="tt-bubble-card">'+TTChatSkins.preview(c.k)+'<div><strong>'+c.n+'</strong><small>'+(c.k==='none'?'免費':c.lv?'VIP '+c.lv+' 解鎖':own?'已永久持有':TTCat.tag(500,14))+'</small></div><button onclick="bkBubbleTap('+i+')" '+(sel||(!own&&c.lv)?'disabled':'')+'>'+(sel?'使用中':own?'換上':c.lv?'尚未解鎖':TTCat.coin(14,'c')+' 500 購買')+'</button></article>';}).join('');TTChatSkins.mount(box);}
+box.innerHTML=BUB_CATALOG.map((c,i)=>{const own=TTChatSkins.owns(c.k,window.__owned,lv),sel=own&&c.k===bubActiveKey();return '<article class="tt-bubble-card">'+TTChatSkins.preview(c.k)+'<div><strong>'+c.n+'</strong><small>'+(c.k==='none'?'免費':c.lv?'VIP '+c.lv+' 解鎖':own?'已永久持有':'50 金幣')+'</small></div><button onclick="bkBubbleTap('+i+')" '+(sel||(!own&&c.lv)?'disabled':'')+'>'+(sel?'使用中':own?'換上':c.lv?'尚未解鎖':'50 金幣購買')+'</button></article>';}).join('');TTChatSkins.mount(box);}
 let bubbleBuying=false;
 window.bkBubbleTap=function(i){const c=BUB_CATALOG[i];if(!c)return;const own=TTChatSkins.owns(c.k,window.__owned,window.__vipInfo?.()?.lv||0);if(own){__setBub(c.k);bkBubbleRender();toast('已換上「'+c.n+'」');return;}if(c.lv){toast('VIP '+c.lv+' 解鎖「'+c.n+'」');return;}if(!myKey){toast('先建立闆卡，再購買氣泡');return;}
-ttConfirm('購買「'+c.n+'」？','使用 500 貓貓幣，購買後永久持有。',()=>buyChatSkin(c),'500 貓貓幣購買');};
+ttConfirm('購買「'+c.n+'」？','使用 50 金幣，購買後永久持有。',()=>buyChatSkin(c),'50 金幣購買');};
 async function buyChatSkin(c){if(bubbleBuying||!myKey||c.lv||c.price!==50)return;const key=myKey; bubbleBuying=true;
 try{const held=await db.ref(ROOT+'/owned/'+key+'/'+c.itemId).once('value');if(held.exists()){window.__owned[c.itemId]=held.val();bkBubbleRender();toast('你已擁有這款氣泡');return;}
-const CAT=TTCat.price(50);const bal=await db.ref(ROOT+'/cat/'+key+'/balance').once('value');if(!Number.isSafeInteger(bal.val())||bal.val()<CAT){toast('貓貓幣不夠，需要 '+TTCat.fmt(CAT)+'，可以先到錢包用金幣兌換');return;}
-const ref=db.ref(ROOT+'/clientOrders').push(),ts=Date.now();const o={type:'shop',plan:c.itemId,planName:'聊天氣泡・'+c.n,amount:50,origAmount:50,couponUsed:false,couponDisc:0,itemId:c.itemId,itemName:c.n,name:me()?.b?.name||'酒館客人',paidBy:'cat',catAmount:CAT,status:'done',createdAt:ts,myKey:key};   /* v492 氣泡改用貓貓幣（amount 仍記金幣等值 50） */
-await catSafety().execute({key,amount:CAT,ids:[ref.key],lookup:walletLookup,commit:async()=>{const existing=await db.ref(ROOT+'/owned/'+key+'/'+c.itemId).once('value');if(existing.exists())throw Object.assign(Error('已擁有'),{code:'validation_failed'});const changes={};changes['clientOrders/'+ref.key]=o;changes['cat/'+key+'/balance']=firebase.database.ServerValue.increment(-CAT);changes['catTx/'+key+'/'+ref.key]={type:'spend',amount:-CAT,ref:ref.key,note:o.planName,ts};changes['cat/'+key+'/lastTx']=ref.key;changes['owned/'+key+'/'+c.itemId]={name:c.n,ts,ref:ref.key};await db.ref(ROOT).update(changes);}});
+const bal=await db.ref(ROOT+'/wallet/'+key+'/balance').once('value');if(!Number.isSafeInteger(bal.val())||bal.val()<50){toast('金幣不足，需要 50 金幣');return;}
+const ref=db.ref(ROOT+'/clientOrders').push(),ts=Date.now();const o={type:'shop',plan:c.itemId,planName:'聊天氣泡・'+c.n,amount:50,origAmount:50,couponUsed:false,couponDisc:0,itemId:c.itemId,itemName:c.n,name:me()?.b?.name||'酒館客人',paidBy:'wallet',status:'done',createdAt:ts,myKey:key};
+await walletSafety().execute({key,amount:50,ids:[ref.key],lookup:walletLookup,commit:async()=>{const existing=await db.ref(ROOT+'/owned/'+key+'/'+c.itemId).once('value');if(existing.exists())throw Object.assign(Error('已擁有'),{code:'validation_failed'});const changes={};changes['clientOrders/'+ref.key]=o;changes['wallet/'+key+'/balance']=firebase.database.ServerValue.increment(-50);changes['walletTx/'+key+'/'+ref.key]={type:'spend',amount:-50,ref:ref.key,note:o.planName,ts};changes['wallet/'+key+'/lastTx']=ref.key;changes['owned/'+key+'/'+c.itemId]={name:c.n,ts,ref:ref.key};await db.ref(ROOT).update(changes);}});
 rememberPaymentIds([ref.key]);if(myKey===key){window.__owned[c.itemId]={name:c.n,ts};__setBub(c.k);bkBubbleRender();toast('已購買並換上「'+c.n+'」');}
 }catch(e){if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'購買未完成，請查看訂單');}finally{bubbleBuying=false;}}
 window.openChatSkins=function(){window.bookOpen?.();bkGo('bubbles');};
@@ -8118,14 +8119,14 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=492"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=493"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=492"></script>
+<script src="lobby-ui/live.js?v=493"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
@@ -8146,7 +8147,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=492"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=454">
-<script src="lobby-ui/mobile-app.js?v=492"></script>
+<script src="lobby-ui/mobile-app.js?v=493"></script>
 </body>
 </html>
 
