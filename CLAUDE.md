@@ -3,7 +3,8 @@
 ## v493 付費商品改回金幣（更正 v492）
 使用者 11/06：店內靠付費時裝回收繪師成本（幾十萬），v492 把時裝、寵物、座椅、染髮券、聊天氣泡、工房部件全改成貓貓幣是錯的——貓貓幣會白送（每日任務、活動），等於付費商品可以免費拿。正確分法：**付費商品一律金幣**；貓貓幣只用在小屋家具（混合 AI 流程可量產）與店長送的免費時裝（福利）。v492 已於 11/06 推上正式站，v493 修正前付費商品在正式站收的是貓貓幣。
 網站：lobby.html payCurrency()／payWithCoins 只在商品標 cur:'cat'（TTCat.forItem）時付貓貓幣，目前沒有這類商品 → 全部走 v491 的金幣流程；coinsAvailable 回到 v491（只有貓貓幣商品略過儲值方案判斷）；聊天氣泡購買與手帳說明整段回到 v491（50 金幣、walletSafety）；布告欄「貓貓幣登場」改成「每日任務改送貓貓幣、付費商品照舊用金幣」。tavern-ui/live-wardrobe.js 整檔回到 v491（金幣標價）＋一行註解。lobby-ui/cat-coin.js：EXCHANGE_ON=false 錢包不顯示兌換（沒有能用貓貓幣買的東西，金幣換過去也換不回來），exchange() 與規則保留；錢包貓貓幣說明改「酒館送你的小心意」；live.js／mobile-app.js／guide.html 錢包文字改回金幣可買時裝。貓貓幣餘額顯示、每日任務 11/7 起送 100 貓貓幣、像素硬幣、名牌、手帳三格不變。版本鏈 cat-coin／live／mobile-app／bridge／tavern-ui index／時裝間比較／live-wardrobe 493、lobby-view 493、verTag v493。
-規則沒改：v492 的規則仍允許 paidBy 'cat' 買 shop 商品（網站已不走這條，但懂技術的人可以用每日任務的貓貓幣自己組請求買付費商品）→ 待辦：規則第十批把 clientOrders／owned 的 cat 分支限縮到標了貓貓幣的商品（或先整個拿掉），需使用者發布。
+規則第十批（tests/security-rules-v428/build/harden-phase10.cjs，可重複執行；套用前快照 rules-before-v493.json，需使用者發布）：clientOrders paidBy 'cat' 加上「shopConfig/<itemId>/cur == 'cat'」（shopConfig 只有店長能寫；背包 owned 本來就要求同一次寫入的新訂單，訂單擋下背包也拿不到）；染髮券拿掉第九批的貓貓幣 +1 分支，只收金幣。兌換、每日任務 11/07 起 100 貓貓幣、店長調整不變。之後上架貓貓幣商品（家具、免費時裝）：shopConfig 該商品加 cur:'cat'，網站 TTCat.forItem 也看同一個欄位（商城橋接要把 cur 帶進 plan）。新規則與 v492／v493 網站都相容（v492 的貓貓幣結帳會被整筆拒絕，不會扣錢）。
+測試 test-phase10.cjs 19 項（貓貓幣買沒標的時裝／寵物／座椅／染髮券／工房部件／時裝部件、只寫訂單、客人自己標貓貓幣、同一次寫入先標再買都拒絕；標了貓貓幣的商品可買、少付與 catAmount 錯拒絕；金幣買時裝／寵物／染髮券／工房部件照常；店長標記與調整；11/07 起每日任務），舊規則下前六項全部放行；test-phase9 的 cloth9 改標 cur:'cat'、貓貓幣買染髮券改預期拒絕。run.sh 第 1～10 批全過（32／36／58／12／64／20／25／29／49／19），security-v428、base-parts-v434 用新規則通過。
 測試：payment-safety-v273、chat-skins-v364、security-v428、base-parts-v434 換回 v491 版（金幣斷言）；payment-safety 補 TTCat stub 與 paidBy wallet 斷言；四個全過（後兩個用 v492 規則＋本機 emulator 9273）。本機預覽實際結帳熊熊偵探 350 金幣：wallet 1350→1000、paidBy wallet、貓貓幣不動、背包有；錢包無兌換、布告欄與氣泡說明正確。
 v492 期間若有客人在正式站把金幣換成貓貓幣：店長頁名冊看貓貓幣餘額（11/7 前有餘額的都是兌換來的），可用「調整金幣／調整貓貓幣」退回。
 

@@ -1,5 +1,6 @@
 // v492 規則測試：貓貓幣（兌換、時裝付款、每日任務 11/07 起改送 100 貓貓幣）。
 // 「11/07 以後」的案例用把切換時間改到過去的同一份規則來測。
+// v493 第十批：貓貓幣只能付 shopConfig 標 cur:'cat' 的商品 → 這裡的 cloth9 標成貓貓幣商品，染髮券改為只收金幣。
 'use strict';
 const fs=require('fs');const {req,setRules,seed}=require('./emu.cjs');
 const [,,oldFile,newFile]=process.argv;
@@ -9,7 +10,7 @@ const NOW=Date.now(),TODAY=Math.floor((NOW+28800000)/86400000);
 const data=()=>({secureV1:{members:{discord_100000000000000001:{active:true,key:'k1'},discord_100000000000000002:{active:true,key:'k2'}},owners:{k1:'discord_100000000000000001',k2:'discord_100000000000000002'}},peiwan:{
  config:{adminUid:'admin1',services:{s1:{price:300}}},
  lobby:{k1:{name:'小明'},k2:{name:'小華'}},
- shopConfig:{cloth9:{price:300,active:true}},
+ shopConfig:{cloth9:{price:300,active:true,cur:'cat'}},
  chat:{m1:{key:'k1',name:'小明',text:'嗨',t:NOW,map:'hall'}},
  wallet:{k1:{balance:1000,lastTx:'x0'},k2:{balance:1000,lastTx:'y0'}},
  walletTx:{k1:{x0:{type:'topup',amount:1000,ref:'x0'}},k2:{y0:{type:'topup',amount:1000,ref:'y0'}}},
@@ -61,10 +62,10 @@ const cases=[
  ['貓貓幣訂單用「待確認」不付錢拿衣服','me','PATCH','peiwan',buyCloth('o5',300,{status:'pending',noPay:true}),false],
  ['貓貓幣訂單標已完成但沒扣款','me','PATCH','peiwan',buyCloth('o6',300,{noPay:true}),false],
  ['貓貓幣不夠（5000 買 6000）','me','PATCH','peiwan',{...catOrder('o7',600),['owned/k1/cloth9']:{name:'cloth9',ts:1,ref:'o7'}},false],
- ['用貓貓幣買染髮券（299 → 2990）','me','PATCH','peiwan',buyDye('o8',299),true],
+ ['用貓貓幣買染髮券（v493 起只收金幣）','me','PATCH','peiwan',buyDye('o8',299),false],
  ['染髮券貓貓幣只付 2980','me','PATCH','peiwan',buyDye('o9',298),false],
  ['用貓貓幣付陪玩單','me','PATCH','peiwan',catOrder('o10',300,{type:'play',item:'svc_s1'}),false],
- ['沒有金幣紀錄也能用貓貓幣買染髮券','me','PATCH','peiwan',buyDye('o11',299),true,'now','nowallet'],
+ ['沒有金幣紀錄用貓貓幣買染髮券（v493 起只收金幣）','me','PATCH','peiwan',buyDye('o11',299),false,'now','nowallet'],
  ['沒有金幣紀錄也能用貓貓幣買衣服','me','PATCH','peiwan',buyCloth('o12',300),true,'now','nowallet'],
  ['沒有貓貓幣紀錄也能用金幣買染髮券','me','PATCH','peiwan',{...walletPay('w3',{type:'shop',plan:'dyeTicket',itemId:'dyeTicket',amount:299}),['owned/k1/dyeTickets']:inc(1)},true,'now','nocat'],
  ['貓貓幣直接寫成 99999','me','PUT','peiwan/cat/k1/balance',99999,false],
