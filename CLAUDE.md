@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## v497 大廳「小屋」鈕換像素小屋圖示
+- lobby-ui/assets/house.png（128×128，跟 chat／dress／gift／mug 同一套：2px 深暖棕描邊 #3a2622、硬邊、粉嫩色）。做法：C:\gen\gen_image.py（gpt-image-2）拿四顆舊圖示當畫風參考生草稿 → scratchpad 的 icon/px.py 去白底、縮 108 高、收 30 色、加 2px 描邊 → retouch.py 手修（圓窗逐格重畫成暖光橢圓窗、屋頂粉與木門加飽和）。
+- lobby-ui/house.js：ICON.houseImg，dock 的 #ttHouseBtn 改用圖（小屋裡其他按鈕仍是線條 SVG）。verTag v497、house.js ?v=497。
+
 ## v496 金幣像素圖示、移除舊背包、四件家具凹槽與床頭重做
 - **金幣圖示**（D 11/07：金幣要跟貓貓幣同一套）：img/gold-coin-px48.png／gold-coin-spin48.png，由 tt-room-kit/coin3d/goldtrace.py 產生
   （pixtrace.py 換金色色票；斜放顯示犬尤原圖「反面四芒星」，貓貓幣是正面貓臉）。TTCat.gold(size,mode)／TTCat.gtag(n,size) 跟 coin/tag 同用法（.nyan.nyan-g）。

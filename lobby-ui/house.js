@@ -145,6 +145,7 @@ async function buy(k){const c=S.byKey[k],p=priceOf(k),key=S.key;if(S.buying||!c|
 
 // ---------- 介面：右下（佈置、家具店）、右上（回大廳、縮放）、佈置清單 ----------
 const ICON={
+ houseImg:'<img src="lobby-ui/assets/house.png" alt="">',   // v497 大廳 dock 的小屋鈕：像素小屋圖示（跟我的酒館／商城／背包同一套畫風）
  house:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 13 14 4.5 24 13"/><path d="M7 11v12h14V11"/><path d="M12 23v-6h4v6"/></svg>',
  brush:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M6 22c3 0 5-2 5-5l9-11 3 3-11 9c0 3-2 5-6 4z"/><path d="M15 9l4 4"/></svg>',
  shop:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 11h18l-1.5 11h-15z"/><path d="M9 11V8a5 5 0 0 1 10 0v3"/><path d="M11 16h6"/></svg>',
@@ -156,7 +157,7 @@ const ICON={
 function btn(id,cls,icon,label,fn){const b=document.createElement('button');b.type='button';b.id=id;b.className=cls;b.innerHTML=ICON[icon]+'<span>'+label+'</span>';b.onclick=fn;return b;}
 function build(){
  const dock=$('ttMainDock');if(!dock||$('ttHouseBtn'))return;
- const entry=btn('ttHouseBtn','tt-house-entry','house','小屋',enter);
+ const entry=btn('ttHouseBtn','tt-house-entry','houseImg','小屋',enter);
  const hub=$('ttHubButton');if(hub)hub.after(entry);else dock.prepend(entry);
  dock.append(btn('ttHouseEdit','tt-house-only','brush','佈置',()=>setMode('edit')));
  dock.append(btn('ttHouseShop','tt-house-only tt-house-main','shop','家具店',openShop));
