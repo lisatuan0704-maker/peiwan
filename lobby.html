@@ -1449,7 +1449,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/contacts.css?v=341">
 <script src="lobby-ui/contacts.js?v=411"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=492">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=496">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=357">
 <script src="lobby-ui/scene.js?v=481"></script>
 <script src="lobby-ui/hair-motion.js?v=272"></script>
@@ -1460,7 +1460,7 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/presence.js?v=483"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/payment-safety.js?v=492"></script>
-<script src="lobby-ui/cat-coin.js?v=493"></script>
+<script src="lobby-ui/cat-coin.js?v=496"></script>
 <script src="lobby-ui/cancel-reason.js?v=432"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=274">
@@ -1513,7 +1513,6 @@ body.artBub.bub3s .npc .bub{
   <div class="mhSubRow">
     <button class="mhSub" onclick="if(window.vipPg){};buildVip2();gOpen('vipM')">VIP 等級</button>
     <button class="mhSub" onclick="buildAch2();gOpen('achM')">成就</button>
-    <button class="mhSub" onclick="buildBag();gOpen('bagM')">背包</button>
     <button class="mhSub" onclick="openTopup()">錢包 <span id="mhCoin" style="color:#B8860B;font-weight:800"></span></button>
     <button class="mhSub" onclick="renderMailBox();gOpen('mailBoxM')">信箱 <span id="mhMailN" style="color:#E14E6B;font-weight:800"></span></button>
     <button class="mhSub" onclick="bookOpen()">手帳</button>
@@ -1698,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v494</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v496</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -1766,10 +1765,6 @@ body.artBub.bub3s .npc .bub{
   </div>
 </div></div>
 
-<div class="gwin" id="bagM"><div class="gcard">
-  <div class="gtop"><span class="gt">我的背包</span><button class="gx" onclick="gClose('bagM')">✕</button></div>
-  <div class="gin" id="bagBody"></div>
-</div></div>
 <div class="gwin" id="wardM"><div class="gcard">
   <div class="gtop"><span class="gt">換裝區・自由搭配</span><button class="gx" onclick="gClose('wardM')">✕</button></div>
   <div class="gin" id="wardBody"></div>
@@ -7343,80 +7338,10 @@ window.__hasCard=myKey?null:false;
   reportAccount();
 })();
 
-/* ================= v44:背包(時裝/頭像框/優惠券) ================= */
-function buildBag(){
-  const el=document.getElementById('bagBody'); if(!el) return;
-  let owned='wr1'; try{ owned=ttFrameId(localStorage.getItem('tt_frame')); }catch(e){}
-  const FR={wr1:'花圈框'}; Object.keys(TTF_ART).forEach(function(k){ FR[k]=TTF_ART[k].nm; });
-  let frOwnN=1, frOwnNames=['花圈框']; try{ const lv=(window.__vipInfo&&window.__vipInfo().lv)|0; for(let i=1;i<=5;i++){ if(lv>=i){ frOwnN++; frOwnNames.push(TTF_ART['vip'+i].nm); } } }catch(e){}
-  /* 時裝:實際列出已擁有的款式(讀 window.__owned + __OUTFITS),含小人預覽與「穿上身」 */
-  const OUT=(window.__outfitList?window.__outfitList():(window.__OUTFITS||[]).map((o,i)=>Object.assign({id:'cloth'+i},o)));
-  const own=window.__owned||{};
-  let curDoll=null; try{ const a=(typeof me==='function')?me():null; curDoll=(a&&a.b&&a.b.doll)?a.b.doll:null; }catch(e){}
-  function sameOutfit(d,o){
-    if(!d||!o) return false;
-    if(o.id&&d.set) return d.set===o.id;                 /* 部件式套裝:看 set */
-    if(d.set) return false;
-    if(!o.doll) return false;
-    return d.back===o.doll.back&&d.front===o.doll.front&&d.cloth===o.doll.cloth&&d.face===o.doll.face&&d.acc===o.doll.acc;
-  }
-  const ownedList=OUT.filter(o=>own[o.id]&&!window.TTRetiredOutfits?.retired(o.id,(window.__shopCfg||{})[o.id]));
-  /* 露亞經典裝(cloth0)為預設款,人人皆有 */
-  if(!window.TTRetiredOutfits?.retired('cloth0')&&!ownedList.some(o=>o.id==='cloth0')){ const d0=OUT.find(o=>o.id==='cloth0'); if(d0) ownedList.unshift(d0); }
-  let clothHtml='';
-  ownedList.forEach(o=>{ if(!o) return;
-    const wearing=sameOutfit(curDoll,o);
-    const hair=(curDoll&&typeof curDoll.hair==='number')?curDoll.hair:0;
-    const cfgB=(window.__shopCfg||{})[o.id]||{};
-    clothHtml+='<div class="ach2" style="align-items:center">'
-      +'<canvas class="bagCv" width="64" height="64" data-id="'+o.id+'" data-hair="'+hair+'" style="width:46px;height:46px;image-rendering:pixelated;flex:0 0 auto"></canvas>'
-      +'<div style="flex:1"><div class="an2">'+esc(o.nm||'')+'</div><div class="ad2">'+(wearing?'目前穿著中':esc(o.de||(cfgB.parts?'店長上架的新款':'')))+'</div></div>'
-      +(wearing?'<span class="st2 ok">穿著中</span>':'<button class="bagWearBtn" data-id="'+o.id+'" style="border:none;background:linear-gradient(180deg,#FBDD79,#F6CE5A);color:#4A3B63;font-family:inherit;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer">穿上身</button>')
-      +'</div>';
-  });
-  el.innerHTML=
-    '<div class="ghint">你擁有的東西都收在這裡。購買的時裝與獲得的獎勵會自動出現。</div>'
-    +'<div class="vnm2" style="font-size:13px;margin-bottom:6px">時裝 · 共 '+ownedList.length+' 款</div>'
-    +clothHtml
-    +'<div class="ghint" style="margin:4px 0 12px">想要新造型?到<b>商城</b>逛逛,購買後會永久收進背包。 <a href="#" id="bagToDress" style="color:#E27FA6;text-decoration:underline">去商城 →</a> <a href="#" id="bagToWard" style="color:#8E68C8;text-decoration:underline">自由搭配 →</a></div>'
-
-    +'<div class="vnm2" style="font-size:13px;margin-bottom:6px">頭像框</div>'
-    +'<div class="ach2"><img src="'+AICON.star+'" alt=""><div style="flex:1"><div class="an2">'+frOwnNames.join('・')+'</div><div class="ad2">目前使用:'+(FR[owned]||owned)+'(點左上角頭像更換;VIP 升級會解鎖更多)</div></div><span class="st2 ok">'+frOwnN+' 款</span></div>'
-    +'<div class="vnm2" style="font-size:13px;margin:12px 0 6px">VIP 回饋金幣</div>'
-    +(function(){ /* v491 優惠券停用，改為每升一級送一次回饋金幣 */
-       let info=null; try{ info=window.__vipInfo&&window.__vipInfo(); }catch(e){}
-       const got=(window.TTVipGift&&window.TTVipGift.got())||{};
-       if(info&&info.lv){
-         const n=(window.__vipCfg||[]).filter(t=>t.lv<=info.lv&&got[t.lv]).reduce((a,t)=>a+t.gift,0);
-         const wait=(window.__vipCfg||[]).filter(t=>t.lv<=info.lv&&!got[t.lv]).length;
-         return '<div class="ach2"><img src="'+AICON.coin+'" alt=""><div style="flex:1"><div class="an2">VIP '+info.lv+' 回饋金幣</div><div class="ad2">'+(wait?'確認等級後會自動存進錢包':'已經存進你的錢包')+'</div></div><span class="st2'+(n?' ok':'')+'">已領 '+n.toLocaleString()+'</span></div>';
-       }
-       return '<div class="ach2"><img src="'+AICON.coin+'" alt=""><div style="flex:1"><div class="an2">還沒有回饋金幣</div><div class="ad2">累積支持升上 VIP 後，每升一級送一次回饋金幣</div></div><span class="st2">0</span></div>';
-     })();
-  /* 畫出每件時裝的小人預覽 */
-  el.querySelectorAll('canvas.bagCv').forEach(cv=>{
-    const id=cv.dataset.id, hair=+cv.dataset.hair||0;
-    const o=OUT.find(x=>x.id===id); if(!o||typeof drawDollTo!=='function') return;
-    const cfg2=(window.__shopCfg||{})[id]||{};
-    const hasP=!!(cfg2.parts&&Object.keys(cfg2.parts).length);
-    const base=o.doll?Object.assign({},o.doll):Object.assign({},curDoll||{});
-    try{ drawDollTo(cv, Object.assign(base,{hair:hair,set:hasP?id:null}), 'idle'); }catch(e){}
-  });
-  /* 穿上身 */
-  el.querySelectorAll('.bagWearBtn').forEach(btn=>{ btn.onclick=()=>{
-    const i=btn.dataset.id;
-    if(window.__bagWear){ window.__bagWear(i); try{ if(window.SFX)SFX.success(); }catch(e){}
-      setTimeout(()=>buildBag(),120); }
-  };});
-  /* 去商城 */
-  const link=el.querySelector('#bagToDress');
-  if(link) link.onclick=(e)=>{ e.preventDefault(); if(window.gClose)gClose('bagM'); const d=document.getElementById('dressBtn'); if(d) setTimeout(()=>d.click(),200); };
-  const lw=el.querySelector('#bagToWard');
-  if(lw) lw.onclick=(e)=>{ e.preventDefault(); if(window.gClose)gClose('bagM'); if(window.openWardrobe) setTimeout(openWardrobe,150); };
-}
+/* v496：舊背包（v44 時裝／頭像框／優惠券清單）已移除，背包一律是時裝間裡的「背包」（bridge 的 openWardrobe） */
 (function(){
   const b=document.getElementById('h2bag');
-  if(b) b.addEventListener('click',()=>{ buildBag(); gOpen('bagM'); });
+  if(b) b.addEventListener('click',()=>{ if(window.openWardrobe) openWardrobe(); });
 })();
 
 /* ================= v46:商城設定 + 已擁有商品(訂閱 → 供商城讀取) ================= */
@@ -8125,17 +8050,18 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=494"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=496"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=494"></script>
+<script src="lobby-ui/live.js?v=496"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=494"><script src="lobby-ui/house.js?v=494"></script>
+<link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=496"><script src="lobby-ui/house.js?v=496"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=427"></script>
@@ -8154,7 +8080,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=492"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=454">
-<script src="lobby-ui/mobile-app.js?v=493"></script>
+<script src="lobby-ui/mobile-app.js?v=496"></script>
 </body>
 </html>
 

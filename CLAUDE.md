@@ -1,5 +1,25 @@
 # 小小酒館修改紀錄
 
+## v496 金幣像素圖示、移除舊背包、四件家具凹槽與床頭重做
+- **金幣圖示**（D 11/07：金幣要跟貓貓幣同一套）：img/gold-coin-px48.png／gold-coin-spin48.png，由 tt-room-kit/coin3d/goldtrace.py 產生
+  （pixtrace.py 換金色色票；斜放顯示犬尤原圖「反面四芒星」，貓貓幣是正面貓臉）。TTCat.gold(size,mode)／TTCat.gtag(n,size) 跟 coin/tag 同用法（.nyan.nyan-g）。
+  換掉的地方：大廳頂部錢數、手機錢數、錢包（餘額、右上大幣改轉動、儲值方案、含贈送）、時裝間標價（goldT／gM 記號 ，跟貓貓幣的  一起在 unCat 換）。
+  dock 的「錢包」鈕圖示（lobby-ui/assets/coin.png）沒換。
+- **舊背包移除**：lobby.html 的 #bagM 視窗、buildBag()、手機「背包」小鈕刪掉；錢包「獎勵與收藏 →」刪掉；右上 #h2bag 改開新背包（openWardrobe → 時裝間背包）。
+- **家具**：流理台／浴缸／洗手台用 boolean 真的挖凹槽，內壁用深兩階材質（r_steelIn／r_tubInD）、槽底一塊亮色底板；雙人床改圓木 ∩ 床頭框、床框一圈同高。
+  四件樣本用 palettes/basic_soft.json，D 看過說「可以，全部套用」→ 第一批 82 件全部改用 tt-room-kit/bed/palettes/soft_all.json（124 種材質，OKLCH 換算：暗階提亮帶色相、彩度拉高、亮階偏奶油；白色暗部偏淡紫、奶油／亞麻／紙暗部走蜜桃淺棕；原本飽和的紅粉綠不加多；發光材質不動；每種材質的 old 欄位留原色階）。上色指令 T4_LIT='r_mirrorW=0.4,f_glass=0.35,g_glass=0.35' OSFX=_t4 PALX=soft_all bash to_p1t.sh <名>；舊圖備份在 bed/_backup_1107/t4_before_soft/。前後對照 tt-room-kit/house-picker/柔和配色_酒館日常_1107.png、柔和配色_萬用系列_1107.png。
+- **洗手台鏡子**（D 11/07）：鏡框半徑 0.23→0.30（約櫃寬 8 成）；兩道斜反光 D 說效果差 → 拿掉；鏡面朝正前方受光少會被染灰紫，上色時帶 T4_LIT='r_mirrorW=0.4'（tone4.py 新增的亮度下限，預設不開）。
+- **小屋縮圖調色**（D 11/07「商店的圖有色差、黑黑灰灰」）：房間畫面每幀有 grade() 的白天調色光，縮圖原本沒有 → house-embed.js thumbGrade() 用同一組 GRADE 數值（提亮暗部＋暖粉霧＋5 格光暈）做一次，再用家具形狀剪回；家具店、佈置清單、背包縮圖都吃這個。lobby-ui/house.js 的 VER 495→496（room.html 網址版本）。
+
+## v495 商城視窗固定＋分類鈕果凍點擊、貓貓幣商品排最上面、小屋縮圖不糊、小屋新手教學
+使用者 11/06：商城按分類有些視窗大小會整個改變不舒服 → 要固定，上排分類鈕要有果凍感；每個分類能用貓貓幣買的排最上面；吊掛盆栽很模糊；想要新手教學（第一次進來畫面灰灰的隔一層、虛線圈起來說明要點哪裡）。
+商城（tavern-ui/live-wardrobe.js）：目前搭配在每個分類都留著（原本座椅／飲品／染髮券／聊天氣泡會收起來，外框跟著變）；聊天氣泡改在商城裡直接列 10 款（預覽用時裝間自己載的 lobby-ui/chat-skins.js／css），點一下換上，買的時候交給大廳原本的 bkBubbleTap 確認框（lobby-ui/live.css：商城開著時 .ttc、#toast 疊在最上層），買好自動重畫；分類鈕點了套 .jelly（tavern-ui/shop-v495.css，減少動態設定不播）；商城每個分類 cur:'cat' 的商品排在最前面（catFirst，背包不重排）。
+小屋：家具縮圖一律整數倍、不平滑（tt-room-kit/house-lobby/house-embed.js thumbOf；家具店框 136、佈置清單框 96，比框大的照 1 倍畫、object-fit:contain＋pixelated）；新手教學 lobby-ui/coach.js／coach.css（TTCoach.run(steps,{doneKey})，整片變灰、虛線圈呼吸、大廳同一套說明卡，Esc 略過、Enter 下一步）——第一次進小屋自動跑 6 步（房間、家具店、貓貓幣、佈置、縮放、回大廳），看過記 localStorage tt_house_tour_v1，右上新「教學」鈕可以再看；TTRoom.roomRect() 給教學圈房間。
+上色（未改，等使用者挑）：82 件都是 11/04 定案的抖動版（tone4：SUB=3 近色豐富、少量抖動、玫瑰紫陰影、無白點與木紋）。對照圖 tt-room-kit/house-picker/上色對照_1106.png：A 現在／B 中間色少一點（T4_SUB=2）／C 只留 4 階＋交界抖動（T4_SUB=1 T4_RICH=0）／D 每個面平塗（GRAD=0 T4_SUB=1 T4_RICH=0），樣本在 bed/props/<名>_cmpA～D。
+小屋後續（同日 D 再改）：家具店與佈置清單縮圖一律同一個比例（1 倍、不平滑，落地家具底部對齊，框 136）；房間背景改純漸層（像素晚霞天空先拿掉，house-lobby/house.css）；右側放大／縮小／整間拿掉（滾輪縮放、拖曳照用），「我的家具」改成右側整欄；拿起家具時旁邊的四顆按鈕拿掉，改鍵盤 R 轉向／Delete 收回／Esc 取消、點一下放好，大廳畫面最下面常駐一行白字操作說明（#ttHouseKeys，散步／佈置／拿著家具各一套；焦點在大廳時按鍵經 TTRoom.key 轉給房間）；新手教學拿掉縮放那步。
+萬用系列 8 件改手工建模（D：Tripo 扶正後殘留歪斜，「冰箱不能是斜的」「請記得參考原設計」）：冰箱、流理台、爐台、浴缸（開口）、洗手台、格子櫃、三人布沙發・灰藍、雙人床・灰藍被，造型照 tt-room-kit/sets/R_basic/ref3/cells 原設計、尺寸照原 Tripo 外框、顏色沿用 Tripo 版材質（bed/set_props_R_fridge.py、set_props_R_t2hand.py；sets/R_basic/tripo2.json 拿掉這 8 件對應，props.tsv 補列；備份 bed/_backup_1106_tripo7、_backup_1106_fridge2）。量測（2 倍渲染法線圖，直立面應為 0°）：Tripo 版三人布沙發 3～4.5°、舊冰箱約 3°、爐台／雙人床／浴缸約 1°；手工版全部 0°。第一批 82 件現在全部是手工建模。
+版本：verTag v495、lobby-view 495、live.css 495、bridge 495→tavern-ui index 495→時裝間比較 495→live-wardrobe 495、house.js／css 495（room.html?v=495）、coach 495。
+
 ## v494 小屋第一批家具（試做）＋日常系列用貓貓幣販售（需發布新規則）
 使用者 11/06：小屋不一次全上，先出幾樣家具測試再慢慢推；第一批 82 件（酒館日常 41＋萬用系列 41，清單 tt-room-kit/house-picker/第一批上架.txt）；介面跟大廳同一套。家具「依精緻度區分價位、大型家具至少每日任務 3 天」，其餘價格與日常系列價格交給 Claude 訂；日常系列（犬尤畫的髮型四組、眼睛四組、上衣 A–D、下衣 A–C、套裝 A–B）改用貓貓幣買。
 價格（貓貓幣；shopConfig 存金幣等值價，顯示與扣款 ×10）：家具＝大小×精緻度，小件 100／150／200、中件 150／200／300、大件 300／400／500（簡單／標準／精緻），逐件分級在 tt-room-kit/house-picker/第一批價格.txt；入住禮 4 件免費（木椅、單人床、方地毯、木框窗，第一次進小屋就擺好）。全部買齊 18,950。日常系列：髮型（前髮＋後髮）300、眼睛（眼睛＋眉毛）200、上衣 150、下衣 150、套裝 300（tavern-ui/daily-v494.js TTDailyPrices）。

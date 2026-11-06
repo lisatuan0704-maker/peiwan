@@ -94,7 +94,7 @@
   avatar.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();avatar.click();}});
   const funds=document.createElement('div');funds.className='tt-funds';
   // v492 雙幣：金幣（點單）＋貓貓幣（時裝間），點一下打開錢包
-  funds.innerHTML='<strong class="tt-fund" title="金幣：點冒險者一起玩"><img src="'+asset('coin')+'" alt=""><span id="ttWalletCount"></span><small>金幣</small></strong>'
+  funds.innerHTML='<strong class="tt-fund" title="金幣：點冒險者一起玩">'+TTCat.gold(32,'c')+'<span id="ttWalletCount"></span><small>金幣</small></strong>'
     +'<strong class="tt-fund tt-fund-cat" title="貓貓幣：每日任務與活動送的">'+TTCat.coin(32,'c','data-cat-pop')+'<span id="ttCatCount"></span><small>貓貓幣</small></strong>';
   funds.setAttribute('role','button');funds.tabIndex=0;funds.setAttribute('aria-label','打開錢包：金幣與貓貓幣');
   funds.addEventListener('click',e=>{e.stopPropagation();openTopup();});
@@ -158,17 +158,15 @@
   let catHost=null;
   renderTopup=function(){
     const cfg=window.__topupCfg||{},tiers=(cfg.tiers||[]).filter(t=>t&&t.amt>0),bal=Number(window.__wallet)||0;
-    $('topupBody').innerHTML='<div class="purse-summary framed-motion"><div class="wallet-balance"><small>目前可用金幣</small><strong>'+bal.toLocaleString()+'<span>金幣</span></strong><p>為下一次相聚，存一點期待。</p></div><div class="coin-scene" aria-hidden="true"><span class="coin-orbit"></span><img src="'+asset('coin')+'" alt=""><i class="coin-spark">✦</i><span class="coin-label">TAVERN COINS</span></div>'+motion(3)+'</div>'
+    $('topupBody').innerHTML='<div class="purse-summary framed-motion"><div class="wallet-balance"><small>目前可用金幣</small><strong>'+TTCat.gold(48,'c')+' '+bal.toLocaleString()+'</strong><p>為下一次相聚，存一點期待。</p></div><div class="coin-scene" aria-hidden="true"><span class="coin-orbit"></span>'+TTCat.gold(96,'s')+'<i class="coin-spark">✦</i><span class="coin-label">TAVERN COINS</span></div>'+motion(3)+'</div>'
       +'<div class="section-caption"><b>貓貓幣</b><span>CAT COINS</span></div><div id="ttCatSlot"></div>'
       +(cfg.note?'<p class="body-note">'+text(cfg.note)+'</p>':'')+'<div class="section-caption"><b>補充一點快樂</b><span>TOP UP</span></div><div class="packages">'
-      +(tiers.length?tiers.map((t,i)=>'<button type="button" class="package framed-motion" data-tier="'+i+'"><span class="coupon-id">'+String(i+1).padStart(2,'0')+' / 儲值</span><strong>'+Number(t.amt+(t.bonus||0)).toLocaleString()+' <small>金幣</small></strong>'+(t.bonus>0?'<small class="tt-bonus">含贈送 '+text(t.bonus)+' 金幣</small>':'')+'<p>NT$ '+Number(t.amt).toLocaleString()+'</p><span class="coupon-arrow">↗</span>'+motion(i%2)+'</button>').join(''):'<p class="body-note">目前尚未開放儲值，敬請期待。</p>')+'</div>'
+      +(tiers.length?tiers.map((t,i)=>'<button type="button" class="package framed-motion" data-tier="'+i+'"><span class="coupon-id">'+String(i+1).padStart(2,'0')+' / 儲值</span><strong>'+TTCat.gold(26,'c')+' '+Number(t.amt+(t.bonus||0)).toLocaleString()+'</strong>'+(t.bonus>0?'<small class="tt-bonus">含贈送 '+TTCat.gtag(t.bonus,14)+'</small>':'')+'<p>NT$ '+Number(t.amt).toLocaleString()+'</p><span class="coupon-arrow">↗</span>'+motion(i%2)+'</button>').join(''):'<p class="body-note">目前尚未開放儲值，敬請期待。</p>')+'</div>'
       +'<p class="body-note">1 金幣 = 1 元，可以點冒險者一起玩，也能買時裝。<br>儲值由店長核對，入帳時會收到通知。</p><div class="text-links"><a class="text-btn" href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener">找店長幫忙 ↗</a><button type="button" class="text-btn" id="ttWalletTx">查看交易紀錄 →</button></div><div id="walletTxBox"></div>';
     if(!catHost){catHost=document.createElement('div');catHost.className='tt-cat-slot';TTCat.mount(catHost);}
     $('ttCatSlot').replaceWith(catHost);
     $('topupBody').querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>pickTier(Number(b.dataset.tier)));
     $('ttWalletTx').onclick=()=>renderWalletTx();
-    const collection=document.createElement('button');collection.type='button';collection.className='text-btn';collection.textContent='獎勵與收藏 →';
-    collection.onclick=()=>{gClose('topupM');buildBag();gOpen('bagM');};$('topupBody').querySelector('.text-links').append(collection);
   };
 
   // 搬動原設定控制元件，保留既有監聽器與儲存行為。

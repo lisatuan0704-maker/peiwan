@@ -130,7 +130,7 @@ body.tt214 #frDockBadge{position:absolute;right:-3px;top:-5px;background:#d46484
  body.tt214 #mhDoll,body.tt214 #mhName{visibility:hidden}
  body.tt214 .mhSubRow{flex-wrap:wrap;justify-content:center;overflow:visible;padding:14px 12px;gap:8px}
  body.tt214 .mhSub{font-size:13px;border:1px solid #c2adbe7a;background:#fff9;color:#77607b;border-radius:9px;padding:9px 13px}
- body.tt214 .mhSub[onclick*="buildBag"],body.tt214 .mhSub[onclick*="bookOpen"]{display:none}
+ body.tt214 .mhSub[onclick*="bookOpen"]{display:none}
  body.tt214 #mhOrder{background:linear-gradient(125deg,#b76885,#8c5c79);color:#fff9ee;box-shadow:0 4px #7c4f6b50}
  body.tt214 #mhDress{background:linear-gradient(125deg,#d7d3ee,#bdafd8);color:#5f527b}
  body.tt214 #mhWard{background:linear-gradient(125deg,#fff6ec,#e9d6e0);color:#805b74}
@@ -293,3 +293,5 @@ body.tt214 #hud2 .tt-book-hint svg{width:16px;height:16px;fill:#FFE3EF;stroke:#1
 html body.tt214 #hud2#hud2 .tt-funds{grid-column:3;grid-row:1;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:6px!important;padding:0 22px 0 14px!important;margin:0!important;border:0!important;border-left:2px dashed #D9CDEA!important;align-self:center}
 html body.tt214 #hud2#hud2::after{left:78px;background:linear-gradient(118deg,rgba(140,215,248,.3) 0 9%,transparent 9% 90%,rgba(255,175,212,.32) 90%),linear-gradient(160deg,#fff,#F6FAFF 60%,#FBF4FF)}
 body.tt214 #hud2 .h2who .h2nm{max-width:11em;overflow:hidden;text-overflow:ellipsis}
+/* v495 商城、背包開著時（#ttApprovedUI z-index 11000），大廳的確認框與提示要蓋在最上面（商城裡買聊天氣泡用大廳的確認框） */
+body.tt-approved-open .ttc{z-index:11050!important}body.tt-approved-open #toast{z-index:11060!important}

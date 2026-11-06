@@ -118,6 +118,9 @@ const IMG=(()=>{try{const s=root.document.currentScript;return new URL('../img/'
 function coin(size,mode='c',attrs=''){
  return '<span class="nyan nyan-'+(mode==='s'?'s':'c')+(size%48===0?' nyan-px':'')+'" style="--s:'+size+'px"'+(attrs?' '+attrs:'')+' aria-hidden="true"></span>';
 }
+/* v496 金幣：同一套像素硬幣（犬尤原圖反面四芒星、金黃色票；coin3d/goldtrace.py），img/gold-coin-px48.png／gold-coin-spin48.png */
+function gold(size,mode='c',attrs=''){return coin(size,mode,attrs).replace('class="nyan ','class="nyan nyan-g ');}
+function gtag(n,size=16,cls=''){return '<span class="tt-cat-tag tt-gold-tag'+(cls?' '+cls:'')+'">'+gold(size,'c')+'<span>'+fmt(n)+'</span><span class="nyan-sr">金幣</span></span>';}
 /* 價格標：小硬幣＋數字（螢幕報讀唸「N 貓貓幣」） */
 function tag(n,size=16,cls=''){return '<span class="tt-cat-tag'+(cls?' '+cls:'')+'">'+coin(size,'c')+'<span>'+fmt(n)+'</span><span class="nyan-sr">貓貓幣</span></span>';}
 /* 有貓貓幣進來：畫面上標了 data-cat-pop 的硬幣轉一圈 */
@@ -158,6 +161,8 @@ const css=`.tt-cat-box{display:grid;gap:12px;margin-top:6px}
 .nyan-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .nyan{--s:24px;display:inline-block!important;position:relative!important;margin-block:0;width:var(--s)!important;height:var(--s)!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;vertical-align:middle;flex:none;background:url(${IMG}cat-coin-px48.png) 0 0/100% 100% no-repeat!important;image-rendering:auto}
 .nyan-px{image-rendering:pixelated}
+.nyan.nyan-g{background-image:url(${IMG}gold-coin-px48.png)!important}
+.nyan-g.nyan-s,.nyan-g.nyan-c.pop{background-image:url(${IMG}gold-coin-spin48.png)!important}
 .nyan-s,.nyan-c.pop{background-image:url(${IMG}cat-coin-spin48.png)!important;background-size:calc(var(--s)*12) var(--s)!important}
 .nyan-s{animation:nyanSpin 1.6s steps(12) infinite}
 .nyan-c.pop{animation:nyanSpin .7s steps(12) 1,nyanHop .7s ease-out 1}
@@ -169,6 +174,6 @@ const css=`.tt-cat-box{display:grid;gap:12px;margin-top:6px}
 function injectCss(doc=root.document){if(!doc||doc.getElementById('ttCatCss'))return;const s=doc.createElement('style');s.id='ttCatCss';s.textContent=css;(doc.head||doc.documentElement).append(s);}
 if(root.document.readyState==='loading')root.document.addEventListener('DOMContentLoaded',()=>injectCss());else injectCss();
 
-root.TTCat={RATE,DAILY,DAILY_FROM,ICON,PACKS,EXCHANGE_ON,forItem,bonus,gain,price,fmt,dailyOn,exchange,mount,onChange,loadTx,tag,coin,pop,injectCss,watch};
+root.TTCat={RATE,DAILY,DAILY_FROM,ICON,PACKS,EXCHANGE_ON,forItem,bonus,gain,price,fmt,dailyOn,exchange,mount,onChange,loadTx,tag,coin,gold,gtag,pop,injectCss,watch};
 setInterval(watch,3000);setTimeout(watch,0);
 })(window);

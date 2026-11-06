@@ -26,7 +26,7 @@ const app=document.createElement('div');app.id='ttM';
 app.innerHTML='<header class="ttm-top" id="ttmTop">'
  +'<div class="ttm-card"><canvas id="ttmDoll" width="64" height="64" aria-hidden="true"></canvas>'
  +'<div class="ttm-who"><small>我的闆卡</small><b id="ttmName">小小酒館</b></div>'
- +'<button type="button" class="ttm-coins" id="ttmCoins" aria-label="金幣與貓貓幣餘額，點一下打開錢包"><i aria-hidden="true"></i><b id="ttmCoinN">0</b><small>金幣</small>'+TTCat.coin(18,'c','data-cat-pop')+'<b id="ttmCatN">0</b><small>貓貓幣</small></button></div>'
+ +'<button type="button" class="ttm-coins" id="ttmCoins" aria-label="金幣與貓貓幣餘額，點一下打開錢包">'+TTCat.gold(18,'c')+'<b id="ttmCoinN">0</b><small>金幣</small>'+TTCat.coin(18,'c','data-cat-pop')+'<b id="ttmCatN">0</b><small>貓貓幣</small></button></div>'
  +'<div class="ttm-actions" id="ttmActions"><button type="button" class="ttm-order" id="ttmTopup"><span aria-hidden="true">＋</span>儲值金幣</button>'
  +'<button type="button" class="ttm-help" id="ttmCardImg" style="font-family:inherit;cursor:pointer">存闆卡圖</button>'
  +'<a class="ttm-help" href="lobby.html?contact=1" data-contact-support>聯絡客服</a></div>'
