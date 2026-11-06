@@ -15,7 +15,8 @@
     setM: ['settings', '酒館設定', '調成你喜歡的節奏。', 'MAKE YOURSELF AT HOME', 'TUNE IN'],
     mailBoxM: ['mail', '我的信箱', '給你的每一句話，都在這裡。', 'LETTERS TO YOU', 'POST'],
     shopM4: ['orders', '我的訂單', '約好的時間，替你好好記著。', 'TAVERN ORDERS', 'ORDERS'],
-    shopM1: ['menu', '想來點什麼？', '找冒險者一起玩，或看看酒館的會員方案。', 'ORDER MENU', 'ORDER']
+    shopM1: ['menu', '想來點什麼？', '找冒險者一起玩，或看看酒館的會員方案。', 'ORDER MENU', 'ORDER'],
+    houseShopM: ['achievements', '家具店', '挑幾件喜歡的家具，帶回小屋。', 'TAVERN FURNITURE', 'HOME']
   };
   const shells = {};
   function shell(id) {

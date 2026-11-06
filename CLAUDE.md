@@ -1,5 +1,16 @@
 # 小小酒館修改紀錄
 
+## v494 小屋第一批家具（試做）＋日常系列用貓貓幣販售（需發布新規則）
+使用者 11/06：小屋不一次全上，先出幾樣家具測試再慢慢推；第一批 82 件（酒館日常 41＋萬用系列 41，清單 tt-room-kit/house-picker/第一批上架.txt）；介面跟大廳同一套。家具「依精緻度區分價位、大型家具至少每日任務 3 天」，其餘價格與日常系列價格交給 Claude 訂；日常系列（犬尤畫的髮型四組、眼睛四組、上衣 A–D、下衣 A–C、套裝 A–B）改用貓貓幣買。
+價格（貓貓幣；shopConfig 存金幣等值價，顯示與扣款 ×10）：家具＝大小×精緻度，小件 100／150／200、中件 150／200／300、大件 300／400／500（簡單／標準／精緻），逐件分級在 tt-room-kit/house-picker/第一批價格.txt；入住禮 4 件免費（木椅、單人床、方地毯、木框窗，第一次進小屋就擺好）。全部買齊 18,950。日常系列：髮型（前髮＋後髮）300、眼睛（眼睛＋眉毛）200、上衣 150、下衣 150、套裝 300（tavern-ui/daily-v494.js TTDailyPrices）。
+小屋：右下新「小屋」鈕（手機功能首頁不開）→ 大廳場景換成自己的房間（house/room.html，iframe；名牌、設定照舊），右下改「佈置／家具店」，右上「回大廳」＋放大／縮小／整間。房間＝tt-room-kit 的小屋頁只留第一批家具與酒館日常外殼 14×14（tt-room-kit/house-lobby/build.py 產生 house/room.html、house/atl.png、house/catalog.json；家具或素材換了要重跑），晚霞像素天空＋浮空草地台沿用小屋試做頁，房間裡走的是自己的小人（drawDollTo）。佈置模式：下方「我的家具」清單（剩幾件）、點房間家具拿起、拿起時旁邊有 轉向／放好／收回／取消。家具店是 live.js 的 houseShopM（大廳同一套視窗），酒館日常／萬用系列、全部／地板／牆面。lobby-ui/house.js、house.css；window.TTHouse 給房間用、iframe 裡是 window.TTRoom。
+資料：shopConfig/house:<家具>{name,price,cur:'cat',type:'小屋家具',active}（type 不是時裝、沒有 custom，不會出現在時裝間與店長商城清單）；購買＝同一次寫入 clientOrders（type shop、paidBy cat、itemId house:<家具>）＋cat 扣款＋catTx spend＋houseInv/<key>/<家具>/<訂單>{ts}（catSafety 鎖）；擺設 house/<key>{layout,at}，0.6 秒合併一次 set。
+日常系列：tavern-ui/daily-v494.js 用當季時裝的草稿格式，每件一組（daily_hair_A…、daily_eye_、daily_top_、daily_bottom_（下身配件，z under）、daily_suit_），img/daily-v494/ 是繪師原檔；店長上架（shopConfig 同編號 custom、price、cur:'cat'）前客人看不到。tavern-ui-bridge.js：草稿上架時帶上 cur、商品帶 cur／daily、結帳 curPlan 帶 cur（payWithCoins 照 TTCat.forItem 付貓貓幣）、名稱「日常時裝・」。live-wardrobe.js：cur:'cat' 的商品標價用小硬幣（外層整段跳脫的地方用記號再換）、目前搭配／確認選購的需購買金額分金幣、貓貓幣。結帳提示與貓貓幣不足提示：兌換關著時改說每日任務每天送 100。
+店長頁：新「貓貓幣商品上架」卡（cat-shop-import.js，商城分頁）一鍵新增日常系列 17＋家具 78 到 shopConfig，只新增沒有的、不覆寫，先下載備份；admin 載入 daily-v494.js；刪除角色一併清 house／houseInv。
+規則第十一批（tests/security-rules-v428/build/harden-phase11.cjs，可重複執行；套用前快照 rules-before-v494.json）：houseInv 本人只能新增、同一次寫入要有本人的新訂單（itemId house:<家具>、paidBy cat、status done、amount ≥ shopConfig 價），不能改、不能刪，店員可刪（退款）；house 本人與店員讀寫，layout 每件只能是上架家具或入住禮、欄位與數字範圍限制。日常系列不用新規則（背包一般商品分支＋第十批 cur:'cat'）。test-phase11.cjs 25 項；run.sh 第 1～11 批全過（32／36／58／12／64／20／25／29／49／19／25）。本機預覽實際送出的寫入（買家具、存擺設、買日常上衣）在新規則下重播全部允許。
+版本：verTag v494、lobby-view 494、live.js 494、bridge 494→tavern-ui index 494→時裝間比較 494→live-wardrobe 494。
+上線順序：店長發布 security/database.rules.json → 推網站 → 店長頁按「上架貓貓幣商品」。貓貓幣兌換仍關著（EXCHANGE_ON=false），目前只能靠每日任務存。
+
 ## v493 付費商品改回金幣（更正 v492）
 使用者 11/06：店內靠付費時裝回收繪師成本（幾十萬），v492 把時裝、寵物、座椅、染髮券、聊天氣泡、工房部件全改成貓貓幣是錯的——貓貓幣會白送（每日任務、活動），等於付費商品可以免費拿。正確分法：**付費商品一律金幣**；貓貓幣只用在小屋家具（混合 AI 流程可量產）與店長送的免費時裝（福利）。v492 已於 11/06 推上正式站，v493 修正前付費商品在正式站收的是貓貓幣。
 網站：lobby.html payCurrency()／payWithCoins 只在商品標 cur:'cat'（TTCat.forItem）時付貓貓幣，目前沒有這類商品 → 全部走 v491 的金幣流程；coinsAvailable 回到 v491（只有貓貓幣商品略過儲值方案判斷）；聊天氣泡購買與手帳說明整段回到 v491（50 金幣、walletSafety）；布告欄「貓貓幣登場」改成「每日任務改送貓貓幣、付費商品照舊用金幣」。tavern-ui/live-wardrobe.js 整檔回到 v491（金幣標價）＋一行註解。lobby-ui/cat-coin.js：EXCHANGE_ON=false 錢包不顯示兌換（沒有能用貓貓幣買的東西，金幣換過去也換不回來），exchange() 與規則保留；錢包貓貓幣說明改「酒館送你的小心意」；live.js／mobile-app.js／guide.html 錢包文字改回金幣可買時裝。貓貓幣餘額顯示、每日任務 11/7 起送 100 貓貓幣、像素硬幣、名牌、手帳三格不變。版本鏈 cat-coin／live／mobile-app／bridge／tavern-ui index／時裝間比較／live-wardrobe 493、lobby-view 493、verTag v493。

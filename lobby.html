@@ -1698,7 +1698,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v493</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v494</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -1778,6 +1778,11 @@ body.artBub.bub3s .npc .bub{
 <div class="gwin" id="pcM"><div class="gcard">
   <div class="gtop"><span class="gt">陪玩資訊卡</span><button class="gx" onclick="gClose('pcM')">✕</button></div>
   <div class="gin" id="pcBody"></div>
+</div></div>
+
+<div class="gwin" id="houseShopM"><div class="gcard">
+  <div class="gtop"><span class="gt">家具店</span><button class="gx" onclick="gClose('houseShopM')">✕</button></div>
+  <div class="gin"><div class="tt-house-shop"></div></div>
 </div></div>
 
 <div class="gwin" id="achM"><div class="gcard">
@@ -4313,7 +4318,7 @@ function renderPayMethod(){
   /* 點單用金幣、時裝類用貓貓幣（v492）,不提供轉帳;不夠就去儲值或兌換 */
   const cat=payCurrency()==='cat',bal=payBalance();
   row.innerHTML='<div style="margin-bottom:12px;background:#FBEFC0;border-radius:10px;padding:9px 12px;font-size:12.5px;color:#8A6A2A;line-height:1.55">'
-    +(cat?'<b>時裝間以貓貓幣購買</b>・目前持有 <b class="pmBal">'+TTCat.fmt(bal)+'</b> 貓貓幣。不夠可以在錢包用金幣兌換 ✦'
+    +(cat?'<b>這件用貓貓幣購買</b>・目前持有 <b class="pmBal">'+TTCat.fmt(bal)+'</b> 貓貓幣。'+(TTCat.EXCHANGE_ON?'不夠可以在錢包用金幣兌換 ✦':'每日任務每天送 '+TTCat.DAILY+' 貓貓幣 ✦')
          :'<b>本店以金幣消費</b>・目前餘額 <b class="pmBal">'+bal+'</b> 金幣。餘額不足可到錢包儲值 ✦')+'</div>';
   setPayMethod('coin');
 }
@@ -4400,7 +4405,7 @@ async function payWithCoins(){
  if(!Number.isSafeInteger(amt)||amt<0){toast('金額有誤，請重新選擇');return;}
  // 貓貓幣商品（TTCat.forItem，v493 起付費商品一律金幣）：訂單 amount 照舊記金幣等值價（背包規則照這個比價），catAmount＝×10 才是實際扣的貓貓幣
  const useCat=kind==='shop'&&TTCat.forItem(plan),catAmt=useCat?TTCat.price(amt):0;
- if(useCat?(window.__cat||0)<catAmt:(window.__wallet||0)<amt){toast(useCat?'貓貓幣不夠，可以先到錢包用金幣兌換':'餘額不足');return;}
+ if(useCat?(window.__cat||0)<catAmt:(window.__wallet||0)<amt){toast(useCat?(TTCat.EXCHANGE_ON?'貓貓幣不夠，可以先到錢包用金幣兌換':'貓貓幣不夠，還差 '+TTCat.fmt(catAmt-(window.__cat||0))+'（每日任務每天送 '+TTCat.DAILY+'）'):'餘額不足');return;}
  const couponUsed=!!(_coinCoupon&&couponsLeft()>0);let couponDisc=0;
  if(couponUsed){const vi=window.__vipInfo?.();if(vi?.lv)couponDisc=vi.cur.disc;}
  const ref=db.ref(ROOT+'/clientOrders').push();
@@ -8115,20 +8120,22 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/season-v291.js?v=373"></script>
 <script src="tavern-ui/season-v292.js?v=445"></script>
 <script src="tavern-ui/season-v293.js?v=445"></script>
+<script src="tavern-ui/daily-v494.js?v=494"></script>
 <script src="tavern-ui/outfit-splits.js?v=441"></script>
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=493"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=494"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=416"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=493"></script>
+<script src="lobby-ui/live.js?v=494"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=494"><script src="lobby-ui/house.js?v=494"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=427"></script>

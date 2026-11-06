@@ -18,7 +18,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="tavern-ui/season-v291.js?v=441"></script><script src="tavern-ui/season-v292.js?v=445"></script><script src="tavern-ui/season-v293.js?v=445"></script><script src="tavern-ui/outfit-splits.js?v=441"></script>
+<script src="tavern-ui/season-v291.js?v=441"></script><script src="tavern-ui/season-v292.js?v=445"></script><script src="tavern-ui/season-v293.js?v=445"></script><script src="tavern-ui/daily-v494.js?v=494"></script><script src="tavern-ui/outfit-splits.js?v=441"></script>
 <script src="js/tt-seats.js?v=2"></script><script src="lobby-ui/seats.js?v=361"></script>
 <style>
 :root{
@@ -2234,12 +2234,12 @@ function coIndex(){
 }
 function custOrders(key){ return coIndex()[key]||[]; }
 function delCustomer(key,nm){
-  if(!confirm('確定刪除「'+nm+'」的帳號?\n\n將一併移除:大廳角色、闆卡、錢包(金幣與貓貓幣)、背包、好友關係、信箱、DC 綁定。\n(訂單與檢舉紀錄會保留;對方下次整理頁面會被登出,可重新從入口開始)')) return;
+  if(!confirm('確定刪除「'+nm+'」的帳號?\n\n將一併移除:大廳角色、闆卡、錢包(金幣與貓貓幣)、背包、小屋(家具與擺設)、好友關係、信箱、DC 綁定。\n(訂單與檢舉紀錄會保留;對方下次整理頁面會被登出,可重新從入口開始)')) return;
   /* DC 綁定:找到指向這隻角色的帳號,蓋上 deleted 旗標 → 客人端讀到會自動清除本機登入 */
   Object.entries(accountsData||{}).forEach(([dcid,a])=>{
     if(a&&a.myKey===key) db.ref(ROOT+'/accounts/'+dcid).set({deleted:true,deletedAt:Date.now()});
   });
-  ['lobby','cards','pos','wallet','walletTx','cat','catTx','owned','dmMeta','friendReq','blocks','mail'].forEach(n=>{
+  ['lobby','cards','pos','wallet','walletTx','cat','catTx','owned','house','houseInv','dmMeta','friendReq','blocks','mail'].forEach(n=>{   /* v494 小屋 house／houseInv 一起清 */
     db.ref(ROOT+'/'+n+'/'+key).remove();
   });
   /* 好友是互寫的:把他從每個好友的名單裡也移掉 */
@@ -2855,6 +2855,7 @@ body.dark #qnavPop button{color:#D8CBEE}
 })();
 </script>
 <script src="season-shop-import.js?v=482"></script>
+<script src="cat-shop-import.js?v=494"></script>
 <script src="lobby-ui/account-review.js?v=437"></script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support-admin.mjs?v=427"></script></body>
