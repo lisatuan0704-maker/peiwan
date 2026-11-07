@@ -54,7 +54,7 @@
     if(locked){
       const lock=el('div','sb-lock');lock.append(el('b','',lv>=1?'此區為進階會員以上專用':'此區為月卡會員專用'),el('span','',lv>=1?'升級進階或尊榮會員即可使用':'加入進階或尊榮會員即可使用'));
       const go=el('button','sb-plan','查看月費會員');go.type='button';go.onclick=()=>{close();try{shopOpen(2,'member');}catch(e){}};
-      lock.append(go);body.classList.add('is-locked');card.append(lock);requestAnimationFrame(()=>card.style.setProperty('--sb-head',head.offsetHeight+'px'));
+      if(window.MEMBERSHIP_ON!==false)lock.append(go);body.classList.add('is-locked');card.append(lock);requestAnimationFrame(()=>card.style.setProperty('--sb-head',head.offsetHeight+'px'));
     }
     body.scrollTop=keep;
   }

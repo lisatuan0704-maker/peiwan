@@ -15,7 +15,7 @@
     setM: ['settings', '酒館設定', '調成你喜歡的節奏。', 'MAKE YOURSELF AT HOME', 'TUNE IN'],
     mailBoxM: ['mail', '我的信箱', '給你的每一句話，都在這裡。', 'LETTERS TO YOU', 'POST'],
     shopM4: ['orders', '我的訂單', '約好的時間，替你好好記著。', 'TAVERN ORDERS', 'ORDERS'],
-    shopM1: ['menu', '想來點什麼？', '找冒險者一起玩，或看看酒館的會員方案。', 'ORDER MENU', 'ORDER'],
+    shopM1: ['menu', '想來點什麼？', window.MEMBERSHIP_ON===false ? '找冒險者一起玩，挑一種喜歡的玩法。' : '找冒險者一起玩，或看看酒館的會員方案。', 'ORDER MENU', 'ORDER'],
     houseShopM: ['achievements', '家具店', '挑幾件喜歡的家具，帶回小屋。', 'TAVERN FURNITURE', 'HOME']
   };
   const shells = {};
@@ -134,7 +134,9 @@
   const menu=shells.shopM1.content, buttons=[...menu.querySelectorAll('.planBtn')];
   const grid=document.createElement('div');grid.className='feature-grid';
   const choices=[['PLAY','mug','找冒險者一起玩','特戰英豪、找冒險者聊聊天','看名簿'],['MEMBER','coupon','加入會員','三種月會員方案','看方案'],['TABLE','receipt','酒館併桌','多人同桌・一人一席','看場次']];
-  buttons.forEach((b,i)=>{const [word,ic,title,sub,cta]=choices[i];b.classList.add('feature-tile','framed-motion');b.innerHTML='<span class="tile-number">0'+(i+1)+'</span><span class="vertical-word" aria-hidden="true">'+word+'</span><img src="'+asset(ic)+'" alt=""><h2>'+title+'</h2><p>'+sub+'</p><span class="tile-cta">'+cta+' →</span>'+motion(i);if(i===2)b.querySelector('p').id='tbMenuSub';grid.append(b);});
+  // v500 會員區關閉時會員卡藏起來，編號跳過它（01 點冒險者、02 併桌）
+  let tileNo=0;
+  buttons.forEach((b,i)=>{const [word,ic,title,sub,cta]=choices[i];const off=i===1&&window.MEMBERSHIP_ON===false;if(off)b.style.display='none';else tileNo++;b.classList.add('feature-tile','framed-motion');b.innerHTML='<span class="tile-number">0'+(off?i+1:tileNo)+'</span><span class="vertical-word" aria-hidden="true">'+word+'</span><img src="'+asset(ic)+'" alt=""><h2>'+title+'</h2><p>'+sub+'</p><span class="tile-cta">'+cta+' →</span>'+motion(i);if(i===2)b.querySelector('p').id='tbMenuSub';grid.append(b);});
   menu.prepend(grid);tbMenuRefresh();const ribbon=document.createElement('div');ribbon.className='menu-ribbon';ribbon.innerHTML='<b>今日菜單</b><span>WHAT WOULD YOU LIKE</span>';menu.prepend(ribbon);
   menu.querySelector(':scope > .btns')?.remove();
   shells.shopM4.content.querySelector(':scope > .btns')?.remove();

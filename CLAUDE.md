@@ -1,5 +1,14 @@
 # 小小酒館修改紀錄
 
+## v500 先關掉月費會員區（MEMBERSHIP_ON=false，程式與資料保留）
+店長 11/07：目前客人不夠支撐開會員，會員區先關掉。lobby.html 新增 `const MEMBERSHIP_ON=false`（PLANS 上方，同時掛 window.MEMBERSHIP_ON 給 live.js／staff-book.js），改成 true 就全部恢復。
+關掉的地方：點單選單「加入會員」卡（#mbMenuBtn 隱藏；live.js 新版選單同樣藏起來，編號改 01 找冒險者一起玩、02 酒館併桌，選單副標改「找冒險者一起玩，挑一種喜歡的玩法。」）；shopOpen(2,'member') 一律擋下並提示「會員方案暫時沒有開放」（所有帶去會員方案的路徑都經過這裡）；手機冒險者通訊錄遮罩的「查看月費會員」鈕不顯示（staff-book.js；v432 起手機改功能首頁，這個舊首頁入口本來就看不到）；VIP 視窗說明拿掉「儲值與月卡都算」；成就「月費會員」還沒拿到的人看不到（ACH_ALL＋achShown，ACH_DEF 只留看得到的；已拿到的照常顯示、稱號保留；別人闆卡的成就圖示依對方有沒有拿到）。
+沒動：PLANS.member 三個方案、ttMemberTier、會員訂單的通知／票卡／店長頁、資料庫規則（harden-phase5 PRICE 照舊）、VIP 等級（累積支持，不是月費會員）。舊商城 #dressM 的「會員享折扣」字樣在已不使用的舊視窗裡（商城鈕已改開新商城），沒動。
+不在這個 repo：Discord 伺服器的會員身分組（member-roles.cjs）與「💎 旅人私席」頻道在 api 主機，要一起關需另外處理。
+版本：verTag v500、lobby-view 500、live.js 500、staff-book.js 500。
+待店長決定（11/07 已問）：①冒險者私訊（原本進階會員以上才能傳）要整個藏起來、只留鈕但不帶去買會員、還是暫時開放給所有老闆——目前沒會員的人按「私訊縭／蕪／桃」會看到「會員方案暫時沒有開放」；②已經買過會員、還在 31 天內的客人怎麼處理（目前權益照舊到期滿）；③成就「月費會員」的處理（目前照上面的預設）。
+驗證：本機 Playwright（Firebase 全擋、不寫正式資料）1366 電腦版點單選單只剩兩張卡、shopOpen(2,'member') 不打開、點冒險者方案照常、VIP 說明、成就（沒拿到看不到、已拿到看得到）、390 手機畫面沒有會員字樣，兩邊沒有頁面錯誤。既有測試 hub-actions-v299、mobile-v353、payment-safety-v273、topup-online-v499、viewport-v352、social-v347 通過；hub-v297、contacts-v296（直接開 lobby.html 被轉到 lobby-view 而逾時）、lobby-v346、lobby-v358、order-flow-v234 在未修改的 v499 一樣失敗，錯誤相同。
+
 ## v499 線上儲值接上應援正式環境（付款主機 server/ v498 包已部署並切正式環境 2026/11/07）
 使用者 11/06：應援（OEN）正式環境核准（商店代號 tinytavern；藍新信件：信用卡含國外卡、ATM 已開通、可 3D；超商代碼待正式付款頁確認；電子發票是否開通不確定）。業務要求綁定固定 IP（主機 35.229.172.14）。
 付款主機（C:\tinytavern\server，不在 git；部署步驟 server/正式上線步驟.md，上傳包 pay-v498.tar.gz，舊版備份 _backup_v196/）：照應援官方文件 developer.oen.tw v10.3 重寫。lib/oen.js：OEN_ENV=testing|production 決定 API 與付款頁網址、OEN_MERCHANT_ID、OEN_TOKEN、OEN_WEBHOOK_SECRET（OenPay-Signature HMAC、5 分鐘時效）、OEN_PAYMENT_METHODS（預設 cvs,atm；linePay 開通才加，否則建單失敗）、OEN_USE3D、OEN_REQUIRE_EMAIL；403 無 code＝固定 IP 未綁定。lib/topup.js：/api/topup 需 Firebase 登入憑證且 secureV1 members/owners 確認是本人闆卡、金額必須是 config/topup/tiers（讀不到就拒絕，不再用預設金額）、建單 clientOrders（type topup、payChannel oen、payEnv、oenId、oenHid）＋ payV1/pending/<訂單>（只有主機讀寫），應援 /checkout 帶 Idempotency-Key、successUrl lobby.html?pay=ok&order=<訂單>、failureUrl lobby.html（應援會加 ?payment_error=）。付款通知只當提醒：用 id 回查 GET /transactions/{id}，orderId、金額、交易 id 對上且 charged／claimed 才入帳；入帳先 transaction 搶 credited（值 'oen:<交易id>'，店長手動入帳是 true），再一次多路徑 update 寫 status done、creditedAt、wallet balance increment、walletTx topup、信件、移除 pending，失敗就放回旗標。超商／ATM 取號（charging）把代碼存 clientOrders.payCode。每 5 分鐘補查 pending（GET /order/{orderId}/transactions）：漏收通知補入帳、同一筆付兩次只入一次並在訂單 payAlert 提醒退款、30 分鐘沒付款標 status cancelled＋payAbandoned（之後真的付款仍入帳）。測試環境：網站來的儲值一律回 NOT_LIVE（測試卡人人可用），只接受 try-topup.js 的測試帳號 paytest_v498（testOnly）。/api/pay-config 回 live、methods、needEmail。check-oen.js 上線前檢查（token、固定 IP、儲值方案）。test/topup.test.js 22 項（偽造通知、重送／同時送、金額或交易 id 不符、店長已入帳、已退款、寫入失敗後補查、旗標卡住、漏收、超商、放棄後付款、付兩次、Email、逾時、IP 403、簽章、測試環境）。

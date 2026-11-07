@@ -1575,7 +1575,7 @@ body.artBub.bub3s .npc .bub{
 <div class="shopModal" id="shopM1"><div class="shopCard">
   <h3>想來點什麼?</h3>
   <button class="planBtn" onclick="shopStep('play')"><b>找冒險者一起玩</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D">特戰英豪、找冒險者聊聊天</span></button>
-  <button class="planBtn" onclick="shopStep('member')"><b>加入會員</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D">三種月會員方案</span></button>
+  <button class="planBtn" id="mbMenuBtn" onclick="shopStep('member')"><b>加入會員</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D">三種月會員方案</span></button>
   <button class="planBtn" id="tbMenuBtn" style="display:none" onclick="openTables()"><b>［限定］酒館併桌</b><span class="pp">›</span><br><span style="font-size:12.5px;color:#A5798D" id="tbMenuSub">多人同桌・一人一席・售完為止</span></button>
   <div class="btns"><button class="sc-back" onclick="shopClose()">先逛逛</button></div>
 </div></div>
@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v499</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v500</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -1752,7 +1752,7 @@ body.artBub.bub3s .npc .bub{
 <div class="gwin" id="vipM"><div class="gcard">
   <div class="gtop"><span class="gt">VIP 等級與獎勵</span><button class="gx" onclick="gClose('vipM')">✕</button></div>
   <div class="gin">
-    <div class="ghint">依累積支持升級（儲值與月卡都算，儲值當下就計入）。每升一級解鎖：回饋金幣、專屬時裝、寵物、椅子、限定對話框，最高階送實體周邊。</div>
+    <div class="ghint" id="vipHint">依累積支持升級（儲值與月卡都算，儲值當下就計入）。每升一級解鎖：回饋金幣、專屬時裝、寵物、椅子、限定對話框，最高階送實體周邊。</div>
     <div id="vipList"></div>
   </div>
 </div></div>
@@ -2795,7 +2795,7 @@ function drawFullCard(b){
   const done=(pub.ach&&pub.ach.length)?pub.ach:[];
   let achHtml='';
   try{
-    achHtml=(typeof ACH_DEF!=='undefined'?ACH_DEF:[]).map(function(a){
+    achHtml=(typeof ACH_ALL!=='undefined'?ACH_ALL.filter(a=>achShown(a,done)):[]).map(function(a){
       const ok=done.indexOf(a.id)>=0;
       const ic=(typeof AICON!=='undefined'&&AICON[a.ic])?AICON[a.ic]:'';
       return '<div class="pcAb'+(ok?'':' no')+'" title="'+esc(a.n+' — '+a.d)+'">'
@@ -3866,6 +3866,13 @@ let PAY_ACCOUNT = '(017)兆豐銀行 台南分行 213-09-07119-8 陽生實業有
 function payAccShown(){const m=/^(.*?\d[\d -]{6,}\d)/.exec(String(PAY_ACCOUNT||''));return m?m[1].trim():String(PAY_ACCOUNT||'');}
 let PAY_NOTE = '';       /* 店長可在後台填付款備註(例:匯款後請保留收據) */
 let PAY_MINS = 60;       /* 付款截止分鐘數,店長可調 */
+/* v500 店長：客人還不夠支撐月費會員，先關掉會員區（方案、程式與資料保留，改 true 就恢復） */
+const MEMBERSHIP_ON = false;
+window.MEMBERSHIP_ON = MEMBERSHIP_ON;
+if(!MEMBERSHIP_ON){
+  const b=document.getElementById('mbMenuBtn'); if(b) b.style.display='none';
+  const h=document.getElementById('vipHint'); if(h) h.textContent=h.textContent.replace('儲值與月卡都算，','');
+}
 const PLANS = {
   play: { title:'找冒險者一起玩', items:[
     {id:'val1', n:'特戰英豪 1 小時', p:300},
@@ -3892,6 +3899,7 @@ function playItems(){ return (TT_SVCS&&TT_SVCS.length)?TT_SVCS:PLANS.play.items;
 let curKind='play', curPlan=null;
 function shopClose(){ document.querySelectorAll('.shopModal').forEach(m=>m.style.display='none'); }
 function shopOpen(step, kind){
+  if(step===2&&(kind||curKind)==='member'&&!MEMBERSHIP_ON){ toast('會員方案暫時沒有開放'); return; }
   shopClose();
   if(step===1){ shopM1.style.display='flex'; }
   else if(step===2){
@@ -7165,12 +7173,15 @@ document.addEventListener('dragstart',e=>{
 let TT_STATS={cat:0,orders:0,chat:0,u:[]};
 try{ TT_STATS=Object.assign(TT_STATS,JSON.parse(localStorage.getItem('tt_stats')||'{}')); }catch(e){}
 if(!Array.isArray(TT_STATS.u)) TT_STATS.u=[];
-const ACH_DEF=[
+const ACH_ALL=[
   {id:'regular',ic:'mug',n:'常客',d:'累積點單 5 次',k:'orders',need:5},
   {id:'catlover',ic:'cat',n:'貓奴',d:'擼店貓 20 次',k:'cat',need:20},
   {id:'chatty',ic:'chat',n:'話匣子',d:'在大廳聊天 30 句',k:'chat',need:30},
   {id:'crown',ic:'crown',n:'月費會員',d:'加入任一月費會員方案',k:null,need:1}
 ];
+/* v500 會員區關閉時，還沒拿到「月費會員」的人看不到這個成就；已拿到的照常顯示與保留稱號 */
+const achShown=(a,got)=>MEMBERSHIP_ON||a.id!=='crown'||(got||[]).indexOf('crown')>=0;
+const ACH_DEF=ACH_ALL.filter(a=>achShown(a,TT_STATS.u));
 /* v413 月費會員成就：有已確認的會員訂單就解鎖（沿用 crown 編號，已解鎖紀錄保留） */
 function achMemberCheck(){
   try{
@@ -8122,11 +8133,11 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=496"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
-<script src="lobby-ui/staff-book.js?v=416"></script>
+<script src="lobby-ui/staff-book.js?v=500"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=499"></script>
+<script src="lobby-ui/live.js?v=500"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script>
