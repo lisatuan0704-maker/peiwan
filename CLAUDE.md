@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## v498 好友名單：已是好友還在「邀請」、多出沒有闆卡的「神秘人」
+使用者截圖：好友 2（神秘人、魚油）、邀請 1（魚油）。原因①：雙方互相送過邀請時，frAccept 只刪 friendReq/{我}/{對方}，我送給對方的那張 friendReq/{對方}/{我} 留著 → 對方同時看到「好友」和「邀請」；通訊錄的邀請分頁也沒有排除已是好友的人。原因②：好友節點指向已不存在的闆卡（開店前清空只清 lobby／cards 等，沒清 friends／friendReq；店長刪角色只刪對方名單裡「有回指」的那筆），名字是當初存在 friends 裡的舊名（程式裡沒有「神秘人」這個字）。
+lobby.html 好友區塊：frView() 顯示前過濾——已是好友的邀請、指向自己、lobby/{key}/name 不存在（公開可讀，查一次快取）的好友／邀請都不顯示，紅點也用過濾後的數字；同時清掉自己名下那一筆（friendReq/{我}/{k}、friends/{我}/{k}，每筆每次開頁只試一次，被拒不重試）。frAccept 多刪 friendReq/{對方}/{我}；frAdd 遇到對方已邀請我時直接接受，不再反向送一張。verTag v498、lobby-view 498。
+驗證：本機 emulator（9273）以工作複本載入大廳：修改前重現 好友 2／邀請 1，修改後 好友 1（魚油）／邀請 0、資料庫殘留已清；自己／沒有闆卡的邀請被藏起並清掉、正常邀請照常顯示；互相邀請後按接受兩張邀請都收掉；有待接受邀請時按加好友直接成為好友。清理與接受的讀寫以正式規則（security/database.rules.json）重播全部允許，不需發布新規則。
+
 ## v497 大廳「小屋」鈕換像素小屋圖示
 - lobby-ui/assets/house.png（128×128，跟 chat／dress／gift／mug 同一套：2px 深暖棕描邊 #3a2622、硬邊、粉嫩色）。做法：C:\gen\gen_image.py（gpt-image-2）拿四顆舊圖示當畫風參考生草稿 → scratchpad 的 icon/px.py 去白底、縮 108 高、收 30 色、加 2px 描邊 → retouch.py 手修（圓窗逐格重畫成暖光橢圓窗、屋頂粉與木門加飽和）。
 - lobby-ui/house.js：ICON.houseImg，dock 的 #ttHouseBtn 改用圖（小屋裡其他按鈕仍是線條 SVG）。verTag v497、house.js ?v=497。

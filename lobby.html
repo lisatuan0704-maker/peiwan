@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v497</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v498</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -6815,8 +6815,27 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   }
   window.frOpen=function(){ ensureWins(); frBind(); frPaint(); gOpen('frM'); };
 
+  /* v498 好友名單防呆(顯示端):
+     ・已經是好友的人,殘留的邀請不列在「邀請」(雙方互送邀請時,被接受那張以外的另一張會留下來)
+     ・好友／邀請指向自己,或指向已不存在的闆卡(lobby/{key}/name 沒有:角色已刪除、開店前清掉的測試角色)不顯示
+     ・殘留只清自己名下那一筆 friendReq/{me}/{k}、friends/{me}/{k};每筆每次開頁只試一次(被拒也不重試) */
+  const _frGone={}, _frAsk={}, _frTried={};
+  function frDrop(p){ if(_frTried[p]||!db) return; _frTried[p]=1; setTimeout(()=>{ try{ db.ref(ROOT+p).remove().catch(()=>{}); }catch(e){} },0); }
+  function frExists(k){
+    try{ if((bosses[k]&&bosses[k].name)||agents.get(k)?.b?.name) return true; }catch(e){}
+    if(Object.hasOwn(_frGone,k)) return !_frGone[k];
+    if(!_frAsk[k]&&db){ _frAsk[k]=1;
+      db.ref(ROOT+'/lobby/'+k+'/name').once('value').then(s=>{ _frGone[k]=!s.exists(); if(_frGone[k]){ frBadge(); frPaint(); } }).catch(()=>{}); }
+    return true;   /* 還沒查到(或查不到)先照常顯示 */
+  }
+  function frView(){
+    const me=myKey, f={}, q={}; if(!me) return {f:FR,q:FRQ};
+    for(const k in FR){ if(k===me||!frExists(k)){ frDrop('/friends/'+me+'/'+k); continue; } f[k]=FR[k]; }
+    for(const k in FRQ){ if(k===me||FR[k]||!frExists(k)){ frDrop('/friendReq/'+me+'/'+k); continue; } q[k]=FRQ[k]; }
+    return {f,q};
+  }
   function frBadge(){
-    const n=Object.keys(FRQ).length + Object.values(DMM).reduce((s,m)=>s+((m&&m.unread)||0),0);
+    const n=Object.keys(frView().q).length + Object.values(DMM).reduce((s,m)=>s+((m&&m.unread)||0),0);
     const b=document.getElementById('frDockBadge');
     if(b){ b.style.display=n?'':'none'; b.textContent=n>9?'9+':n; }
   }
@@ -6825,12 +6844,14 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   window.frPaint=function(){
     const el=document.getElementById('frBody'); if(!el||!window.TTContacts) return;
     const staffList=(()=>{try{return window.TinyTavernUI?.staff?.()||[]}catch(e){return []}})();const staffThreads=Object.entries(DMM).filter(([k,m])=>/^staff_/.test(k)&&m).map(([k,m])=>{const s=staffList.find(x=>'staff_'+x.cid===k);return {id:k,name:(s&&s.name)||ttStaffDisplayName(k.slice(6),m.name||'冒險者'),avatar:s&&s.theme?'tavern-ui/assets/avatar-'+s.theme+'.png?v=260':''};});
-    TTContacts.render(el,{friends:FR,requests:FRQ,blocked:BLK,messages:DMM,staffThreads,hidden:window.__ttHidden||{},present:new Set([...agents.keys()])},{message:k=>dmOpen(k),staffMessage:k=>staffDmOpen(k.slice(6),(staffThreads.find(t=>t.id===k)||{}).name),remove:k=>frRemove(k),accept:k=>frAccept(k),decline:k=>frDecline(k),block:k=>frBlock(k),unblock:k=>frUnblock(k),unhide:k=>ttUnhide(k)});
+    const fv=frView();
+    TTContacts.render(el,{friends:fv.f,requests:fv.q,blocked:BLK,messages:DMM,staffThreads,hidden:window.__ttHidden||{},present:new Set([...agents.keys()])},{message:k=>dmOpen(k),staffMessage:k=>staffDmOpen(k.slice(6),(staffThreads.find(t=>t.id===k)||{}).name),remove:k=>frRemove(k),accept:k=>frAccept(k),decline:k=>frDecline(k),block:k=>frBlock(k),unblock:k=>frUnblock(k),unhide:k=>ttUnhide(k)});
   };
   /* --- 好友動作 --- */
   window.frAdd=function(k,name){
     if(!myKey){ toast('先做一張闆卡才能加好友 ✦'); return; }
     if(k===myKey||FR[k]) return;
+    if(FRQ[k]){ frAccept(k); try{ pcSocialRender(); }catch(e){} return; }   /* v498 對方已經邀請過我 → 直接成為好友,不再反向送一張邀請 */
     /* 對方封鎖我 → 看起來照常送出,但實際不寫入(不讓人試探誰封鎖了自己) */
     db.ref(ROOT+'/blocks/'+k+'/'+myKey).once('value').then(s=>{
       if(!s.val()) db.ref(ROOT+'/friendReq/'+k+'/'+myKey).set({name:myName(),at:Date.now()});
@@ -6843,6 +6864,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     db.ref(ROOT+'/friends/'+myKey+'/'+k).set({name:nm,at:Date.now()});
     db.ref(ROOT+'/friends/'+k+'/'+myKey).set({name:myName(),at:Date.now()});
     db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove();
+    db.ref(ROOT+'/friendReq/'+k+'/'+myKey).remove().catch(()=>{});   /* v498 我也邀請過對方的話一起收掉,不然對方會同時看到「好友」和「邀請」 */
     toast('成為好友了!'); try{ SFX.clink&&SFX.clink(); }catch(e){}
   };
   window.frDecline=function(k){ db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove(); };
