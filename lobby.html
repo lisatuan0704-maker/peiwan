@@ -1697,7 +1697,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v498</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v499</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -4460,6 +4460,7 @@ function needCard(msg){
 function openTopup(){
   if(needCard('先做一張闆卡,儲值的金幣才會記在你身上 ✦')) return;
   shopClose();                       // 關掉可能還開著的舊付款頁,不然關掉錢包後它會冒出來
+  try{ ttPayCfgLoad(); }catch(e){}   // v499 重新確認線上付款是否開放
   renderTopup(); if(window.gOpen) gOpen('topupM');
 }
 function renderTopup(){
@@ -4481,7 +4482,7 @@ function renderTopup(){
     +(cfg.note?'<div class="ghint" style="text-align:center">'+esc(cfg.note)+'</div>':'')
     +tierHtml
     +'<div style="font-size:12px;color:#A5798D;margin-top:14px;line-height:1.8">金幣可用於點單與時裝購買(1 金幣＝1 元)。<br>'
-      +'儲值後店長會核對銀行入帳,<b style="color:#8E68C8">通常幾分鐘內完成</b>,深夜可能稍久;入帳會跳通知給你 ✦<br>'
+      +'線上付款完成會<b style="color:#8E68C8">自動入帳</b>;銀行轉帳由店長核對入帳,通常幾分鐘內完成,深夜可能稍久。入帳會跳通知給你 ✦<br>'
       +'<a href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener" style="color:#E27FA6;text-decoration:underline">等太久?到 Discord 找店長 →</a></div>'
     +(bal>0?'<div style="text-align:center;margin-top:10px"><a href="#" onclick="renderWalletTx();return false" style="color:#8E68C8;font-size:12.5px;text-decoration:underline">查看交易紀錄</a></div>':'')
     +'<div id="walletTxBox"></div>';
@@ -4508,10 +4509,11 @@ function pickTier(i){
   document.getElementById('tuPayInfo').innerHTML=
     '<div class="tu-receipt"><div><span>儲值金額</span><b>NT$'+curTier.amt+'</b></div>'+
     '<div><span>入帳金幣</span><b>'+get+' <small>金幣</small></b>'+(curTier.bonus>0?'<small class="tu-bonus">內含贈送 '+curTier.bonus+' 金幣</small>':'')+'</div></div>'+
-    '<div class="tu-section-heading"><span>01 / ONLINE PAYMENT</span><h4>線上付款</h4><p>信用卡與超商代碼付款申請中，尚未開放。</p></div>'+
-    '<button type="button" id="tuOnlineBtn" disabled aria-disabled="true" onclick="tuPayOnline()" style="display:block;width:100%;margin:10px 0 4px;border:none;cursor:pointer;'+
+    '<div class="tu-section-heading"><span>01 / ONLINE PAYMENT</span><h4>線上付款</h4><p>'+(ONLINE_PAYMENT_READY?esc(ttPayMethodsText())+'都可以，付款完成金幣自動入帳。':'線上付款準備中，可以先用銀行轉帳。')+'</p></div>'+
+    '<div id="tuEmailBox"'+(((window.__payCfg||{}).needEmail)?'':' hidden')+'><label for="tuEmail">Email（電子發票會寄到這裡）</label><input type="email" id="tuEmail" maxlength="120" autocomplete="email" placeholder="例:boss@example.com"></div>'+
+    '<button type="button" id="tuOnlineBtn"'+(ONLINE_PAYMENT_READY?'':' disabled aria-disabled="true"')+' onclick="tuPayOnline()" style="display:block;width:100%;margin:10px 0 4px;border:none;cursor:pointer;'+
       'background:linear-gradient(180deg,#F19FBE,#D96A8B);color:#fff;font-family:inherit;font-size:14.5px;font-weight:800;padding:12px;border-radius:12px;box-shadow:0 4px 12px rgba(200,90,130,.3)">'+
-      '信用卡／超商代碼付款・申請中</button>'+
+      (ONLINE_PAYMENT_READY?'線上付款 NT$'+curTier.amt+'・自動入帳':'線上付款準備中')+'</button>'+
     '<div class="tu-bank-divider">或使用銀行轉帳</div>'+
     '<div class="tu-bank-account" style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b style="color:#5A4880">'+esc(payAccShown())+'</b>'+
     '<button type="button" onclick="(function(b){try{navigator.clipboard.writeText(payAccShown())}catch(e){}b.textContent=\'已複製 ✓\';setTimeout(()=>b.textContent=\'複製\',1500)})(this)" style="border:none;background:#F0E7FA;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;cursor:pointer">複製</button></div>'+
@@ -4523,41 +4525,85 @@ function pickTier(i){
     if(dc&&el&&!el.value) el.value='@'+(dc.global_name||dc.username); }catch(e){}
   shopClose(); document.getElementById('topupPayM').style.display='flex';
 }
-/* ===== v196:線上儲值(應援金流)——按下直接跳付款頁,付完 webhook 自動入帳 ===== */
+/* ===== v499:線上儲值(應援)——按下跳應援付款頁;付款主機向應援回查確認後才自動入帳 =====
+   付款主機 pay.tinytavern.tw(server/):/api/pay-config 回報是否已切正式環境、開了哪些付款方式、要不要填 Email */
 const PAY_API='https://pay.tinytavern.tw';
-// 金流仍在審核，且付款網址 TLS 憑證查驗失敗；完成後端與正式交易驗收才開啟。
-const ONLINE_PAYMENT_READY=false;
-window.tuPayOnline=async function(){
-  if(!ONLINE_PAYMENT_READY){toast('信用卡與超商代碼付款申請中，開通後才提供線上付款');return;}
-  if(!curTier){ toast('請先選擇儲值方案'); return; }
-  if(needCard('先做一張闆卡,儲值的金幣才會記在你身上 ✦')) return;
-  const btn=document.getElementById('tuOnlineBtn');
-  if(btn){ btn.disabled=true; btn.textContent='連線中…'; }
-  try{
-    const nm=(document.getElementById('tuName')||{}).value||'';
-    const r=await fetch(PAY_API+'/api/topup',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({amount:curTier.amt, myKey:myKey, name:nm})});
-    const j=await r.json();
-    if(j&&j.ok&&j.url){
-      if(j.orderId){ try{ const ids=myOrderIds(); ids.push(j.orderId); localStorage.setItem('tt_orders',JSON.stringify(ids)); }catch(e){} }
-      ttNavigate(j.url); return;
-    }
-    toast('線上付款暫時忙線,可先用下方轉帳,或稍後再試');
-  }catch(e){ toast('連不上付款頁面,可先用下方轉帳'); }
-  if(btn){ btn.disabled=false; btn.textContent='線上付款(信用卡/超商)・自動入帳'; }
+let ONLINE_PAYMENT_READY=false;  // 付款主機明確回 live:true(正式環境)才開放;還在測試環境、舊版主機或連不上都顯示準備中
+const PAY_METHOD_NAMES={card:'信用卡',cvs:'超商代碼',atm:'ATM 轉帳',linePay:'LINE Pay'};
+window.__payCfg=null;
+window.ttPayCfgLoad=function(){
+  return fetch(PAY_API+'/api/pay-config',{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    if(j&&j.ok){ window.__payCfg=j; ONLINE_PAYMENT_READY=j.live===true; } return window.__payCfg;
+  }).catch(()=>window.__payCfg);
 };
-/* 從付款頁跳回來時的提示 */
+window.ttPayMethodsText=function(){ return (((window.__payCfg||{}).methods)||['card','cvs','atm']).map(m=>PAY_METHOD_NAMES[m]).filter(Boolean).join('、'); };
+try{ ttPayCfgLoad(); }catch(e){}
+/* 電腦版付款視窗與手機儲值頁共用:tier={amt,bonus};opt={name,email,onEmail};成功會直接離開頁面 */
+window.ttPayOnline=async function(tier,opt){
+  opt=opt||{};
+  const needLogin=()=>{ if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'先用 Discord 登入',sub:'登入後金幣才會記在你的闆卡上,點這裡登入',onclick:()=>{ try{ dcAuth(); }catch(e){} },hold:9000}); else toast('請先用 Discord 登入再付款'); };
+  if(!ONLINE_PAYMENT_READY){ toast('線上付款準備中,可以先用銀行轉帳'); return false; }
+  if(!tier){ toast('請先選擇儲值方案'); return false; }
+  if(needCard('先做一張闆卡,儲值的金幣才會記在你身上 ✦')) return false;
+  let token='';
+  try{ const u=firebase.auth().currentUser; if(u) token=await u.getIdToken(); }catch(e){}
+  if(!token){ needLogin(); return false; }
+  let j=null;
+  try{
+    const r=await fetch(PAY_API+'/api/topup',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
+      body:JSON.stringify({amount:tier.amt,myKey:myKey,name:opt.name||'',email:opt.email||''})});
+    j=await r.json();
+  }catch(e){ toast('連不上付款頁面,可以先用銀行轉帳,或稍後再試'); return false; }
+  if(j&&j.ok&&j.url){
+    try{ const ids=myOrderIds(); if(j.orderId&&ids.indexOf(j.orderId)<0){ ids.push(j.orderId); localStorage.setItem('tt_orders',JSON.stringify(ids)); } }catch(e){}
+    ttNavigate(j.url); return true;
+  }
+  const c=j&&j.code;
+  if(c==='EMAIL_REQUIRED'){ window.__payCfg=Object.assign(window.__payCfg||{},{needEmail:true}); if(opt.onEmail) opt.onEmail(); toast('請填 Email,電子發票會寄到這裡'); }
+  else if(c==='BAD_EMAIL') toast('Email 格式不太對,再檢查一下');
+  else if(c==='LOGIN_REQUIRED') needLogin();
+  else if(c==='NOT_LIVE'){ ONLINE_PAYMENT_READY=false; toast('線上付款準備中,可以先用銀行轉帳'); }
+  else if(c==='BAD_AMOUNT') toast('儲值方案剛更新,請重新選一次');
+  else if(c==='TOO_MANY') toast('按太多次了,請等幾分鐘再試');
+  else toast('線上付款暫時忙線,可以先用銀行轉帳,或稍後再試');
+  return false;
+};
+window.tuPayOnline=async function(){
+  const btn=document.getElementById('tuOnlineBtn'),em=document.getElementById('tuEmail'),box=document.getElementById('tuEmailBox');
+  if(btn){ btn.disabled=true; btn.textContent='連線中…'; }
+  const ok=await ttPayOnline(curTier,{name:(document.getElementById('tuName')||{}).value||'',email:em?em.value.trim():'',
+    onEmail:()=>{ if(box) box.hidden=false; if(em) em.focus(); }});
+  if(!ok&&btn){ btn.disabled=!ONLINE_PAYMENT_READY; btn.textContent=ONLINE_PAYMENT_READY&&curTier?'線上付款 NT$'+curTier.amt+'・自動入帳':'線上付款準備中'; }
+};
+/* 回到酒館後查這筆儲值:已入帳就恭喜;超商/ATM 提醒去繳費;其他等入帳通知(訂單監看會在入帳時跳通知) */
+window.ttPayReturn=function(oid){
+  const show=o=>{
+    if(!window.lobbyNotify){ toast('已返回酒館,付款結果確認中'); return; }
+    if(o&&o.type==='topup'&&o.status==='done') lobbyNotify({ok:true,icon:'coin',title:'金幣已入帳!',sub:(o.coinAmount||o.amount)+' 金幣進到錢包了 ✦',onclick:()=>openTopup(),hold:9000});
+    else if(o&&o.payCode) lobbyNotify({icon:'coin',title:o.payCode.kind==='atm'?'記得完成 ATM 轉帳':'記得到超商繳費',sub:'代碼與期限在「訂單」裡,繳費完成金幣會自動入帳',onclick:()=>shopOpen(4),hold:12000});
+    else lobbyNotify({ok:true,icon:'coin',title:'已返回酒館',sub:'付款結果確認中,完成後金幣會自動入帳並通知你',onclick:()=>shopOpen(4),hold:9000});
+  };
+  if(!oid||!db){ show(null); return; }
+  let n=0;
+  (function read(){ db.ref(ROOT+'/clientOrders/'+oid).once('value').then(s=>show(s.val())).catch(()=>{ if(++n<6) setTimeout(read,1500); else show(null); }); })();
+};
+/* 從付款頁跳回來:成功導回 ?pay=ok&order=<訂單>;失敗導回 ?payment_error=<代碼>(LINE Pay 取消時什麼都不帶) */
 (function(){
   try{
-    const q=new URLSearchParams(location.search);
+    const q=new URLSearchParams(location.search),err=q.get('payment_error'),oid=q.get('order');
     if(q.get('pay')==='ok'){
-      setTimeout(()=>{ if(window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'已返回酒館',sub:'付款結果確認中；超商代碼請完成繳費，實際入帳以錢包與訂單紀錄為準',hold:9000});
-        else toast('付款結果確認中，請查看錢包與訂單；取得超商代碼不代表已付款'); },1200);
-    }else if(q.get('pay')==='fail'){
-      setTimeout(()=>{ if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'付款沒有完成',sub:'尚未確認付款結果，請先查看訂單及銀行紀錄，避免重複付款',hold:9000});
-        else toast('尚未確認付款結果，請先查看訂單及銀行紀錄'); },1200);
+      const id=/^[A-Za-z0-9_-]{1,80}$/.test(oid||'')?oid:'';
+      if(id){ try{ const ids=myOrderIds(); if(ids.indexOf(id)<0){ ids.push(id); localStorage.setItem('tt_orders',JSON.stringify(ids)); } }catch(e){} }
+      setTimeout(()=>ttPayReturn(id),1500);
+    }else if(err||q.get('pay')==='fail'){
+      const msg=/^T000[1-5]$/.test(err||'')?'這張卡沒有付款成功,可以換一張卡再試一次':err==='V0003'?'付款結果還在確認中,稍後看錢包或訂單就知道':'付款頁逾時或中斷了;錢包沒入帳的話,重新選方案再付一次就好';
+      setTimeout(()=>{ if(window.lobbyNotify) lobbyNotify({icon:'coin',title:err==='V0003'?'付款確認中':'付款沒有完成',sub:msg,onclick:()=>openTopup(),hold:9000}); else toast(msg); },1500);
     }
-    if(q.get('pay')){q.delete('pay');history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);}
+    if(q.has('pay')||q.has('payment_error')||q.has('order')){
+      const strip=(loc,h)=>{ const p=new URLSearchParams(loc.search); ['pay','payment_error','order'].forEach(k=>p.delete(k)); h.replaceState(null,'',loc.pathname+(p.toString()?'?'+p:'')+loc.hash); };
+      strip(location,history);
+      try{ if(window.parent!==window) strip(window.parent.location,window.parent.history); }catch(e){}   // 電腦版外框也清掉,重新整理不會再跳一次
+    }
   }catch(e){}
 })();
 let tuProofData=null;
@@ -7517,7 +7563,8 @@ window.lobbyNotify=lobbyNotify;
           else if(o.type==='shop'){ /* 即買即得,購買當下已有慶祝,不再重複通知 */ }
           else lobbyNotify({ok:true,icon:'gift',title:'訂單已完成',sub:'謝謝光臨!期待下次再見 ✦',onclick:openOrders});
         } else if(st==='cancelled'){
-          lobbyNotify({icon:'coupon',title:o.staffDeclined?'冒險者臨時無法接單':'訂單已取消',sub:(o.refunded?((o.amount||0)+' 金幣已退回你的錢包,可以重新點單'):'店長已取消此訂單')+'・詳情看信箱',onclick:openOrders,hold:9000});
+          if(o.payChannel==='oen'&&o.payAbandoned) lobbyNotify({icon:'coin',title:'線上儲值沒有完成',sub:'這筆沒有付款成功;想儲值可以再試一次',onclick:openOrders,hold:7000});   /* v499 */
+          else lobbyNotify({icon:'coupon',title:o.staffDeclined?'冒險者臨時無法接單':'訂單已取消',sub:(o.refunded?((o.amount||0)+' 金幣已退回你的錢包,可以重新點單'):'店長已取消此訂單')+'・詳情看信箱',onclick:openOrders,hold:9000});
         }
       }
     });
@@ -8079,14 +8126,14 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=496"></script>
+<script src="lobby-ui/live.js?v=499"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script>
 <link rel="stylesheet" href="lobby-ui/house.css?v=496"><script src="lobby-ui/house.js?v=497"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
-<script src="lobby-ui/membership.js?v=427"></script>
+<script src="lobby-ui/membership.js?v=499"></script>
 <script src="lobby-ui/order-flow.js?v=492"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
@@ -8101,8 +8148,8 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
-<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=492"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=454">
-<script src="lobby-ui/mobile-app.js?v=496"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=492"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=499">
+<script src="lobby-ui/mobile-app.js?v=499"></script>
 </body>
 </html>
 

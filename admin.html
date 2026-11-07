@@ -642,7 +642,8 @@ function coCancelRefund(id){
   const isTopup=(o.type==='topup');
   const back=isTopup?topupCredit(o):isCat?(Number(o.catAmount)||0):(Number(o.amount)||0),unit=isCat?'貓貓幣':'金幣';
   if(isWallet||isCat) msg='取消並退回 '+back+' '+unit+'給客人?';
-  else if(isTopup&&o.credited) msg='這是已入帳的儲值單。取消將從客人錢包扣回 '+back+' 金幣,確定?';
+  else if(isTopup&&o.credited) msg='這是已入帳的儲值單。取消將從客人錢包扣回 '+back+' 金幣,確定?'+(o.payChannel==='oen'?'\n\n⚠ 這筆是線上付款：客人付的錢要另外到應援後台（金流列表 → 這筆交易 → 退款）退給客人。':'');
+  else if(isTopup&&o.payChannel==='oen'&&o.status==='pending') msg='這筆線上儲值還沒付款完成（系統會自動入帳，不用手動確認）。\n仍要取消嗎?取消後客人若還是付款成功，系統仍會入帳。';
   else msg='取消這筆訂單?(此單非金幣支付,款項請另行退還給客人)';
   if(!confirm(msg)) return;
   const needCoin = !!o.myKey && (isWallet || isCat || (isTopup&&o.credited));
@@ -1494,7 +1495,7 @@ function askNotifyPerm(){
   try{ if(window.Notification && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
 }
 function notifyPending(){
-  const wait=Object.entries(clientOrders||{}).filter(([,o])=>o&&o.status==='pending');
+  const wait=Object.entries(clientOrders||{}).filter(([,o])=>o&&o.status==='pending'&&o.payChannel!=='oen');
   document.title=(wait.length?('('+wait.length+') 待核帳・'):'')+TITLE_BASE;
   const ids=wait.map(([id])=>id);
   if(_seenPending===null){ _seenPending=new Set(ids); return; }
@@ -1523,7 +1524,7 @@ function notifyPending(){
 }
 /* 待核帳急件面板:手機上一眼看完、一鍵確認(儲值優先,因為卡住客人拿不到金幣) */
 function urgentCardHtml(list){
-  const wait=list.filter(([,o])=>o.status==='pending')
+  const wait=list.filter(([,o])=>o.status==='pending'&&o.payChannel!=='oen')   /* v499 線上付款由系統自動入帳，不列待核帳 */
     .sort((a,b)=>{ const at=a[1].type==='topup'?0:1, bt=b[1].type==='topup'?0:1;
       if(at!==bt) return at-bt; return (a[1].createdAt||0)-(b[1].createdAt||0); });
   if(!wait.length) return '<div class="card" style="padding:14px 16px"><b style="color:#2F8A5C">✓ 沒有待核帳的單</b><span style="font-size:12.5px;color:var(--ink-soft);margin-left:8px">客人用金幣消費是即時成立的,不需要你核帳</span></div>';
@@ -1594,7 +1595,7 @@ function coFilterBar(all){
 function renderClientOrders(){
   const el=document.getElementById("tab6"); if(!el) return;
   const all=Object.entries(clientOrders);
-  const pending=all.filter(([,o])=>o.status==='pending').length;
+  const pending=all.filter(([,o])=>o.status==='pending'&&o.payChannel!=='oen').length;
   const badge=document.getElementById("coBadge");
   if(badge){ badge.style.display=pending?"inline":"none"; badge.textContent=pending; }
   const topCards=urgentCardHtml(all.slice().sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)))+payCardHtml()+topupCardHtml();
@@ -1626,6 +1627,7 @@ function renderClientOrders(){
       +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">'
       +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">'+(o.paidBy==='cat'?(Number(o.catAmount)||0)+' 貓貓幣（金幣等值 '+(Number(o.amount)||0)+'）':'NT$'+(Number(o.amount)||0))+'</b>'+lowPriceWarn(o)
       +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+topupCredit(o)+' 金幣'+(topupTampered(o)?' ⚠ 金幣數被改過':'')+(o.credited?'・已入帳':'')+'</span>':'')
+      +(o.payChannel==='oen'?'　'+oenBadge(o):'')
       +(o.paidBy==='wallet'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">金幣支付</span>':'')
       +(o.paidBy==='cat'?'　<span style="background:#FCE8DA;color:#B5643C;font-size:12px;font-weight:700;padding:2px 8px">貓貓幣支付</span>':'')
       +(o.staffName?'　<span style="background:#EFE4FB;color:#8E68C8;font-size:12px;font-weight:700;padding:2px 8px">指定:'+esc(TTStaffNames.display(o.staffName,o.staffCid))+'</span>':'')
@@ -1637,7 +1639,7 @@ function renderClientOrders(){
       +'<span style="color:'+st[1]+';font-size:13px;font-weight:700">● '+st[0]+'</span></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
       +'<button onclick="coToggle('+ja(id)+')" style="border:none;background:#F4E3E9;padding:6px 10px;cursor:pointer;font-family:inherit">'+(open?'收合':'看截圖')+'</button>'
-      +(o.status==='pending'?'<button onclick="coSet('+ja(id)+',\'confirmed\')" style="border:none;background:#57A87C;color:#fff;padding:6px 10px;cursor:pointer;font-family:inherit">✔ 確認收款</button>':'')
+      +(o.status==='pending'&&o.payChannel!=='oen'?'<button onclick="coSet('+ja(id)+',\'confirmed\')" style="border:none;background:#57A87C;color:#fff;padding:6px 10px;cursor:pointer;font-family:inherit">✔ 確認收款</button>':'')
       +(o.status==='confirmed'?'<button onclick="coSet('+ja(id)+',\'done\')" style="border:none;background:#8E68C8;color:#fff;padding:6px 10px;cursor:pointer;font-family:inherit">完成</button>':'')
       +'<button onclick="coAdjust('+ja(id)+')" style="border:none;background:#F6E2C8;padding:6px 10px;cursor:pointer;font-family:inherit">調整紀錄</button>'
       +((o.status!=='cancelled'&&o.status!=='done')?'<button onclick="coCancelRefund('+ja(id)+')" style="border:none;background:#F4D7DE;color:#B03A5B;padding:6px 10px;cursor:pointer;font-family:inherit;font-weight:700">取消並退款</button>':'')
@@ -1896,6 +1898,14 @@ function topupCredit(o){
   const expect=t?amt+Math.max(0,Number(t.bonus)||0):amt;
   const c=Number(o&&o.coinAmount);
   return (Number.isSafeInteger(c)&&c>=0&&c<=expect)?c:expect;
+}
+/* v499 線上付款（應援）訂單的標記：付款方式、進度、異常 */
+function oenBadge(o){
+  const M={card:'信用卡',applePay:'Apple Pay',cvs:'超商代碼',atm:'ATM',linePay:'LINE Pay'};
+  const st=o.creditedAt?'已自動入帳':o.payAbandoned?'未完成付款（沒有扣款）':o.payCode?(o.payCode.kind==='atm'?'等 ATM 轉帳':'等超商繳費'):'等付款結果';
+  return '<span style="background:#E3F1FF;color:#2F6CA8;font-size:12px;font-weight:700;padding:2px 8px">💳 線上付款'+(o.payMethod?'・'+esc(M[o.payMethod]||o.payMethod):'')+'・'+st+(o.oenHid?'・'+esc(o.oenHid):'')+'</span>'
+    +(o.testOnly?'　<span style="background:#EEE;color:#666;font-size:12px;font-weight:700;padding:2px 8px">測試</span>':'')
+    +(o.payAlert?'<div style="margin-top:6px;background:#FDECEF;border-left:4px solid #C0392B;padding:6px 10px;font-size:12.5px;color:#B03A5B;font-weight:700">⚠ '+esc(o.payAlert)+'</div>':'');
 }
 function topupTampered(o){ const c=Number(o&&o.coinAmount); return o&&o.coinAmount!=null&&!(Number.isSafeInteger(c)&&c===topupCredit(o)); }
 function months(){

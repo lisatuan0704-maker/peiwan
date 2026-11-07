@@ -217,6 +217,9 @@
     const current=done?2:o.status==='confirmed'?1:0;
     let status=cancelled?'此訂單已取消':done?(o.type==='topup'?'儲值完成・'+Number(o.coinAmount||o.amount||0).toLocaleString()+' 金幣已入帳':o.type==='shop'?'購買完成・已收進背包':o.type==='member'?'會員已開通':'已完成這次陪伴'):o.status==='confirmed'?'訂單已確認':'等待店長確認付款';
     if(!done&&!cancelled&&o.booking&&o.status==='confirmed')status=o.staffDeclined?'冒險者無法接單，店長正在協助退款或改期':o.accepted?'冒險者已確認，準時赴約。':'等待冒險者確認時段';
+    // v499 線上儲值：依付款進度顯示；超商代碼／ATM 帳號與期限直接列在票卡上
+    if(o.payChannel==='oen'&&!done){const pc=o.payCode,ex=pc&&Number(pc.expiredAt)?new Date(Number(pc.expiredAt)):null,due=ex?'（'+(ex.getMonth()+1)+'/'+ex.getDate()+' '+String(ex.getHours()).padStart(2,'0')+':'+String(ex.getMinutes()).padStart(2,'0')+' 前）':'';
+      status=cancelled?(o.payAbandoned?'線上付款沒有完成，這筆沒有扣款':status):pc?(pc.kind==='atm'?'請 ATM 轉帳到'+(pc.bankCode?'銀行代碼 '+pc.bankCode+'、':'')+'帳號 '+pc.code:'請到超商繳費，代碼 '+pc.code)+due+'，繳費後金幣自動入帳':'等待付款結果，付款完成金幣會自動入帳';}
     if(cancelled&&o.refunded)status+=o.paidBy==='cat'?'・'+TTCat.fmt(o.catAmount)+' 貓貓幣已退回':'・'+(Number(o.amount)||0)+' 金幣已退回錢包';
     const steps=cancelled?'':'<div class="steps" aria-label="'+attr(status)+'">'+[current>0?'已付款':'待付款確認',current>0?'已確認':'待確認',done?'已完成':'待完成'].map((lb,i)=>'<span class="'+(done||i<current?'done':i===current?'current':'future')+'">'+(!done&&i===current?'<i aria-hidden="true"></i>':'')+lb+(!done&&i===current?'<small>目前進度</small>':'')+'</span>').join('')+'</div>';
     const controls=[];const voice=(!done&&!cancelled&&o.type==='play')?'<div class="ticket-voice" data-voice-order="'+attr(id)+'" hidden></div>':'';

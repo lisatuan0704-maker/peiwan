@@ -40,8 +40,8 @@ if(require.main===module)(async()=>{
  const engine=safety.create({storage:{getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},locks:{request:async(n,o,fn)=>fn({})}});let writes=0;
  await assert.rejects(engine.execute({key:'guest',amount:100,ids:['next'],lookup:async()=>[{myKey:'guest',paidBy:'wallet',amount:100}],commit:async()=>writes++}),e=>e.code==='RECOVERED');assert.equal(writes,0);assert(!store.has(safety.prefix+'guest'));
  const unsupported=safety.create({storage:{},locks:null});await assert.rejects(unsupported.execute({key:'guest',amount:100,ids:['x'],commit:async()=>writes++}),e=>e.code==='UNSUPPORTED');
- // 網頁回跳參數不能宣稱付款成功，審核中不可建立線上付款。
- assert(!html.includes("title:'付款完成!'"));assert(html.includes('const ONLINE_PAYMENT_READY=false;'));assert(html.includes('if(!ONLINE_PAYMENT_READY)'));
+ // 網頁回跳參數不能宣稱付款成功；v499 起線上付款預設關閉，付款主機明確回 live:true（正式環境）才開放。
+ assert(!html.includes("title:'付款完成!'"));assert(html.includes('let ONLINE_PAYMENT_READY=false;'));assert(html.includes('ONLINE_PAYMENT_READY=j.live===true;'));assert(html.includes('if(!ONLINE_PAYMENT_READY)'));
  assert(!html.includes('saveProof(ref.key, proofData).then'));assert(!html.includes('saveProof(ref.key, tuProofData).then'));
  console.log('PASS: actual single-order flow, atomic delivery, all-or-nothing debit/order/delivery and unknown acknowledgement, invalid amounts, delayed commit, timeout lock, mutable form snapshot, cross-tab contention, reload journal, payment-return wording and pending gateway');
 })().catch(e=>{console.error(e);process.exitCode=1});

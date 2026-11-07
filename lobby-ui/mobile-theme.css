@@ -66,3 +66,7 @@ html.ttm-on #ttM{background:radial-gradient(circle at 12% 8%,#FFE3EF 0,transpare
 #ttmWallet .ttm-ghost{border:2.5px solid var(--ttm-ink)!important;color:var(--ttm-ink)!important;font-weight:700;box-shadow:0 4px 0 var(--ttm-ink);width:calc(100% - 7px)!important}
 #ttmWallet .ttm-done b{color:var(--ttm-ink)!important;font-weight:900}
 #ttmWallet .ttm-txr{border-bottom:1.5px dashed #D3D8F2!important}
+/* v499 線上付款區與「或用銀行轉帳」分隔 */
+#ttmWallet .ttm-paydivider{display:flex;align-items:center;gap:10px;margin:2px 7px 14px 0;font-size:12.5px;font-weight:700;color:var(--ttm-ink)}
+#ttmWallet .ttm-paydivider::before,#ttmWallet .ttm-paydivider::after{content:"";flex:1;border-top:2px dashed #9FB4E8}
+#ttmWallet .ttm-online .ttm-primary{margin-top:10px}

@@ -27,7 +27,9 @@
     choice.innerHTML='<div class="tu-choice-label"><b>選擇付款方式</b><span>先選一種，再繼續付款</span></div><div class="tu-method-grid" role="group" aria-label="付款方式"><button type="button" data-method="online" aria-controls="tuOnlineView"><span class="tu-method-icon" aria-hidden="true">↗</span><span><b>線上付款</b><small>信用卡・超商 / 自動入帳</small></span><i aria-hidden="true">✓</i></button><button type="button" data-method="bank" aria-controls="tuBankView"><span class="tu-method-icon" aria-hidden="true">⇄</span><span><b>銀行轉帳</b><small>上傳憑證 / 店長核帳</small></span><i aria-hidden="true">✓</i></button></div>';
     const ready=typeof ONLINE_PAYMENT_READY!=='undefined'&&ONLINE_PAYMENT_READY;
     const onlineChoice=choice.querySelector('[data-method="online"]');
-    if(!ready){onlineChoice.disabled=true;onlineChoice.setAttribute('aria-disabled','true');onlineChoice.querySelector('small').textContent='申請中・尚未開放';}
+    // v499 付款方式文字跟著付款主機的設定（ttPayMethodsText 在 lobby.html）
+    if(ready&&window.ttPayMethodsText)onlineChoice.querySelector('small').textContent=ttPayMethodsText().replace(/、/g,'・')+' / 自動入帳';
+    if(!ready){onlineChoice.disabled=true;onlineChoice.setAttribute('aria-disabled','true');onlineChoice.querySelector('small').textContent='準備中・尚未開放';}
     info.append(choice,online,bank);
     online.querySelector('.tu-section-heading>span').textContent='NEXT / 前往付款';
     fields.querySelector('.tu-section-heading>span').textContent='NEXT / 填寫轉帳資料';
