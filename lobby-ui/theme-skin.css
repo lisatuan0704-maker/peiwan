@@ -1202,3 +1202,35 @@ html body #intro #introGo{border:3px solid var(--sk-ink)!important;border-radius
 html body #intro #introCard2{border:3px solid var(--sk-ink)!important;border-radius:14px!important;background:#fff!important;color:var(--sk-ink)!important;font-weight:900!important;box-shadow:0 4px 0 var(--sk-ink)!important}
 html body #intro #introCard2[hidden]{display:none!important}
 html body #intro #introSkip{background:none!important;box-shadow:none!important;border:0!important;color:var(--sk-mute)!important;font-weight:700}
+/* v503 通訊錄（我的酒館）：D 11/08「好友顯示有 BUG」「上面空格一堆，不能好好活用版面嗎」
+   BUG：好友卡片 min-height:0＋名單區高度有限 → 格線把每列平均壓扁，卡片被切掉（視窗越矮越嚴重）→ 每列固定照內容高度，放不下就捲動。
+   版面：上方從四段（標題／狀態＋搜尋／分頁／名單）收成兩段：第一段「標題｜我的狀態」、第二段「分頁＋人數｜搜尋」，名單拿到大部分高度。 */
+html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts{grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto minmax(0,1fr)!important;column-gap:18px!important;row-gap:12px!important;padding:16px 22px!important}
+html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts::before{background:var(--sk-orbit) left 340px top 2px/150px 64px no-repeat,var(--st-purple) left 330px top 0/22px 22px no-repeat,var(--sk-glass2)!important}
+html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts>.contacts-heading{grid-area:1/1!important;align-self:center!important;padding:0 0 0 46px!important;margin:0!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-heading h2{font-size:22px!important;margin:0 0 2px!important;padding-bottom:7px!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-heading p{font-size:12px!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-my-status{grid-area:1/2!important;align-self:center!important;display:grid!important;grid-template-columns:auto auto;align-items:center;column-gap:12px;row-gap:3px;padding:8px 14px!important;margin:0!important;background-size:0 0,auto,auto!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-my-status strong{margin:0!important;font-size:15px!important;padding-left:24px!important;white-space:nowrap}
+html:not(.ttm-on) body #ttHub #frM .contacts-my-status strong::before{width:16px!important;height:20px!important;margin-top:-10px!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-status-buttons{flex-wrap:nowrap!important;gap:7px!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-status-buttons button{min-height:32px!important;padding:3px 11px 1px!important;font-size:13px!important;white-space:nowrap}
+html:not(.ttm-on) body #ttHub #frM .contacts-my-status .contacts-status-note{grid-column:1/-1;margin:0!important;font-size:11px!important;line-height:1.4!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-tabs{grid-area:2/1!important;justify-self:start!important;align-self:center!important;margin:0!important;flex-wrap:nowrap!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-tabs button{padding:5px 15px 3px!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-result{grid-area:2/1!important;justify-self:end!important;align-self:center!important;margin:0!important;text-align:right}
+html:not(.ttm-on) body #ttHub #frM .contacts-search{grid-area:2/2!important;align-self:center!important;width:100%!important;height:40px!important;margin:0!important}
+html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts>.contacts-list{grid-area:3/1/4/3!important;grid-auto-rows:max-content!important;align-content:start!important;overflow:auto!important;min-height:0!important}
+html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts .contact-entry{min-height:max-content!important;overflow:visible!important}
+html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts>.contacts-list:has(.contacts-empty){grid-template-rows:minmax(0,1fr)!important}
+html:not(.ttm-on) body #ttHub #frM .contacts-list>.contacts-empty{height:100%!important;min-height:160px!important}
+@media(max-width:860px){
+  html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto minmax(0,1fr)!important;row-gap:10px!important;padding:14px 14px!important}
+  html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts::before{background:var(--sk-glass2)!important}
+  html:not(.ttm-on) body #ttHub #frM .contacts-my-status{grid-area:2/1!important;grid-template-columns:auto minmax(0,1fr)}
+  html:not(.ttm-on) body #ttHub #frM .contacts-status-buttons{flex-wrap:wrap!important}
+  html:not(.ttm-on) body #ttHub #frM .contacts-search{grid-area:3/1!important}
+  html:not(.ttm-on) body #ttHub #frM .contacts-tabs{grid-area:4/1!important}
+  html:not(.ttm-on) body #ttHub #frM .contacts-result{grid-area:4/1!important}
+  html:not(.ttm-on) body #ttHub #frM #frBody.tt-contacts>.contacts-list{grid-area:5/1!important}
+}
