@@ -17,10 +17,18 @@ const ICON={
 };
 const TABS=[
  {key:'orders',label:'訂單',node:'shopM4',badge:'ordBadge',open:()=>shopOpen(4),hide:()=>{const n=$('shopM4');if(n)n.style.display='none';}},
- {key:'chat',label:'私訊',node:'frM',badge:'frDockBadge',open:()=>frOpen(),hide:()=>gClose('frM')},
+ {key:'chat',label:'私訊',node:'frM',badge:'frDockBadge',open:()=>{frOpen();staffEntry();},hide:()=>gClose('frM')},
  {key:'wallet',label:'儲值',node:'ttmWallet',open:()=>{$('ttmWallet').classList.add('on');wallet.render();},hide:()=>$('ttmWallet').classList.remove('on')},
  {key:'mail',label:'信箱',node:'mailBoxM',badge:'mailBadge',open:()=>{renderMailBox();gOpen('mailBoxM');},hide:()=>gClose('mailBoxM')}
 ];
+// v500 私訊分頁最上面放「冒險者通訊錄」：手機也能開始私訊還沒聊過的冒險者（開原本的 TTStaffBook）。
+function staffEntry(){
+ const body=$('frBody');if(!body||!body.parentElement||$('ttmStaffBook'))return;
+ const b=document.createElement('button');b.type='button';b.id='ttmStaffBook';b.className='ttm-staffbook';
+ b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+ICON.chat+'</svg><span><b>冒險者通訊錄</b><small>'+(window.MEMBERSHIP_ON===false?'看誰在線上，也能私訊冒險者':'看誰在線上，會員可私訊冒險者')+'</small></span><i aria-hidden="true">›</i>';
+ b.onclick=()=>window.TTStaffBook?.open();
+ body.before(b);
+}
 const root=document.documentElement;root.classList.add('ttm-on');
 const app=document.createElement('div');app.id='ttM';
 app.innerHTML='<header class="ttm-top" id="ttmTop">'

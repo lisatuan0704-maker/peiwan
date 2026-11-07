@@ -70,3 +70,11 @@ html.ttm-on #ttM{background:radial-gradient(circle at 12% 8%,#FFE3EF 0,transpare
 #ttmWallet .ttm-paydivider{display:flex;align-items:center;gap:10px;margin:2px 7px 14px 0;font-size:12.5px;font-weight:700;color:var(--ttm-ink)}
 #ttmWallet .ttm-paydivider::before,#ttmWallet .ttm-paydivider::after{content:"";flex:1;border-top:2px dashed #9FB4E8}
 #ttmWallet .ttm-online .ttm-primary{margin-top:10px}
+/* v500 私訊分頁最上面的「冒險者通訊錄」入口 */
+html.ttm-on #frM .ttm-staffbook{display:flex!important;align-items:center;gap:12px;width:calc(100% - 7px)!important;margin:2px 7px 16px 0!important;padding:12px 14px!important;border:2.5px solid var(--ttm-ink)!important;border-radius:16px!important;background:linear-gradient(170deg,#fff,#F7FAFF 70%,#FAF5FF)!important;box-shadow:inset 0 0 0 2px #fff,6px 6px 0 -1px #FFD6E6,6px 6px 0 1.5px var(--ttm-ink)!important;color:var(--ttm-ink)!important;font-family:inherit;text-align:left;cursor:pointer;box-sizing:border-box}
+html.ttm-on #frM .ttm-staffbook svg{flex:none;width:40px;height:40px;padding:8px;box-sizing:border-box;border-radius:12px;background:var(--ttm-pink);fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+html.ttm-on #frM .ttm-staffbook span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+html.ttm-on #frM .ttm-staffbook b{font-size:16px;font-weight:900;color:var(--ttm-ink)}
+html.ttm-on #frM .ttm-staffbook small{font-size:12.5px;font-weight:700;color:var(--ttm-soft)}
+html.ttm-on #frM .ttm-staffbook i{font-style:normal;font-size:24px;font-weight:900;line-height:1;color:var(--ttm-ink)}
+html.ttm-on #frM .ttm-staffbook:active{transform:translate(2px,2px)}
