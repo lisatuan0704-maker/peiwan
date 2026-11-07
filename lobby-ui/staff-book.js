@@ -34,7 +34,7 @@
   function paint(){
     if(!box||box.hidden)return;
     const staff=list(),m=meta(),hasThread=staff.some(s=>m['staff_'+s.cid]);
-    const lv=tier(),locked=lv<2&&!hasThread;
+    const lv=tier(),dmOk=window.ttStaffDmOk?ttStaffDmOk():lv>=2,locked=!dmOk&&!hasThread;
     const k=JSON.stringify([locked,lv,staff.map(s=>[s.cid,s.on,s.busy]),staff.map(s=>m['staff_'+s.cid]||0)]);
     if(k===sig&&box.firstChild)return;sig=k;
     const keep=box.querySelector('.sb-body')?.scrollTop||0;

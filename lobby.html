@@ -1447,7 +1447,7 @@ body.artBub.bub3s .npc .bub{
 }
 </style>
 <link rel="stylesheet" href="lobby-ui/contacts.css?v=341">
-<script src="lobby-ui/contacts.js?v=411"></script>
+<script src="lobby-ui/contacts.js?v=500"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
 <link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=496">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=357">
@@ -2795,7 +2795,7 @@ function drawFullCard(b){
   const done=(pub.ach&&pub.ach.length)?pub.ach:[];
   let achHtml='';
   try{
-    achHtml=(typeof ACH_ALL!=='undefined'?ACH_ALL.filter(a=>achShown(a,done)):[]).map(function(a){
+    achHtml=(typeof ACH_DEF!=='undefined'?ACH_DEF:[]).map(function(a){
       const ok=done.indexOf(a.id)>=0;
       const ic=(typeof AICON!=='undefined'&&AICON[a.ic])?AICON[a.ic]:'';
       return '<div class="pcAb'+(ok?'':' no')+'" title="'+esc(a.n+' — '+a.d)+'">'
@@ -3872,6 +3872,7 @@ window.MEMBERSHIP_ON = MEMBERSHIP_ON;
 if(!MEMBERSHIP_ON){
   const b=document.getElementById('mbMenuBtn'); if(b) b.style.display='none';
   const h=document.getElementById('vipHint'); if(h) h.textContent=h.textContent.replace('儲值與月卡都算，','');
+  const s=document.querySelector('#mhStaff small'); if(s) s.textContent='看誰在線上，也能私訊冒險者';
 }
 const PLANS = {
   play: { title:'找冒險者一起玩', items:[
@@ -7015,14 +7016,16 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   /* v411 會員私訊冒險者：進階／尊榮會員可傳；沿用 dm／dmMeta，冒險者端代號 staff_<角色ID> */
   window.ttMemberTier=function(){let best=0;try{Object.values(myOrdersCache||{}).forEach(o=>{if(!o||o.type!=='member'||!['confirmed','done','settled'].includes(o.status))return;if(Date.now()-(Number(o.createdAt)||0)>31*86400000)return;const n=String(o.planName||'');const lv=/尊榮/.test(n)?3:/進階/.test(n)?2:/會員/.test(n)?1:0;if(lv>best)best=lv;});}catch(e){}return best;};
   window.ttDmMeta=()=>DMM;
+  /* v500 會員區關閉期間，有闆卡的老闆都能私訊冒險者 */
+  window.ttStaffDmOk=()=>!MEMBERSHIP_ON||ttMemberTier()>=2;
   window.staffDmOpen=function(cid,name){
     if(!cid)return;if(!myKey){toast('先做一張闆卡，才能私訊冒險者 ✦');return;}
     const k='staff_'+cid;
-    if(ttMemberTier()<2&&!DMM[k]){toast('進階會員以上就能私訊冒險者 ✦');try{shopOpen(2,'member');}catch(e){}return;}
+    if(!ttStaffDmOk()&&!DMM[k]){toast('進階會員以上就能私訊冒險者 ✦');try{shopOpen(2,'member');}catch(e){}return;}
     ensureWins(); dmClose(true);
     _dmWith=k;_dmStaffName=ttStaffDisplayName(cid,name||(DMM[k]&&DMM[k].name)||'冒險者');
     document.getElementById('dmTitle').textContent='私訊・'+_dmStaffName;
-    {const h=document.getElementById('dmHint');if(h)h.textContent=ttMemberTier()>=2?'':'會員已到期，只能查看紀錄';const w=document.getElementById('dmWarnBtn');if(w)w.hidden=true;const f=document.getElementById('dmFoot');if(f)f.hidden=ttMemberTier()>=2;}
+    {const h=document.getElementById('dmHint');if(h)h.textContent=ttStaffDmOk()?'':'會員已到期，只能查看紀錄';const w=document.getElementById('dmWarnBtn');if(w)w.hidden=true;const f=document.getElementById('dmFoot');if(f)f.hidden=ttStaffDmOk();}
     TTDirectMessageLog.reset(document.getElementById('dmLog'));
     try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
     _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
@@ -7043,7 +7046,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     const t=sticker?stickerCode:(i.value||'').trim();if(!t)return false;
     if(window.__mute)return fail('mute','你目前被禁言中，暫時無法傳私訊。');
     const isStaff=/^staff_/.test(_dmWith);
-    if(isStaff&&ttMemberTier()<2)return fail('tier','進階會員以上才能私訊冒險者。');
+    if(isStaff&&!ttStaffDmOk())return fail('tier','進階會員以上才能私訊冒險者。');
     if(!isStaff&&!FR[_dmWith])return fail('friend','你們已不是好友，重新加好友後才能私訊。');
     const k=_dmWith,sender=myKey,senderName=myName(),recipientName=isStaff?_dmStaffName:(FR[_dmWith]?.name||'');
     _dmSending=true;const sendButton=i.parentElement.querySelector('button:not(.dm-sticker-toggle)');if(sendButton){sendButton.disabled=true;sendButton.setAttribute('aria-busy','true');}
@@ -7179,13 +7182,12 @@ const ACH_ALL=[
   {id:'chatty',ic:'chat',n:'話匣子',d:'在大廳聊天 30 句',k:'chat',need:30},
   {id:'crown',ic:'crown',n:'月費會員',d:'加入任一月費會員方案',k:null,need:1}
 ];
-/* v500 會員區關閉時，還沒拿到「月費會員」的人看不到這個成就；已拿到的照常顯示與保留稱號 */
-const achShown=(a,got)=>MEMBERSHIP_ON||a.id!=='crown'||(got||[]).indexOf('crown')>=0;
-const ACH_DEF=ACH_ALL.filter(a=>achShown(a,TT_STATS.u));
+/* v500 會員區關閉時整個拿掉「月費會員」成就與稱號（已拿到的紀錄保留在本機與 pub.ach，不刪） */
+const ACH_DEF=ACH_ALL.filter(a=>MEMBERSHIP_ON||a.id!=='crown');
 /* v413 月費會員成就：有已確認的會員訂單就解鎖（沿用 crown 編號，已解鎖紀錄保留） */
 function achMemberCheck(){
   try{
-    if(TT_STATS.u.indexOf('crown')>=0||typeof myOrdersCache==='undefined')return;
+    if(!MEMBERSHIP_ON||TT_STATS.u.indexOf('crown')>=0||typeof myOrdersCache==='undefined')return;
     const has=Object.values(myOrdersCache||{}).some(o=>o&&o.type==='member'&&['confirmed','done','settled'].includes(o.status));
     if(!has)return;
     TT_STATS.u.push('crown');statSave();
@@ -7516,7 +7518,7 @@ window.__hasCard=myKey?null:false;
   for(let i=0;i<3;i++) setTimeout(petal, i*2600);
   setInterval(petal, 3000);
   /* 動態稱號:顯示已解鎖成就中最高的稱號 */
-  const TITLE_BY=[['crown','月費會員'],['catlover','貓奴'],['chatty','話匣子'],['regular','常客']];
+  const TITLE_BY=[['crown','月費會員'],['catlover','貓奴'],['chatty','話匣子'],['regular','常客']].filter(([id])=>MEMBERSHIP_ON||id!=='crown');
   window.updateTitle=function(){
     const pill=document.getElementById('h2pill'); if(!pill) return;
     let t='酒館之友';
