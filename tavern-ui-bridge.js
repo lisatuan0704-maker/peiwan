@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=496';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=501';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -309,7 +309,13 @@ seatChoice:()=>window.TTSeatUI?.choice(),selectSeat:id=>window.TTSeatUI?.select(
     },
     originalInfo(cid){const s=staff().find(s=>s.cid===cid);if(s){close();oldInfo(cid,{name:s.name,st:s.on?(s.busy?'busy':'free'):'off'},0);}},
     openChatSkins(){close();window.openChatSkins();},
-    buy(source){if(isDrink(source))throw Error('請在其他分類選擇飲料杯數');if(/^[^:]+::(hair|face|cloth|acc\d*)$/.test(String(source))){const sid=source.split('::')[0],o=catalog().find(x=>x.id===sid),part=o?.parts.find(p=>p.saleId===source);if(!o||o.retired)throw Error('這套時裝已下架');if(!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(!part||!part.salePrice)throw Error('這個部件尚未開放單買');if(o.owned||part.owned)throw Error('這個部件已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:source,n:'時裝部件・'+o.name+'・'+part.saleLabel,p:part.salePrice,itemId:source,itemName:o.name+'・'+part.saleLabel};shopClose();shopOpen(3);return;}const o=catalog().find(x=>x.id===source);if(o?.retired)throw Error('這套測試時裝已下架');if(!o||!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(o.owned)throw Error('這件商品已在背包裡');close();curKind='shop';curBooking=false;curReserveAt=null;curPlan={id:o.id,n:o.baseUnit?'工房部件・'+o.name+(o.kind==='hair'?'（前髮＋後髮）':o.kind==='face'&&o.parts.length>1?'（眼睛＋眉毛）':''):(['寵物','其他','座椅'].includes(o.type)?o.type+'・':o.daily?'日常時裝・':'時裝・')+o.name,p:o.price,itemId:o.id,itemName:o.name,...(o.cur==='cat'?{cur:'cat'}:{})};shopClose();shopOpen(3);},
+    // v501 結帳項目：單件與「全部結帳」共用同一套檢查（下架、未開賣、已持有），付款時每件仍是一筆完整交易
+    shopPlan(source){if(isDrink(source))throw Error('請在其他分類選擇飲料杯數');if(/^[^:]+::(hair|face|cloth|acc\d*)$/.test(String(source))){const sid=source.split('::')[0],o=catalog().find(x=>x.id===sid),part=o?.parts.find(p=>p.saleId===source);if(!o||o.retired)throw Error('這套時裝已下架');if(!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(!part||!part.salePrice)throw Error('這個部件尚未開放單買');if(o.owned||part.owned)throw Error('這個部件已在背包裡');return {id:source,n:'時裝部件・'+o.name+'・'+part.saleLabel,p:part.salePrice,itemId:source,itemName:o.name+'・'+part.saleLabel};}const o=catalog().find(x=>x.id===source);if(o?.retired)throw Error('這套測試時裝已下架');if(!o||!o.sale||o.previewOnly)throw Error('這套時裝目前開放試穿，售價尚未設定');if(o.owned)throw Error('這件商品已在背包裡');return {id:o.id,n:o.baseUnit?'工房部件・'+o.name+(o.kind==='hair'?'（前髮＋後髮）':o.kind==='face'&&o.parts.length>1?'（眼睛＋眉毛）':''):(['寵物','其他','座椅'].includes(o.type)?o.type+'・':o.daily?'日常時裝・':'時裝・')+o.name,p:o.price,itemId:o.id,itemName:o.name,...(o.cur==='cat'?{cur:'cat'}:{})};},
+    buy(source){const plan=this.shopPlan(source);close();curKind='shop';curBooking=false;curReserveAt=null;curPlan=plan;shopClose();shopOpen(3);},
+    // v501 使用者：試穿中要買的東西一次結帳 → 結帳頁列出全部、按一次付款（lobby.html payCartWithCoins 逐件付款）
+    buyCart(ids){const list=[...new Set((Array.isArray(ids)?ids:[ids]).filter(Boolean).map(String))];if(!list.length)throw Error('沒有要結帳的商品');if(list.length===1)return this.buy(list[0]);const plan=this.cartPlan(list.map(id=>this.shopPlan(id)));close();curKind='shop';curBooking=false;curReserveAt=null;curPlan=plan;shopClose();shopOpen(3);},
+    cartPlan(items){const sum=l=>l.reduce((n,x)=>n+x.p,0);return {id:'cart',cart:true,items,n:'一起結帳 '+items.length+' 件',p:sum(items.filter(x=>x.cur!=='cat')),catP:sum(items.filter(x=>x.cur==='cat'))};},
+    cartRecheck(items){return this.cartPlan(items.map(x=>this.shopPlan(x.itemId)));},   // 付款前用最新的價格與持有重算；有一件不能買就丟錯
     /* v258:染髮券商品(一張全包主色+漸層;價格可由店長在商城新增 id 為 dyeTicket 的商品覆蓋,預設 299) */
     dyePrice(){return Number(window.__shopCfg?.dyeTicket?.price)||299;},
     buyDye(){if(typeof me!=='function'||!me())throw Error('先做一張闆卡，再購買染髮券');close();curKind='shop';curBooking=false;curReserveAt=null;const p=this.dyePrice();curPlan={id:'dyeTicket',n:'染髮券 1 張',p,itemId:'dyeTicket',itemName:'染髮券 1 張'};shopClose();shopOpen(3);},

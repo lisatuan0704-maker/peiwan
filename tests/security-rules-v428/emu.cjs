@@ -1,6 +1,6 @@
 // Minimal Realtime Database emulator client for rules tests.
 'use strict';
-const BASE='http://127.0.0.1:9000';
+const BASE=process.env.RTDB_EMU||'http://127.0.0.1:9000';   // 例：RTDB_EMU=http://127.0.0.1:9273
 function token(uid,claims={}){
   if(!uid)return null;
   const b=o=>Buffer.from(JSON.stringify(o)).toString('base64url');

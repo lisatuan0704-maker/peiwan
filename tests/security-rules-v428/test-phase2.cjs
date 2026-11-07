@@ -47,7 +47,7 @@ const cases=[
  ['不保存染髮就把券扣掉/改掉','anon','PATCH','peiwan/owned/k1',{dyeTickets:0},false],
  ['沒用券就新增染髮組合','anon','PATCH','peiwan/owned/k1',{dyeLast:'r2','dyedHairSets/r2':{front:'a',back:'b',at:1}},false],
  ['憑空增加染髮券','anon','PUT','peiwan/owned/k1/dyeTickets',5,false],
- ['群組陪玩單（2 人共 600）','anon','PATCH','peiwan',{'clientOrders/g1a':{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:300,myKey:'k1',groupId:'g1'},'clientOrders/g1b':{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:300,myKey:'k1',groupId:'g1'},...spend('g1',600)},true],
+ ['群組陪玩單（2 人共 600）','anon','PATCH','peiwan',{'clientOrders/g1a':{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:300,myKey:'k1',groupId:'g1',groupSize:2},'clientOrders/g1b':{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:300,myKey:'k1',groupId:'g1',groupSize:2},...spend('g1',600),'walletTx/k1/g1':{type:'spend',amount:-600,ref:'g1',ts:1,groupId:'g1',orderIds:['g1a','g1b']}},true],   // v503 第十三批：照網頁格式帶 groupSize 與明細 orderIds
  ['群組單金額比扣款多','anon','PATCH','peiwan',{'clientOrders/g2a':{type:'play',plan:'svc_s1',paidBy:'wallet',status:'confirmed',amount:900,myKey:'k1',groupId:'g2'},...spend('g2',100)},false],
  ['清空別人的背包','anon','PUT','peiwan/owned/k2',{},false],
  ['刪除別人背包的一件衣服','anon','DELETE','peiwan/owned/k2/cloth0',undefined,false],

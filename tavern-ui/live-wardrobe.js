@@ -93,15 +93,16 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
   lookPanel.querySelector('.look-checkout')?.addEventListener('click',openLookCheckout);
   lookPanel.querySelector('.look-items').scrollTop=scroll;paintLook();
  }
+ // v501 使用者：穿上的東西一次結帳 → 只留一顆「全部結帳」，結帳頁列出全部、按一次付款（每件仍各自成立一筆訂單）
  function openLookCheckout(){
   data=api.state();const q=lookQuote(lookItems());renderLook();
-  lookDialog.innerHTML='<header><div><small>YOUR SELECTION</small><h2>確認選購</h2></div><button type="button" class="look-close" aria-label="關閉選購清單">×</button></header><p>部件可以單買；同一套選的部件合計比整套貴時，會自動改成買整套。每項會分別進入結帳確認。</p><div class="look-purchases">'+q.ready.map(o=>'<article><div><strong>'+esc(o.name)+'</strong><span>'+(isCat(o)?catT(o.price):goldT(o.price))+(o.unit==='pet'?'／隻':o.unit==='part'?'／單件':'／整套')+'</span></div><button class="primary" type="button" data-look-buy="'+esc(o.id)+'">前往結帳</button></article>').join('')+'</div>'+(q.unavailable.length?'<p class="look-unavailable">尚未開賣：'+q.unavailable.map(o=>esc(o.name)).join('、')+'</p>':'')+'<footer><span>需購買金額</span><strong>'+[q.total||!q.catTotal?goldT(q.total):'',q.catTotal?catT(q.catTotal):''].filter(Boolean).join('＋')+'</strong></footer>';
+  lookDialog.innerHTML='<header><div><small>YOUR SELECTION</small><h2>確認選購</h2></div><button type="button" class="look-close" aria-label="關閉選購清單">×</button></header><p>部件可以單買；同一套選的部件合計比整套貴時，會自動改成買整套。下面這些會一次結帳。</p><div class="look-purchases">'+q.ready.map((o,i)=>'<article><span class="look-no" aria-hidden="true">'+String(i+1).padStart(2,'0')+'</span><div><strong>'+esc(o.name)+'</strong><span>'+(isCat(o)?catT(o.price):goldT(o.price))+(o.unit==='pet'?'／隻':o.unit==='part'?'／單件':'／整套')+'</span></div></article>').join('')+'</div>'+(q.unavailable.length?'<p class="look-unavailable">尚未開賣：'+q.unavailable.map(o=>esc(o.name)).join('、')+'</p>':'')+'<footer><span>需購買金額</span><strong>'+[q.total||!q.catTotal?goldT(q.total):'',q.catTotal?catT(q.catTotal):''].filter(Boolean).join('＋')+'</strong></footer>'+(q.ready.length?'<button class="primary look-buy-all" type="button" data-look-buy-all>全部結帳 · '+q.ready.length+' 項</button>':'');
   lookDialog.querySelector('.look-close').onclick=()=>lookDialog.close();
-  lookDialog.querySelectorAll('[data-look-buy]').forEach(b=>b.onclick=()=>{
-   const id=b.dataset.lookBuy,fresh=api.state(),current=lookQuote(lookItems(fresh)).ready.find(o=>o.id===id),shown=q.ready.find(o=>o.id===id);
-   if(!current||current.price!==shown.price){data=fresh;openLookCheckout();tell('商品資訊已更新，請重新確認。');return;}
+  lookDialog.querySelector('[data-look-buy-all]')?.addEventListener('click',()=>{
+   const fresh=api.state(),current=lookQuote(lookItems(fresh)).ready,sig=l=>l.map(o=>o.id+':'+o.price+':'+(o.cur||'')).join('|');
+   if(!current.length||sig(current)!==sig(q.ready)){data=fresh;openLookCheckout();tell('商品資訊已更新，請重新確認。');return;}
    pendingLook=JSON.parse(JSON.stringify({selection,color}));
-   try{api.buy(id);lookDialog.close();}catch(e){pendingLook=null;tell(e.message);}
+   try{api.buyCart(current.map(o=>o.id));lookDialog.close();}catch(e){pendingLook=null;tell(e.message);}
   });
   if(!lookDialog.open)lookDialog.showModal();
  }

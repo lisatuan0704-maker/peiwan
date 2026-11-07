@@ -53,7 +53,7 @@ async function exchange(coin){
  return {tx,coin,got};
 }
 
-const TX_LABEL={exchange:'金幣兌換',spend:'消費',daily:'每日任務',welcome:'見面禮',event:'活動獎勵',harvest:'小屋收成',adjust:'店長調整',refund:'退回',convert:'轉換'};
+const TX_LABEL={exchange:'金幣兌換',spend:'消費',daily:'每日任務',idle:'掛機收益',welcome:'見面禮',event:'活動獎勵',harvest:'小屋收成',adjust:'店長調整',refund:'退回',convert:'轉換'};
 function txRows(rows){
  if(!rows.length)return '<p class="tt-cat-empty">還沒有貓貓幣紀錄</p>';
  return rows.map(t=>{const d=new Date(t.ts||0),pos=(t.amount||0)>0;
@@ -76,7 +76,8 @@ function mount(host,opt={}){
   const cat=root.__cat||0,wal=root.__wallet||0,c=pick,valid=Number.isSafeInteger(c)&&c>=1&&c<=MAX,enough=valid&&c<=wal;
   host.innerHTML='<div class="tt-cat-box">'
    +'<div class="tt-cat-head">'+coin(48,'s')+'<div><small>貓貓幣</small><strong>'+fmt(cat)+'</strong></div>'
-   +'<p>酒館送你的小心意。<br>'+(dailyOn()?'每天在大廳說說話、待一會兒，就會收到貓貓幣。':'11/7 起，每天在大廳說說話、待一會兒，就會收到貓貓幣。')+'</p></div>'
+   +'<p>酒館送你的小心意。<br>'+(dailyOn()?'每天在大廳說說話、待一會兒，就會收到貓貓幣。':'11/7 起，每天在大廳說說話、待一會兒，就會收到貓貓幣。')+'<br>掛機也會慢慢存，最多存 8 小時，記得回來領。</p></div>'
+   +'<div class="tt-idle-slot" hidden></div>'   // v502 掛機收益（lobby-ui/idle-income.js）
    +(EXCHANGE_ON?'<div class="tt-cat-cap"><b>用金幣兌換</b><span>1 金幣 ＝ 10 貓貓幣</span></div>'
    +'<div class="tt-cat-packs">'+PACKS.map(p=>'<button type="button" data-pack="'+p+'" aria-pressed="'+(p===c)+'"'+(p>wal?' class="short"':'')+'><span>'+fmt(p)+' 金幣</span><strong>'+tag(gain(p),20)+'</strong><small>'+(bonus(p)?'含加送 '+fmt(bonus(p)):'&nbsp;')+'</small></button>').join('')+'</div>'
    +'<label class="tt-cat-own">自訂數量<input type="number" inputmode="numeric" min="1" max="'+MAX+'" step="1" placeholder="輸入金幣數" value="'+(c&&!PACKS.includes(c)?c:'')+'"><span>金幣</span></label>'
@@ -94,6 +95,7 @@ function mount(host,opt={}){
   host.querySelector('[data-act="no"]')?.addEventListener('click',()=>{confirming=false;render();});
   host.querySelector('[data-act="yes"]')?.addEventListener('click',go);
   host.querySelector('[data-act="tx"]').onclick=()=>{txOpen=!txOpen;render();};
+  root.TTIdle?.mount(host.querySelector('.tt-idle-slot'),'w');
   if(txOpen)loadTx(host.querySelector('.tt-cat-tx'));
  }
  async function go(){
@@ -105,7 +107,7 @@ function mount(host,opt={}){
  }
  render();
  // 呼叫端請重複使用同一個 host（錢包重畫時把它搬回去），這裡只在畫面上時才重畫
- onChange(()=>{if(!busy&&host.isConnected&&!host.contains(root.document.activeElement))render();});
+ onChange(()=>{const ae=root.document.activeElement;if(!busy&&host.isConnected&&!(host.contains(ae)&&ae.tagName==='INPUT'))render();});   // v502 只在輸入數量時不重畫（按了掛機收益「領取」也要更新餘額）
  return {render};
 }
 

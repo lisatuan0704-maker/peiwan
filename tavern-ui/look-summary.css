@@ -89,3 +89,13 @@
  body.has-look-summary #categories{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:thin;min-width:0;padding-bottom:3px!important}
  body.has-look-summary #categories button{flex:none;white-space:nowrap}
 }
+/* v501 一起結帳：列編號＋一顆「全部結帳」 */
+.look-checkout-dialog[open]{display:flex;flex-direction:column;overflow:hidden}
+.look-checkout-dialog[open]>*{flex:none}
+.look-checkout-dialog[open]>.look-purchases{flex:1 1 auto;min-height:64px;overflow-y:auto;margin:0 -6px;padding:0 6px}
+.look-purchases article{justify-content:flex-start;gap:12px;padding:11px 0}
+.look-purchases article>div{flex:1;min-width:0;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.look-purchases article>div>strong{min-width:0;overflow-wrap:anywhere}
+.look-purchases article>div>span{flex:none;margin-top:0;white-space:nowrap}
+.look-purchases .look-no{flex:none;margin:0;font-size:12px;font-weight:700;letter-spacing:1px;color:#c2768c}
+.look-checkout-dialog .look-buy-all{display:block;width:100%;margin-top:14px;min-height:46px;font-size:15px;border-radius:12px}

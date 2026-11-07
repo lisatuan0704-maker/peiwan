@@ -2249,7 +2249,7 @@ function delCustomer(key,nm){
   Object.entries(accountsData||{}).forEach(([dcid,a])=>{
     if(a&&a.myKey===key) db.ref(ROOT+'/accounts/'+dcid).set({deleted:true,deletedAt:Date.now()});
   });
-  ['lobby','cards','pos','wallet','walletTx','cat','catTx','owned','house','houseInv','dmMeta','friendReq','blocks','mail'].forEach(n=>{   /* v494 小屋 house／houseInv 一起清 */
+  ['lobby','cards','pos','wallet','walletTx','cat','catTx','owned','house','houseInv','idle','dmMeta','friendReq','blocks','mail'].forEach(n=>{   /* v494 小屋 house／houseInv 一起清；v502 掛機收益 idle */
     db.ref(ROOT+'/'+n+'/'+key).remove();
   });
   /* 好友是互寫的:把他從每個好友的名單裡也移掉 */

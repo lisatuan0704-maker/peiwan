@@ -33,7 +33,7 @@
  }
  function checkout(){
    if(curKind==='shop'){
-     heading('shopM3','BOUTIQUE / 商品結帳','確認你的選購。',1);
+     heading('shopM3',curPlan?.cart?'BOUTIQUE / 一起結帳':'BOUTIQUE / 商品結帳','確認你的選購。',1);
      const card=$('shopM3').querySelector('.shopCard');
      card.querySelector('.of-ghost').textContent='SHOP';
      card.querySelector('.of-track').innerHTML='<span><b>01</b> 選購商品</span><span class="active"><b>02</b> 確認付款</span>';
@@ -61,7 +61,23 @@
    if(curKind!=='play')return previous.pick(id);
    try{validate();const p=playItems().find(x=>x.id===id);if(!p)throw Error('這個方案已下架，請重新選擇');const price=pricing(p.p,count());curPlan={...p,unitPrice:p.p,quantity:count(),p:price.total};curBooking=pkMode==='book';curReserveAt=null;if(curBooking)openReserve(()=>shopOpen(3));else shopOpen(3);}catch(e){toast(e.message);}
  };
+ // v501 商城一起結帳：列出全部商品與總額（金幣、貓貓幣分開算），按一次付款由 payCartWithCoins 逐件付
+ function cartInfo(){
+   const box=$('payCoinInfo');if(!box)return;if(_submitting&&box.querySelector('.of-cart'))return;   // 付款中不重畫（餘額正在一件件扣）
+   const items=curPlan.items||[],gold=curPlan.p||0,cat=TTCat.price(curPlan.catP||0),wallet=window.__wallet||0,catBal=window.__cat||0;
+   const price=x=>x.cur==='cat'?TTCat.coin(16,'c')+' '+money(TTCat.price(x.p))+' <small>貓貓幣</small>':money(x.p)+' <small>金幣</small>';
+   const lack=[gold>wallet?'金幣還差 '+money(gold-wallet):'',cat>catBal?'貓貓幣還差 '+money(cat-catBal):''].filter(Boolean);
+   box.innerHTML='<div class="of-cart"><div class="of-cart-head"><span>一起結帳</span><b>'+items.length+' 件</b></div><ol>'+items.map((x,i)=>'<li><span class="of-cart-no">'+String(i+1).padStart(2,'0')+'</span><b>'+esc(x.itemName||x.n)+'</b><em>'+price(x)+'</em></li>').join('')+'</ol></div>'
+     +(gold||!cat?'<div class="of-payment-line"><span>本次應付</span><strong>'+money(gold)+' <small>金幣</small></strong></div><div class="of-wallet-line">持有 '+money(wallet)+' 金幣 · 付款後剩 '+money(Math.max(0,wallet-gold))+' 金幣</div>':'')
+     +(cat?'<div class="of-payment-line"><span>'+(gold?'另付':'本次應付')+'</span><strong>'+TTCat.coin(32,'c')+' '+money(cat)+' <small>貓貓幣</small></strong></div><div class="of-wallet-line">持有 '+money(catBal)+' 貓貓幣 · 付款後剩 '+money(Math.max(0,catBal-cat))+' 貓貓幣</div>':'')
+     +(lack.length?'<div class="of-cart-lack">'+lack.join('、')+'。補足後這頁的付款鈕會自動解鎖　<a href="#" data-of-topup>去錢包 →</a></div>':'')
+     +'<p class="of-cart-note">按一次就把上面全部買下。萬一中途有一件沒買成，會停下來告訴你，沒買到的不會扣款。</p>';
+   box.querySelector('[data-of-topup]')?.addEventListener('click',e=>{e.preventDefault();try{gClose('shopM3');}catch(_){}shopClose();openTopup();});
+   const btn=$('paySubmitBtn');if(btn&&!_submitting){btn.disabled=!!lack.length;btn.style.opacity=lack.length?'.5':'1';btn.textContent='全部結帳';}
+   checkout();
+ }
  renderCoinInfo=function(){
+   if(curKind==='shop'&&curPlan?.cart)return cartInfo();
    const out=previous.coinInfo();if(curKind!=='play'&&curKind!=='shop')return out;
    // v492 時裝類付貓貓幣（payDue＝金幣等值價×10）
    const box=$('payCoinInfo'),label=box.querySelector('label'),topup=box.querySelector('a')?.closest('div'),cat=payCurrency()==='cat',unit=cat?'貓貓幣':'金幣',balance=payBalance(),amount=payDue();
@@ -135,7 +151,7 @@
      if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'這組點單未成立，請重試');
    }finally{stopWait();submitting=_submitting=false;btn.disabled=false;btn.textContent=method==='coin'?'用金幣支付':'送出訂單';}
  }
- submitOrder=function(){if(curKind==='play'&&members().length>1)return submitGroup('transfer');return previous.transfer();};
+ submitOrder=function(){if(curKind==='shop'&&curPlan?.cart){toast('一起結帳請用金幣付款');return;}if(curKind==='play'&&members().length>1)return submitGroup('transfer');return previous.transfer();};
  payWithCoins=function(){if(curKind==='play'&&members().length>1)return submitGroup('coin');return previous.coin();};
  window.TTOrderFlow={pricing,duration,makeRecords,members};
 })();

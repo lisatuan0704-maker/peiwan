@@ -1460,10 +1460,10 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/presence.js?v=483"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/payment-safety.js?v=492"></script>
-<script src="lobby-ui/cat-coin.js?v=496"></script>
+<script src="lobby-ui/cat-coin.js?v=502"></script>
 <script src="lobby-ui/cancel-reason.js?v=432"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
-<link rel="stylesheet" href="lobby-ui/order-flow.css?v=274">
+<link rel="stylesheet" href="lobby-ui/order-flow.css?v=501">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
 <script src="card-ui/tavern-scene.js?v=265" defer></script>
 <link rel="stylesheet" href="lobby-ui/membership.css?v=256">
@@ -4318,11 +4318,11 @@ function payFinalAmount(){
 function renderPayMethod(){
   const row=document.getElementById('payMethodRow'); if(!row) return;
   _coinCoupon=false;   // 每次進結帳頁,優惠券預設不勾
-  if(!coinsAvailable()){ row.innerHTML=''; setPayMethod('transfer'); return; }  // 會員月卡:真金轉帳
+  if(!coinsAvailable()&&!curPlan?.cart){ row.innerHTML=''; setPayMethod('transfer'); return; }  // 會員月卡:真金轉帳（v501 一起結帳只能用金幣／貓貓幣）
   /* 點單用金幣、時裝類用貓貓幣（v492）,不提供轉帳;不夠就去儲值或兌換 */
   const cat=payCurrency()==='cat',bal=payBalance();
   row.innerHTML='<div style="margin-bottom:12px;background:#FBEFC0;border-radius:10px;padding:9px 12px;font-size:12.5px;color:#8A6A2A;line-height:1.55">'
-    +(cat?'<b>這件用貓貓幣購買</b>・目前持有 <b class="pmBal">'+TTCat.fmt(bal)+'</b> 貓貓幣。'+(TTCat.EXCHANGE_ON?'不夠可以在錢包用金幣兌換 ✦':'每日任務每天送 '+TTCat.DAILY+' 貓貓幣 ✦')
+    +(curPlan?.cart&&curPlan.p>0&&curPlan.catP>0?'<b>這次一起結帳</b>・金幣餘額 <b class="pmBal">'+(window.__wallet||0)+'</b>、貓貓幣 <b class="pmCatBal">'+TTCat.fmt(window.__cat||0)+'</b>。不夠可以先到錢包儲值 ✦':cat?'<b>這件用貓貓幣購買</b>・目前持有 <b class="pmBal">'+TTCat.fmt(bal)+'</b> 貓貓幣。'+(TTCat.EXCHANGE_ON?'不夠可以在錢包用金幣兌換 ✦':'每日任務每天送 '+TTCat.DAILY+' 貓貓幣 ✦')
          :'<b>本店以金幣消費</b>・目前餘額 <b class="pmBal">'+bal+'</b> 金幣。餘額不足可到錢包儲值 ✦')+'</div>';
   setPayMethod('coin');
 }
@@ -4336,12 +4336,13 @@ function setPayMethod(m){
   if(tf) tf.style.display=coin?'none':'block';
   if(cf) cf.style.display=coin?'block':'none';
   const btn=document.getElementById('paySubmitBtn');
-  if(coin){ renderCoinInfo(); if(btn) btn.textContent=payCurrency()==='cat'?'用貓貓幣支付':'用金幣支付'; }
+  if(coin){ renderCoinInfo(); if(btn) btn.textContent=curPlan?.cart?'全部結帳':payCurrency()==='cat'?'用貓貓幣支付':'用金幣支付'; }
   else { if(btn){ btn.textContent='送出訂單'; btn.disabled=false; btn.style.opacity='1'; } }
 }
 /* v493 雙幣：付費商品（時裝、寵物、座椅、染髮券、氣泡、工房部件）一律金幣（使用者 11/06 更正 v492）；
    只有商品標 cur:'cat'（TTCat.forItem）才付貓貓幣＝金幣等值價×10，目前沒有這類商品 */
-function payCurrency(){ return curKind==='shop'&&TTCat.forItem(curPlan)?'cat':'wallet'; }
+function payCurrency(){ if(curKind==='shop'&&curPlan?.cart) return curPlan.p>0||!curPlan.catP?'wallet':'cat';   // v501 一起結帳：全是貓貓幣商品才算貓貓幣
+  return curKind==='shop'&&TTCat.forItem(curPlan)?'cat':'wallet'; }
 function payBalance(){ return payCurrency()==='cat'?(window.__cat||0):(window.__wallet||0); }
 function payDue(){ const a=payFinalAmount(); return payCurrency()==='cat'?TTCat.price(a):a; }
 function renderCoinInfo(){
@@ -4396,7 +4397,26 @@ async function walletLookup(ids){
  }));}finally{clearTimeout(timer);}
 }
 function rememberPaymentIds(ids){try{localStorage.setItem('tt_orders',JSON.stringify([...new Set([...myOrderIds(),...ids])]));}catch(_){} }
+/* v501 金幣／貓貓幣付款的同一次寫入：訂單＋扣款＋扣款明細＋lastTx＋商品（v428 規則一筆扣款明細只對應一筆訂單）。
+   單件 payWithCoins 與商城一起結帳 payCartWithCoins 共用，寫入內容與 v500 相同。 */
+function coinPayChanges(key,id,o,plan,useCat,amt,catAmt){
+ const changes={};changes['clientOrders/'+id]=o;
+ if(useCat){
+  changes['cat/'+key+'/balance']=firebase.database.ServerValue.increment(-catAmt);
+  changes['catTx/'+key+'/'+id]={type:'spend',amount:-catAmt,ref:id,note:plan.n,ts:o.createdAt};
+  changes['cat/'+key+'/lastTx']=id;
+ }else{
+  changes['wallet/'+key+'/balance']=firebase.database.ServerValue.increment(-amt);
+  changes['walletTx/'+key+'/'+id]={type:'spend',amount:-amt,ref:id,note:plan.n,ts:o.createdAt};
+  changes['wallet/'+key+'/lastTx']=id; // v-sec2: 資料庫規則以此核對「扣款＝交易紀錄」
+ }
+ if(o.type==='shop'&&plan.itemId==='dyeTicket')changes['owned/'+key+'/dyeTickets']=firebase.database.ServerValue.increment(1);
+ else if(o.type==='shop'&&plan.itemId)changes['owned/'+key+'/'+plan.itemId]={name:plan.itemName||plan.n,ts:o.createdAt,ref:id};
+ // 訂單、扣款明細、商品一起成立，拒絕時全部不寫入。
+ return changes;
+}
 async function payWithCoins(){
+ if(curKind==='shop'&&curPlan?.cart)return payCartWithCoins();   // v501 商城一起結帳
  if(curKind==='shop'&&TTSeats.isSeat(curPlan?.itemId)){const st=TTSeatUI.state(curPlan.itemId);if(st.owned||!st.onSale||st.price!==curPlan.p){toast('商品持有狀態或販售設定已更新，請重新選擇座椅。');return;}}
  if(curKind==='shop'&&window.TTRetiredOutfits?.retired(curPlan?.itemId,(window.__shopCfg||{})[curPlan?.itemId])){toast('這套測試時裝已下架，請重新選擇商品。');return;}
  if(['pet_drink_blue','pet_drink_sakura','pet_drink_ghost'].includes(curPlan?.itemId)){toast('請到其他分類選擇飲料杯數購買。');return;}
@@ -4421,22 +4441,7 @@ async function payWithCoins(){
  _submitting=true;const btn=document.getElementById('paySubmitBtn');if(btn)btn.disabled=true;
  const done=submitGuard('paySubmitBtn','送出訂單');
  try{
-  await (useCat?catSafety():walletSafety()).execute({key,amount:useCat?catAmt:amt,ids:[ref.key],lookup:walletLookup,commit:async()=>{
-    const changes={};changes['clientOrders/'+ref.key]=o;
-    if(useCat){
-     changes['cat/'+key+'/balance']=firebase.database.ServerValue.increment(-catAmt);
-     changes['catTx/'+key+'/'+ref.key]={type:'spend',amount:-catAmt,ref:ref.key,note:plan.n,ts:o.createdAt};
-     changes['cat/'+key+'/lastTx']=ref.key;
-    }else{
-     changes['wallet/'+key+'/balance']=firebase.database.ServerValue.increment(-amt);
-     changes['walletTx/'+key+'/'+ref.key]={type:'spend',amount:-amt,ref:ref.key,note:plan.n,ts:o.createdAt};
-     changes['wallet/'+key+'/lastTx']=ref.key; // v-sec2: 資料庫規則以此核對「扣款＝交易紀錄」
-    }
-    if(kind==='shop'&&plan.itemId==='dyeTicket')changes['owned/'+key+'/dyeTickets']=firebase.database.ServerValue.increment(1);
-    else if(kind==='shop'&&plan.itemId)changes['owned/'+key+'/'+plan.itemId]={name:plan.itemName||plan.n,ts:o.createdAt,ref:ref.key};
-    // 訂單、扣款明細、商品一起成立，拒絕時全部不寫入。
-    await db.ref(ROOT).update(changes);
-   }});
+  await (useCat?catSafety():walletSafety()).execute({key,amount:useCat?catAmt:amt,ids:[ref.key],lookup:walletLookup,commit:async()=>{await db.ref(ROOT).update(coinPayChanges(key,ref.key,o,plan,useCat,amt,catAmt));}});
  }catch(e){if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'交易結果尚未確認，請聯絡店長');return;}
  finally{done();_submitting=false;if(btn)btn.disabled=false;}
  try{localStorage.setItem('tt_orders',JSON.stringify([...new Set([...myOrderIds(),ref.key])]));}catch(_){}
@@ -4449,6 +4454,56 @@ async function payWithCoins(){
  /* v408 買完染髮券：回到染髮工作室詢問是否直接染上剛剛的顏色（只開介面，交易已完成） */
  if(kind==='shop'&&plan.itemId==='dyeTicket'){try{window.ttAfterDyeTicket?.();}catch(_){}}
 }
+/* v501 商城「全部結帳」（使用者 11/07：穿上的東西一次結帳，不要一件一件結）。
+   資料庫規則一筆扣款明細只對應一筆訂單，一次寫入多件會整筆被拒 → 按一次付款、逐件送出：每件照樣是一筆完整交易
+   （coinPayChanges），沿用交易鎖與未確認紀錄。付款前重讀價格與持有、先確認總額夠付（不夠就一件都不扣）；
+   中途有一件沒成立就停下，已買到的照常持有，跟老闆說清楚哪幾件買到、哪幾件沒有。 */
+async function payCartWithCoins(){
+ if(_submitting)return;
+ const name=(document.getElementById('payNameCoin').value||'').trim();
+ if(!name){toast('請填稱呼或 Discord 名');shake('payNameCoin');return;}
+ if(!myKey||!curPlan?.cart){toast('請先使用闆卡並重新選擇商品');return;}
+ const key=myKey,shown=curPlan;let cart;
+ try{cart=window.TinyTavernUI.cartRecheck(shown.items);}catch(e){toast(((e&&e.message)||'商品資訊已更新')+'，請回商城重新確認');return;}
+ const same=cart.items.length===shown.items.length&&cart.items.every((x,i)=>x.itemId===shown.items[i].itemId&&x.p===shown.items[i].p&&(x.cur||'')===(shown.items[i].cur||''));
+ if(!same){curPlan=cart;renderCoinInfo();toast('商品價格已更新，請確認後再按一次');return;}
+ for(const plan of cart.items){
+  if(!Number.isSafeInteger(plan.p)||plan.p<0){toast('金額有誤，請重新選擇');return;}
+  if(TTSeats.isSeat(plan.itemId)){const st=TTSeatUI.state(plan.itemId);if(st.owned||!st.onSale||st.price!==plan.p){toast('「'+plan.itemName+'」的持有狀態或販售設定已更新，請回商城重新確認。');return;}}
+  if(window.TTRetiredOutfits?.retired(plan.itemId,(window.__shopCfg||{})[plan.itemId])){toast('「'+plan.itemName+'」已下架，請回商城重新確認。');return;}
+ }
+ const gold=cart.p,cat=TTCat.price(cart.catP);
+ if((window.__wallet||0)<gold){toast('金幣不夠，還差 '+(gold-(window.__wallet||0))+' 金幣，這次沒有扣款');return;}
+ if((window.__cat||0)<cat){toast('貓貓幣不夠，還差 '+TTCat.fmt(cat-(window.__cat||0))+'，這次沒有扣款');return;}
+ _submitting=true;const btn=document.getElementById('paySubmitBtn');if(btn)btn.disabled=true;
+ const done=submitGuard('paySubmitBtn','全部結帳'),bought=[];let stop=null;
+ try{
+  for(const [i,plan] of cart.items.entries()){
+   if(btn)btn.textContent='結帳中 '+(i+1)+'／'+cart.items.length;
+   const useCat=TTCat.forItem(plan),amt=plan.p,catAmt=useCat?TTCat.price(amt):0,ref=db.ref(ROOT+'/clientOrders').push();
+   const o={plan:plan.id,planName:plan.n,amount:amt,origAmount:plan.p,couponUsed:false,couponDisc:0,type:'shop',itemId:plan.itemId,itemName:plan.itemName||null,
+    name,last5:null,proof:null,paidBy:useCat?'cat':'wallet',staffName:null,staffCid:null,booking:false,reserveAt:null,status:'done',createdAt:Date.now(),myKey:key};
+   if(useCat)o.catAmount=catAmt;
+   try{await (useCat?catSafety():walletSafety()).execute({key,amount:useCat?catAmt:amt,ids:[ref.key],lookup:walletLookup,commit:async()=>{await db.ref(ROOT).update(coinPayChanges(key,ref.key,o,plan,useCat,amt,catAmt));}});}
+   catch(e){if(e.ids)rememberPaymentIds(e.ids);stop={plan,e};break;}
+   bought.push({plan,o});rememberPaymentIds([ref.key]);
+  }
+ }finally{done();_submitting=false;if(btn){btn.disabled=false;btn.textContent='全部結帳';}}
+ if(bought.length){try{statInc('orders');bought.forEach(b=>notifyOrder(b.o));watchMyOrders();}catch(_){}}
+ if(!stop){
+  try{shopClose();}catch(_){}
+  if(window.celebrate)celebrate('購買成功!',bought.length+' 件都收進背包了');else toast('購買成功!');
+  return;
+ }
+ if(!bought.length){toast(stop.e.message||'交易結果尚未確認，請聯絡店長');return;}   // 一件都沒成立：跟單件一樣留在結帳頁
+ const label=p=>'「'+(p.itemName||p.n)+'」',rest=cart.items.slice(bought.length+1);
+ try{shopClose();}catch(_){}
+ const sub=['買到了：'+bought.map(b=>label(b.plan)).join('、')+'，已收進背包。',
+  stop.e.code==='UNCONFIRMED'?label(stop.plan)+'的付款結果還沒確認，請先到訂單查看，不要重複付款。':'沒買到：'+label(stop.plan)+'，沒有扣款。'+(stop.e.message?'（'+stop.e.message+'）':''),
+  rest.length?'還沒結帳：'+rest.map(label).join('、')+'，沒有扣款。':''].filter(Boolean).join('\n');
+ if(window.ttConfirm)ttConfirm('買到 '+bought.length+' 件，還有 '+(cart.items.length-bought.length)+' 件沒買到',sub,()=>{try{window.TinyTavernUI?.open('shop');}catch(_){}},'回商城看看','知道了');
+ else toast(sub);
+}
 /* 錢包顯示 + 儲值 */
 function updateCoinChip(){ const el=document.getElementById('coinBal'); if(el) el.textContent=(window.__wallet||0);
   const m=document.getElementById('mhCoin'); if(m) m.textContent=(window.__wallet||0);
@@ -4456,7 +4511,7 @@ function updateCoinChip(){ const el=document.getElementById('coinBal'); if(el) e
 /* v492 貓貓幣變動：HUD、停在時裝結帳頁時即時更新（兌換完回來付款鈕自動解鎖） */
 TTCat.onChange(()=>{ try{ updateCoinChip();
   const m3=document.getElementById('shopM3');
-  if(m3&&m3.style.display==='flex'&&payMethod==='coin'&&payCurrency()==='cat'){ renderCoinInfo(); const bn=document.querySelector('#payMethodRow .pmBal'); if(bn) bn.textContent=TTCat.fmt(window.__cat||0); }
+  if(m3&&m3.style.display==='flex'&&payMethod==='coin'&&(payCurrency()==='cat'||curPlan?.cart)){ renderCoinInfo(); const bn=document.querySelector('#payMethodRow .pmBal'); if(bn&&payCurrency()==='cat') bn.textContent=TTCat.fmt(window.__cat||0); const bc=document.querySelector('#payMethodRow .pmCatBal'); if(bc) bc.textContent=TTCat.fmt(window.__cat||0); }
 }catch(e){} });
 /* ⚠ 沒有闆卡就沒有 myKey,錢包路徑會變成 wallet/null —— 那是所有訪客共用的節點。
    真的匯了錢也永遠看不到金幣。所以儲值前一定要先擋。 */
@@ -6304,6 +6359,8 @@ const SFX=(function(){
     body.appendChild(acc(true,'✦','貓貓幣登場','11/7 起', '<p><b>酒館送你的小心意：貓貓幣</b></p><p>11/7 起，每日任務改送貓貓幣，活動也會送。收到的貓貓幣會存在錢包裡，名牌上的小硬幣也會轉一圈告訴你。</p><p>時裝、寵物、座椅、染髮券和聊天氣泡照樣用金幣購買，原本的金幣都會好好留著。</p>'));
     if(TTCat.dailyOn()) body.appendChild(acc(true,'✦','每日任務','每天', '<p><b>每天完成就送 100 貓貓幣</b></p><p>每日登入打卡，在大廳聊天室發送至少一則訊息，並在大廳待滿 10 分鐘，100 貓貓幣會自動存進錢包（每天一次，以台灣時間計算）。</p>'));
     else body.appendChild(acc(true,'✦','每日任務','新登場', '<p><b>每天完成就送 10 金幣</b></p><p>每日登入打卡，在大廳聊天室發送至少一則訊息，並在大廳待滿 10 分鐘，10 金幣會自動存進錢包（每天一次，以台灣時間計算）。11/7 起改送 100 貓貓幣。</p>'));
+    /* v502 掛機收益：離線也累積，每小時 22、最多 8 小時（lobby-ui/idle-income.js，規則第十二批） */
+    body.appendChild(acc(true,'✦','掛機收益','新登場', '<p><b>關掉網頁也會慢慢存貓貓幣</b></p><p>用 Discord 登入後，每小時存 22 貓貓幣，最多存 8 小時（176 貓貓幣）。存滿就會停下來等你，按「掛機收益」的「領取」收進錢包，下一輪從領取那一刻重新開始存。</p><p>電腦版在左上角名牌下方，手機版在上方個人卡下方，錢包的貓貓幣區也看得到。每天來領一次，七天就能存到 1,232 貓貓幣。</p>'));
     const staff=[...agents.entries()].filter(([k])=>k.indexOf('staff_')===0);
     body.appendChild(acc(false,'✦','現在在店', staff.length+' 位', null, bd=>{
       if(!staff.length){ bd.innerHTML='<p class="lite">目前沒有冒險者名單</p>'; return; }
@@ -8132,7 +8189,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=496"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=501"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=500"></script>
@@ -8147,7 +8204,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=499"></script>
-<script src="lobby-ui/order-flow.js?v=492"></script>
+<script src="lobby-ui/order-flow.js?v=501"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
 import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=469';
@@ -8163,6 +8220,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=492"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=500">
 <script src="lobby-ui/mobile-app.js?v=500"></script>
+<script src="lobby-ui/idle-income.js?v=502"></script>
 </body>
 </html>
 
