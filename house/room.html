@@ -304,6 +304,12 @@ let items=load()||fresh(theme);
 const HOST=(()=>{try{return window.parent!==window&&window.parent.TTHouse?window.parent.TTHouse:null;}catch(e){return null;}})();
 const VISIT=(()=>{try{return HOST&&HOST.visiting?HOST.visiting():null;}catch(e){return null;}})();   // v504 拜訪別人的小屋：只能參觀（不能佈置、不存檔），主人的小人站在房間裡
 const HOUSE_KEYS=new Set(["vf_wardrobe", "vf_bookshelf", "vf_desk", "vf_chair", "vf_bed", "vf_nightstand", "vf_dresser", "vf_chest", "vf_rug", "vf_plant", "vf_teacart", "vf_coatrack", "vf_catbed", "vf_heartchair", "vf_kitchen", "vf_cupboard", "vf_sofa", "vf_coffeetable", "vf_sideboard", "vf_fireplace", "vf_rug2", "vf_flowerstand", "vf_stepstool", "vf_aquarium", "vf_toychest", "vf_win_curtain", "vf_win_round", "vf_wallshelf", "vf_cuckoo", "vf_painting", "vf_wreath", "vf_bunting", "vf_hangplant", "vf_corkboard", "vf_tapestry", "vf_wallbooks", "vf_win_shutter", "vf_counter", "vf_barrels", "vf_tallplant", "vf_runner", "vr_desk", "vr_chair", "vr_bed", "vr_wardrobe", "vr_dresser", "vr_bookshelf", "vr_rack", "vr_sidetable", "vr_dining", "vr_sofa", "vr_armchair", "vr_rug", "vr_window", "vr_clock", "vr_shelf", "vr_sink", "vr_fridge", "vr_stove", "vr_bathtub", "vr_basin", "vr_cubeshelf", "vr_sofa2b", "vr_dblbedb", "vr_s_a_dessertcart", "vr_s_a_plushpile", "vr_s_a_sidetable", "vr_s_b_bookshelf", "vr_s_b_corkboard", "vr_s_b_fireplace", "vr_s_d_wardrobe", "vr_s_e_hammock", "vr_s_e_partshelf", "vr_s_g_bed", "vr_s_g_desk", "vr_s_g_mirror", "vr_s_g_pegboard", "vr_s_g_plant", "vr_s_g_rack", "vr_s_g_window", "vr_s_h_cauldron", "vr_s_i_teatable", "vl_shellbed", "vl_clamchair", "vl_coralshelf", "vl_aquarium", "vl_corallamp", "vl_treasure", "vl_wheel", "vl_anchor", "vl_kelp", "vl_starpouf", "vl_turtletable", "vl_jellylamp", "vl_sofa", "vl_barrel", "vl_reef", "vl_rug", "vl_helmet", "vl_pearlstand", "vl_wardrobe", "vl_bubbletube", "vl_fishbowl", "vl_crates", "vl_porthole", "vl_net", "vl_seaweed", "vl_lantern", "vl_lifebuoy", "vl_shellsofa", "vl_sideboard", "vl_shellclock", "vl_curio", "vl_coraltree", "vl_rug2", "vl_oars", "vp_stumptable", "vp_stumpstool", "vp_mushlamp", "vp_leafbed", "vp_vineshelf", "vp_acornpot", "vp_mosssofa", "vp_flowerchair", "vp_logbench", "vp_mushhouse", "vp_well", "vp_fern", "vp_berrybasket", "vp_mossrock", "vp_rug", "vp_wagon", "vp_hedgehog", "vp_pond", "vp_sunflower", "vp_nest", "vp_leaves", "vp_herbs", "vp_clock", "vp_diningtable", "vp_branchchair", "vp_runner", "vp_plantladder", "vp_cottagewin", "vp_easel", "vp_potting", "vp_beehive", "vp_vinearch", "vp_rug2", "vp_armchair", "vp_butterflies", "vp_pans", "vp_lanternw"]),HOUSE_STARTER=["vr_chair", "vr_bed", "vr_rug", "vr_window"],HOUSE_N=14;
+// v507 小屋擴建（14→18→22）：18、22 格的房間外殼另外存成 room_18.png／room_22.png，用到才載（不塞進 room.html）。
+// 房間大小由大廳給（自己家＝house/<key>/size、拜訪＝houseView/<key>/size），沒有就是 14。
+const HOUSE_SHELLS={"18": {"w": 588, "h": 452, "ax": 294.0, "ay": 292.53, "src": "room_18.png"}, "22": {"w": 716, "h": 516, "ax": 358.0, "ay": 324.53, "src": "room_22.png"}},HOUSE_SIZES=[HOUSE_N,...Object.keys(HOUSE_SHELLS).map(Number)].sort((a,b)=>a-b);
+const houseSizeOk=n=>HOUSE_SIZES.includes(+n)?+n:HOUSE_N;
+function houseShell(n){const k='room_'+n;if(!SPR[k]&&HOUSE_SHELLS[n])SPR[k]={...HOUSE_SHELLS[n]};return k;}
+let HOUSE_SZ=(()=>{try{return houseSizeOk(HOST&&HOST.roomSize&&HOST.roomSize());}catch(e){return HOUSE_N;}})();houseShell(HOUSE_SZ);
 for(const k of Object.keys(DEF))if(!HOUSE_KEYS.has(k))delete DEF[k];
 for(const t of Object.keys(THEMES))if(t!=='daily')delete THEMES[t];
 // 入住禮：第一次進小屋就擺好的幾件（免費）
@@ -315,7 +321,7 @@ items=houseLayout(HOST&&HOST.initialLayout())||(VISIT?[]:fresh('daily'));
 const houseSerial=()=>items.map(({_pt,host,...o})=>host?{...o,on:items.indexOf(host)}:{...o});
 load=function(){return items.slice();};
 save=function(){if(VISIT)return;try{HOST&&HOST.save(houseSerial());}catch(e){}};
-loadSize=function(){return HOUSE_N;};
+loadSize=function(){return HOUSE_SZ;};
 // 像素 v5／v7 切換（V 鍵）是開發用的，這裡關掉
 addEventListener('keydown',e=>{if((e.key||'').toLowerCase()!=='v')return;const t=e.target;if(!(t&&t.closest&&t.closest('input,textarea')))e.stopImmediatePropagation();},true);
 startLoad();
@@ -1879,6 +1885,7 @@ PST.textContent='#hsPeers{position:fixed;inset:0;pointer-events:none;z-index:6;o
  +'.hs-name{position:absolute;transform:translate(-50%,-100%);padding:1px 8px;border-radius:999px;background:rgba(28,33,86,.78);color:#fff;font:700 12px/1.6 "LINE Seed TW","Huninn",sans-serif;white-space:nowrap}'
  +'.hs-bub{position:absolute;transform:translate(-50%,-100%);max-width:220px;padding:6px 11px;border:2.5px solid #1C2156;border-radius:14px;background:#fff;color:#1C2156;font:700 13px/1.45 "LINE Seed TW","Huninn",sans-serif;box-shadow:0 3px 0 #1C2156;word-break:break-word;animation:hsBub .18s ease-out}'
  +'.hs-bub::after{content:"";position:absolute;left:50%;bottom:-9px;width:12px;height:12px;margin-left:-6px;background:#fff;border-right:2.5px solid #1C2156;border-bottom:2.5px solid #1C2156;transform:rotate(45deg)}'
+ +'.hs-bub.hs-stk{padding:5px}.hs-bub.hs-stk img{display:block;width:56px;height:56px;object-fit:contain}'
  +'@keyframes hsBub{from{transform:translate(-50%,-90%) scale(.7);opacity:0}to{transform:translate(-50%,-100%) scale(1);opacity:1}}';
 document.head.append(PST);
 const PL=document.createElement('div');PL.id='hsPeers';document.body.append(PL);
@@ -1903,7 +1910,9 @@ function peerLabels(){const meH=(SPR[DOLL()]||{}).ay||56;
     P.el.style.left=q.x+'px';P.el.style.top=q.y+'px';if(P.bub){P.bub.style.left=q.x+'px';P.bub.style.top=(q.y-P.el.offsetHeight-12)+'px';}}   // 泡泡放在名牌上面，不蓋住名字
   if(ME_BUB){const q=scr(me.i,me.j,meH+10);ME_BUB.style.left=q.x+'px';ME_BUB.style.top=q.y+'px';}}
 let ME_BUB=null,ME_BT=0;
-function peerSay(id,text){const el=document.createElement('div');el.className='hs-bub';el.textContent=String(text||'').slice(0,120);PL.append(el);
+function peerSay(id,text){const el=document.createElement('div');el.className='hs-bub';
+  if(text&&typeof text==='object'&&text.img){el.classList.add('hs-stk');const im=new Image();im.src=text.img;im.alt=(text.name||'')+'貼圖';im.draggable=false;el.append(im);}   // v507 小屋聊天貼圖：大廳交過來 {img,name}
+  else el.textContent=String(text||'').slice(0,120);PL.append(el);
   if(id==='me'){ME_BUB?.remove();ME_BUB=el;clearTimeout(ME_BT);ME_BT=setTimeout(()=>{if(ME_BUB===el){el.remove();ME_BUB=null;}},5200);}
   else{const P=PEERS.get(id);if(!P){el.remove();return;}P.bub?.remove();P.bub=el;clearTimeout(P.bt);P.bt=setTimeout(()=>{if(P.bub===el){el.remove();P.bub=null;}},5200);}
   peerLabels();}
@@ -1917,6 +1926,10 @@ function spawnAt(n){const B=blocked(null),o=SPAWN[Math.max(0,n|0)%4],ti=Math.max
 {const _dr=draw;draw=function(now,dt){peerStep(dt);_dr(now,dt);peerLabels();};}
 {const _b=boot;boot=function(){_b();try{setDoll(HOST&&HOST.dollCanvas&&HOST.dollCanvas());}catch(e){}frameRoom();readyFn();};}
 addEventListener('resize',()=>{if(!held)frameRoom();});
+// v507 小屋擴建：大廳付好款叫這個，房間直接變大（原本的家具都留在原位）；外殼還沒載就先載
+async function houseSetSize(n){n=houseSizeOk(n);if(n===N)return N;const k=K(houseShell(n));await loadKey(k);if(!(k in _IM))return N;
+  HOUSE_SZ=n;cancel();N=n;updateSizeUI();frameRoom();
+  if(!reduceMotion.matches)for(let a=0;a<4;a++)burst(iso(N*(a%2),N*(a>>1)),8);return N;}
 window.TTRoom={ready,
   setMode:m=>setMode(m==='edit'?'edit':'walk'),mode:()=>mode,
   zoom:d=>zoomStep(d>0?1:-1),frame:()=>frameRoom(),
@@ -1931,7 +1944,7 @@ window.TTRoom={ready,
     if(k==='delete'||k==='backspace'){held.isNew?cancel():removeHeld();return true;}
     if(k==='escape'){cancel();return true;}return false;},
   layout:()=>houseSerial(),visiting:()=>!!VISIT,
-  me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0}),setPeers,say:peerSay,spawn:spawnAt,
+  me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0}),setPeers,say:peerSay,spawn:spawnAt,size:()=>N,setSize:houseSetSize,
   thumb:(k,S=88)=>thumbOf(k,S),
   async thumbAsync(k,S=88){const d=DEF[k];if(!d)return '';await loadKey(K(d.spr[0]));return thumbOf(k,S);},
   setDoll,

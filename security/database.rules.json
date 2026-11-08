@@ -575,6 +575,12 @@
           },
           "vis": {
             ".validate": "newData.val() == 'public' || newData.val() == 'friends' || newData.val() == 'private'"
+          },
+          "size": {
+            ".validate": "newData.isNumber() && (newData.val() == 14 || newData.val() == 18 || newData.val() == 22) && ((auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || newData.val() == data.val() || (((newData.val() == 18 && (!data.exists() || data.val() == 14)) || (newData.val() == 22 && data.val() == 18)) && ((newData.val() == 18 && newData.parent().child('sizeRef').isString() && newData.parent().child('sizeRef').val().matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).exists() && !root.child('peiwan/clientOrders').child(newData.parent().child('sizeRef').val()).exists() && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('myKey').val() == $k && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('itemId').val() == 'house:size18' && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('type').val() == 'shop' && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('status').val() == 'done' && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('paidBy').val() == 'cat' && root.child('peiwan/shopConfig').child('house:size18').child('price').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('amount').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('amount').val() >= root.child('peiwan/shopConfig').child('house:size18').child('price').val()) || (newData.val() == 22 && newData.parent().child('sizeRef').isString() && newData.parent().child('sizeRef').val().matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).exists() && !root.child('peiwan/clientOrders').child(newData.parent().child('sizeRef').val()).exists() && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('myKey').val() == $k && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('itemId').val() == 'house:size22' && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('type').val() == 'shop' && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('status').val() == 'done' && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('paidBy').val() == 'cat' && root.child('peiwan/shopConfig').child('house:size22').child('price').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('amount').isNumber() && newData.parent().parent().parent().child('clientOrders').child(newData.parent().child('sizeRef').val()).child('amount').val() >= root.child('peiwan/shopConfig').child('house:size22').child('price').val()))))"
+          },
+          "sizeRef": {
+            ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{1,40}$/)"
           }
         }
       },
@@ -655,6 +661,9 @@
           },
           "$other": {
             ".validate": false
+          },
+          "size": {
+            ".validate": "newData.isNumber() && (newData.val() == 14 || ((newData.val() == 18 || newData.val() == 22) && newData.parent().parent().parent().child('house').child($k).child('size').isNumber() && newData.parent().parent().parent().child('house').child($k).child('size').val() >= newData.val()))"
           }
         }
       },

@@ -34,7 +34,7 @@ function steps(){
   {target:()=>document.querySelector('.tt-funds'),pad:8,title:'錢包',text:'金幣用來點冒險者、買時裝，按這裡可以儲值。\n貓貓幣是酒館送你的（每日任務、掛機收益），可以買小屋家具。'},
   {target:()=>$('chatbox'),pad:6,title:'聊天室',text:'跟大家打聲招呼吧！說的話會冒在小人頭上。\n每天在大廳說說話、待滿 10 分鐘，完成每日任務就送 '+daily+' 貓貓幣。'},
   {target:()=>union([$('dressBtn'),$('wardBtn')]),pad:8,title:'商城與背包',text:'商城的衣服可以先試穿再買；背包裡是你已經有的衣服、寵物和座椅，隨時換裝。'},
-  {target:()=>$('ttHouseBtn'),pad:8,title:'小屋',text:'你專屬的小房間：用貓貓幣買家具佈置，也能邀請好友進來一起聊天。'},
+  {target:()=>$('ttHouseBtn'),pad:8,title:'小屋',text:'你專屬的小房間：用貓貓幣抽扭蛋拿家具來佈置，也能邀請好友進來一起聊天。'},
   {target:()=>$('ttHubButton'),pad:8,title:'我的酒館',text:'好友、私訊、信箱、訂單和成就都在這裡。\n想再看一次這個教學，右上角「設定」裡有「大廳教學」。'}
  ];}
 function run(){

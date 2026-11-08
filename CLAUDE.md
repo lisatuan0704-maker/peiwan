@@ -801,6 +801,25 @@ v297：右下功能收為我的酒館六分頁（通訊錄、信箱、訂單、�
 - 上線前：Firebase 發布規則（含第 14、15 批）→ Push。實測腳本 scratchpad/visit/multi.cjs（三個分身＋模擬資料庫，16 項）。
 - 順手修：大廳入店歡迎卡（#intro）原文有禁用字（虛擬角色／乾淨無擦邊／金流透明），改成「這裡是像素風的小小酒館。找冒險者一起打遊戲、語音聊聊天，或在大廳隨意晃晃——慢慢來，當自己家就好。」
 
+## 2026/11/08 v507 小屋聊天貼圖、右下只留佈置＋扭蛋、小屋擴建（Claude；需發布第十七批規則＋店長頁上架）
+- 小屋聊天貼圖（D：小屋聊天也要能發貼圖）：跟大廳同一套貼圖代碼「[貼圖:sticker-NN]」（TTChatStickers），走同一條 houseChat（120 字內），不用改規則。
+  聊天框左邊貼圖鈕＋上方貼圖選單（house.js STK_ICON、.tt-hc-pick），紀錄顯示小圖，房間頭上冒圖片泡泡（room.html peerSay 收 {img,name}）。
+  小屋聊天也加了 1.2 秒只能送一則（同大廳）。
+- 右下只留「佈置」＋粉色「扭蛋」（D：家具店跟扭蛋定位重複）：#ttHouseShop 隱藏（扭蛋鈕靠它定位、openShop 程式保留），
+  我的家具「去家具店」改「去扭蛋」，小屋教學第 2 步改扭蛋，大廳教學小屋那步改「抽扭蛋拿家具」。
+- **小屋擴建**（D：花比較多貓貓幣可以擴建）：14 → 18 → 22，一次一級，入口是右下「擴建」鈕（D：單獨一顆、放在佈置左邊；價格要店長上架才出現，擴到 22 或在別人家就不顯示）。
+  價格：shopConfig/house:size18＝300（3,000 貓貓幣）、house:size22＝600（6,000 貓貓幣），店長頁「上架貓貓幣商品」會新增，之後可在資料庫改 price。
+  購買＝家具同一條路（clientOrders itemId house:size<N>、paidBy cat＋扣款＋catTx），同一次寫入 house/<key>/size、sizeRef（訂單編號）、at、layout。
+  拜訪快照 houseView/<key>/size（14 格不寫，規則還沒發布時照樣能寫）。房間：18／22 的外殼另存 house/room_18.png、room_22.png，用到才載；
+  room.html 的 HOUSE_SHELLS／houseSetSize／TTRoom.size()、setSize()，房間大小由大廳 TTHouse.roomSize() 給。
+  ⚠ 這次是直接改 house/room.html（同樣改法已寫進 tt-room-kit/house-lobby 的 house-early.js、house-embed.js、build.py；build.py 會輸出兩張外殼）。
+  重建後要照舊跑 pin_live.py（試建出來的圖集跟正式站不同）。退款擴建訂單不會自動縮回，要店員把 house/<key>/size 改回去。
+- **規則第十七批**（tests/security-rules-v428/build/harden-phase17.cjs，test-phase17 19 項；9～16 批重跑，第 9 批 2 項是 11/07 前的舊測試照舊失敗）：
+  house size 只能往上一級、同一次寫入要有這張新的擴建訂單（本人、itemId 對、貓貓幣、金額 ≥ shopConfig 價），店員可直接改；houseView size 不能比 house size 大。
+  預覽頁實際送出的擴建寫入用正式規則重播：允許、同一筆再送被擋；舊規則下整筆被拒、不扣錢。
+- 店長頁「上架貓貓幣商品」：順手修——扭蛋家具（price 0）不再上架（上架成 0 元的話客人可以自己寫 0 元訂單拿走扭蛋家具；正式站目前沒有這種資料）。
+- 上線順序：①發布 security/database.rules.json ②推網站 ③店長頁商城分頁按「上架貓貓幣商品」（新增兩級擴建）。
+
 ## 2026/11/08 v506 大廳新手教學（Claude；D：「第一次進來也要有像小屋一樣的新手教學，他們才知道這邊可以點陪玩」）
 - lobby-ui/lobby-tour.js（TTLobbyTour.run／auto）：用小屋同一套 TTCoach，8 步——你的小人（WASD／空白鍵互動／點別人看闆卡）→
   冒險者（「待接單」＝有空、點兩下看介紹卡）→ 我要點單 → 錢包（金幣／貓貓幣）→ 聊天室（每日任務）→ 商城與背包 → 小屋 → 我的酒館。

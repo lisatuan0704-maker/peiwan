@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='505';
+const VER='507';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -31,6 +31,9 @@ const VIS_NAME={public:'公開',friends:'只限好友',private:'不公開'};
 const VIS_TIP={public:'好友和隨機拜訪的老闆都能進來一起聊天（擺 5 件以上才會出現在隨機拜訪）',friends:'只有好友能進來，不會出現在隨機拜訪',private:'只有你自己，誰都不能進來'};
 const DIR_MIN=5;          // 入住禮 4 件＋至少再擺 1 件，才放進隨機拜訪名單
 const SEATS=['0','1','2','3'],STALE=45000,CHAT_MAX=120;
+// v507 小屋擴建（D：花比較多貓貓幣可以擴建）：14→18→22 格，一次擴一級；價格是店長頁 shopConfig/house:size18、house:size22（金幣等值價，扣 ×10 貓貓幣）
+const SIZES=[14,18,22],sizeOk=n=>SIZES.includes(+n)?+n:14,nextSize=()=>SIZES[SIZES.indexOf(sizeOk(S.size))+1]||0;
+const STK_ICON='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 21H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8l-7 7Z"/><path d="M14 21v-4a3 3 0 0 1 3-3h4M8 9h.01M15 9h.01M8 13q3 4 6 0"/></svg>';
 const TS=()=>firebase.database.ServerValue.TIMESTAMP;
 const myName=()=>((typeof me==='function'&&me()?.b?.name)||'酒館客人').slice(0,40);
 const isPhone=()=>document.documentElement.classList.contains('ttm-on');
@@ -71,8 +74,8 @@ async function enter(){
   try{
    await loadCatalog();
    const h=(await DB().ref(R()+'/house/'+key).once('value')).val()||{};
-   S.layout=Array.isArray(h.layout)?h.layout:(h.at?[]:null);S.vis=VIS_NAME[h.vis]?h.vis:'public';   // v505：有存檔時間但沒擺設＝家具全收回背包了（不是新小屋，不再擺入住禮）
-  }catch(e){S.layout=null;}
+   S.layout=Array.isArray(h.layout)?h.layout:(h.at?[]:null);S.vis=VIS_NAME[h.vis]?h.vis:'public';S.size=sizeOk(h.size);   // v505：有存檔時間但沒擺設＝家具全收回背包了（不是新小屋，不再擺入住禮）
+  }catch(e){S.layout=null;S.size=14;}
   if(!S.on||S.hk!==key||S.visit)return;
   watch('houseInv/'+key,v=>{S.inv=v||{};renderBag();renderShop();});
   watch('houseVisit/'+key,v=>{S.visitors=v||{};renderPanel();renderTop();});
@@ -84,7 +87,7 @@ async function enter(){
   openFrame('我的小屋',()=>{
     renderBag();publish(room('layout'));room('spawn',+S.seat||0);S.last=null;pubPos();pushPeers();   // 快照跟著目前的擺設（第一次進來、入住禮剛擺好也要有）
     if(window.TTCoach&&!TTCoach.seen(TOUR_KEY))setTimeout(()=>{if(S.on&&!S.visit)houseTour();},400);else if(!S.layout)say('歡迎回家！入住禮已經幫你擺好了');});
-  setMode('walk');renderTop();renderChat();
+  setMode('walk');renderTop();renderChat();renderExpand();setTimeout(renderExpand,2000);
  }finally{S.joining=false;}
 }
 // 關掉目前的房間（自己的或別人的）：起身、停掉同步，不換回大廳的名牌；回大廳用 exit()
@@ -134,7 +137,7 @@ function startRoom(hk){
  cref.on('value',onConn);S.subs.push(()=>cref.off('value',onConn));
  clearInterval(S.pubT);clearInterval(S.beatT);S.last=null;
  S.pubT=setInterval(pubPos,200);
- S.beatT=setInterval(()=>{if(!S.seatRef)return;S.seatRef.update({at:TS()}).catch(()=>{});
+ S.beatT=setInterval(()=>{renderExpand();if(!S.seatRef)return;S.seatRef.update({at:TS()}).catch(()=>{});
    if(!S.visit&&S.vis==='public'&&S.listed)DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});},15000);   // v505：有在隨機名單上才報「在家」（不在名單上寫不進去）
  if(!S.visit&&S.vis==='public'&&S.listed)DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});}
 // 自己的位置：走動時最多每 0.2 秒回報一次，停下來再補最後一次
@@ -155,21 +158,26 @@ function onChat(v){const fresh=[];
  for(const [id,m] of Object.entries(v).sort((a,b)=>(a[1]?.at||0)-(b[1]?.at||0))){if(!m||S.chatSeen.has(id))continue;S.chatSeen.add(id);
   S.chatLog.push({id,f:m.f,n:m.n||'旅人',x:String(m.x||''),at:m.at});if(m.at>S.joinedAt-3000)fresh.push(m);}
  S.chatLog=S.chatLog.slice(-30);
- for(const m of fresh)room('say',m.f===KEY()?'me':m.f,m.x);
+ for(const m of fresh){const it=stkOf(m.x);room('say',m.f===KEY()?'me':m.f,it?{img:stkUrl(it),name:it.name}:m.x);}
  renderChat();}
-async function sendChat(){const inp=$('ttHouseSay');if(!inp)return;const x=inp.value.trim().slice(0,CHAT_MAX);if(!x)return;
+async function sendChat(preset){const inp=$('ttHouseSay');if(!inp)return;const x=(preset||inp.value.trim()).slice(0,CHAT_MAX);if(!x)return;
  if(window.ttIsMuted?window.ttIsMuted():!!window.__mute){say('你目前被禁言中，暫時不能說話');return;}
  if(!S.seat||!S.hk){say('還沒進到小屋裡，等一下再說');return;}
- inp.value='';
+ if(Date.now()-(S.lastSay||0)<1200){say('說慢一點點唷');return;}
+ S.lastSay=Date.now();if(!preset)inp.value='';
  try{await DB().ref(R()+'/houseChat/'+S.hk).push({f:KEY(),n:myName(),x,s:S.seat,at:TS()});}
- catch(_){inp.value=x;say('訊息沒有送出，請再試一次');}}
+ catch(_){if(!preset)inp.value=x;say(preset?'貼圖沒有送出，請再試一次':'訊息沒有送出，請再試一次');}}
+// v507 小屋聊天貼圖（D：小屋聊天也要能發貼圖）：跟大廳同一套貼圖代碼「[貼圖:sticker-NN]」（TTChatStickers），走同一條聊天，不用改資料庫規則
+const stkOf=x=>{try{return window.TTChatStickers?.decode(x)||null;}catch(_){return null;}};
+const stkUrl=it=>new URL('tavern-ui/'+it.asset,location.href).href;   // 房間在 house/ 底下的 iframe，給完整網址
+function sendSticker(id){const code=window.TTChatStickers?.encode(id);if(code)sendChat(code);}
 // 主人每次回家順手清掉一天以前的聊天
 function pruneChat(hk){DB().ref(R()+'/houseChat/'+hk).limitToFirst(60).once('value').then(s=>{const v=s.val()||{},old=Date.now()-86400000,ch={};
   for(const [id,m] of Object.entries(v))if(!m||!(m.at>old))ch[id]=null;if(Object.keys(ch).length)DB().ref(R()+'/houseChat/'+hk).update(ch).catch(()=>{});}).catch(()=>{});}
 function renderChat(){const box=$('ttHouseChat');if(!box)return;const log=box.querySelector('.tt-hc-log');
  const people=SEATS.map(s=>S.room[s]).filter(v=>v&&v.at>Date.now()-STALE*2).length;
  box.querySelector('.tt-hc-who').textContent=S.on?'小屋裡 '+Math.max(1,people)+' / 4 人':'';
- log.innerHTML=S.chatLog.length?S.chatLog.slice(-8).map(m=>'<p'+(m.f===KEY()?' class="mine"':'')+'><b>'+esc(m.n)+'</b>'+esc(m.x)+'</p>').join('')
+ log.innerHTML=S.chatLog.length?S.chatLog.slice(-8).map(m=>'<p'+(m.f===KEY()?' class="mine"':'')+'><b>'+esc(m.n)+'</b>'+((it=>it?'<img class="tt-hc-stkimg" src="'+esc(stkUrl(it))+'" alt="'+esc(it.name)+'貼圖">':esc(m.x))(stkOf(m.x)))+'</p>').join('')
   :'<p class="tt-hc-empty">'+(S.visit?'跟大家打聲招呼吧':'邀請好友進來一起聊天吧（右上「拜訪」）')+'</p>';
  log.scrollTop=log.scrollHeight;}
 
@@ -180,9 +188,10 @@ function houseTour(){if(!window.TTCoach||!S.on||S.visit)return;if(S.mode!=='walk
  const daily=TTCat.dailyOn()?'每天在大廳說說話、待滿 10 分鐘，完成每日任務就送 '+TTCat.DAILY+' 貓貓幣。':'11/7 起，每天在大廳說說話、待滿 10 分鐘，完成每日任務就送 '+TTCat.DAILY+' 貓貓幣。';
  TTCoach.run([
   {target:room,pad:4,title:'歡迎來到你的小屋！',text:'這間房間是你專屬的，入住禮的四件家具已經幫你擺好了。\n點地板，小人就會走過去；按住拖曳可以移動視角，滾輪可以放大縮小。'},
-  {target:()=>$('ttHouseShop'),title:'家具店',text:'用貓貓幣買家具。越大、越精緻的家具越貴，買了會先收進「我的家具」。'},
+  {target:()=>$('ttHouseGacha'),title:'扭蛋',text:'用貓貓幣抽家具：單抽 120、十連 1,200。抽到的家具會先收進「我的家具」。'},
   {target:cat,title:'貓貓幣',text:daily+'\n名牌上這個硬幣就是你現在有的貓貓幣。'},
   {target:()=>$('ttHouseEdit'),title:'佈置',text:'按這裡，右邊會打開「我的家具」：點一件拿出來，移到想放的地方再點一下就擺好。\n點房間裡的家具，可以拿起來重新擺。'},
+  ...($('ttHouseExpand')&&!$('ttHouseExpand').classList.contains('off')?[{target:()=>$('ttHouseExpand'),title:'擴建',text:'房間不夠擺？花貓貓幣可以把房間擴大（14→18→22 格），原本的家具都留在原位。'}]:[]),
   {target:()=>$('ttHouseVisit'),title:'拜訪',text:'邀請在線上的好友進你的小屋一起聊天（最多 4 人），或隨機去別人的小屋坐坐。\n也可以在這裡決定誰能進來。'},
   {target:()=>$('ttHouseChat'),title:'小屋聊天',text:'在這裡打字，說的話會出現在小人頭上，小屋裡的人都看得到。'},
   {target:()=>$('ttHouseBack'),title:'回大廳',text:'想回酒館大廳就按這裡，擺好的家具都會自動存起來。'}
@@ -198,7 +207,7 @@ function flushSave(){clearTimeout(S.saveT);if(!pending||!S.key||S.visit)return;c
 function publish(layout){const key=S.key;if(!key||!DB()||S.visit||!Array.isArray(layout))return Promise.resolve();
  const lay=JSON.parse(JSON.stringify(layout)),n=Math.min(999,lay.length),ch={};
  if(S.vis==='private'){ch['houseView/'+key]=null;ch['houseDir/'+key]=null;}
- else{ch['houseView/'+key]={layout:lay,vis:S.vis,at:TS(),name:myName(),n};ch['houseDir/'+key]=S.vis==='public'&&n>=DIR_MIN?{at:TS(),n,on:TS()}:null;}
+ else{ch['houseView/'+key]={layout:lay,vis:S.vis,at:TS(),name:myName(),n,...(sizeOk(S.size)>14?{size:sizeOk(S.size)}:{})};   /* v507：14 格不寫 size（規則還沒發布時照樣寫得進去） */ch['houseDir/'+key]=S.vis==='public'&&n>=DIR_MIN?{at:TS(),n,on:TS()}:null;}
  return DB().ref(R()).update(ch).then(()=>{S.listed=!!ch['houseDir/'+key];}).catch(()=>{});}
 
 // ---------- 佈置模式 ----------
@@ -210,10 +219,11 @@ function renderBag(){const box=$('ttHouseBag');if(!box||!S.cat)return;
  const list=S.cat.filter(c=>owned(c.k)>0&&(S.bagKind==='all'||c.kind===S.bagKind));
  const tabs=kinds.map(([k,n])=>'<button type="button" data-bk="'+k+'" aria-pressed="'+(S.bagKind===k)+'">'+n+'</button>').join('');
  box.querySelector('.tt-hb-tabs').innerHTML=tabs;
+ renderExpand();
  const grid=box.querySelector('.tt-hb-grid');
  grid.innerHTML=list.length?list.map(c=>{const n=left(c.k);return '<button type="button" class="tt-hb-item'+(n>0?'':' none')+'" data-k="'+c.k+'" title="'+esc(c.name)+'">'
    +'<span class="tt-hb-pic"><img alt="" data-thumb="'+c.k+'"></span><b>'+esc(c.name)+'</b><small>'+(n>0?'剩 '+n+' 件':'都擺出來了')+'</small></button>';}).join('')
-  :'<p class="tt-hb-empty">背包裡還沒有家具，去家具店帶幾件回家吧</p>';
+  :'<p class="tt-hb-empty">背包裡還沒有家具，去扭蛋抽幾件回家吧</p>';
  fillThumbs(grid,136);}   // 家具店、佈置清單同一個比例（1 倍）
 async function fillThumbs(root,size){const R=S.frame?.contentWindow?.TTRoom;if(!R)return;
  for(const im of root.querySelectorAll('img[data-thumb]')){const k=im.dataset.thumb,ck=k+'@'+size;
@@ -277,6 +287,32 @@ async function buy(k){const c=S.byKey[k],p=priceOf(k),key=S.key;if(S.buying||!c|
  }catch(e){if(e&&e.ids)try{rememberPaymentIds(e.ids);}catch(_){}say(e&&e.message||'購買沒有完成，請到訂單看看');}
  finally{S.buying=false;}}
 
+// ---------- v507 小屋擴建 ----------
+// 跟買家具同一條路：clientOrders（itemId house:size18／22、paidBy cat）＋扣貓貓幣＋catTx＋cat lastTx，
+// 同一次寫入把 house/<key>/size 改成新大小、sizeRef 指向這張訂單（規則第十七批照這張訂單收錢才給擴建）；擺設一起存，新小屋也不會變空房。
+function renderExpand(){const b=$('ttHouseExpand');if(!b)return;const nx=nextSize(),p=nx?priceOf('size'+nx):0;
+ b.classList.toggle('off',!p||!!S.visit||!S.on);b.title=p?'擴建到 '+nx+'×'+nx+'（'+TTCat.fmt(TTCat.price(p))+' 貓貓幣）':'';b.setAttribute('aria-label',b.title||'擴建');}
+function askExpand(){const nx=nextSize(),p=nx?priceOf('size'+nx):0;if(!nx||!p||S.visit||!S.on)return;const CAT=TTCat.price(p),cur=sizeOk(S.size);
+ ttConfirm('擴建小屋：'+cur+'×'+cur+' → '+nx+'×'+nx,'房間會變大，原本的家具都留在原位。\n需要 '+TTCat.fmt(CAT)+' 貓貓幣（你現在有 '+TTCat.fmt(window.__cat||0)+'）。',expand,'擴建');}
+async function expand(){const nx=nextSize(),p=nx?priceOf('size'+nx):0,key=S.key;if(S.buying||!nx||!p||!key||key!==KEY()||S.visit)return;
+ const CAT=TTCat.price(p);S.buying=true;
+ try{const bal=await DB().ref(R()+'/cat/'+key+'/balance').once('value');
+  if(!Number.isSafeInteger(bal.val())||bal.val()<CAT){say('貓貓幣不夠，還差 '+TTCat.fmt(CAT-(Number(bal.val())||0))+(TTCat.EXCHANGE_ON?'，可以先到錢包用金幣兌換':'（每日任務每天送 '+TTCat.DAILY+'）'));return;}
+  const ref=DB().ref(R()+'/clientOrders').push(),ts=Date.now(),name=(typeof me==='function'&&me()?.b?.name)||'酒館客人',nm='小屋擴建 '+nx+'×'+nx;
+  const o={type:'shop',plan:'house:size'+nx,planName:'小屋擴建・'+nx+'×'+nx,amount:p,origAmount:p,couponUsed:false,couponDisc:0,itemId:'house:size'+nx,itemName:nm,name,paidBy:'cat',catAmount:CAT,status:'done',createdAt:ts,myKey:key};
+  const lay=room('layout');
+  await catSafety().execute({key,amount:CAT,ids:[ref.key],lookup:walletLookup,commit:async()=>{const ch={};
+   ch['clientOrders/'+ref.key]=o;ch['cat/'+key+'/balance']=firebase.database.ServerValue.increment(-CAT);
+   ch['catTx/'+key+'/'+ref.key]={type:'spend',amount:-CAT,ref:ref.key,note:o.planName,ts};ch['cat/'+key+'/lastTx']=ref.key;
+   ch['house/'+key+'/size']=nx;ch['house/'+key+'/sizeRef']=ref.key;ch['house/'+key+'/at']=TS();
+   if(Array.isArray(lay)&&lay.length)ch['house/'+key+'/layout']=JSON.parse(JSON.stringify(lay));
+   await DB().ref(R()).update(ch);}});
+  try{rememberPaymentIds([ref.key]);}catch(_){}
+  S.size=nx;
+  if(S.on&&S.key===key&&!S.visit){await room('setSize',nx);publish(room('layout'));renderBag();renderExpand();say('小屋擴建到 '+nx+'×'+nx+' 了！原本的家具都留在原位');}
+ }catch(e){if(e&&e.ids)try{rememberPaymentIds(e.ids);}catch(_){}say(e&&e.message||'擴建沒有完成，請到訂單看看');}
+ finally{S.buying=false;}}
+
 // ---------- v504 串門子 ----------
 // 開放設定：存在自己的小屋紀錄（換裝置也記得），快照、隨機名單跟著改；改得更嚴時，現在不該在的人請他們先離開
 async function setVis(v){if(!VIS_NAME[v]||!S.key||S.visit||v===S.vis)return;const old=S.vis;S.vis=v;renderPanel();
@@ -307,7 +343,7 @@ async function visit(key,via){
   if(S.on)await teardown();
   useSeat(st);
   try{window.TinyTavernUI?.close?.();window.TTHub?.close?.();window.dmClose?.();}catch(_){}
-  S.visit={key,name,layout:view.layout,via,likes:0,liked:false};S.key=mk;S.hk=key;S.on=true;S.mode='walk';
+  S.visit={key,name,layout:view.layout,size:sizeOk(view.size),via,likes:0,liked:false};S.key=mk;S.hk=key;S.on=true;S.mode='walk';
   if(owner&&owner.doll)S.dolls[key]=dollCanvasOf(owner.doll);
   document.body.classList.add('tt-house-on','tt-house-visit');document.body.classList.remove('tt-house-edit');
   setSign('Tiny Tavern・拜訪小屋',name+' 的小屋');
@@ -389,6 +425,7 @@ function renderPanel(){const box=$('ttVisitPanel');if(!box||!S.panel)return;
 const ICON={
  houseImg:'<img src="lobby-ui/assets/house.png" alt="">',   // v497 大廳 dock 的小屋鈕：像素小屋圖示（跟我的酒館／商城／背包同一套畫風）
  house:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 13 14 4.5 24 13"/><path d="M7 11v12h14V11"/><path d="M12 23v-6h4v6"/></svg>',
+ grow:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 9.5l6.5 3.5-6.5 3.5-6.5-3.5z"/><path d="M4 9V4h5M24 9V4h-5M4 19v5h5M24 19v5h-5"/></svg>',
  brush:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M6 22c3 0 5-2 5-5l9-11 3 3-11 9c0 3-2 5-6 4z"/><path d="M15 9l4 4"/></svg>',
  shop:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 11h18l-1.5 11h-15z"/><path d="M9 11V8a5 5 0 0 1 10 0v3"/><path d="M11 16h6"/></svg>',
  back:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M11 7 5 13l6 6"/><path d="M5 13h12a6 6 0 0 1 0 12h-3"/></svg>',
@@ -404,6 +441,7 @@ function build(){
  const dock=$('ttMainDock');if(!dock||$('ttHouseBtn'))return;
  const entry=btn('ttHouseBtn','tt-house-entry','houseImg','小屋',enter);
  const hub=$('ttHubButton');if(hub)hub.after(entry);else dock.prepend(entry);
+ dock.append(btn('ttHouseExpand','tt-house-only off','grow','擴建',askExpand));   // v507 D：擴建單獨一顆，放在佈置左邊（價格上架、還能再擴才出現）
  dock.append(btn('ttHouseEdit','tt-house-only','brush','佈置',()=>setMode('edit')));
  dock.append(btn('ttHouseShop','tt-house-only tt-house-main','shop','家具店',openShop));
  const top=document.createElement('div');top.id='ttHouseTop';
@@ -412,17 +450,27 @@ function build(){
   btn('ttHouseVisit','tt-house-btn tt-own-only','visit','拜訪',()=>S.panel?closePanel():openPanel()),btn('ttHouseHelp','tt-house-btn tt-own-only','help','教學',houseTour),btn('ttHouseBack','tt-house-btn','back','回大廳',exit));
 // v495 D：右邊的放大／縮小／整間拿掉（滾輪縮放、按住拖曳照樣能用），「我的家具」改成右側整欄
  const bag=document.createElement('section');bag.id='ttHouseBag';bag.setAttribute('aria-label','我的家具');
- bag.innerHTML='<header><span class="tt-hb-title"><b>我的家具</b><small>MY FURNITURE</small></span><div class="tt-hb-acts"><button type="button" class="tt-hb-shop">去家具店</button><button type="button" class="tt-hb-done">完成</button></div><div class="tt-hb-tabs"></div></header>'
+ bag.innerHTML='<header><span class="tt-hb-title"><b>我的家具</b><small>MY FURNITURE</small></span><div class="tt-hb-acts"><button type="button" class="tt-hb-shop">去扭蛋</button><button type="button" class="tt-hb-done">完成</button></div><div class="tt-hb-tabs"></div></header>'
   +'<p class="tt-hb-tip">點家具拿出來，移到房間裡再點一下放好；點房間裡的家具可以移動。</p><div class="tt-hb-grid"></div>';
- bag.querySelector('.tt-hb-shop').onclick=openShop;bag.querySelector('.tt-hb-done').onclick=()=>setMode('walk');
+ bag.querySelector('.tt-hb-shop').onclick=()=>{if(window.TTGacha)TTGacha.open();else openShop();};/* v507 家具店入口拿掉，改去扭蛋 */bag.querySelector('.tt-hb-done').onclick=()=>setMode('walk');
  // v504 串門子側欄（跟「我的家具」同一個位置、同一套外觀）
  const vp=document.createElement('section');vp.id='ttVisitPanel';vp.setAttribute('aria-label','拜訪');   // v506 D：「串門子」聽起來像中國用語 → 拜訪
  vp.innerHTML='<header><span class="tt-hb-title"><b>拜訪</b><small>VISIT</small></span><button type="button" class="tt-vp-close">關閉</button></header><div class="tt-vp-body"></div>';
  // v504 小屋聊天（左下）：最近幾句＋輸入框；說的話也會冒在小人頭上
  const chat=document.createElement('section');chat.id='ttHouseChat';chat.setAttribute('aria-label','小屋聊天');
  chat.innerHTML='<header><b>小屋聊天</b><small class="tt-hc-who"></small></header><div class="tt-hc-log" aria-live="polite"></div>'
-  +'<form class="tt-hc-form"><input id="ttHouseSay" maxlength="'+CHAT_MAX+'" autocomplete="off" placeholder="說點什麼…（Enter 送出）" aria-label="在小屋裡說話"><button type="submit">送出</button></form>';
+  +'<form class="tt-hc-form"><button type="button" class="tt-hc-stkbtn" title="聊天貼圖" aria-label="發送聊天貼圖" aria-expanded="false" aria-controls="ttHouseStk">'+STK_ICON+'</button>'
+  +'<input id="ttHouseSay" maxlength="'+CHAT_MAX+'" autocomplete="off" placeholder="說點什麼…（Enter 送出）" aria-label="在小屋裡說話"><button type="submit">送出</button></form>'
+  +'<div class="tt-hc-pick" id="ttHouseStk" hidden aria-label="聊天貼圖選單"><div class="tt-hc-pickhd"><b>聊天貼圖</b><span>點一下發送</span></div><div class="tt-hc-pickgrid"></div></div>';
  chat.querySelector('form').addEventListener('submit',e=>{e.preventDefault();sendChat();});
+ {const pick=chat.querySelector('.tt-hc-pick'),sb=chat.querySelector('.tt-hc-stkbtn'),grid=pick.querySelector('.tt-hc-pickgrid'),cat=window.TTStickerCatalog||[];
+  if(!cat.length||!window.TTChatStickers)sb.hidden=true;
+  grid.innerHTML=cat.map(it=>'<button type="button" data-id="'+esc(it.id)+'" aria-label="發送'+esc(it.name)+'貼圖"><img src="'+esc(stkUrl(it))+'" alt="" draggable="false"><span>'+esc(it.name)+'</span></button>').join('');
+  const hide=()=>{pick.hidden=true;sb.setAttribute('aria-expanded','false');};
+  sb.onclick=()=>{const open=pick.hidden;pick.hidden=!open;sb.setAttribute('aria-expanded',String(open));if(open)grid.querySelector('button')?.focus({preventScroll:true});};
+  grid.onclick=e=>{const b=e.target.closest('button[data-id]');if(!b)return;hide();sendSticker(b.dataset.id);$('ttHouseSay')?.focus({preventScroll:true});};
+  pick.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();hide();sb.focus({preventScroll:true});}});
+  document.addEventListener('pointerdown',e=>{if(!pick.hidden&&!chat.contains(e.target))hide();});}
  const keys=document.createElement('p');keys.id='ttHouseKeys';keys.setAttribute('aria-live','polite');
  document.body.append(top,bag,vp,chat,keys);renderKeys();renderChat();
  // 家具店視窗：live.js 已經把 #houseShopM 包成大廳同一套外框，這裡換掉頁尾字、放內容
@@ -449,6 +497,7 @@ function renderKeys(){const el=$('ttHouseKeys');if(!el)return;const hold=S.mode=
 // ---------- 給房間（iframe）用的介面 ----------
 window.TTHouse={
  initialLayout:()=>S.visit?S.visit.layout:S.layout,
+ roomSize:()=>S.visit?S.visit.size:sizeOk(S.size),
  visiting:()=>S.visit?{key:S.visit.key,name:S.visit.name}:null,
  save,
  changed:()=>{renderBag();renderKeys();},
