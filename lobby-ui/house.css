@@ -122,6 +122,11 @@ body:not(.tt-house-panel) #ttVisitPanel,body:not(.tt-house-on) #ttVisitPanel,bod
 .tt-vp-inv{background:linear-gradient(180deg,#FF7AA8,#FF3F80);color:#fff}
 .tt-vp-inv:disabled{opacity:.6;cursor:default}
 .tt-vp-kick{background:#FFF0F6}
+/* v506 邀請好友只列在線上的：名字前小綠點；不在線上的收在下面、淡一點，只留「去他家」 */
+.tt-vp-list b.tt-vp-on::before{content:"";display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#3CCB7F;box-shadow:0 0 0 2px #fff,0 0 0 3px #3CCB7F55;vertical-align:1px}
+.tt-vp-sub{margin:10px 0 6px;font-size:12px;font-weight:700;color:var(--sk-mute,#5C6196)}
+.tt-vp-off li{background:#F6F5FB;border-color:#B9BCD9}
+.tt-vp-off b{color:var(--sk-mute,#5C6196)}
 .tt-vp-random{width:100%;font:inherit;font-size:15px;font-weight:700;padding:10px;border-radius:14px;border:3px solid var(--sk-ink,#1C2156);cursor:pointer;
   background:linear-gradient(180deg,#8FD3FF,#5AB4F0);color:#fff;text-shadow:0 1px 0 rgba(28,33,86,.4);box-shadow:0 4px 0 var(--sk-ink,#1C2156)}
 .tt-vp-random:active{transform:translateY(2px);box-shadow:0 2px 0 var(--sk-ink,#1C2156)}

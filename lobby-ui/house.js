@@ -170,7 +170,7 @@ function renderChat(){const box=$('ttHouseChat');if(!box)return;const log=box.qu
  const people=SEATS.map(s=>S.room[s]).filter(v=>v&&v.at>Date.now()-STALE*2).length;
  box.querySelector('.tt-hc-who').textContent=S.on?'小屋裡 '+Math.max(1,people)+' / 4 人':'';
  log.innerHTML=S.chatLog.length?S.chatLog.slice(-8).map(m=>'<p'+(m.f===KEY()?' class="mine"':'')+'><b>'+esc(m.n)+'</b>'+esc(m.x)+'</p>').join('')
-  :'<p class="tt-hc-empty">'+(S.visit?'跟大家打聲招呼吧':'邀請好友進來一起聊天吧（右上「串門子」）')+'</p>';
+  :'<p class="tt-hc-empty">'+(S.visit?'跟大家打聲招呼吧':'邀請好友進來一起聊天吧（右上「拜訪」）')+'</p>';
  log.scrollTop=log.scrollHeight;}
 
 // ---------- 新手教學（v495）：第一次進小屋，整片變灰、虛線圈起要點的地方；右上「教學」可以再看一次 ----------
@@ -183,7 +183,7 @@ function houseTour(){if(!window.TTCoach||!S.on||S.visit)return;if(S.mode!=='walk
   {target:()=>$('ttHouseShop'),title:'家具店',text:'用貓貓幣買家具。越大、越精緻的家具越貴，買了會先收進「我的家具」。'},
   {target:cat,title:'貓貓幣',text:daily+'\n名牌上這個硬幣就是你現在有的貓貓幣。'},
   {target:()=>$('ttHouseEdit'),title:'佈置',text:'按這裡，右邊會打開「我的家具」：點一件拿出來，移到想放的地方再點一下就擺好。\n點房間裡的家具，可以拿起來重新擺。'},
-  {target:()=>$('ttHouseVisit'),title:'串門子',text:'邀請好友進你的小屋一起聊天（最多 4 人），或隨機去別人的小屋坐坐。\n也可以在這裡決定誰能進來。'},
+  {target:()=>$('ttHouseVisit'),title:'拜訪',text:'邀請在線上的好友進你的小屋一起聊天（最多 4 人），或隨機去別人的小屋坐坐。\n也可以在這裡決定誰能進來。'},
   {target:()=>$('ttHouseChat'),title:'小屋聊天',text:'在這裡打字，說的話會出現在小人頭上，小屋裡的人都看得到。'},
   {target:()=>$('ttHouseBack'),title:'回大廳',text:'想回酒館大廳就按這裡，擺好的家具都會自動存起來。'}
  ],{doneKey:TOUR_KEY,last:'開始佈置吧'});}
@@ -310,7 +310,7 @@ async function visit(key,via){
   S.visit={key,name,layout:view.layout,via,likes:0,liked:false};S.key=mk;S.hk=key;S.on=true;S.mode='walk';
   if(owner&&owner.doll)S.dolls[key]=dollCanvasOf(owner.doll);
   document.body.classList.add('tt-house-on','tt-house-visit');document.body.classList.remove('tt-house-edit');
-  setSign('Tiny Tavern・小屋串門子',name+' 的小屋');
+  setSign('Tiny Tavern・拜訪小屋',name+' 的小屋');
   if(via==='random')S.seen.add(key);
   DB().ref(R()+'/houseVisit/'+key+'/'+mk).update({name:myName(),at:TS()}).catch(()=>{});
   watch('houseVisit/'+key,v=>{const vs=v||{},m=vs[mk];if(!S.visit||S.visit.key!==key)return;S.visit.likes=Object.values(vs).filter(x=>x&&x.like===true).length;S.visit.liked=!!(m&&m.like===true);renderTop();});
@@ -341,6 +341,7 @@ async function kick(k){if(S.visit||!S.key)return;const s=SEATS.find(x=>S.room[x]
 // 邀請好友：私訊一張邀請卡（跟一般私訊一樣只限互為好友、封鎖的人收不到）
 async function invite(fk,btn){const mk=KEY();if(!mk||!DB()||!fk)return;
  const fr=S.friends||{};if(!fr[fk]){say('只能邀請好友喔');return;}
+ if(!isOn(fk)){say((fr[fk].name||'對方')+' 現在不在線上，等他上線再邀請吧');renderPanel();return;}
  if(window.ttIsMuted?window.ttIsMuted():!!window.__mute){say('你目前被禁言中，暫時無法傳私訊');return;}
  if(S.vis==='private'){say('你的小屋現在是「不公開」，先改成公開或只限好友再邀請');return;}
  if(btn)btn.disabled=true;
@@ -353,8 +354,12 @@ async function invite(fk,btn){const mk=KEY();if(!mk||!DB()||!fk)return;
 
 // 「串門子」側欄（自己的小屋才有）：誰可以進來、現在在小屋裡的人、隨機拜訪、好友、最近來玩的人
 function openPanel(){if(!S.on||S.visit)return;if(S.mode==='edit')setMode('walk');S.panel=true;document.body.classList.add('tt-house-panel');renderPanel();renderTop();loadFriends();
+ clearInterval(S.onT);S.onT=setInterval(()=>{if(S.panel&&onSig()!==S.onSig)renderPanel();},3000);   // 好友上線／下線時才重畫（不然按鈕會被換掉、點不到）
  requestAnimationFrame(()=>room('frame'));}
-function closePanel(){if(!S.panel)return;S.panel=false;document.body.classList.remove('tt-house-panel');requestAnimationFrame(()=>room('frame'));}
+function closePanel(){clearInterval(S.onT);S.onT=0;if(!S.panel)return;S.panel=false;document.body.classList.remove('tt-house-panel');requestAnimationFrame(()=>room('frame'));}
+// v506 D：「邀請好友應該是邀請在線上的」→ 在線＝大廳有他的位置心跳（posMap，跟通訊錄同一套；在自己小屋裡的人大廳也照常回報）
+const isOn=k=>{try{return !!posMap[k];}catch(_){return false;}};
+const onSig=()=>Object.keys(S.friends||{}).filter(isOn).sort().join('|');
 async function loadFriends(){const mk=KEY();if(!mk||!DB())return;try{S.friends=(await DB().ref(R()+'/friends/'+mk).once('value')).val()||{};}catch(_){S.friends={};}renderPanel();}
 const ago=t=>{const m=Math.max(0,Math.round((Date.now()-(Number(t)||0))/60000));return m<1?'剛剛':m<60?m+' 分鐘前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前';};
 function renderPanel(){const box=$('ttVisitPanel');if(!box||!S.panel)return;
@@ -362,15 +367,20 @@ function renderPanel(){const box=$('ttVisitPanel');if(!box||!S.panel)return;
  const recent=vs.sort((a,b)=>(b[1].at||0)-(a[1].at||0)).slice(0,8);
  const here=SEATS.map(s=>S.room[s]).filter(v=>v&&v.k!==S.key&&v.at>Date.now()-STALE*2);
  const fr=S.friends;const frs=fr?Object.entries(fr).filter(([,v])=>v&&typeof v==='object').sort((a,b)=>String(a[1].name||'').localeCompare(String(b[1].name||''),'zh-Hant')):null;
+ S.onSig=onSig();const fOn=frs?frs.filter(([k])=>isOn(k)):[],fOff=frs?frs.filter(([k])=>!isOn(k)):[];
+ const goBtn=k=>'<button type="button" class="tt-vp-go" data-go="'+esc(k)+'">去他家</button>';
  box.querySelector('.tt-vp-body').innerHTML=
   '<section class="tt-vp-sec"><h4>誰可以進來</h4><div class="tt-vp-vis" role="radiogroup" aria-label="小屋開放設定">'
    +Object.entries(VIS_NAME).map(([k,n])=>'<button type="button" role="radio" data-vis="'+k+'" aria-checked="'+(S.vis===k)+'">'+n+'</button>').join('')+'</div>'
    +'<p class="tt-vp-tip">'+VIS_TIP[S.vis]+'</p></section>'
   +'<section class="tt-vp-sec"><h4>現在在小屋裡<span class="tt-vp-cnt">'+(here.length+1)+' / 4 人</span></h4>'+(here.length?'<ul class="tt-vp-list">'+here.map(v=>'<li><b>'+esc(v.name||'旅人')+'</b><span><button type="button" class="tt-vp-kick" data-kick="'+esc(v.k)+'">請離開</button></span></li>').join('')+'</ul>'
    :'<p class="tt-vp-empty">只有你一個人。邀請好友進來一起聊天吧</p>')+'</section>'
-  +'<section class="tt-vp-sec"><h4>邀請好友</h4>'+(frs===null?'<p class="tt-vp-empty">讀取中…</p>':frs.length?'<ul class="tt-vp-list">'+frs.map(([k,v])=>'<li><b>'+esc(v.name||'旅人')+'</b><span>'
-     +'<button type="button" class="tt-vp-inv" data-invite="'+esc(k)+'">邀請</button><button type="button" class="tt-vp-go" data-go="'+esc(k)+'">去他家</button></span></li>').join('')+'</ul>'
-   :'<p class="tt-vp-empty">還沒有好友。在大廳點開別人的闆卡，就能送出好友邀請。</p>')+'</section>'
+  +'<section class="tt-vp-sec"><h4>邀請好友'+(frs&&frs.length?'<span class="tt-vp-cnt">在線上 '+fOn.length+' 位</span>':'')+'</h4>'
+   +(frs===null?'<p class="tt-vp-empty">讀取中…</p>':!frs.length?'<p class="tt-vp-empty">還沒有好友。在大廳點開別人的闆卡，就能送出好友邀請。</p>'
+    :(fOn.length?'<ul class="tt-vp-list">'+fOn.map(([k,v])=>'<li><b class="tt-vp-on">'+esc(v.name||'旅人')+'</b><span>'
+       +'<button type="button" class="tt-vp-inv" data-invite="'+esc(k)+'">邀請</button>'+goBtn(k)+'</span></li>').join('')+'</ul>'
+      :'<p class="tt-vp-empty">現在沒有好友在線上，等大家上線再邀請吧。</p>')
+    +(fOff.length?'<h5 class="tt-vp-sub">不在線上的好友（可以去他家看看）</h5><ul class="tt-vp-list tt-vp-off">'+fOff.map(([k,v])=>'<li><b>'+esc(v.name||'旅人')+'</b><span>'+goBtn(k)+'</span></li>').join('')+'</ul>':''))+'</section>'
   +'<section class="tt-vp-sec"><button type="button" class="tt-vp-random">隨機拜訪一間小屋</button></section>'
   +'<section class="tt-vp-sec"><h4>最近來玩的人<span class="tt-vp-likes">♥ '+likes+'</span></h4>'+(recent.length?'<ul class="tt-vp-list tt-vp-guests">'+recent.map(([,v])=>'<li><b>'+esc(v.name||'旅人')+'</b><small>'+ago(v.at)+(v.like===true?'・<i>♥</i>':'')+'</small></li>').join('')+'</ul>'
    :'<p class="tt-vp-empty">還沒有人來過</p>')+'</section>';}
@@ -399,15 +409,15 @@ function build(){
  const top=document.createElement('div');top.id='ttHouseTop';
  top.append(btn('ttVisitLike','tt-house-btn tt-visit-only','heart','讚',toggleLike),btn('ttVisitNext','tt-house-btn tt-visit-only','dice','下一間',randomVisit),
   btn('ttVisitHome','tt-house-btn tt-visit-only','house','我的小屋',enter),
-  btn('ttHouseVisit','tt-house-btn tt-own-only','visit','串門子',()=>S.panel?closePanel():openPanel()),btn('ttHouseHelp','tt-house-btn tt-own-only','help','教學',houseTour),btn('ttHouseBack','tt-house-btn','back','回大廳',exit));
+  btn('ttHouseVisit','tt-house-btn tt-own-only','visit','拜訪',()=>S.panel?closePanel():openPanel()),btn('ttHouseHelp','tt-house-btn tt-own-only','help','教學',houseTour),btn('ttHouseBack','tt-house-btn','back','回大廳',exit));
 // v495 D：右邊的放大／縮小／整間拿掉（滾輪縮放、按住拖曳照樣能用），「我的家具」改成右側整欄
  const bag=document.createElement('section');bag.id='ttHouseBag';bag.setAttribute('aria-label','我的家具');
  bag.innerHTML='<header><span class="tt-hb-title"><b>我的家具</b><small>MY FURNITURE</small></span><div class="tt-hb-acts"><button type="button" class="tt-hb-shop">去家具店</button><button type="button" class="tt-hb-done">完成</button></div><div class="tt-hb-tabs"></div></header>'
   +'<p class="tt-hb-tip">點家具拿出來，移到房間裡再點一下放好；點房間裡的家具可以移動。</p><div class="tt-hb-grid"></div>';
  bag.querySelector('.tt-hb-shop').onclick=openShop;bag.querySelector('.tt-hb-done').onclick=()=>setMode('walk');
  // v504 串門子側欄（跟「我的家具」同一個位置、同一套外觀）
- const vp=document.createElement('section');vp.id='ttVisitPanel';vp.setAttribute('aria-label','串門子');
- vp.innerHTML='<header><span class="tt-hb-title"><b>串門子</b><small>VISIT</small></span><button type="button" class="tt-vp-close">關閉</button></header><div class="tt-vp-body"></div>';
+ const vp=document.createElement('section');vp.id='ttVisitPanel';vp.setAttribute('aria-label','拜訪');   // v506 D：「串門子」聽起來像中國用語 → 拜訪
+ vp.innerHTML='<header><span class="tt-hb-title"><b>拜訪</b><small>VISIT</small></span><button type="button" class="tt-vp-close">關閉</button></header><div class="tt-vp-body"></div>';
  // v504 小屋聊天（左下）：最近幾句＋輸入框；說的話也會冒在小人頭上
  const chat=document.createElement('section');chat.id='ttHouseChat';chat.setAttribute('aria-label','小屋聊天');
  chat.innerHTML='<header><b>小屋聊天</b><small class="tt-hc-who"></small></header><div class="tt-hc-log" aria-live="polite"></div>'

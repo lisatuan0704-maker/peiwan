@@ -870,7 +870,7 @@ function tenRoom(P){const res=P.res,cnt={};res.forEach(it=>{const s=ROOMD?.items
   res.forEach((it,i)=>{const RI=ROOMD.items[it.k];if(RI.kind!=='wall')return;const wt=Math.max(1,Math.ceil(RI.w/16));let best=null,fb=null,fs=1e18;
     for(const sd of nw%2?['R','L']:['L','R']){for(let c=1;c<=N-1-wt&&!best;c++){const r=wallRect(RI,sd,c),bx=tb(it.k,RI,r.left,r.top,r.flip),L=fits(taken,bx,it,3,2);
         if(L)best={r,bx,L};else if(!best){const L0=labs(it,bx)[0],sc=pen(taken,bx,L0);if(sc<fs){fs=sc;fb={r,bx,L:L0};}}}if(best)break;}
-    const pk=best||fb;taken.push([...pk.bx,1],[...pk.L.b,0]);nw++;out[i]={...pk.r,lab:pk.L.p,ok:!!best};});
+    const pk=best||fb;taken.push([...pk.bx,1],[...pk.L.b,0]);nw++;out[i]={...pk.r,bx:pk.bx,lab:pk.L.p,ok:!!best};});
   // 地上：三排的目標位置（照畫面比例）；xm＝這一排左右最遠能放到哪
   const yb=H-48,yt=Math.min(yb-40,cy+62),ym=Math.round((yt+yb)/2),xm=y=>Math.max(24,Math.min(W/2-30,2*(y-cy)-44));
   const SL=[[ym,0,0],[ym,-.5,1],[ym,.5,1],[yb,-.52,2],[yb,.52,2],[ym,-1,3],[ym,1,3],[yb,-.97,4],[yb,.97,4],[yt,0,5]];   // 最後面中間那格最後才用（會擋到牆角的掛牆家具）
@@ -885,7 +885,7 @@ function tenRoom(P){const res=P.res,cnt={};res.forEach(it=>{const s=ROOMD?.items
       for(const c of C[i]){const mx=(c.bx[0]+c.bx[2])/2,d=mode?c.bx[3]+Math.abs(mx-cx)*.18:Math.hypot(mx-sx,(c.bx[3]-sy)*1.3);   // 0＝靠近目標位置；1＝從後面中間往外塞
         if(d>=bs)continue;const L=fits(T,c.bx,it,m,ml);if(L){bs=d;best={c,L};}else if(!best){const L0=labs(it,c.bx)[0],sc=pen(T,c.bx,L0)*20+d;if(sc<fs){fs=sc;fb={c,L:L0};}}}
       const pk=best||fb;if(!best){bad++;tot+=pen(T,pk.c.bx,pk.L);}T.push([...pk.c.bx,1],[...pk.L.b,0]);
-      o[i]={left:pk.c.left,top:pk.c.top,w:RI.w,h:RI.h,wall:false,flip:false,lab:pk.L.p,ok:!!best};});
+      o[i]={left:pk.c.left,top:pk.c.top,w:RI.w,h:RI.h,wall:false,flip:false,bx:pk.c.bx,lab:pk.L.p,ok:!!best};});
     return{o,bad,tot};}
   let win=null;
   for(const [ord,mode,m,ml] of[[byH,0,3,2],[byA,0,3,2],[byH,1,3,2],[byA,1,3,2],[byH,0,1,1],[byA,0,1,1],[byH,1,1,1],[byA,1,1,1]]){const r=attempt(ord,mode,m,ml);
@@ -1735,7 +1735,21 @@ function resultUI(){const P=plan;mkHead();
   if(P.n===1){const L=P.L,k=P.it.r;setUI(HEAD+walletHTML()+`<div class="p plate" style="left:calc(${L.plateX}px*var(--s));top:calc(${L.plateY}px*var(--s))">${P.it.nw?'<b class="nw">NEW</b>':''}${P.it.name}</div>
     <div class="p btns" style="bottom:calc(8px*var(--s))"><button class="btn" id="bk">收下</button><button class="btn hot" id="b1">再抽一次<em><i></i>${PRICE1}</em></button><button class="btn hot" id="b10">抽十次<em><i></i>${PRICE10}</em></button></div><div class="p links"><button id="bo">家具圖鑑・機率</button></div>`);}
   else{const G=P.G;let names='';G.cells.forEach((c,i)=>{const r=P.res[i].r;names+=`<span class="gname" style="left:calc(${P.anchor[i][0]}px*var(--s));top:calc(${P.anchor[i][1]+2}px*var(--s))">${P.res[i].nw?'<b class="nw">NEW</b>':''}${r==='common'?'':`<small class="r-${r}">${RN[r][0]}</small>`}${P.res[i].name}</span>`;});
-    setUI(HEAD+walletHTML()+`<div class="p" style="inset:0;pointer-events:none">${names}</div><div class="p btns" style="bottom:calc(6px*var(--s))"><button class="btn" id="bk">收下</button><button class="btn hot" id="b10">再抽十次<em><i></i>${PRICE10}</em></button></div>`);}}
+    setUI(HEAD+walletHTML()+`<div class="p" style="inset:0;pointer-events:none">${names}</div><div class="p btns" style="bottom:calc(6px*var(--s))"><button class="btn" id="bk">收下</button><button class="btn hot" id="b10">再抽十次<em><i></i>${PRICE10}</em></button></div>`);unclutter(P);}}
+// D 11/08「還是有文字會擋到彼此」：擺家具時名牌寬度是估的，十件塞不下時也會退而求其次 → 名牌畫出來後照「真的大小」再排一次：
+// 名牌跟名牌絕對不疊、不出畫面、不壓到標題／金幣／按鈕；其餘照「離原位近、少蓋到別件家具」挑位置（上面的名牌先定位）
+function unclutter(P){const els=[...ui.querySelectorAll('.gname')];if(!els.length)return;const o=stageEl.getBoundingClientRect();
+  const box=e=>{const r=e.getBoundingClientRect();return[(r.left-o.left)/S,(r.top-o.top)/S,(r.right-o.left)/S,(r.bottom-o.top)/S];};
+  const UIb=[uiRect('.head'),uiRect('.wallet'),...[...ui.querySelectorAll('.btns button')].map(b=>{const r=b.getBoundingClientRect();return[(r.left-o.left)/S-3,(r.top-o.top)/S-3,(r.right-o.left)/S+3,(r.bottom-o.top)/S+3];})].filter(Boolean),FB=(P.room?P.room.items:[]).map(x=>x&&x.bx);   // 按鈕列的外框橫跨整個畫面，只閃真的按鈕
+  const ar=(a,t)=>Math.max(0,Math.min(a[2],t[2])-Math.max(a[0],t[0]))*Math.max(0,Math.min(a[3],t[3])-Math.max(a[1],t[1]));
+  const done=[];
+  els.map((e,i)=>({e,i,b:box(e)})).sort((a,b)=>a.b[1]-b.b[1]).forEach(({e,i,b})=>{const w=b[2]-b[0],h=b[3]-b[1],cx=(b[0]+b[2])/2,y0=b[1],own=FB[i];
+    const ys=[0,1,-1,2,-2,3,-3,4,5].map(k=>y0+k*(h+1));if(own)ys.push(own[1]-h-2,own[3]+1);
+    let best=null,bs=1e18;
+    for(const y of ys)for(const f of[0,-.3,.3,-.6,.6,-.9,.9,-1.2,1.2]){const x=cx+f*w,q=[x-w/2,y,x+w/2,y+h];
+      if(q[0]<2||q[2]>W-2||q[1]<2||q[3]>H-2||UIb.some(u=>hitR(q,u))||done.some(d=>hitR(q,[d[0]-1,d[1]-1,d[2]+1,d[3]+1])))continue;
+      const sc=Math.hypot(x-cx,(y-y0)*1.6)+FB.reduce((a,t,j)=>a+(t?ar(q,t)*(j===i?.15:.6):0),0);if(sc<bs){bs=sc;best=q;}}
+    const q=best||b;done.push(q);if(best&&(Math.abs(q[0]-b[0])>.5||Math.abs(q[1]-b[1])>.5)){e.style.left=`calc(${((q[0]+q[2])/2).toFixed(1)}px*var(--s))`;e.style.top=`calc(${q[1].toFixed(1)}px*var(--s))`;}});}
 async function begin(n,seed,given){const r=rng(seed);const seen=new Set();const res=given||roll(n,r).map(it=>{const nw=!OWN.has(it.k)&&!seen.has(it.k);seen.add(it.k);return{...it,nw};});res.forEach(it=>OWN.add(it.k));saveOwn();fired=new Set();faceKey='';
   const Fs=await Promise.all(res.map(it=>loadFurn(it.k)));
   plan=n===1?planOne(res[0],seed,Fs[0]):planTen(res,seed,Fs);mode=n===1?'one':'ten';setUI(HEAD+walletHTML()+`<div class="p skip">點一下畫面可以略過</div>`);}

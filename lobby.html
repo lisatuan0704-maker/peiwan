@@ -1493,6 +1493,7 @@ body.artBub.bub3s .npc .bub{
     <div class="setRow"><div class="setL"><div class="setT">掛機亂走</div><div class="setD">閒置時小人自己逛(大家看得到)</div></div><button class="tgl" id="tglWander"><i></i></button></div>
     <div class="setRow"><div class="setL"><div class="setT">特效品質</div><div class="setD">電腦不順就選「輕量」;「華麗」會另外開啟手帳翻頁動畫(很吃顯示卡)</div></div>
       <div class="fxSeg" id="fxSeg"><button data-v="lite">輕量</button><button data-v="auto">自動</button><button data-v="hi">華麗</button></div></div>
+    <div class="setRow" id="setTourRow"><div class="setL"><div class="setT">大廳教學</div><div class="setD">再看一次第一次進大廳的說明</div></div><div class="fxSeg"><button type="button" id="setTour">看一次</button></div></div>
     <div style="border-top:2px dashed #EDE4F7;margin-top:12px;padding-top:12px;display:flex;gap:9px;flex-wrap:wrap">
       <a href="guide.html" style="flex:1;min-width:130px;text-align:center;text-decoration:none;background:#F3EDFB;color:#8E68C8;font-size:13px;font-weight:700;padding:11px 8px;border-radius:11px">新手指南</a>
       <a href="lobby.html?contact=1" data-contact-support style="flex:1;min-width:130px;text-align:center;text-decoration:none;background:linear-gradient(180deg,#B9C6F5,#8FA3E8);color:#fff;font-size:13px;font-weight:700;padding:11px 8px;border-radius:11px">聯絡客服</a>
@@ -1697,7 +1698,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v505</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v506</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -5759,7 +5760,7 @@ function tryServeNudge(staff){
   /* v439: 已經有闆卡（例如剛做好）就不再顯示「先做一張闆卡」 */
   let hasCard=false; try{ hasCard=!!localStorage.getItem('tt_me'); }catch(e){}
   if(hasCard){ const b=document.getElementById('introCard2'); if(b) b.hidden=true; }
-  if(!seen) setTimeout(()=>{ if(!portraitHome()) intro.classList.add('on'); },1000);
+  /* v506: 第一次進大廳改跑新手教學（lobby-ui/lobby-tour.js），這張舊入店小卡不再自動跳（桌機已不能點地板走路，卡上寫的也過時了） */
 })();
 
 /* 載入畫面淡出 */
@@ -8386,8 +8387,8 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/live.js?v=505"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
-<link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=504"><script src="lobby-ui/house.js?v=505"></script><script src="lobby-ui/gacha.js?v=504"></script>
+<link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=506"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=506"><script src="lobby-ui/house.js?v=506"></script><script src="lobby-ui/gacha.js?v=506"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=499"></script>
