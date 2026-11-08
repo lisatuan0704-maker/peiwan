@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>家具扭蛋</title>
+<link rel="icon" href="data:,"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Coiny&family=Rammetto+One&display=swap">
+<style>
+/* 11/07 v3：扭蛋機、扭蛋、光束、粒子都是 3D，鏡頭真的繞著轉；每一格先算光（泛光），再即時轉成像素（固定色盤＋抖動點＋描邊）。
+   畫布是低解析度（高約 330 點），整數倍放大；文字與按鈕是浮在上面的 HTML */
+:root{--ink:#1C2156;--s:2}   /* 介面描邊色＝大廳介面的深藍紫（theme-skin --sk-ink） */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#1a1028;overflow:hidden;font-family:Huninn,"Microsoft JhengHei",sans-serif;color:var(--ink)}
+#stage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+#ui{position:absolute;inset:0;pointer-events:none}
+#ui .p{position:absolute;pointer-events:auto}
+.head{left:calc(12px*var(--s));top:calc(10px*var(--s))}
+.head small{display:block;font-family:Coiny,sans-serif;font-size:calc(7px*var(--s));letter-spacing:.18em;color:#ffd7e6}
+.head b{display:inline-block;margin-top:calc(2px*var(--s));padding:calc(2px*var(--s)) calc(10px*var(--s));font-size:calc(14px*var(--s));color:#fff;background:linear-gradient(100deg,#ff7aa2,#b78cff);clip-path:polygon(0 0,100% 0,94% 100%,0 100%);text-shadow:0 calc(1px*var(--s)) 0 #7a3a6a}
+.head .pool{display:flex;align-items:center;gap:calc(4px*var(--s));margin-top:calc(3px*var(--s));font-style:normal;font-size:calc(7px*var(--s));color:#fff;background:#1C2156;padding:calc(1px*var(--s)) calc(7px*var(--s));width:max-content;clip-path:polygon(0 0,100% 0,96% 100%,0 100%)}
+.head .pool i{font-style:normal;font-size:calc(5.5px*var(--s));color:#d4c6ff}
+.pools{left:calc(12px*var(--s));top:calc(58px*var(--s));display:flex;flex-direction:column;gap:calc(3px*var(--s))}
+.pools button{font:inherit;font-size:calc(7px*var(--s));text-align:left;padding:calc(2px*var(--s)) calc(8px*var(--s));border:calc(1px*var(--s)) solid var(--ink);border-radius:999px;background:rgba(255,246,236,.92);color:var(--ink);cursor:pointer}
+.pools button.on{background:linear-gradient(100deg,#ff7aa2,#b78cff);color:#fff}
+/* 限定卡池檔期（11/08 D：兩週一輪替、星期一 04:00 換期）：卡池鈕右邊小字＝剩幾天／幾號登場／已結束；標題下的檔期牌寫結束時間 */
+.pools button{display:flex;align-items:center;gap:calc(5px*var(--s))}
+.pools button small{margin-left:auto;font-size:calc(5.5px*var(--s));padding:0 calc(4px*var(--s));border-radius:999px;background:#ece4ff;color:#5b4aa8;white-space:nowrap}
+.pools button.on small{background:rgba(255,255,255,.3);color:#fff}
+.pools button.last small{background:#ff6f9c;color:#fff;animation:limBlink 1.6s steps(2) infinite}
+.pools button.closed{background:rgba(232,226,240,.92);color:#8a80a6;border-style:dashed}
+.pools button.closed.on{background:linear-gradient(100deg,#b9a9d6,#9e93c4);color:#fff;border-style:solid}
+.pools button.closed small{background:#d9d2e6;color:#7a7194}
+.head .lim{display:flex;align-items:center;gap:calc(4px*var(--s));margin-top:calc(3px*var(--s));width:max-content;font-size:calc(5.5px*var(--s));color:var(--ink);background:#fff6ec;border:calc(1px*var(--s)) solid var(--ink);padding:calc(1px*var(--s)) calc(7px*var(--s)) calc(1px*var(--s)) calc(2px*var(--s));clip-path:polygon(0 0,100% 0,96% 100%,0 100%)}
+.head .lim b{font-family:Coiny,sans-serif;font-weight:400;font-size:calc(5px*var(--s));letter-spacing:.12em;color:#fff;background:linear-gradient(100deg,#ffc24a,#ff6fa3);padding:0 calc(4px*var(--s));border-radius:999px}
+.head .lim i{font-style:normal;font-weight:700;font-size:calc(6.5px*var(--s));color:#e0457b}
+.head .lim.last i{animation:limBlink 1.6s steps(2) infinite}
+.head .lim.off b{background:#9e93c4}.head .lim.off i{color:#7a7194}
+#ui:has(.head .lim) .pools{top:calc(72px*var(--s))}   /* 有檔期牌時卡池鈕往下讓 */
+@keyframes limBlink{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.pools button.last small,.head .lim.last i{animation:none}}
+#odds .pl{margin:0 0 calc(4px*var(--s));color:#7a64c8}
+.wallet{right:calc(12px*var(--s));top:calc(12px*var(--s));display:flex;align-items:center;gap:calc(3px*var(--s));padding:calc(2px*var(--s)) calc(8px*var(--s)) calc(2px*var(--s)) calc(3px*var(--s));background:#fff6ec;border:calc(1.5px*var(--s)) solid var(--ink);border-radius:999px;font-family:Coiny,sans-serif;font-size:calc(9px*var(--s));box-shadow:0 calc(2px*var(--s)) 0 var(--ink)}
+.wallet i{width:calc(14px*var(--s));height:calc(14px*var(--s));background:url(../img/cat-coin-px48.png) center/contain no-repeat;image-rendering:pixelated}
+.tag{left:50%;transform:translateX(-50%);top:calc(4px*var(--s));font-size:calc(6px*var(--s));color:#cdb6ff;letter-spacing:.06em;white-space:nowrap}
+.btns{left:0;right:0;bottom:calc(10px*var(--s));display:flex;justify-content:center;gap:calc(10px*var(--s))}
+.btn{font:inherit;font-size:calc(9px*var(--s));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(1px*var(--s));padding:calc(4px*var(--s)) calc(14px*var(--s));border:calc(1.5px*var(--s)) solid var(--ink);border-radius:calc(9px*var(--s));background:#fff6ec;color:var(--ink);cursor:pointer;box-shadow:0 calc(3px*var(--s)) 0 var(--ink);transition:transform .08s}
+.btn:active{transform:translateY(calc(2px*var(--s)));box-shadow:0 calc(1px*var(--s)) 0 var(--ink)}
+.btn.hot{background:linear-gradient(180deg,#ff9cbc,#ff6f9c);color:#fff;text-shadow:0 calc(1px*var(--s)) 0 #a8385e}
+.btn em{font-style:normal;font-family:Coiny,sans-serif;font-size:calc(7px*var(--s));display:flex;align-items:center;gap:calc(2px*var(--s))}
+.btn em i{width:calc(10px*var(--s));height:calc(10px*var(--s));background:url(../img/cat-coin-px48.png) center/contain no-repeat;image-rendering:pixelated}
+.btn[disabled]{opacity:.45;cursor:default}
+.links{right:calc(12px*var(--s));bottom:calc(12px*var(--s));display:flex;flex-direction:column;gap:calc(4px*var(--s));align-items:flex-end}
+.links button{font:inherit;font-size:calc(6.5px*var(--s));background:rgba(255,246,236,.92);border:calc(1px*var(--s)) solid var(--ink);border-radius:999px;padding:calc(1px*var(--s)) calc(7px*var(--s));cursor:pointer;color:var(--ink)}
+.plate{transform:translateX(-50%);display:flex;align-items:center;gap:calc(5px*var(--s));white-space:nowrap;font-size:calc(10px*var(--s));padding:calc(2px*var(--s)) calc(10px*var(--s)) calc(2px*var(--s)) calc(4px*var(--s));background:#fff6ec;border:calc(1.5px*var(--s)) solid var(--ink);border-radius:999px;box-shadow:0 calc(2px*var(--s)) 0 var(--ink)}
+.plate small{font-size:calc(7px*var(--s));color:#fff;padding:0 calc(5px*var(--s));border-radius:999px}
+.r-common{background:#e27d9c}.r-rare{background:#7a64c8}.r-limited{background:linear-gradient(100deg,#d9952f,#ff8fab)}
+.pick{transform:translateX(-50%);font-size:calc(8px*var(--s));color:#fff;padding:calc(1px*var(--s)) calc(9px*var(--s));background:linear-gradient(100deg,#d9952f,#ff8fab);border:calc(1.5px*var(--s)) solid var(--ink);clip-path:polygon(5% 0,100% 0,95% 100%,0 100%);text-shadow:0 calc(1px*var(--s)) 0 rgba(0,0,0,.3);white-space:nowrap;line-height:1.2;text-align:center;pointer-events:none!important}
+.pick small{display:block;font-family:"Rammetto One",Coiny,sans-serif;font-size:calc(5px*var(--s));letter-spacing:.16em}
+.nw{font-family:Coiny,sans-serif;font-weight:400;font-size:.8em;color:#fff;background:#ff6f9c;padding:0 .35em;border-radius:999px;margin-right:.25em}
+.gname{position:absolute;transform:translateX(-50%);font-size:calc(5.5px*var(--s));white-space:nowrap;background:#fff6ec;border:calc(1px*var(--s)) solid var(--ink);border-radius:999px;padding:0 calc(4px*var(--s));pointer-events:none}
+.skip{left:50%;transform:translateX(-50%);bottom:calc(5px*var(--s));font-size:calc(6px*var(--s));color:#e8dcff;opacity:.85;pointer-events:none!important}
+#odds{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(30,18,50,.55);backdrop-filter:blur(3px);pointer-events:auto}
+#odds.on{display:flex}
+#odds .card{width:calc(330px*var(--s));max-width:94%;max-height:88%;overflow:auto;background:linear-gradient(160deg,#fff7fb,#f1e8ff);border:calc(1.5px*var(--s)) solid var(--ink);border-radius:calc(12px*var(--s));padding:calc(10px*var(--s)) calc(12px*var(--s));font-size:calc(7px*var(--s));box-shadow:0 calc(4px*var(--s)) 0 var(--ink)}
+#odds h3{margin:0 0 calc(4px*var(--s));font-size:calc(10px*var(--s))}
+#odds small{font-family:Coiny,sans-serif;letter-spacing:.15em;color:#b07ac8;font-size:calc(6px*var(--s))}
+#odds table{width:100%;border-collapse:collapse;margin:calc(4px*var(--s)) 0}
+#odds td{padding:calc(2px*var(--s)) 0;border-bottom:calc(.5px*var(--s)) dashed #d9c3e8;vertical-align:top}
+#odds td:last-child{text-align:right;font-family:Coiny,sans-serif}
+#odds p{margin:calc(3px*var(--s)) 0;line-height:1.5}
+.dex-top{position:sticky;top:calc(-10px*var(--s));z-index:2;margin:0 calc(-12px*var(--s)) calc(4px*var(--s));padding:calc(4px*var(--s)) calc(12px*var(--s));background:linear-gradient(160deg,#fff7fb,#f6efff)}
+.dex-bar{position:relative;height:calc(10px*var(--s));background:#eadff2;border:calc(1px*var(--s)) solid var(--ink);border-radius:999px;overflow:hidden}
+.dex-bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ff8fb8,#b78cff)}
+.dex-bar span{position:relative;display:block;text-align:center;font-size:calc(6px*var(--s));line-height:calc(8px*var(--s));color:var(--ink);font-weight:700}
+.dex-rule{font-size:calc(5.5px*var(--s));color:#7a6680}
+.dex-sec{margin-top:calc(6px*var(--s))}
+.dex-sec h4 .fxk{background:linear-gradient(100deg,#7a64c8,#ff8fb8)}
+.fx-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(140px*var(--s)),1fr));gap:calc(5px*var(--s))}
+.fx-card{display:flex;gap:calc(5px*var(--s));padding:calc(4px*var(--s));background:linear-gradient(160deg,#f7f3ff,#ffe9f4);border:calc(1px*var(--s)) solid var(--ink);border-radius:calc(6px*var(--s));box-shadow:0 calc(1.5px*var(--s)) 0 var(--ink)}
+.fx-card i{position:relative;flex:0 0 calc(64px*var(--s));height:calc(45px*var(--s));border-radius:calc(4px*var(--s));overflow:hidden;border:calc(1px*var(--s)) solid var(--ink)}
+.fx-card img{width:100%;height:100%;object-fit:cover;display:block}
+.fx-card i s{position:absolute;left:0;right:0;bottom:0;text-decoration:none;text-align:center;font-size:calc(5px*var(--s));color:#fff;background:rgba(28,33,86,.72)}
+.fx-card div{flex:1;min-width:0;display:flex;flex-direction:column;gap:calc(1px*var(--s))}
+.fx-card em{font-style:normal;font-size:calc(5px*var(--s));color:#7a64c8}
+.fx-card b{font-size:calc(7.5px*var(--s))}
+.fx-card p{margin:0!important;font-size:calc(5.2px*var(--s));line-height:1.35;color:#5c4a63}
+.fx-card u{position:relative;display:block;margin-top:auto;height:calc(7px*var(--s));background:#eadff2;border:calc(.8px*var(--s)) solid var(--ink);border-radius:999px;overflow:hidden;text-decoration:none}
+.fx-card u span{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ff8fb8,#b78cff)}
+.fx-card u q{position:relative;display:block;text-align:center;font-size:calc(5px*var(--s));line-height:calc(5.6px*var(--s));quotes:none;font-weight:700}
+.fx-card.no img{filter:saturate(.55) brightness(.9)}
+.dex-sec h4{display:flex;align-items:center;gap:calc(4px*var(--s));margin:0 0 calc(4px*var(--s));padding-bottom:calc(2px*var(--s));border-bottom:calc(1px*var(--s)) solid #d9c3e8;font-size:calc(7px*var(--s))}
+.dex-sec h4 small{color:#fff;font-family:inherit;letter-spacing:0;font-size:calc(6px*var(--s));padding:0 calc(5px*var(--s));border-radius:999px}
+.dex-sec h4 b{font-family:Coiny,sans-serif;font-weight:400;letter-spacing:.12em;color:#b07ac8;font-size:calc(6px*var(--s))}
+.dex-sec h4 span{flex:1;font-size:calc(6px*var(--s));color:#5c4a63}
+.dex-sec h4 em{font-style:normal;font-family:Coiny,sans-serif;font-size:calc(6px*var(--s))}
+.dex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(50px*var(--s)),1fr));gap:calc(4px*var(--s))}
+.dex-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:calc(2px*var(--s));padding:calc(3px*var(--s)) calc(2px*var(--s)) calc(3px*var(--s));background:linear-gradient(160deg,#ffffff,#fbeef6);border:calc(1px*var(--s)) solid var(--ink);border-radius:calc(6px*var(--s));box-shadow:0 calc(1.5px*var(--s)) 0 var(--ink)}
+.dex-sec[data-r=rare] .dex-card{background:linear-gradient(160deg,#f7f3ff,#ddd3ff)}
+.dex-sec[data-r=limited] .dex-card{background:linear-gradient(160deg,#fff8dc,#ffd9ec)}
+.dex-card i{display:flex;align-items:center;justify-content:center;width:100%;height:calc(42px*var(--s));background:radial-gradient(circle at 50% 62%,rgba(255,255,255,.95),rgba(255,255,255,0) 70%);border-radius:calc(4px*var(--s))}
+.dex-card b{font-size:calc(5.3px*var(--s));font-weight:700;text-align:center;line-height:1.15}
+.dex-card.no img{filter:grayscale(1) brightness(1.05);opacity:.4}
+.dex-card.no b{color:#9a8499}
+.dex-card s{position:absolute;top:calc(2px*var(--s));left:calc(2px*var(--s));text-decoration:none;font-size:calc(4.5px*var(--s));background:#9a8499;color:#fff;border-radius:999px;padding:0 calc(3px*var(--s))}
+.dex-card.own::after{content:'✦';position:absolute;top:calc(1px*var(--s));right:calc(3px*var(--s));color:#ff6f9c;font-size:calc(6.5px*var(--s))}
+#odds .x{float:right;font:inherit;font-size:calc(9px*var(--s));background:none;border:0;cursor:pointer}
+/* 稀有度字卡（D 11/07：像素大字跟星星 AI 感重 → 改成店內介面的風格）：深藍紫斜切橫帶的英文小標＋斜切色塊大字（深色描邊、錯位陰影）＋四芒星＋鏤空英文大字浮水印 */
+#rk{position:absolute;left:0;top:0;display:none;flex-direction:column;align-items:center;pointer-events:none;white-space:nowrap;--a:#ff9cbc;--b:#ffbf94}
+#rk.on{display:flex}
+#rk .wm{position:absolute;left:50%;top:50%;transform:translate(-50%,-58%);font:calc(30px*var(--s))/1 "Rammetto One",Coiny,sans-serif;letter-spacing:.04em;color:transparent;-webkit-text-stroke:calc(.6px*var(--s)) rgba(255,255,255,.5);z-index:-1}
+#rk .en{position:relative;z-index:1;margin-bottom:calc(-3px*var(--s));padding:calc(2.5px*var(--s)) calc(9px*var(--s)) calc(2px*var(--s));font:calc(6px*var(--s))/1 Coiny,sans-serif;letter-spacing:.32em;color:#fff;background:var(--ink);clip-path:polygon(calc(4px*var(--s)) 0,100% 0,calc(100% - calc(4px*var(--s))) 100%,0 100%);transform:rotate(-3deg) translateX(calc(-10px*var(--s)))}
+#rk .box{position:relative;padding:calc(3px*var(--s)) calc(16px*var(--s)) calc(4px*var(--s));background:linear-gradient(100deg,var(--a),var(--b));border:calc(1.5px*var(--s)) solid var(--ink);border-radius:calc(2px*var(--s));box-shadow:calc(3px*var(--s)) calc(3px*var(--s)) 0 var(--ink);transform:rotate(-3deg) skewX(-10deg)}
+#rk .box::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 58%,rgba(255,255,255,.55) 58% 63%,transparent 63% 68%,rgba(255,255,255,.3) 68% 72%,transparent 72%)}
+#rk .box span{position:relative;z-index:1;display:block;transform:skewX(10deg);font-size:calc(19px*var(--s));line-height:1.15;letter-spacing:.14em;color:#fff;
+  --o:calc(1.3px*var(--s));text-shadow:var(--o) 0 0 var(--ink),calc(-1*var(--o)) 0 0 var(--ink),0 var(--o) 0 var(--ink),0 calc(-1*var(--o)) 0 var(--ink),var(--o) var(--o) 0 var(--ink),calc(-1*var(--o)) var(--o) 0 var(--ink),var(--o) calc(-1*var(--o)) 0 var(--ink),calc(-1*var(--o)) calc(-1*var(--o)) 0 var(--ink),0 calc(2.6px*var(--s)) 0 var(--ink)}
+#rk .stars{display:flex;gap:calc(2px*var(--s));margin-top:calc(6px*var(--s))}
+#rk .stars i{width:calc(14px*var(--s));height:calc(14px*var(--s));background:var(--st) center/contain no-repeat;transform:scale(0)}
+#rk.rk-rare{--a:#b08cff;--b:#72c9f5}
+#rk.rk-limited{--a:#ffc24a;--b:#ff6fa3}
+.gname small{display:inline-block;margin-right:calc(2px*var(--s));padding:0 calc(3px*var(--s));border-radius:999px;font-size:calc(4.5px*var(--s));color:#fff;vertical-align:1px}
+/* 正式版（v504，放在大廳小屋的扭蛋視窗裡）：右上關閉鈕、錢包往左讓位；提示訊息 */
+html.live .wallet{right:calc(36px*var(--s))}
+.closeX{right:calc(12px*var(--s));top:calc(11px*var(--s));width:calc(18px*var(--s));height:calc(18px*var(--s));display:flex;align-items:center;justify-content:center;font:inherit;font-size:calc(12px*var(--s));line-height:1;color:var(--ink);background:#fff6ec;border:calc(1.5px*var(--s)) solid var(--ink);border-radius:999px;box-shadow:0 calc(1.5px*var(--s)) 0 var(--ink);cursor:pointer;padding:0}
+.closeX:active{transform:translateY(calc(1px*var(--s)));box-shadow:none}
+.msg{left:50%;top:42%;transform:translateX(-50%);max-width:86%;padding:calc(4px*var(--s)) calc(12px*var(--s));font-size:calc(8px*var(--s));text-align:center;color:#fff;background:rgba(28,33,86,.88);border:calc(1px*var(--s)) solid #b78cff;border-radius:calc(8px*var(--s));pointer-events:none!important;animation:msgIn .25s ease-out}
+@media (max-aspect-ratio:5/4){.links{bottom:calc(50px*var(--s))}}   /* 窄畫面：右下的圖鑑／音效鈕移到抽卡鈕上面，不要疊在一起 */
+@keyframes msgIn{from{opacity:0;transform:translate(-50%,calc(4px*var(--s)))}}
+#err{position:absolute;left:12px;bottom:12px;color:#ffd7e6;font-size:13px;white-space:pre-wrap}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="rk"><i class="wm"></i><small class="en"></small><b class="box"><span></span></b><div class="stars"></div></div>
+  <div id="ui"></div>
+  <div id="odds"><div class="card"><button class="x" aria-label="關閉">×</button><small>COLLECTION・RATES</small><h3>家具圖鑑</h3><div id="oddsBody"></div></div></div>
+</div>
+<div id="err"></div>
+<script type="module" src="g3d.js?v=76"></script>
+</body>
+</html>
