@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='507';
+const VER='508';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -47,6 +47,19 @@ const priceOf=k=>{const p=(window.__shopCfg||{})['house:'+k];return p&&p.cur==='
 const owned=k=>(S.byKey[k]?.starter?1:0)+Object.keys(S.inv[k]||{}).length;
 function placed(){try{return S.frame?.contentWindow?.TTRoom?.placed()||{};}catch(_){return {};}}
 const left=k=>owned(k)-(placed()[k]||0);
+// v509「我的家具」NEW：新拿到（主要是扭蛋）還沒從背包拿出來的家具。每位老闆一份存本機 tt_house_new_<key>：
+// {b:第一次記錄的時間（之前就有的家具不算新）,k:{扭蛋結果交過來的家具:1},c:{家具:拿出來時看過的最新時間}}；houseInv 的 ts 比 b、c 都新＝NEW
+function newGet(force){const mk=S.key||KEY();if(!mk)return null;if(S.nw&&S.nw.mk===mk)return S.nw;let v=null;
+ try{v=JSON.parse(localStorage.getItem('tt_house_new_'+mk)||'null');}catch(_){}
+ if(!v||typeof v!=='object'||!(v.b>0)){if(!force&&S.invOk!==mk)return null;   // 背包資料還沒到：先不記起點
+  let b=SNOW();for(const g of Object.values(S.inv||{}))for(const x of Object.values(g||{}))b=Math.max(b,Number(x&&x.ts)||0);v={b};}
+ S.nw={mk,b:+v.b,k:v.k&&typeof v.k==='object'?v.k:{},c:v.c&&typeof v.c==='object'?v.c:{}};newPut();return S.nw;}
+function newPut(){const n=S.nw;if(!n)return;try{localStorage.setItem('tt_house_new_'+n.mk,JSON.stringify({b:n.b,k:n.k,c:n.c}));}catch(_){}}
+const invTop=k=>{let t=0;for(const x of Object.values(S.inv[k]||{}))t=Math.max(t,Number(x&&x.ts)||0);return t;};
+function isNew(k){const n=newGet();return !!n&&(!!n.k[k]||invTop(k)>Math.max(n.b,Number(n.c[k])||0));}
+function newAdd(keys){const n=newGet(true);if(!n)return;for(const k of keys)if(S.byKey[k]||!S.cat)n.k[k]=1;
+ const ks=Object.keys(n.k);if(ks.length>60)for(const k of ks.slice(0,ks.length-60))delete n.k[k];newPut();}
+function newClear(k){const n=newGet(true);if(!n||(!n.k[k]&&!isNew(k)))return;delete n.k[k];n.c[k]=Math.max(SNOW(),invTop(k));newPut();}
 
 // ---------- 進出小屋 ----------
 function dollCanvasOf(doll){const c=document.createElement('canvas');c.width=c.height=64;try{window.drawDollTo(c,doll||{},'idle');}catch(_){}return c;}
@@ -60,7 +73,7 @@ function restoreSign(){const sg=$('sign');if(sg&&S.sign){const p=sg.querySelecto
   const held=$('ttCntHold')?.querySelector('#cnt');if(u&&S.sign[1]!=null){u.innerHTML=S.sign[1];const fresh=u.querySelector('#cnt');if(held&&fresh){fresh.replaceWith(held);}}}
  S.sign=null;}
 function openFrame(title,onReady){const f=document.createElement('iframe');f.id='ttHouseFrame';f.title=title;f.src='house/room.html?v='+VER;S.frame=f;
- document.body.append(f);f.addEventListener('load',async()=>{try{await f.contentWindow.TTRoom.ready;}catch(_){}if(S.frame===f)onReady();});}
+ document.body.append(f);f.addEventListener('load',async()=>{try{await f.contentWindow.TTRoom.ready;}catch(_){}if(S.frame===f){f._ok=1;onReady();}});}   // _ok：房間畫好了（placeNew 等它）
 async function enter(){
  if(S.on&&!S.visit)return;
  if(isPhone()){say('小屋請用電腦開，手機版之後再開放');return;}
@@ -71,16 +84,16 @@ async function enter(){
   S.key=key;S.hk=key;S.on=true;document.body.classList.add('tt-house-on');
   try{window.TinyTavernUI?.close?.();}catch(_){}
   setSign('Tiny Tavern・我的小屋',myName()+' 的小屋');
-  try{
-   await loadCatalog();
-   const h=(await DB().ref(R()+'/house/'+key).once('value')).val()||{};
-   S.layout=Array.isArray(h.layout)?h.layout:(h.at?[]:null);S.vis=VIS_NAME[h.vis]?h.vis:'public';S.size=sizeOk(h.size);   // v505：有存檔時間但沒擺設＝家具全收回背包了（不是新小屋，不再擺入住禮）
-  }catch(e){S.layout=null;S.size=14;}
+  let h=null;
+  try{h=(await DB().ref(R()+'/house/'+key).once('value')).val()||{};}
+  catch(e){await teardown();restoreSign();say('小屋讀不到，檢查一下網路再按一次「小屋」');return;}   // v508：讀不到≠新小屋
+  S.layout=Array.isArray(h.layout)?h.layout:(h.at?[]:null);S.vis=VIS_NAME[h.vis]?h.vis:'public';S.size=sizeOk(h.size);   // v505：有存檔時間但沒擺設＝家具全收回背包了（不是新小屋，不再擺入住禮）
+  try{await loadCatalog();}catch(e){}   // 家具清單讀不到只影響背包／家具店，不能拿來當成新小屋
   if(!S.on||S.hk!==key||S.visit)return;
-  watch('houseInv/'+key,v=>{S.inv=v||{};renderBag();renderShop();});
+  watch('houseInv/'+key,v=>{S.inv=v||{};S.invOk=key;renderBag();renderShop();});   // invOk：背包讀到了（NEW 的起點要等它）
   watch('houseVisit/'+key,v=>{S.visitors=v||{};renderPanel();renderTop();});
   const st=await sit(key);
-  if(!S.on||S.hk!==key||S.visit){if(st.r==='ok')st.ref.remove().catch(()=>{});return;}   // v505：坐下的途中按了回大廳，不要再把小屋開起來
+  if(!S.on||S.hk!==key||S.visit){if(st.r==='ok'){try{st.ref.onDisconnect().cancel();}catch(_){}st.ref.remove().catch(()=>{});}return;}   // v505：坐下的途中按了回大廳，不要再把小屋開起來
   if(st.r==='ok')useSeat(st);
   startRoom(key);
   pruneChat(key);
@@ -91,7 +104,7 @@ async function enter(){
  }finally{S.joining=false;}
 }
 // 關掉目前的房間（自己的或別人的）：起身、停掉同步，不換回大廳的名牌；回大廳用 exit()
-async function teardown(){flushSave();const seatRef=S.seatRef;S.leaving=true;
+async function teardown(){flushSave();xpEnd();const seatRef=S.seatRef;S.leaving=true;S.tok=(S.tok||0)+1;
  S.on=false;unsub();closePanel();clearInterval(S.pubT);clearInterval(S.beatT);S.pubT=S.beatT=0;
  document.body.classList.remove('tt-house-on','tt-house-edit','tt-house-visit');
  S.frame?.remove();S.frame=null;S.visit=null;S.hk=null;S.seat=null;S.seatRef=null;S.room={};S.whoSig=null;S.chatLog=[];S.chatSeen=new Set();renderChat();
@@ -104,7 +117,7 @@ async function exit(){if(!S.on)return;await teardown();restoreSign();}
 // 回傳 {r:'ok'／'full'／'denied'／'kicked', s, ref}；坐好就設好斷線自動起身
 async function sit(hk){const mk=KEY(),ref=DB().ref(R()+'/houseRoom/'+hk);let cur;
  try{cur=(await ref.once('value')).val()||{};}catch(_){return {r:'denied'};}
- const now=Date.now(),own=hk===mk;
+ const now=SNOW(),own=hk===mk;
  let order=SEATS.filter(s=>cur[s]&&cur[s].k===mk);   // 另一個分頁已經坐著：沿用那個座位
  if(!order.length)order=SEATS.filter(s=>!cur[s]).concat(SEATS.filter(s=>cur[s]&&!(cur[s].at>now-STALE)));   // v505：空位優先，沒有空位才接手斷線的座位
  if(!order.length&&own){const g=SEATS.filter(s=>cur[s]&&cur[s].k!==mk).sort((a,b)=>(cur[a].at||0)-(cur[b].at||0))[0];   // 主人回家客滿：請最久沒動的那位起身
@@ -113,23 +126,26 @@ async function sit(hk){const mk=KEY(),ref=DB().ref(R()+'/houseRoom/'+hk);let cur
  const p=(S.hk===hk&&room('me'))||{i:8.5+(Math.random()-.5),j:10.5,f:1};
  for(const s of order){try{await ref.child(s).set({k:mk,name:myName(),i:r2(p.i),j:r2(p.j),f:p.f<0?-1:1,at:TS()});
    ref.child(s).onDisconnect().remove();return {r:'ok',s,ref:ref.child(s)};}catch(_){}}
- if(!own){try{const k=(await DB().ref(R()+'/houseKick/'+hk+'/'+mk).once('value')).val();if(k&&k>Date.now()-600000)return {r:'kicked'};}catch(_){}}
+ if(!own){try{const k=(await DB().ref(R()+'/houseKick/'+hk+'/'+mk).once('value')).val();if(k&&k>SNOW()-600000)return {r:'kicked'};}catch(_){}}
  return {r:'denied'};}
-function useSeat(st){S.seat=st.s;S.seatRef=st.ref;S.joinedAt=Date.now();}
+// v508 伺服器時間（客人電腦時鐘快一兩分鐘，別人的小人就全部被當成斷線、看不到）
+let OFF=0,offOn=false;const SNOW=()=>Date.now()+OFF;
+function watchOffset(){if(offOn||!DB())return;offOn=true;try{DB().ref('.info/serverTimeOffset').on('value',s=>{OFF=Number(s.val())||0;});}catch(_){offOn=false;}}
+function useSeat(st){S.seat=st.s;S.seatRef=st.ref;S.joinedAt=SNOW();}
 // 同步：看座位（其他人畫進房間）、聽聊天、回報自己的位置
-function startRoom(hk){
+function startRoom(hk){watchOffset();
  watch('houseRoom/'+hk,v=>{if(S.hk!==hk)return;S.room=v||{};const mine=S.seat&&S.room[S.seat];
   if(S.seat&&!S.leaving&&(!mine||mine.k!==KEY())){   // 我的座位不見了：被主人請出去、網路閃斷被清掉、或分頁在背景心跳變慢被接走
    // v505：先試著坐回去，坐不下才離開，並照原因說明（原本一律說「主人請你離開」）
-   S.seat=null;S.seatRef=null;
-   sit(hk).then(st=>{if(!S.on||S.hk!==hk||S.seat)return;
+   try{S.seatRef&&S.seatRef.onDisconnect().cancel();}catch(_){}S.seat=null;S.seatRef=null;
+   sit(hk).then(st=>{if(!S.on||S.hk!==hk||S.seat){if(st.r==='ok'&&(!S.on||S.hk!==hk||st.s!==S.seat)){try{st.ref.onDisconnect().cancel();}catch(_){}st.ref.remove().catch(()=>{});}return;}
     if(st.r==='ok'){useSeat(st);S.last=null;pubPos();return;}
     if(S.visit){const nm=S.visit.name;exit().then(()=>say(st.r==='kicked'?nm+' 請你先離開小屋了':st.r==='full'?nm+' 的小屋客滿了，先回大廳囉':st.r==='denied'?nm+' 的小屋現在沒有開放了':'連線不穩，先回大廳囉'));}
     else say('連線不穩，等一下再試');});}
   pushPeers();
   /* v505：座位資料每 0.2 秒就會因為有人走動而更新；面板和聊天只在「有人進出」時重畫
      （原本每次都重畫：面板的按鈕按下去的瞬間被換掉、點不到；往上捲的聊天紀錄一直被拉回最底） */
-  const who=SEATS.map(s=>{const v=S.room[s];return v&&v.at>Date.now()-STALE*2?v.k+':'+(v.name||''):'';}).join('|');
+  const who=SEATS.map(s=>{const v=S.room[s];return v&&v.at>SNOW()-STALE*2?v.k+':'+(v.name||''):'';}).join('|');
   if(who!==S.whoSig){S.whoSig=who;renderPanel();renderChat();}});
  watch('houseChat/'+hk,v=>{if(S.hk!==hk)return;onChat(v||{});},ref=>ref.limitToLast(30));
  // v505：網路重連後重新設好「斷線自動起身」（舊連線的設定會跟著舊連線消失，關分頁後座位會卡著）
@@ -145,7 +161,7 @@ function pubPos(){if(!S.seatRef)return;const p=room('me');if(!p)return;const L=S
  if(L&&Math.abs(L.i-p.i)<.05&&Math.abs(L.j-p.j)<.05&&L.f===p.f)return;
  S.last={i:p.i,j:p.j,f:p.f};S.seatRef.update({i:r2(Math.max(-2,Math.min(30,p.i))),j:r2(Math.max(-2,Math.min(30,p.j))),f:p.f<0?-1:1,at:TS()}).catch(()=>{});}
 // 其他人：座位上的人（不含自己、不含斷線的），小人圖從大廳資料讀一次存起來
-function pushPeers(){if(!S.frame)return;const mk=KEY(),now=Date.now(),list=[];
+function pushPeers(){if(!S.frame)return;const mk=KEY(),now=SNOW(),list=[];
  for(const s of SEATS){const v=S.room[s];if(!v||v.k===mk||!(v.at>now-STALE*2))continue;
   const d=S.dolls[v.k];if(d===undefined)loadDoll(v.k);
   list.push({id:v.k,name:v.name||'旅人',i:+v.i||0,j:+v.j||0,f:v.f<0?-1:1,doll:d||null});}
@@ -172,10 +188,10 @@ const stkOf=x=>{try{return window.TTChatStickers?.decode(x)||null;}catch(_){retu
 const stkUrl=it=>new URL('tavern-ui/'+it.asset,location.href).href;   // 房間在 house/ 底下的 iframe，給完整網址
 function sendSticker(id){const code=window.TTChatStickers?.encode(id);if(code)sendChat(code);}
 // 主人每次回家順手清掉一天以前的聊天
-function pruneChat(hk){DB().ref(R()+'/houseChat/'+hk).limitToFirst(60).once('value').then(s=>{const v=s.val()||{},old=Date.now()-86400000,ch={};
+function pruneChat(hk){DB().ref(R()+'/houseChat/'+hk).limitToFirst(60).once('value').then(s=>{const v=s.val()||{},old=SNOW()-86400000,ch={};
   for(const [id,m] of Object.entries(v))if(!m||!(m.at>old))ch[id]=null;if(Object.keys(ch).length)DB().ref(R()+'/houseChat/'+hk).update(ch).catch(()=>{});}).catch(()=>{});}
 function renderChat(){const box=$('ttHouseChat');if(!box)return;const log=box.querySelector('.tt-hc-log');
- const people=SEATS.map(s=>S.room[s]).filter(v=>v&&v.at>Date.now()-STALE*2).length;
+ const people=SEATS.map(s=>S.room[s]).filter(v=>v&&v.at>SNOW()-STALE*2).length;
  box.querySelector('.tt-hc-who').textContent=S.on?'小屋裡 '+Math.max(1,people)+' / 4 人':'';
  log.innerHTML=S.chatLog.length?S.chatLog.slice(-8).map(m=>'<p'+(m.f===KEY()?' class="mine"':'')+'><b>'+esc(m.n)+'</b>'+((it=>it?'<img class="tt-hc-stkimg" src="'+esc(stkUrl(it))+'" alt="'+esc(it.name)+'貼圖">':esc(m.x))(stkOf(m.x)))+'</p>').join('')
   :'<p class="tt-hc-empty">'+(S.visit?'跟大家打聲招呼吧':'邀請好友進來一起聊天吧（右上「拜訪」）')+'</p>';
@@ -221,10 +237,26 @@ function renderBag(){const box=$('ttHouseBag');if(!box||!S.cat)return;
  box.querySelector('.tt-hb-tabs').innerHTML=tabs;
  renderExpand();
  const grid=box.querySelector('.tt-hb-grid');
- grid.innerHTML=list.length?list.map(c=>{const n=left(c.k);return '<button type="button" class="tt-hb-item'+(n>0?'':' none')+'" data-k="'+c.k+'" title="'+esc(c.name)+'">'
-   +'<span class="tt-hb-pic"><img alt="" data-thumb="'+c.k+'"></span><b>'+esc(c.name)+'</b><small>'+(n>0?'剩 '+n+' 件':'都擺出來了')+'</small></button>';}).join('')
+ const rows=list.map(c=>{const n=left(c.k);return {c,n,nw:n>0&&isNew(c.k)};}).sort((a,b)=>b.nw-a.nw);   // v509 NEW 的排最前面
+ grid.innerHTML=rows.length?rows.map(({c,n,nw})=>'<button type="button" class="tt-hb-item'+(n>0?'':' none')+(nw?' new':'')+'" data-k="'+c.k+'" title="'+esc(c.name)+'">'
+   +(nw?'<i class="tt-hb-new">NEW</i>':'')+'<span class="tt-hb-pic"><img alt="" data-thumb="'+c.k+'"></span><b>'+esc(c.name)+'</b><small>'+(n>0?'剩 '+n+' 件':'都擺出來了')+'</small></button>').join('')
   :'<p class="tt-hb-empty">背包裡還沒有家具，去扭蛋抽幾件回家吧</p>';
  fillThumbs(grid,136);}   // 家具店、佈置清單同一個比例（1 倍）
+// 從背包拿一件出來（點背包的格子、買完「現在擺」、扭蛋完 placeNew 都走這裡）；拿出來就不算 NEW 了
+function bagPick(k){if(left(k)<=0){say('這件都擺出來了，點房間裡的它就能移動');return false;}
+ let ok=false;try{ok=S.frame.contentWindow.TTRoom.grabNew(k)!==false;}catch(_){}
+ if(ok&&isNew(k)){newClear(k);renderBag();}return ok;}
+// v509 扭蛋結果畫面關掉後叫這個（keys：這次抽到的家具，最稀有的在前）：標成 NEW、打開佈置和「我的家具」，把第一件拿在手上準備擺。
+// 不在自己的小屋（例如在別人家）就什麼都不做、回 false；背包資料還沒到就等最多 3 秒，等不到就只打開背包
+function placeNew(keys){const list=(Array.isArray(keys)?keys:[keys]).filter(k=>typeof k==='string'&&k);
+ if(!S.on||S.visit||!S.key||S.key!==KEY())return false;
+ newAdd(list);try{gClose('houseShopM');}catch(_){}
+ S.bagKind='all';setMode('edit');const g=document.querySelector('#ttHouseBag .tt-hb-grid');if(g)g.scrollTop=0;   // 跟按「佈置」一樣；NEW 排在最上面
+ const k=list[0],tok=S.pnTok=(S.pnTok||0)+1,t0=Date.now();if(!k)return true;
+ const step=first=>{if(S.pnTok!==tok||!S.on||S.visit||S.mode!=='edit'||(!first&&room('holding')))return;   // 等的途中離開、收起佈置、自己拿了別的就不搶
+  if(S.frame&&S.frame._ok&&left(k)>0){bagPick(k);return;}
+  if(Date.now()-t0<3000)setTimeout(step,150);};
+ step(true);return true;}
 async function fillThumbs(root,size){const R=S.frame?.contentWindow?.TTRoom;if(!R)return;
  for(const im of root.querySelectorAll('img[data-thumb]')){const k=im.dataset.thumb,ck=k+'@'+size;
   if(S.thumbs[ck]){im.src=S.thumbs[ck];continue;}
@@ -257,8 +289,7 @@ document.addEventListener('click',e=>{
   return;}
  const b=e.target.closest('#ttHouseBag [data-bk],#ttHouseBag [data-k]');if(b){
   if(b.dataset.bk){S.bagKind=b.dataset.bk;renderBag();return;}
-  const k=b.dataset.k;if(left(k)<=0){say('這件都擺出來了，點房間裡的它就能移動');return;}
-  try{S.frame.contentWindow.TTRoom.grabNew(k);}catch(_){}
+  bagPick(b.dataset.k);
   return;}
  const v=e.target.closest('#ttVisitPanel [data-vis],#ttVisitPanel [data-go],#ttVisitPanel [data-invite],#ttVisitPanel [data-kick],#ttVisitPanel .tt-vp-random,#ttVisitPanel .tt-vp-close');if(v){
   if(v.dataset.vis)setVis(v.dataset.vis);
@@ -283,7 +314,7 @@ async function buy(k){const c=S.byKey[k],p=priceOf(k),key=S.key;if(S.buying||!c|
    ch['houseInv/'+key+'/'+k+'/'+ref.key]={ts};await DB().ref(R()).update(ch);}});
   try{rememberPaymentIds([ref.key]);}catch(_){}
   if(S.on&&S.key===key&&!S.visit){S.inv[k]={...(S.inv[k]||{}),[ref.key]:{ts}};renderShop();renderBag();
-   ttConfirm('「'+c.name+'」帶回家了！','要現在擺進房間嗎？',()=>{try{gClose('houseShopM');}catch(_){}setMode('edit');setTimeout(()=>{try{S.frame.contentWindow.TTRoom.grabNew(k);}catch(_){}},60);},'現在擺');}
+   ttConfirm('「'+c.name+'」帶回家了！','要現在擺進房間嗎？',()=>{try{gClose('houseShopM');}catch(_){}setMode('edit');setTimeout(()=>bagPick(k),60);},'現在擺');}
  }catch(e){if(e&&e.ids)try{rememberPaymentIds(e.ids);}catch(_){}say(e&&e.message||'購買沒有完成，請到訂單看看');}
  finally{S.buying=false;}}
 
@@ -292,11 +323,24 @@ async function buy(k){const c=S.byKey[k],p=priceOf(k),key=S.key;if(S.buying||!c|
 // 同一次寫入把 house/<key>/size 改成新大小、sizeRef 指向這張訂單（規則第十七批照這張訂單收錢才給擴建）；擺設一起存，新小屋也不會變空房。
 function renderExpand(){const b=$('ttHouseExpand');if(!b)return;const nx=nextSize(),p=nx?priceOf('size'+nx):0;
  b.classList.toggle('off',!p||!!S.visit||!S.on);b.title=p?'擴建到 '+nx+'×'+nx+'（'+TTCat.fmt(TTCat.price(p))+' 貓貓幣）':'';b.setAttribute('aria-label',b.title||'擴建');}
-function askExpand(){const nx=nextSize(),p=nx?priceOf('size'+nx):0;if(!nx||!p||S.visit||!S.on)return;const CAT=TTCat.price(p),cur=sizeOk(S.size);
- ttConfirm('擴建小屋：'+cur+'×'+cur+' → '+nx+'×'+nx,'房間會變大，原本的家具都留在原位。\n需要 '+TTCat.fmt(CAT)+' 貓貓幣（你現在有 '+TTCat.fmt(window.__cat||0)+'）。',expand,'擴建');}
-async function expand(){const nx=nextSize(),p=nx?priceOf('size'+nx):0,key=S.key;if(S.buying||!nx||!p||!key||key!==KEY()||S.visit)return;
- const CAT=TTCat.price(p);S.buying=true;
- try{const bal=await DB().ref(R()+'/cat/'+key+'/balance').once('value');
+function askExpand(){const nx=nextSize(),p=nx?priceOf('size'+nx):0;if(!nx||!p||S.visit||!S.on)return;const CAT=TTCat.price(p),cur=sizeOk(S.size),title='擴建小屋：'+cur+'×'+cur+' → '+nx+'×'+nx;
+ ttConfirm(title,'粉紅色虛線圍起來的是新增的地板，原本的家具都留在原位。\n需要 '+TTCat.fmt(CAT)+' 貓貓幣（你現在有 '+TTCat.fmt(window.__cat||0)+'）。',()=>{xpEnd();expand();},'擴建');
+ xpStart(nx,title);}
+// v509 擴建預覽：確認視窗開著時，房間先畫出擴建後的大小（TTRoom.previewSize），確認視窗改到左邊聊天框上面、不壓暗不模糊；
+// 取消、點外面、Esc、換成別的確認視窗都會變回來（ttConfirm 沒有取消的回呼，看 #ttcModal 有沒有關掉）。按「擴建」先收掉預覽，再走原本的 expand()
+let XP=null;
+function xpStart(n,title){xpEnd();const m=$('ttcModal'),T=$('ttcT');if(!m||!m.classList.contains('on'))return;
+ XP={n};const ch=$('ttHouseChat')?.getBoundingClientRect();document.body.style.setProperty('--tt-xprev-b',Math.round(ch&&ch.height?innerHeight-ch.top+14:24)+'px');
+ document.body.classList.add('tt-house-xprev');room('previewSize',n);
+ if(window.MutationObserver&&T){const ob=new MutationObserver(()=>{if(!m.classList.contains('on')||T.textContent!==title)xpEnd();});
+  ob.observe(m,{attributes:true,attributeFilter:['class']});ob.observe(T,{childList:true,characterData:true,subtree:true});XP.ob=ob;}}
+function xpEnd(){if(!XP)return;try{XP.ob&&XP.ob.disconnect();}catch(_){}XP=null;document.body.classList.remove('tt-house-xprev');document.body.style.removeProperty('--tt-xprev-b');room('previewSize',null);}
+async function expand(){let nx=nextSize(),p=nx?priceOf('size'+nx):0;const key=S.key;if(S.buying||!nx||!p||!key||key!==KEY()||S.visit)return;
+ S.buying=true;
+ try{const was=sizeOk(S.size),now=sizeOk((await DB().ref(R()+'/house/'+key+'/size').once('value')).val());   // v508：用資料庫裡最新的大小
+  if(now!==was){S.size=now;renderExpand();if(S.on&&!S.visit)await room('setSize',now);if(now>=nx){say('小屋已經擴建到 '+now+'×'+now+' 了');return;}nx=nextSize();p=nx?priceOf('size'+nx):0;if(!nx||!p)return;}
+  const CAT=TTCat.price(p);
+const bal=await DB().ref(R()+'/cat/'+key+'/balance').once('value');
   if(!Number.isSafeInteger(bal.val())||bal.val()<CAT){say('貓貓幣不夠，還差 '+TTCat.fmt(CAT-(Number(bal.val())||0))+(TTCat.EXCHANGE_ON?'，可以先到錢包用金幣兌換':'（每日任務每天送 '+TTCat.DAILY+'）'));return;}
   const ref=DB().ref(R()+'/clientOrders').push(),ts=Date.now(),name=(typeof me==='function'&&me()?.b?.name)||'酒館客人',nm='小屋擴建 '+nx+'×'+nx;
   const o={type:'shop',plan:'house:size'+nx,planName:'小屋擴建・'+nx+'×'+nx,amount:p,origAmount:p,couponUsed:false,couponDisc:0,itemId:'house:size'+nx,itemName:nm,name,paidBy:'cat',catAmount:CAT,status:'done',createdAt:ts,myKey:key};
@@ -310,7 +354,8 @@ async function expand(){const nx=nextSize(),p=nx?priceOf('size'+nx):0,key=S.key;
   try{rememberPaymentIds([ref.key]);}catch(_){}
   S.size=nx;
   if(S.on&&S.key===key&&!S.visit){await room('setSize',nx);publish(room('layout'));renderBag();renderExpand();say('小屋擴建到 '+nx+'×'+nx+' 了！原本的家具都留在原位');}
- }catch(e){if(e&&e.ids)try{rememberPaymentIds(e.ids);}catch(_){}say(e&&e.message||'擴建沒有完成，請到訂單看看');}
+ }catch(e){if(e&&e.ids)try{rememberPaymentIds(e.ids);}catch(_){}say(e&&e.message||'擴建沒有完成，請到訂單看看');
+  DB().ref(R()+'/house/'+key+'/size').once('value').then(s=>{const n=sizeOk(s.val());if(n!==sizeOk(S.size)){S.size=n;renderExpand();if(S.on&&!S.visit)room('setSize',n);}}).catch(()=>{});}   // 結果不明：照資料庫的大小
  finally{S.buying=false;}}
 
 // ---------- v504 串門子 ----------
@@ -330,7 +375,7 @@ async function visit(key,via){
  if(!key)return false;
  if(key===mk){enter();return true;}
  if(S.visit&&S.visit.key===key)return true;
- if(S.joining)return false;S.joining=true;
+ if(S.joining)return false;S.joining=true;S.lastFail='closed';const tok=S.tok||0;
  try{
   let view=null,owner=null;
   try{const [v,o]=await Promise.all([DB().ref(R()+'/houseView/'+key).once('value'),DB().ref(R()+'/lobby/'+key).once('value').catch(()=>null)]);view=v.val();owner=o?o.val():null;await loadCatalog();}
@@ -339,7 +384,8 @@ async function visit(key,via){
   if(!Array.isArray(view.layout))view.layout=[];   // v505：主人把家具全收起來了，空房間照樣可以進
   const name=String((owner&&owner.name)||view.name||'旅人').slice(0,40);
   const st=await sit(key);   // 先在對方家坐好，坐不下就留在原地
-  if(st.r!=='ok'){if(via!=='random')say(st.r==='full'?name+' 的小屋客滿了（最多 4 人），等一下再來':st.r==='kicked'?name+' 請你先離開了，過一陣子再來吧':'這間小屋現在沒有開放');return false;}
+  if((S.tok||0)!==tok){if(st.r==='ok'){try{st.ref.onDisconnect().cancel();}catch(_){}st.ref.remove().catch(()=>{});}S.lastFail='left';return false;}   // v508：等座位的時候按了回大廳
+  if(st.r!=='ok'){S.lastFail=st.r;if(via!=='random')say(st.r==='full'?name+' 的小屋客滿了（最多 4 人），等一下再來':st.r==='kicked'?name+' 請你先離開了，過一陣子再來吧':'這間小屋現在沒有開放');return false;}
   if(S.on)await teardown();
   useSeat(st);
   try{window.TinyTavernUI?.close?.();window.TTHub?.close?.();window.dmClose?.();}catch(_){}
@@ -351,20 +397,39 @@ async function visit(key,via){
   DB().ref(R()+'/houseVisit/'+key+'/'+mk).update({name:myName(),at:TS()}).catch(()=>{});
   watch('houseVisit/'+key,v=>{const vs=v||{},m=vs[mk];if(!S.visit||S.visit.key!==key)return;S.visit.likes=Object.values(vs).filter(x=>x&&x.like===true).length;S.visit.liked=!!(m&&m.like===true);renderTop();});
   startRoom(key);
-  openFrame(name+' 的小屋',()=>{room('spawn',+S.seat);S.last=null;pubPos();pushPeers();const host=SEATS.some(s=>S.room[s]&&S.room[s].k===key&&S.room[s].at>Date.now()-STALE);
+  openFrame(name+' 的小屋',()=>{room('spawn',+S.seat);S.last=null;pubPos();pushPeers();const host=SEATS.some(s=>S.room[s]&&S.room[s].k===key&&S.room[s].at>SNOW()-STALE);
     room('hint',host?'來到 '+name+' 的小屋了，打聲招呼吧':name+' 現在不在家，可以到處看看');});
   renderTop();renderKeys();renderChat();return true;
  }finally{S.joining=false;}}
 // 隨機拜訪：公開名單裡挑一間，主人兩分鐘內在家的先挑；這次逛過的先跳過
+// v508 隨機拜訪過場（lobby-ui/house-trip.js）：先洗牌候選人，再秀出這一間主人的頭像框＋闆卡，房間載好才離場；客滿／沒開門蓋章換下一間
+function profileOf(k,dir){return Promise.all([DB().ref(R()+'/lobby/'+k).once('value').catch(()=>null),DB().ref(R()+'/houseView/'+k).once('value').catch(()=>null)]).then(([a,v])=>{
+  const b=(a&&a.val())||{},view=(v&&v.val())||{},pub=b.pub||{};let photo='';try{photo=window.ttPhotoOf?ttPhotoOf(b)||'':'';}catch(_){}
+  return {key:k,name:String(b.name||view.name||'旅人').slice(0,40),photo,doll:b.doll||{},frm:pub.frm,vip:+pub.vip||0,tags:b.tags,games:b.games,bm:b.bm,bd:b.bd,quote:b.quote,
+   size:sizeOk(view.size),n:+view.n||(Array.isArray(view.layout)?view.layout.length:0),home:!!(dir&&dir.on>SNOW()-120000)};});}
+async function roomReady(){for(let t=0;t<90;t++){const w=S.frame?.contentWindow;if(w&&w.TTRoom){try{await w.TTRoom.ready;}catch(_){}return;}await new Promise(r=>setTimeout(r,100));}}
 async function randomVisit(){const mk=KEY();if(!mk||!DB()){say('先做一張闆卡、用 Discord 登入，才能去別人的小屋玩');return;}
+ if(S.tripping)return;S.tripping=true;const T=window.TTHouseTrip;
+ try{T?.open();
  let all={};try{all=(await DB().ref(R()+'/houseDir').orderByChild('at').limitToLast(200).once('value')).val()||{};}catch(_){}
- const cur=S.visit?.key,now=Date.now(),mix=a=>a.map(k=>[Math.random(),k]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+ const cur=S.visit?.key,now=SNOW(),mix=a=>a.map(k=>[Math.random(),k]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
  let keys=Object.keys(all).filter(k=>k!==mk&&k!==cur);if(keys.every(k=>S.seen.has(k)))S.seen.clear();keys=keys.filter(k=>!S.seen.has(k));
  const home=keys.filter(k=>all[k]&&all[k].on>now-120000),away=keys.filter(k=>!home.includes(k));
- const pool=[...mix(home),...mix(away)];
- if(!pool.length){say('現在還沒有其他開放的小屋，過幾天再來看看');return;}
- for(const k of pool.slice(0,6)){if(await visit(k,'random'))return;S.seen.add(k);}
- say('剛剛那幾間都客滿或沒開放，再按一次試試');}
+ const pool=[...mix(home),...mix(away)].slice(0,6);
+ if(!pool.length){say('現在還沒有其他開放的小屋，過幾天再來看看');await T?.close(false,'現在還沒有其他開放的小屋，過幾天再來看看');return;}
+ const profs=pool.map(k=>profileOf(k,all[k]));
+ if(T){const first=await Promise.all(profs.slice(0,5));await T.search(first);}
+ for(let i=0;i<pool.length;i++){const k=pool[i];
+  if(T){await T.show(await profs[i]);}
+  if(await visit(k,'random')){if(T)await T.done(roomReady());return;}
+  if(S.lastFail==='left')return;
+  S.seen.add(k);
+  if(T){await T.fail(S.lastFail);if(i<pool.length-1)await T.search(await Promise.all(profs.slice(i+1,i+6)));}}
+ say('剛剛那幾間都客滿或沒開放，再按一次試試');await T?.close(false,'剛剛那幾間都客滿或沒開放，再按一次試試');
+ }finally{S.tripping=false;T?.close(true);}}   // 正常走完 done()／close() 已經收掉；中途出錯也不會卡著
+// 試看面板用（?tripdemo=1）：自己＋隨機名單裡幾位的資料
+async function tripSample(){const mk=KEY();if(!mk||!DB())return [];let all={};try{all=(await DB().ref(R()+'/houseDir').limitToLast(6).once('value')).val()||{};}catch(_){}
+ const keys=[...new Set([...Object.keys(all).filter(k=>k!==mk),mk])].slice(0,5);return Promise.all(keys.map(k=>profileOf(k,all[k])));}
 async function toggleLike(){const v=S.visit,mk=KEY();if(!v||!mk)return;const next=!v.liked;v.liked=next;v.likes+=next?1:-1;renderTop();
  try{await DB().ref(R()+'/houseVisit/'+v.key+'/'+mk).update({name:myName(),at:TS(),like:next});if(next)say('幫 '+v.name+' 的小屋按了讚');}
  catch(_){v.liked=!next;v.likes+=next?-1:1;renderTop();say('沒有按成功，請再試一次');}}
@@ -397,11 +462,11 @@ function closePanel(){clearInterval(S.onT);S.onT=0;if(!S.panel)return;S.panel=fa
 const isOn=k=>{try{return !!posMap[k];}catch(_){return false;}};
 const onSig=()=>Object.keys(S.friends||{}).filter(isOn).sort().join('|');
 async function loadFriends(){const mk=KEY();if(!mk||!DB())return;try{S.friends=(await DB().ref(R()+'/friends/'+mk).once('value')).val()||{};}catch(_){S.friends={};}renderPanel();}
-const ago=t=>{const m=Math.max(0,Math.round((Date.now()-(Number(t)||0))/60000));return m<1?'剛剛':m<60?m+' 分鐘前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前';};
+const ago=t=>{const m=Math.max(0,Math.round((SNOW()-(Number(t)||0))/60000));return m<1?'剛剛':m<60?m+' 分鐘前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前';};
 function renderPanel(){const box=$('ttVisitPanel');if(!box||!S.panel)return;
  const vs=Object.entries(S.visitors||{}).filter(([,v])=>v&&typeof v==='object'),likes=vs.filter(([,v])=>v.like===true).length;
  const recent=vs.sort((a,b)=>(b[1].at||0)-(a[1].at||0)).slice(0,8);
- const here=SEATS.map(s=>S.room[s]).filter(v=>v&&v.k!==S.key&&v.at>Date.now()-STALE*2);
+ const here=SEATS.map(s=>S.room[s]).filter(v=>v&&v.k!==S.key&&v.at>SNOW()-STALE*2);
  const fr=S.friends;const frs=fr?Object.entries(fr).filter(([,v])=>v&&typeof v==='object').sort((a,b)=>String(a[1].name||'').localeCompare(String(b[1].name||''),'zh-Hant')):null;
  S.onSig=onSig();const fOn=frs?frs.filter(([k])=>isOn(k)):[],fOff=frs?frs.filter(([k])=>!isOn(k)):[];
  const goBtn=k=>'<button type="button" class="tt-vp-go" data-go="'+esc(k)+'">去他家</button>';
@@ -497,6 +562,7 @@ function renderKeys(){const el=$('ttHouseKeys');if(!el)return;const hold=S.mode=
 // ---------- 給房間（iframe）用的介面 ----------
 window.TTHouse={
  initialLayout:()=>S.visit?S.visit.layout:S.layout,
+ tripSample,
  roomSize:()=>S.visit?S.visit.size:sizeOk(S.size),
  visiting:()=>S.visit?{key:S.visit.key,name:S.visit.name}:null,
  save,
@@ -511,13 +577,14 @@ window.TTHouse={
   if(side){const q=side.getBoundingClientRect();if(q.width)r=Math.max(r,vw-q.left+12);}   // 佈置、串門子：右側整欄
   const ch=$('ttHouseChat')?.getBoundingClientRect();if(ch&&ch.width&&ch.right<vw*.4)l=Math.max(l,ch.right+12);   // 左下的小屋聊天
   return {t,b,l,r};},
- enter,exit,openShop,visit,randomVisit,
+ enter,exit,openShop,visit,randomVisit,placeNew,
  state:()=>({on:S.on,mode:S.mode,inv:S.inv,visit:S.visit?{key:S.visit.key,name:S.visit.name,via:S.visit.via}:null,vis:S.vis,seat:S.seat,room:S.room,chat:S.chatLog.slice(-5)})};
 addEventListener('keydown',e=>{const t=e.target;if(!S.on||(t&&typeof t.closest==='function'&&t.closest('input,textarea')))return;
+ if(e.key==='Escape'&&XP){e.preventDefault();$('ttcNo')?.click();return;}   // v509 擴建確認視窗開著：Esc＝取消（預覽跟著收掉）
  if(S.mode==='edit'&&room('key',e.key)){e.preventDefault();renderKeys();return;}   // 焦點在大廳時，R／Delete／Esc 轉給房間
  if(e.key==='Escape'&&S.panel){closePanel();return;}
  if(e.key==='Escape'&&S.mode==='edit'&&!room('holding'))setMode('walk');
- if(e.key==='Enter'&&S.mode!=='edit'){const i=$('ttHouseSay');if(i){e.preventDefault();i.focus();}}});
+ if(e.key==='Enter'&&S.mode!=='edit'&&!(t&&typeof t.closest==='function'&&t.closest('button,a,[role=button],select'))&&!document.querySelector('.ttc.on')){const i=$('ttHouseSay');if(i){e.preventDefault();i.focus();}}});
 addEventListener('pagehide',()=>{if(S.seatRef)try{S.seatRef.remove();}catch(_){}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
 })();

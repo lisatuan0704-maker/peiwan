@@ -25,6 +25,9 @@ function busy(){
 // 冒險者：先挑「待接單」（綠燈）的那位，沒有就挑畫面上第一位
 function staff(){const all=[...document.querySelectorAll('.npc.staff')].filter(inView);
  return all.find(e=>e.querySelector('.led.g'))||all[0]||null;}
+// v508 掛機收益吊卡（#ttIdleHud）：規則還沒發布、讀不到紀錄時整條不顯示 → 這一步也跳過（不留置中的空說明）
+function idleStep(){const e=$('ttIdleHud');return shown(e)&&!e.classList.contains('off')
+ ?[{target:()=>$('ttIdleHud'),pad:8,title:'掛機收益',text:'就算不在酒館，貓貓幣也會慢慢存起來，最多存 8 小時。\n存滿就不會再增加，記得回來按「領取」。'}]:[];}
 function steps(){
  const daily=(window.TTCat&&TTCat.DAILY)||100;
  return [
@@ -32,6 +35,7 @@ function steps(){
   {target:staff,pad:14,title:'酒館的冒險者',text:'站在店裡的這幾位是酒館的冒險者，可以找他們一起打遊戲、語音聊聊天。\n頭上寫「待接單」的就是現在有空；點兩下冒險者，可以看他的介紹卡。'},
   {target:()=>$('shopBtn'),pad:8,round:true,title:'找冒險者一起玩',text:'按「我要點單」挑一種玩法、選一位冒險者，用金幣付好就完成了，也可以預約之後的時間。\n點好的單，在「我的酒館」的訂單裡看得到進度。'},
   {target:()=>document.querySelector('.tt-funds'),pad:8,title:'錢包',text:'金幣用來點冒險者、買時裝，按這裡可以儲值。\n貓貓幣是酒館送你的（每日任務、掛機收益），可以買小屋家具。'},
+  ...idleStep(),
   {target:()=>$('chatbox'),pad:6,title:'聊天室',text:'跟大家打聲招呼吧！說的話會冒在小人頭上。\n每天在大廳說說話、待滿 10 分鐘，完成每日任務就送 '+daily+' 貓貓幣。'},
   {target:()=>union([$('dressBtn'),$('wardBtn')]),pad:8,title:'商城與背包',text:'商城的衣服可以先試穿再買；背包裡是你已經有的衣服、寵物和座椅，隨時換裝。'},
   {target:()=>$('ttHouseBtn'),pad:8,title:'小屋',text:'你專屬的小房間：用貓貓幣抽扭蛋拿家具來佈置，也能邀請好友進來一起聊天。'},

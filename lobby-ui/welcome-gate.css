@@ -91,6 +91,11 @@ html body :is(#dcGate,#notice) .dgBtn:hover{transform:translateY(-2px)}
 html body :is(#dcGate,#notice) .dgBtn:hover::after{transform:translateX(4px)}
 html body :is(#dcGate,#notice) .dgBtn:active{transform:translateY(1px)}
 
+/* v508 確認登入中（data-step=wait）：整片透明但照樣擋住大廳（不讓人以訪客身分進去），不閃登入卡；太久才冒「連線中」 */
+html body #dcGate[data-step=wait]{background:transparent!important;backdrop-filter:none!important}
+html body #dcGate[data-step=wait] .dgCard{display:none!important}
+html body #dcGate[data-step=wait].slow::after{content:"連線中，請稍候…";position:fixed;left:50%;bottom:32px;transform:translateX(-50%);padding:10px 20px;border-radius:999px;
+  background:rgba(28,33,86,.86);border:2px solid rgba(255,255,255,.7);color:#fff;font:900 14px/1.4 var(--sk-head,sans-serif);letter-spacing:1px;animation:dgIn .4s both}
 @media(max-width:640px){
   html body :is(#dcGate,#notice){padding:12px!important}
   html body :is(#dcGate,#notice) .dgCard{max-height:calc(100dvh - 24px);box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px #DCD3FF,7px 7px 0 -1px #FFD6E6,7px 7px 0 2px var(--sk-ink,#1C2156),0 18px 40px rgba(28,33,86,.35)!important}

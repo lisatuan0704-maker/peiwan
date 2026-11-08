@@ -215,7 +215,7 @@
         "$a": {
           ".read": "(auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && $a == root.child('secureV1/members').child(auth.uid).child('key').val()",
           "$b": {
-            ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val()) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && ($a == root.child('secureV1/members').child(auth.uid).child('key').val() || ($b == root.child('secureV1/members').child(auth.uid).child('key').val() && (!newData.exists() || root.child('peiwan/friendReq').child($b).child($a).exists()))))"
+            ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val()) || ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && ($a == root.child('secureV1/members').child(auth.uid).child('key').val() || ($b == root.child('secureV1/members').child(auth.uid).child('key').val() && (!newData.exists() || root.child('peiwan/friendReq').child($b).child($a).exists() && !root.child('peiwan/blocks').child($a).child($b).exists()))))"
           }
         }
       },
@@ -534,7 +534,7 @@
           },
           "layout": {
             "$i": {
-              ".validate": "$i.matches(/^[0-9]{1,3}$/) && newData.hasChildren(['t']) && newData.child('t').isString() && newData.child('t').val().matches(/^[a-z0-9_]{1,60}$/) && (root.child('peiwan/shopConfig').child('house:' + newData.child('t').val()).exists() || root.child('peiwan/houseInv').child($k).child('' + newData.child('t').val()).exists() || newData.child('t').val() == 'vr_rug' || newData.child('t').val() == 'vr_bed' || newData.child('t').val() == 'vr_chair' || newData.child('t').val() == 'vr_window')",
+              ".validate": "$i.matches(/^[0-9]{1,3}$/) && newData.hasChildren(['t']) && newData.child('t').isString() && newData.child('t').val().matches(/^[a-z0-9_]{1,60}$/) && ((root.child('peiwan/shopConfig').child('house:' + newData.child('t').val()).child('price').isNumber() && root.child('peiwan/shopConfig').child('house:' + newData.child('t').val()).child('price').val() > 0) || root.child('peiwan/houseInv').child($k).child('' + newData.child('t').val()).exists() || newData.child('t').val() == 'vr_rug' || newData.child('t').val() == 'vr_bed' || newData.child('t').val() == 'vr_chair' || newData.child('t').val() == 'vr_window')",
               "t": {
                 ".validate": "newData.isString()"
               },
@@ -611,7 +611,7 @@
           ".validate": "!newData.exists() || ($k.matches(/^[A-Za-z0-9_-]{1,200}$/) && newData.hasChildren(['vis','at']))",
           "layout": {
             "$i": {
-              ".validate": "$i.matches(/^[0-9]{1,3}$/) && newData.hasChildren(['t']) && newData.child('t').isString() && newData.child('t').val().matches(/^[a-z0-9_]{1,60}$/) && (root.child('peiwan/shopConfig').child('house:' + newData.child('t').val()).exists() || root.child('peiwan/houseInv').child($k).child('' + newData.child('t').val()).exists() || newData.child('t').val() == 'vr_rug' || newData.child('t').val() == 'vr_bed' || newData.child('t').val() == 'vr_chair' || newData.child('t').val() == 'vr_window')",
+              ".validate": "$i.matches(/^[0-9]{1,3}$/) && newData.hasChildren(['t']) && newData.child('t').isString() && newData.child('t').val().matches(/^[a-z0-9_]{1,60}$/) && ((root.child('peiwan/shopConfig').child('house:' + newData.child('t').val()).child('price').isNumber() && root.child('peiwan/shopConfig').child('house:' + newData.child('t').val()).child('price').val() > 0) || root.child('peiwan/houseInv').child($k).child('' + newData.child('t').val()).exists() || newData.child('t').val() == 'vr_rug' || newData.child('t').val() == 'vr_bed' || newData.child('t').val() == 'vr_chair' || newData.child('t').val() == 'vr_window')",
               "t": {
                 ".validate": "newData.isString()"
               },

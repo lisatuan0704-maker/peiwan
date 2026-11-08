@@ -1,0 +1,38 @@
+/* v508 大廳小提示：新私訊小卡（#ttDmToast，lobby.html 好友區塊）、聊天框上緣的每日任務標籤（#ttDailyChip，lobby.html TTDaily）。
+   主題同整站：白紙、深藍框 #1C2156、淺藍內框、粉色 #FF4F8B 點綴。小卡在大廳之上、視窗之下（.shopModal 96、.gwin 152 都蓋得過它）。 */
+#ttDmToast{position:fixed;left:22px;bottom:240px;z-index:93;width:min(282px,calc(100vw - 24px));box-sizing:border-box;display:flex;align-items:stretch;
+  background:linear-gradient(170deg,#fff,#F4FAFF);border:3px solid #1C2156;border-radius:14px;box-shadow:inset 0 0 0 2px #CFEFFF,0 4px 0 #1C2156;
+  color:#1C2156;font-family:inherit;opacity:0;transform:translateX(-14px);transition:opacity .2s ease,transform .28s cubic-bezier(.34,1.5,.5,1)}
+#ttDmToast[hidden]{display:none!important}
+#ttDmToast.on{opacity:1;transform:none}
+#ttDmToast::before{content:"";position:absolute;left:-3px;top:10px;bottom:10px;width:5px;border-radius:0 4px 4px 0;background:#FF4F8B}
+#ttDmToast .dmt-go{flex:1;min-width:0;display:flex;align-items:center;gap:9px;margin:0;padding:8px 2px 8px 12px;border:0;background:none;
+  font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:11px 0 0 11px}
+#ttDmToast .dmt-ic{width:32px;height:32px;flex:none;box-sizing:border-box;border:2px solid #1C2156;border-radius:10px;background:#FFF4F9;display:grid;place-items:center}
+#ttDmToast .dmt-ic svg{width:20px;height:20px;fill:#fff;stroke:#FF4F8B;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+#ttDmToast .dmt-tx{min-width:0;display:flex;flex-direction:column;gap:1px}
+#ttDmToast .dmt-hd{display:flex;align-items:baseline;gap:4px;min-width:0;font-size:13px;font-weight:700;line-height:1.35;white-space:nowrap}
+#ttDmToast .dmt-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;color:#FF4F8B;font-weight:900}
+#ttDmToast .dmt-hd span{flex:none}
+#ttDmToast .dmt-pv{font-size:12px;font-weight:700;color:#5C6196;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ttDmToast .dmt-x{flex:none;width:30px;margin:0;padding:6px 0 0;border:0;background:none;color:#1C2156;font:900 17px/1 inherit;cursor:pointer;align-self:flex-start;border-radius:0 11px 0 0}
+#ttDmToast .dmt-go:hover .dmt-ic{background:#FFE3EF}
+#ttDmToast .dmt-go:focus-visible,#ttDmToast .dmt-x:focus-visible{outline:2px dashed #FF4F8B;outline-offset:-4px}
+html.ttm-on #ttDmToast{left:12px;right:12px;width:auto;bottom:calc(var(--ttm-bot,64px) + 14px + env(safe-area-inset-bottom,0px))!important}
+@media (prefers-reduced-motion:reduce){#ttDmToast{transition:opacity .15s;transform:none}}
+
+#ttDailyChip{position:absolute;right:46px;bottom:100%;margin-bottom:-3px;z-index:2;display:flex;align-items:center;gap:7px;padding:4px 10px 5px;
+  background:#fff;border:2.5px solid #1C2156;border-bottom:0;border-radius:10px 10px 0 0;box-shadow:inset 0 2px 0 #CFEFFF;
+  color:#1C2156;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap;pointer-events:auto;cursor:default}
+#ttDailyChip[hidden]{display:none!important}
+#ttDailyChip b{color:#FF4F8B;font-weight:900;letter-spacing:.5px}
+#ttDailyChip .dc-i{color:#5C6196}
+#ttDailyChip .dc-i i{font-style:normal;display:inline-block;min-width:12px;text-align:center;color:#8C88B8}
+#ttDailyChip .dc-i.ok{color:#1C2156}
+#ttDailyChip .dc-i.ok i{color:#FF4F8B;font-weight:900}
+#ttDailyChip.done{gap:5px}
+#ttDailyChip .dc-ok{font-style:normal;color:#FF4F8B;font-weight:900}
+#ttDailyChip.done.mini{padding:3px 8px 4px}
+#ttDailyChip.done.mini .dc-full{display:none}
+#ttDailyChip.done.mini:hover .dc-full{display:inline}
+html.ttm-on #ttDailyChip{display:none!important}

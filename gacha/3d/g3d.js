@@ -1710,13 +1710,24 @@ function limitHTML(){const st=poolState(THEME);if(st.perm)return '';
   return `<span class="lim off"><b>CLOSED</b><i>已結束</i>${twDate(st.end)} 結束</span>`;}
 mkHead();
 const walletHTML=()=>`<div class="p wallet"><i></i><span>${wallet.toLocaleString()}</span></div>`;
+// v508 抽卡鈕第三行：抽完剩多少（不夠寫還差多少），餘額變了原地改字；抽十次上面貼保底小貼紙（主機規則是每次十連必有一件稀有以上，沒有累積保底，不寫「再 N 抽」）
+const balTxt=c=>wallet>=c?`抽完剩 ${(wallet-c).toLocaleString()} 貓貓幣`:`還差 ${(c-wallet).toLocaleString()} 貓貓幣`;
+const balHTML=c=>`<small class="bal${wallet<c?' short':''}" data-cost="${c}">${balTxt(c)}</small>`;
+function balSync(){ui.querySelectorAll('.bal[data-cost]').forEach(e=>{const c=+e.dataset.cost;e.textContent=balTxt(c);e.classList.toggle('short',wallet<c);});}
+const pullBtn1=t=>`<button class="btn hot" id="b1">${t}<em><i></i>${PRICE1}</em>${balHTML(PRICE1)}</button>`;
+const pullBtn10=t=>`<button class="btn hot" id="b10"><span class="g10">十連必得一件稀有以上</span>${t}<em><i></i>${PRICE10}</em>${balHTML(PRICE10)}</button>`;
+// v508 去擺放（正式版、大廳有 HOST.place 才出現）：剛抽到的家具去重複、限定→稀有→普通排好交給大廳 → 關扭蛋、小屋進佈置拿起第一件
+const CAN_PLACE=LIVE&&typeof HOST.place==='function',RORD={limited:0,rare:1,common:2};
+const placeKeys=P=>{const seen=new Set();return (P.res||[]).filter(it=>it&&it.k&&!seen.has(it.k)&&seen.add(it.k)).sort((a,b)=>(RORD[a.r]??3)-(RORD[b.r]??3)).map(it=>it.k);};
+const placeBtn=()=>CAN_PLACE?'<button class="btn go" id="bp">去擺放</button>':'';
 function setUI(h){ui.innerHTML=h;bind();}
-function idleUI(){mkHead();UISIG=sig();setUI(HEAD+walletHTML()+`<div class="p pools">${Object.entries(POOLS).map(([k,P])=>{const st=poolState(k);return `<button data-pool="${k}" class="${k===THEME?'on':''}${st.open?'':' closed'}${st.open&&!st.perm&&st.left<DAY?' last':''}">${P.name}<small>${tabTxt(st)}</small></button>`;}).join('')}</div>${poolState(THEME).open?`<div class="p btns"><button class="btn hot" id="b1">抽一次<em><i></i>${PRICE1}</em></button><button class="btn hot" id="b10">抽十次<em><i></i>${PRICE10}</em></button></div>`
+function idleUI(){mkHead();UISIG=sig();setUI(HEAD+walletHTML()+`<div class="p pools">${Object.entries(POOLS).map(([k,P])=>{const st=poolState(k);return `<button data-pool="${k}" class="${k===THEME?'on':''}${st.open?'':' closed'}${st.open&&!st.perm&&st.left<DAY?' last':''}">${P.name}<small>${tabTxt(st)}</small></button>`;}).join('')}</div>${poolState(THEME).open?`<div class="p btns">${pullBtn1('抽一次')}${pullBtn10('抽十次')}</div>`
    :`<div class="p btns"><button class="btn" disabled>${poolState(THEME).soon?twDate(poolState(THEME).start)+' 開始':'這一期已經結束了'}</button></div>`}
   <div class="p links"><button id="bo">家具圖鑑・機率</button><button id="bs">音效：${SND?'開':'關'}</button>${LIVE?'':'<button id="br">試做重設（金額＋收藏）</button>'}</div>`);}
 function bind(){const q=$,shut=!poolState(THEME).open;if(q('b1')){q('b1').onclick=()=>start(1);q('b1').disabled=shut||wallet<PRICE1;}if(q('b10')){q('b10').onclick=()=>start(10);q('b10').disabled=shut||wallet<PRICE10;}
   if(q('bo'))q('bo').onclick=()=>{$('oddsBody').innerHTML=oddsHTML();$('odds').classList.add('on');};if(q('bs'))q('bs').onclick=e=>{SND=!SND;e.target.textContent='音效：'+(SND?'開':'關');};
-  if(q('br'))q('br').onclick=()=>{wallet=3000;OWN.clear();saveOwn();idleUI();};if(q('bx'))q('bx').onclick=()=>{try{HOST.close();}catch(e){}};ui.querySelectorAll('[data-pool]').forEach(b=>b.onclick=()=>setTheme(b.dataset.pool));if(q('bk'))q('bk').onclick=()=>{mode='idle';plan=null;PA.clear();PN.clear();idleUI();};}
+  if(q('br'))q('br').onclick=()=>{wallet=3000;OWN.clear();saveOwn();idleUI();};if(q('bx'))q('bx').onclick=()=>{try{HOST.close();}catch(e){}};ui.querySelectorAll('[data-pool]').forEach(b=>b.onclick=()=>setTheme(b.dataset.pool));if(q('bk'))q('bk').onclick=()=>{mode='idle';plan=null;PA.clear();PN.clear();idleUI();};
+  if(q('bp'))q('bp').onclick=e=>{e.currentTarget.disabled=true;const k=plan?placeKeys(plan):[];try{HOST.place(k);}catch(_){}};}
 $('odds').querySelector('.x').onclick=()=>$('odds').classList.remove('on');
 // 家具圖鑑（11/08 D「機率一覽要做圖鑑」）：上面卡池名＋收集進度條＋保底規則；下面依限定／稀有／普通分區，一件一張卡（像素圖、名字、單件機率），已收集亮、沒收集灰
 function dexImg(it){const B=40,f=Math.min(B/it.w,B/it.h),k=f>=.5?Math.floor(f*2)/2:f;   // 放大用整數／半格倍數保持像素整齊；太大的家具縮小時用平滑縮
@@ -1733,14 +1744,14 @@ function fxHTML(L,own){const F=POOLS[THEME].fx;if(!F)return'';const n=L.length;
     return `<div class="fx-card ${ok?'own':'no'}"><i><img src="${img}${DV}" alt="">${ok?'':'<s>未解鎖</s>'}</i><div><em>${lv===1?'集到一半':'全部集滿'}</em><b>${nm}</b><p>${ds}</p><u><span style="width:${(Math.min(own,need)/need*100).toFixed(1)}%"></span><q>${ok?'已解鎖':Math.min(own,need)+'／'+need}</q></u></div></div>`;}).join('')}</div></section>`;}
 function resultUI(){const P=plan;mkHead();
   if(P.n===1){const L=P.L,k=P.it.r;setUI(HEAD+walletHTML()+`<div class="p plate" style="left:calc(${L.plateX}px*var(--s));top:calc(${L.plateY}px*var(--s))">${P.it.nw?'<b class="nw">NEW</b>':''}${P.it.name}</div>
-    <div class="p btns" style="bottom:calc(8px*var(--s))"><button class="btn" id="bk">收下</button><button class="btn hot" id="b1">再抽一次<em><i></i>${PRICE1}</em></button><button class="btn hot" id="b10">抽十次<em><i></i>${PRICE10}</em></button></div><div class="p links"><button id="bo">家具圖鑑・機率</button></div>`);}
+    <div class="p btns" style="bottom:calc(8px*var(--s))"><button class="btn" id="bk">收下</button>${placeBtn()}${pullBtn1('再抽一次')}${pullBtn10('抽十次')}</div><div class="p links"><button id="bo">家具圖鑑・機率</button></div>`);}
   else{const G=P.G;let names='';G.cells.forEach((c,i)=>{const r=P.res[i].r;names+=`<span class="gname" style="left:calc(${P.anchor[i][0]}px*var(--s));top:calc(${P.anchor[i][1]+2}px*var(--s))">${P.res[i].nw?'<b class="nw">NEW</b>':''}${r==='common'?'':`<small class="r-${r}">${RN[r][0]}</small>`}${P.res[i].name}</span>`;});
-    setUI(HEAD+walletHTML()+`<div class="p" style="inset:0;pointer-events:none">${names}</div><div class="p btns" style="bottom:calc(6px*var(--s))"><button class="btn" id="bk">收下</button><button class="btn hot" id="b10">再抽十次<em><i></i>${PRICE10}</em></button></div>`);unclutter(P);}}
+    setUI(HEAD+walletHTML()+`<div class="p" style="inset:0;pointer-events:none">${names}</div><div class="p btns" style="bottom:calc(6px*var(--s))"><button class="btn" id="bk">收下</button>${placeBtn()}${pullBtn10('再抽十次')}</div>`);unclutter(P);}}
 // D 11/08「還是有文字會擋到彼此」：擺家具時名牌寬度是估的，十件塞不下時也會退而求其次 → 名牌畫出來後照「真的大小」再排一次：
 // 名牌跟名牌絕對不疊、不出畫面、不壓到標題／金幣／按鈕；其餘照「離原位近、少蓋到別件家具」挑位置（上面的名牌先定位）
 function unclutter(P){const els=[...ui.querySelectorAll('.gname')];if(!els.length)return;const o=stageEl.getBoundingClientRect();
   const box=e=>{const r=e.getBoundingClientRect();return[(r.left-o.left)/S,(r.top-o.top)/S,(r.right-o.left)/S,(r.bottom-o.top)/S];};
-  const UIb=[uiRect('.head'),uiRect('.wallet'),...[...ui.querySelectorAll('.btns button')].map(b=>{const r=b.getBoundingClientRect();return[(r.left-o.left)/S-3,(r.top-o.top)/S-3,(r.right-o.left)/S+3,(r.bottom-o.top)/S+3];})].filter(Boolean),FB=(P.room?P.room.items:[]).map(x=>x&&x.bx);   // 按鈕列的外框橫跨整個畫面，只閃真的按鈕
+  const UIb=[uiRect('.head'),uiRect('.wallet'),...[...ui.querySelectorAll('.btns button,.btns .g10')].map(b=>{const r=b.getBoundingClientRect();return[(r.left-o.left)/S-3,(r.top-o.top)/S-3,(r.right-o.left)/S+3,(r.bottom-o.top)/S+3];})].filter(Boolean),FB=(P.room?P.room.items:[]).map(x=>x&&x.bx);   // 按鈕列的外框橫跨整個畫面，只閃真的按鈕
   const ar=(a,t)=>Math.max(0,Math.min(a[2],t[2])-Math.max(a[0],t[0]))*Math.max(0,Math.min(a[3],t[3])-Math.max(a[1],t[1]));
   const done=[];
   els.map((e,i)=>({e,i,b:box(e)})).sort((a,b)=>a.b[1]-b.b[1]).forEach(({e,i,b})=>{const w=b[2]-b[0],h=b[3]-b[1],cx=(b[0]+b[2])/2,y0=b[1],own=FB[i];
@@ -1777,7 +1788,7 @@ function onResize(){lastVW=innerWidth;lastVH=innerHeight;measure();makeTargets()
 addEventListener('resize',onResize);
 let UISIG='';const sig=()=>Object.keys(POOLS).map(k=>tabTxt(poolState(k))).join('|')+limitHTML();
 setInterval(()=>{if(mode==='idle'&&G.ready&&sig()!==UISIG)idleUI();else if(mode==='result'&&!poolState(THEME).open)bind();},20000);
-if(LIVE){try{HOST.sub(s=>{hostSync(s);if(mode==='idle')idleUI();else{const w=ui.querySelector('.wallet span');if(w)w.textContent=wallet.toLocaleString();}});}catch(e){}
+if(LIVE){try{HOST.sub(s=>{hostSync(s);if(mode==='idle')idleUI();else{const w=ui.querySelector('.wallet span');if(w)w.textContent=wallet.toLocaleString();balSync();}});}catch(e){}
   addEventListener('keydown',e=>{if(e.key==='Escape'){if($('odds').classList.contains('on'))$('odds').classList.remove('on');else if(mode==='idle'||mode==='result')try{HOST.close();}catch(_){}}});}
 // 看酒館模式（?look）：停在酒館那幾格但每一格都重畫（視窗縮放也不會黑掉），下方按鈕切換視角
 async function lookMode(){await G.pull(1,null,7);const P=plan,D0=-TZD,e0=P.H0+100;

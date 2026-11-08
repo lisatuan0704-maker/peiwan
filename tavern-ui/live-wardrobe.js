@@ -595,7 +595,7 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
  $$('#dyeDialog input').forEach(el=>el.oninput=updateDye);$('#dyeTicket').onclick=()=>{window.ttDyeShop();$('#dyeShop').scrollTop=0;$('#categories [data-category=dye]').focus({preventScroll:true});};
  document.querySelector('.paneltitle strong').textContent='我的試衣舞臺';document.querySelector('.collection-mark span').textContent='星光換裝間';document.querySelector('.collection-mark strong').textContent='DRESS UP & PLAY';
  window.ttDressArea=next=>{init();setArea(next);};
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();if(orderDialog.open){closeDrinkOrder();return;}api.close();}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();if(lookDialog.open){lookDialog.close();return;}if(orderDialog.open){closeDrinkOrder();return;}api.close();}});   // v508：確認選購開著時 Esc 先關它（原本整個商城關掉、選購視窗還留著，下次打開還在）
  let compactLayout=innerWidth<601;
  window.addEventListener('resize',()=>{const next=innerWidth<601;if(next!==compactLayout){compactLayout=next;render();}});
  init();render();[200,600,1400,3000].forEach(t=>setTimeout(paint,t));

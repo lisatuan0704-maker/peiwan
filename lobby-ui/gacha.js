@@ -11,7 +11,7 @@ const R=()=>typeof ROOT!=='undefined'?ROOT:'peiwan';
 const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const BASE=()=>typeof PAY_API!=='undefined'?PAY_API:'https://pay.tinytavern.tw',API=()=>BASE()+'/api/gacha';
-const VER='506';
+const VER='508';
 const G={ov:null,fr:null,inv:{},off:null,subs:new Set(),busy:false,sched:null};
 
 // ---------- 給扭蛋頁的介面（gacha/3d/g3d.js 讀 parent.TTGachaHost） ----------
@@ -35,7 +35,12 @@ async function loadSched(){
  try{const r=await fetch(BASE()+'/api/gacha-info',{cache:'no-store',signal:c&&c.signal});const j=await r.json();
   if(j&&Array.isArray(j.schedule))G.sched=j.schedule.filter(x=>x&&typeof x.pool==='string'&&typeof x.start==='string');}catch(_){}
  finally{clearTimeout(t);}}
-window.TTGachaHost={state,pull,close,schedule:()=>G.sched,sub(fn){G.subs.add(fn);return ()=>G.subs.delete(fn);}};
+// v508 抽完按「去擺放」：跟 × 一樣關掉扭蛋視窗 → 交給小屋（house.js 的 TTHouse.placeNew：進佈置、拿起第一件、標 NEW）；keys 扭蛋頁已排好（限定→稀有→普通、不重複）
+function place(keys){
+ if(!G.ov)return;const ks=Array.isArray(keys)?Array.from(keys).filter(k=>typeof k==='string'&&k).slice(0,10):[];   // 換成大廳這邊的陣列（iframe 的陣列 instanceof Array 不成立）
+ close();
+ try{window.TTHouse&&window.TTHouse.placeNew&&window.TTHouse.placeNew(ks);}catch(_){}}
+window.TTGachaHost={state,pull,close,place,schedule:()=>G.sched,sub(fn){G.subs.add(fn);return ()=>G.subs.delete(fn);}};
 window.addEventListener('tt-cat',emit);
 
 // ---------- 開關扭蛋視窗 ----------
@@ -52,7 +57,7 @@ function open(pool){
  f.addEventListener('load',()=>{try{f.contentWindow.focus();}catch(_){}});}
 function close(){
  if(!G.ov)return;const ov=G.ov;G.ov=G.fr=null;
- try{G.off&&G.off();}catch(_){}G.off=null;
+ try{G.off&&G.off();}catch(_){}G.off=null;G.subs.clear();   // v508：關掉的扭蛋頁不再收通知（不然每開一次就多留一份 3D 場景在記憶體）
  ov.classList.remove('on');setTimeout(()=>ov.remove(),260);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&G.ov)close();});
 window.TTGacha={open,close};

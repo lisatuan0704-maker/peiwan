@@ -1930,6 +1930,37 @@ addEventListener('resize',()=>{if(!held)frameRoom();});
 async function houseSetSize(n){n=houseSizeOk(n);if(n===N)return N;const k=K(houseShell(n));await loadKey(k);if(!(k in _IM))return N;
   HOUSE_SZ=n;cancel();N=n;updateSizeUI();frameRoom();
   if(!reduceMotion.matches)for(let a=0;a<4;a++)burst(iso(N*(a%2),N*(a>>1)),8);return N;}
+// v509 擴建預覽（大廳的擴建確認視窗開著時）：先畫出擴建後的房間，新地板粉色＋虛線、輕輕呼吸，取消就變回來。
+// 只有畫面（draw、鏡頭）用擴建後的大小；走路、擺家具、存檔照原本的 N，不改任何資料。大廳叫 TTRoom.previewSize(n)／previewSize(null)
+let PV=null,PV_TOK=0,PV_TAG=null;
+{const FDC={},_fb=fdBuild;fdBuild=function(){const key=N+'|'+TW+'|'+TH;if(key===FD.key)return;   // 草地台每種大小各留一張，預覽切來切去不用重畫
+  if(FD.key)FDC[FD.key]={c:FD.c,ox:FD.ox,oy:FD.oy,poly:FD.poly,mb:FD.mb,mf:FD.mf};
+  const hit=FDC[key];if(hit){Object.assign(FD,hit,{key});return;}FD.c=document.createElement('canvas');_fb();};}
+const pvDo=fn=>{if(!PV||PV.n<=N)return fn();const n0=N;PV.n0=n0;N=PV.n;try{return fn();}finally{N=n0;}};
+{const _dr=draw;draw=function(now,dt){pvDo(()=>_dr(now,dt));pvTagPos();};}
+{const _fr=frameRoom;frameRoom=function(){pvDo(_fr);};}
+{const _ds=drawShell;drawShell=function(){_ds();if(PV&&N===PV.n&&PV.n0<N)pvPaint(performance.now());};}
+function pvPaint(t){const a=PV.n0,n=N,P=iso,q=reduceMotion.matches?.5:.5+.5*Math.sin(t/520),WH=WALL_H*Z2PX,up=p=>({x:p.x,y:p.y-WH});
+  const poly=pts=>{g.beginPath();pts.forEach((p,k)=>k?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));g.closePath();};
+  g.save();
+  g.fillStyle=`rgba(255,122,168,${.06+.05*q})`;poly([P(0,a),P(0,n),up(P(0,n)),up(P(0,a))]);g.fill();poly([P(a,0),P(n,0),up(P(n,0)),up(P(a,0))]);g.fill();   // 變長的兩段牆：淡淡一層
+  const L=[P(a,0),P(n,0),P(n,n),P(0,n),P(0,a),P(a,a)];   // 新地板＝大菱形扣掉原本的菱形（L 形）
+  g.fillStyle=`rgba(255,122,168,${.22+.16*q})`;poly(L);g.fill();
+  const px=1/Math.max(1,cam.z);   // 線條粗細用螢幕像素算（鏡頭拉近也不會變很粗）
+  g.lineWidth=px;g.strokeStyle=`rgba(255,246,250,${.4+.3*q})`;for(let k=1;k<n;k++){const s=k>a?0:a;line(P(k,s),P(k,n));line(P(s,k),P(n,k));}   // 新地板的格線
+  g.setLineDash([6*px,4*px]);g.lineDashOffset=reduceMotion.matches?0:-t/60*px;
+  g.lineWidth=3.2*px;g.strokeStyle='rgba(255,255,255,.95)';poly(L);g.stroke();
+  g.lineWidth=1.8*px;g.strokeStyle=`rgba(255,63,128,${.8+.2*q})`;poly(L);g.stroke();
+  g.restore();}
+PST.textContent+='.hs-pv{position:absolute;transform:translate(-50%,-50%);padding:3px 12px;border:2.5px solid #1C2156;border-radius:999px;background:linear-gradient(180deg,#FF8DB5,#FF4F8B);color:#fff;font:700 13px/1.5 "LINE Seed TW","Huninn",sans-serif;white-space:nowrap;box-shadow:0 3px 0 #1C2156;animation:hsPv .25s ease-out}'
+ +'@keyframes hsPv{from{opacity:0;transform:translate(-50%,-20%)}to{opacity:1;transform:translate(-50%,-50%)}}@media (prefers-reduced-motion:reduce){.hs-pv{animation:none}}';
+function pvTagPos(){if(!PV_TAG)return;if(!PV||PV.n<=N){PV_TAG.remove();PV_TAG=null;return;}const c=(PV.n0+PV.n)/2,s=scr(c,c,0);PV_TAG.style.left=s.x+'px';PV_TAG.style.top=s.y+'px';}   // 小牌子放在新地板前面那一角
+async function housePreviewSize(n){const tok=++PV_TOK;n=n==null?0:houseSizeOk(n);
+  if(!(n>N)){const had=!!PV;PV=null;pvTagPos();if(had)frameRoom();return N;}
+  const k=K(houseShell(n));await loadKey(k);if(tok!==PV_TOK||!(k in _IM)||!(n>N))return N;   // 外殼用到才載；載不到就不預覽
+  cancel();PV={n,n0:N};
+  if(!PV_TAG){PV_TAG=document.createElement('div');PV_TAG.className='hs-pv';PL.append(PV_TAG);}PV_TAG.textContent='擴建後 '+n+'×'+n;
+  frameRoom();pvTagPos();return n;}
 window.TTRoom={ready,
   setMode:m=>setMode(m==='edit'?'edit':'walk'),mode:()=>mode,
   zoom:d=>zoomStep(d>0?1:-1),frame:()=>frameRoom(),
@@ -1944,7 +1975,7 @@ window.TTRoom={ready,
     if(k==='delete'||k==='backspace'){held.isNew?cancel():removeHeld();return true;}
     if(k==='escape'){cancel();return true;}return false;},
   layout:()=>houseSerial(),visiting:()=>!!VISIT,
-  me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0}),setPeers,say:peerSay,spawn:spawnAt,size:()=>N,setSize:houseSetSize,
+  me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0}),setPeers,say:peerSay,spawn:spawnAt,size:()=>N,setSize:houseSetSize,previewSize:housePreviewSize,
   thumb:(k,S=88)=>thumbOf(k,S),
   async thumbAsync(k,S=88){const d=DEF[k];if(!d)return '';await loadKey(K(d.spr[0]));return thumbOf(k,S);},
   setDoll,

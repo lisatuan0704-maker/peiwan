@@ -1698,7 +1698,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v507</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v508</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -1794,7 +1794,7 @@ body.artBub.bub3s .npc .bub{
 </div></div>
 
 <div class="gwin" id="pcM"><div class="gcard">
-  <div class="gtop"><span class="gt">陪玩資訊卡</span><button class="gx" onclick="gClose('pcM')">✕</button></div>
+  <div class="gtop"><span class="gt">冒險者資訊卡</span><button class="gx" onclick="gClose('pcM')">✕</button></div>
   <div class="gin" id="pcBody"></div>
 </div></div>
 
@@ -3775,7 +3775,7 @@ function pushLog(name, text, mine, meta){
   while(CHATBUF.length>120) CHATBUF.shift();
   while(log.children.length>60) log.removeChild(log.firstChild);
   log.scrollTop=log.scrollHeight;
-  if(!mine){ const ct=document.getElementById('chattoggle'), cb=document.getElementById('chatbox');
+  if(!mine&&!(meta&&meta.hist)){ const ct=document.getElementById('chattoggle'), cb=document.getElementById('chatbox');   // v508：剛載入的歷史訊息不算未讀
     if(ct&&cb&&cb.style.display==='none') ct.classList.add('unread'); }   // v505：桌機最小化聊天室也要亮紅點（原本只有手機寬度才亮）
 }
 /* ===== 右鍵選單:闆卡 / 檢舉 ===== */
@@ -3885,7 +3885,6 @@ document.getElementById('chatin').addEventListener('keydown',e=>{
 });
 document.getElementById('chatin').addEventListener('keyup',e=>e.stopPropagation());
 if(db){
-  const chatStart=Date.now();
   /* v505：清 6 小時前的舊聊天，用伺服器時間算（規則用伺服器時間判斷；電腦時鐘快一點，整批清理就會被拒），再多留 1 分鐘緩衝 */
   db.ref('.info/serverTimeOffset').once('value').then(o=>{
     const CUT=Date.now()+(+o.val()||0)-6*3600*1000-60000;
@@ -3900,16 +3899,19 @@ if(db){
      ・同一則只畫一次（舊訊息被擠出最後 30 則又擠回來時，不再重複出現、也不會又冒泡泡）；
      ・掌櫃刪掉的留言，從大家的聊天紀錄拿掉（被擠出最後 30 則的不算，要確認資料庫裡真的沒了）。 */
   const CHAT_SEEN=new Set();
+  /* v508：「剛載入的那一批」改看資料有沒有載完，不再拿本機時鐘跟伺服器時間比（電腦時鐘快，別人的泡泡全都不冒；慢，舊訊息一進來就冒） */
+  let chatLive=false;
   TTWorldScope.listen(db.ref(ROOT+'/chat').limitToLast(30),'child_added',snap=>{
     const m=snap.val(); if(!m||!m.text) return;
     if(CHAT_SEEN.has(snap.key)) return; CHAT_SEEN.add(snap.key);
     if(CHAT_SENT.has(snap.key)) return;
     const mine=!!myKey&&m.key===myKey;
-    pushLog(m.name||'？', m.text, mine, {id:snap.key, t:m.t, key:m.key});
-    if(m.t && m.t < chatStart-15000) return;
+    pushLog(m.name||'？', m.text, mine, {id:snap.key, t:m.t, key:m.key, hist:!chatLive});
+    if(!chatLive) return;
     const a=agents.get(m.key);
     if(a) showBubble(a, m.text);
   });
+  db.ref(ROOT+'/chat').limitToLast(30).once('value').then(()=>{chatLive=true;},()=>{chatLive=true;});   // 註冊在上面那個之後：歷史那一批先跑完才算「之後的新訊息」
   TTWorldScope.listen(db.ref(ROOT+'/chat').limitToLast(30),'child_removed',snap=>{
     const id=snap.key;
     db.ref(ROOT+'/chat/'+id).once('value').then(s=>{
@@ -4410,9 +4412,9 @@ function renderCoinInfo(){
     const bal=payBalance(), due=payDue(), enough=bal>=due;
     box.innerHTML='商品:<b>'+esc(curPlan.n)+'</b><br>應付:<b style="color:#D96A8B">'+TTCat.fmt(due)+' 貓貓幣</b><br>'
       +'目前持有:<b>'+TTCat.fmt(bal)+'</b> → 付款後剩 <b>'+TTCat.fmt(Math.max(0,bal-due))+'</b>'
-      +(enough?'':TTCat.EXCHANGE_ON?'<div style="color:#E14E6B;margin-top:6px;font-weight:700">貓貓幣不夠,還差 '+TTCat.fmt(due-bal)+'　<a href="#" onclick="gClose&&gClose(\'shopM3\');shopClose();openTopup();return false" style="color:#E27FA6;text-decoration:underline">去兌換 →</a></div>'
+      +(enough?'':TTCat.EXCHANGE_ON?'<div class="pay-short" style="color:#E14E6B;margin-top:6px;font-weight:700">貓貓幣不夠,還差 '+TTCat.fmt(due-bal)+'　<a href="#" onclick="gClose&&gClose(\'shopM3\');shopClose();openTopup();return false" style="color:#E27FA6;text-decoration:underline">去兌換 →</a></div>'
         +'<div style="font-size:11.5px;color:#A5798D;margin-top:4px">兌換完成後,這頁的付款鈕會自動解鎖,不用重來一次</div>'
-        :'<div style="color:#E14E6B;margin-top:6px;font-weight:700">貓貓幣不夠,還差 '+TTCat.fmt(due-bal)+'</div>'   // v505：沒開兌換時不放連結（原本點了只會開一個不能兌換的錢包）
+        :'<div class="pay-short" style="color:#E14E6B;margin-top:6px;font-weight:700">貓貓幣不夠,還差 '+TTCat.fmt(due-bal)+'</div>'   // v505：沒開兌換時不放連結（原本點了只會開一個不能兌換的錢包）
         +'<div style="font-size:11.5px;color:#A5798D;margin-top:4px">每日任務和掛機收益都會送貓貓幣，存夠後這頁的付款鈕會自動解鎖</div>');
     const btn=document.getElementById('paySubmitBtn');
     if(btn){btn.disabled=_submitting||!enough;btn.style.opacity=enough?'1':'.5';btn.textContent='用貓貓幣支付';}
@@ -4431,7 +4433,7 @@ function renderCoinInfo(){
     (canCoupon?'<label style="display:flex;align-items:center;gap:6px;margin:6px 0;font-size:13px;color:#8E68C8;cursor:pointer"><input type="checkbox" id="useCouponCoin" '+(_coinCoupon?'checked':'')+' style="transform:scale(1.2)"> 使用 VIP'+vi.lv+' 優惠券(折 $'+vi.cur.disc+'・剩 '+cLeft+' 張)</label>':'')+
     '應付:<b style="color:#D96A8B">'+amt+' 金幣</b><br>'+
     '目前餘額:<b>'+bal+'</b> → 付款後剩 <b>'+Math.max(0,bal-amt)+'</b>'+
-    (enough?'':'<div style="color:#E14E6B;margin-top:6px;font-weight:700">餘額不足,還差 '+(amt-bal)+' 金幣　<a href="#" onclick="gClose&&gClose(\'shopM3\');shopClose();openTopup();return false" style="color:#E27FA6;text-decoration:underline">去儲值 →</a></div>'
+    (enough?'':'<div class="pay-short" style="color:#E14E6B;margin-top:6px;font-weight:700">餘額不足,還差 '+(amt-bal)+' 金幣　<a href="#" onclick="gClose&&gClose(\'shopM3\');shopClose();openTopup();return false" style="color:#E27FA6;text-decoration:underline">去儲值 →</a></div>'
       +'<div style="font-size:11.5px;color:#A5798D;margin-top:4px">儲值後金幣一入帳,這頁的付款鈕會自動解鎖,不用重來一次</div>');
   const ck=document.getElementById('useCouponCoin'); if(ck) ck.onchange=function(){ _coinCoupon=this.checked; renderCoinInfo(); };
   const btn=document.getElementById('paySubmitBtn');
@@ -4500,7 +4502,7 @@ async function payWithCoins(){
   booking:curBooking,reserveAt:curBooking?curReserveAt:null,status:kind==='shop'?'done':'confirmed',createdAt:Date.now(),myKey:key};
  if(useCat)o.catAmount=catAmt;
  _submitting=true;const btn=document.getElementById('paySubmitBtn');if(btn)btn.disabled=true;
- const done=submitGuard('paySubmitBtn','送出訂單');
+ const done=submitGuard('paySubmitBtn',useCat?'用貓貓幣支付':'用金幣支付');   // v508：等太久之後按鈕字還原成正確的（原本變回「送出訂單」）
  try{
   await (useCat?catSafety():walletSafety()).execute({key,amount:useCat?catAmt:amt,ids:[ref.key],lookup:walletLookup,commit:async()=>{await db.ref(ROOT).update(coinPayChanges(key,ref.key,o,plan,useCat,amt,catAmt));}});
  }catch(e){if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'交易結果尚未確認，請聯絡店長');return;}
@@ -5468,10 +5470,37 @@ function readMail(id){
     if(k===key&&(ref||!k)) return;
     if(ref&&cb){try{ref.off('value',cb);}catch(e){}}
     ref=null;cb=null;key=k;day=null;ok=false;
+    chip();
     if(!k) return;
     ref=db.ref(ROOT+'/dailyTask/'+k);
-    cb=s=>{ if(key!==k) return; const v=s.val(); day=v&&typeof v.day==='number'?v.day:null; ok=true; tryClaim(); };
-    ref.on('value',cb,()=>{ if(key===k) ok=false; });
+    cb=s=>{ if(key!==k) return; const v=s.val(); day=v&&typeof v.day==='number'?v.day:null; ok=true; tryClaim(); chip(); };
+    ref.on('value',cb,()=>{ if(key===k){ ok=false; chip(); } });
+  }
+  /* v508 聊天框上緣的每日任務小標籤（只顯示，不影響領取條件與寫入）：說一句話 ✓／○、待滿 10 分（N/10）；
+     領完變「今天的每日任務已完成 ✓」，幾秒後縮成小小的 ✓（滑過再展開）。讀不到 dailyTask（沒登入、規則還沒發布）不顯示；手機功能首頁不顯示（CSS）。 */
+  let chipEl=null,chipMini=0;
+  function chip(){
+    const box=document.getElementById('chatbox'); if(!box) return;
+    const k=key,d=today();
+    if(!k||!ok||!inLobby()){ if(chipEl) chipEl.hidden=true; return; }
+    if(!chipEl){ chipEl=document.createElement('div'); chipEl.id='ttDailyChip'; chipEl.setAttribute('role','status'); box.appendChild(chipEl); }
+    if(chipEl.parentNode!==box) box.appendChild(chipEl);
+    chipEl.hidden=false;
+    const done=day!=null&&day>=d, s=stay(k,d), said=done||!!ls(chatKey(k,d)), full=done||s>=NEED, min=Math.min(10,Math.floor(s/60));
+    const sig=done?'done':(said?1:0)+'_'+min+'_'+(full?1:0);
+    if(chipEl.dataset.sig===sig) return;
+    const was=chipEl.dataset.sig; chipEl.dataset.sig=sig; clearTimeout(chipMini);
+    chipEl.classList.toggle('done',done);
+    if(done){
+      chipEl.innerHTML='<span class="dc-full">今天的每日任務已完成</span><i class="dc-ok">✓</i>';
+      chipEl.title='今天的每日任務已完成'; chipEl.setAttribute('aria-label','今天的每日任務已完成');
+      chipEl.classList.toggle('mini',!was);   // 剛完成先完整顯示，開頁時已完成就直接縮小
+      if(!chipEl.classList.contains('mini')) chipMini=setTimeout(()=>chipEl.classList.add('mini'),8000);
+    }else{
+      chipEl.classList.remove('mini'); chipEl.title=''; chipEl.removeAttribute('aria-label');
+      chipEl.innerHTML='<b>每日任務</b><span class="dc-i'+(said?' ok':'')+'">說一句話 <i>'+(said?'✓':'○')+'</i></span>'
+        +'<span class="dc-i'+(full?' ok':'')+'">待滿 10 分 <i>'+(full?'✓':min+'/10')+'</i></span>';
+    }
   }
   async function tryClaim(){
     const k=key,d=today();
@@ -5495,13 +5524,13 @@ function readMail(id){
     }
     try{
       await db.ref(ROOT).update(ch);
-      if(key===k){ day=d; ls(chatKey(k,d),null); if(window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'每日任務完成！',sub:'今天的發言＋待滿 10 分鐘，送你 '+amt+' '+unit()+' ✦',hold:6000}); }
+      if(key===k){ day=d; ls(chatKey(k,d),null); chip(); if(window.lobbyNotify) lobbyNotify({ok:true,icon:'coin',title:'每日任務完成！',sub:'今天的發言＋待滿 10 分鐘，送你 '+amt+' '+unit()+' ✦',hold:6000}); }
     }catch(e){
       console.warn('daily task',e&&e.code||e);
       // 記下的那則訊息可能已被聊天室清掉：請他再說一句話
       // v505：這個提醒一天只跳一次（客人回報「發什麼貼圖上面都會跳每日任務」——舊版每被拒一次就跳一次）
       if(key===k&&e&&/PERMISSION/i.test(e.code||e.message||'')){ ls(chatKey(k,d),null); const n=(+ls(failKey(k,d))||0)+1; ls(failKey(k,d),n); if(n===1&&window.lobbyNotify) lobbyNotify({icon:'coin',title:'每日任務',sub:'再在大廳說一句話，就能領今天的 '+reward()+' '+unit(),hold:6000}); }
-    }finally{ busy=false; }
+    }finally{ busy=false; chip(); }
   }
   function afterChat(chatId){
     const k=key,d=today();
@@ -5510,16 +5539,17 @@ function readMail(id){
     ls(chatKey(k,d),chatId);
     const left=NEED-stay(k,d);
     if(left>0&&hinted!==k+'_'+d&&ok){ hinted=k+'_'+d; if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'每日任務',sub:'再在大廳待 '+Math.ceil(left/60)+' 分鐘，就送你 '+reward()+' '+unit(),hold:5000}); }
-    tryClaim();
+    tryClaim(); chip();
   }
-  setInterval(()=>{
+  function stayTick(){
     const now=Date.now(),dt=Math.min(70,Math.max(0,(now-lastTick)/1000));lastTick=now; // 電腦睡眠回來不一次補很多
     const k=key,d=today();
     if(!k||!inLobby()||(day!=null&&day>=d)) return;
     const v=stay(k,d);
     if(v<NEED) ls(stayKey(k,d),Math.round(v+dt));
     if(v+dt>=NEED) tryClaim();
-  },15000);
+  }
+  setInterval(()=>{ stayTick(); chip(); },15000);   // v508：計時後順便更新聊天框上的每日任務標籤（同一個計時器）
   window.TTDaily={afterChat,stay:()=>key?stay(key,today()):0};
   try{ firebase.auth().onAuthStateChanged(()=>setTimeout(watch,0)); }catch(e){}
   setInterval(watch,3000);
@@ -5543,7 +5573,8 @@ function readMail(id){
   const reloadAll=()=>{try{if(top!==self&&/lobby-view\.html$/.test(top.location.pathname)){top.location.reload();return;}}catch(e){}location.reload();};
   function busy(){
     if(window.TTWorldScope?.isolated||document.body.classList.contains('tt-house-on'))return true;
-    if(window.TinyTavernUI?.isActive?.()||document.querySelector('.gwin.on,#bookM.on,#ttmWallet.on,#cardOverlay.on,#ttGachaOv,.shopModal[style*="flex"]'))return true;
+    const phone=document.documentElement.classList.contains('ttm-on');   // v508：手機版永遠開著一個分頁（訂單／私訊／儲值／信箱），那不算「正在用視窗」，不然手機永遠不會自動更新
+    if(window.TinyTavernUI?.isActive?.()||document.querySelector(phone?'.gwin.on:not(.ttm-tabview),#bookM.on,#cardOverlay.on,#ttGachaOv,.shopModal[style*="flex"]:not(.ttm-tabview)':'.gwin.on,#bookM.on,#ttmWallet.on,#cardOverlay.on,#ttGachaOv,.shopModal[style*="flex"]'))return true;
     return [...document.querySelectorAll('input:not([type]),input[type=text],textarea')].some(i=>i.offsetParent&&i.value.trim());
   }
   function offer(){
@@ -5645,8 +5676,9 @@ if(db){
   let lobbyBase={},posRaw={};const lobbyExtra={},lobbyExtraOff={};
   const lobbyMerge=()=>{bosses=Object.assign({},lobbyExtra,lobbyBase);sync();};
   function lobbyWant(){
-    if(TTWorldScope.isolated)return;
-    const want=new Set(Object.keys(posRaw));if(typeof myKey==='string'&&myKey)want.add(myKey);
+    if(TTWorldScope.isolated){Object.keys(lobbyExtraOff).forEach(k=>{lobbyExtraOff[k]();delete lobbyExtraOff[k];});return;}   // v508：進房間就停掉，不在背景一直下載
+    const want=new Set(Object.keys(posRaw));if(typeof posMap==='object'&&posMap)Object.keys(posMap).forEach(k=>want.add(k));   // v508：還在「消失先留 6 秒」的人也要
+    if(typeof myKey==='string'&&myKey)want.add(myKey);
     let dirty=false;
     want.forEach(k=>{
       if(lobbyBase[k]||lobbyExtraOff[k]||!/^[A-Za-z0-9_-]{1,200}$/.test(k))return;
@@ -5691,10 +5723,39 @@ if(db){
     agents.forEach(a=>{if(!a.isMe&&!posMap[a.key])a._remotePosition=null;});
     return before!==Object.keys(posMap).sort().join('|');
   }
-  TTWorldScope.listen(db.ref(ROOT+'/lobby').limitToLast(120),'value',s=>{lobbyBase=s.val()||{};lobbyMerge();lobbyWant();});
-  setInterval(()=>{if(applyPos()&&typeof applyPresence==='function')applyPresence();lobbyWant();},1000);
-  TTWorldScope.listen(db.ref(ROOT+'/pos'),'value',
+  TTWorldScope.listen(db.ref(ROOT+'/lobby').limitToLast(120),'value',s=>{const nb=s.val()||{};
+    for(const k in lobbyBase)if(!nb[k]&&(posRaw[k]||k===myKey||(typeof posMap==='object'&&posMap&&posMap[k])))lobbyExtra[k]=lobbyBase[k];   // v508：被擠出最新 120 筆的在線老闆先留著（不然小人會被刪掉再重建、跳回起點）
+    lobbyBase=nb;lobbyWant();lobbyMerge();});
+  /* v508 分頁在背景超過 3 分鐘：先不聽整個 pos（全場位置是最大的下載量）；自己的位置、心跳、斷線清除都照舊（別人照樣看得到我）。
+     暫停時畫面上的人、名單與 lobbyWant 的個別監聽都先凍住（個別監聽留著：沒變動就不花流量，拿掉反而回來要整份重下載）。
+     切回來再聽；重新聽到的第一包當基準（像剛開頁）：新來的人馬上出現、這段時間走掉的人直接拿掉、還在的人直接站到新位置，不從舊位置滑過去。
+     posGate 讓 TTWorldScope 照舊管這條監聽（進房間 isolate 時一樣永久停掉）。window.__posPauseMs 是測試用（縮短 3 分鐘）。 */
+  const posRef=db.ref(ROOT+'/pos'),POS_PAUSE=180000;
+  let posFn=null,posFail=null,posOn=false,posDead=false,posPaused=false,posBase=false,posHidAt=document.hidden?Date.now():0;
+  const posGate={on(ev,fn,err){posFn=fn;posFail=err;posAttach();},off(){posDead=true;posPaused=posBase=false;posDetach();}};
+  function posAttach(){if(posOn||posDead||!posFn)return;posOn=true;posRef.on('value',posFn,posFail);}
+  function posDetach(){if(!posOn)return;posOn=false;try{posRef.off('value',posFn);}catch(e){}}
+  function posPauseCheck(){
+    if(posDead)return;
+    if(document.hidden){
+      if(!posHidAt)posHidAt=Date.now();
+      if(!posPaused&&Date.now()-posHidAt>=(Number.isFinite(window.__posPauseMs)?window.__posPauseMs:POS_PAUSE)){posPaused=true;posDetach();}
+    }else{
+      posHidAt=0;
+      if(posPaused){posPaused=false;posBase=true;posAttach();}
+    }
+  }
+  function posBaseline(){   // 重新聽到的第一包：忘掉防閃的進出紀錄、別人的平滑狀態（下一幀直接定位）
+    for(const k in pvSeen)delete pvSeen[k];pvInit=false;
+    agents.forEach(a=>{if(!a.isMe)a._remotePosition=null;});
+  }
+  document.addEventListener('visibilitychange',posPauseCheck);
+  window.ttPosSync=()=>({on:posOn,paused:posPaused,waiting:posBase});
+  setInterval(()=>{posPauseCheck();if(posPaused||posBase)return;   // 暫停中／等第一包時不重算（不然 10 分鐘沒心跳的判斷會把大家清掉再冒出來）
+    if(applyPos()&&typeof applyPresence==='function')applyPresence();lobbyWant();},1000);
+  TTWorldScope.listen(posGate,'value',
     s=>{ posRaw=s.val()||{};
+      if(posBase){posBase=false;posBaseline();}
       /* 自己的位置被晚到的離線清除刪掉 → 下一幀就補寫（不用等 5 秒心跳） */
       const mine=me();if(mine&&mine._sentPosition&&typeof myKey==='string'&&myKey&&!posRaw[myKey])mine._sentPosition=null;
       applyPos();lobbyWant();
@@ -6838,12 +6899,16 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
   window.dcAuth=function(){
     try{ ttNavigate(TTDiscordAuth.begin(DC_CLIENT,DC_REDIRECT)); }catch(e){ alert('無法儲存登入驗證資料，請確認瀏覽器允許此網站使用儲存空間後再試。'); }
   };
+  /* v508：換身分（換成另一張闆卡）防無限重整——30 秒內最多換 3 次；闆卡被刪後瀏覽器記住的登入鑰匙會一直把人換回去 */
+  window.ttIdSwitchOk=function(){try{const now=Date.now(),a=JSON.parse(sessionStorage.getItem('tt_id_sw')||'[]').filter(t=>now-t<30000);if(a.length>=3)return false;a.push(now);sessionStorage.setItem('tt_id_sw',JSON.stringify(a));}catch(e){}return true;};
+  window.ttForgetLogin=function(){try{window.TTSecureLogin&&TTSecureLogin.forget();}catch(e){}};
   /* v44:進場閘門 —— 順序:先做闆卡 → 再綁 Discord → 進大廳 */
   (function(){
     const g=document.getElementById('dcGate'); if(!g) return;
     const ic=document.getElementById('dgIcon'); if(ic) ic.src=AICON.mug;
     const bound=!!getDC();
-    g.style.display='flex';                 // 預設先擋著,確認後再放行(避免以訪客身分溜進大廳)
+    g.dataset.step='wait';g.style.display='flex';   // 預設先擋著,確認後再放行(避免以訪客身分溜進大廳)。v508：確認中先透明（不閃「綁定 Discord」卡），超過 8 秒才顯示「連線中」
+    setTimeout(()=>{if(g.dataset.step==='wait'&&g.style.display!=='none')g.classList.add('slow');},8000);
     function showCardGate(){
       g.dataset.step='1';
       const cardEl=g.querySelector('.dgCard');
@@ -6884,7 +6949,13 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
         /* 已用 Discord 登入、但這台裝置沒記住闆卡：直接找回帳號擁有的闆卡 */
         if(typeof firebase!=='undefined'&&firebase.auth&&window.TTSecureLogin){
           TTSecureLogin.check(firebase.auth(),db,ROOT,null).then(r=>{
-            if(r.ok&&r.key&&r.key!==myKey){ try{ localStorage.setItem('tt_me',r.key); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); return; }
+            if(r.ok&&r.key&&r.key!==myKey){   // v508：先確認那張闆卡還在（被刪掉的不要換過去，會一直重整）
+              db.ref(ROOT+'/lobby/'+r.key+'/name').once('value').then(n=>{
+                if(n.val()&&ttIdSwitchOk()){ try{ localStorage.setItem('tt_me',r.key); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); return; }
+                ttForgetLogin(); showCardGate();
+              }).catch(()=>showCardGate());
+              return;
+            }
             showCardGate();
           }).catch(()=>showCardGate());
         }else showCardGate();
@@ -6892,7 +6963,13 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
       }
       if(typeof firebase==='undefined'||!firebase.auth||!window.TTSecureLogin){ showLoginGate(); return; }
       TTSecureLogin.check(firebase.auth(),db,ROOT,myKey).then(r=>{
-        if(r.switchTo){ try{ localStorage.setItem('tt_me',r.switchTo); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); return; }
+        if(r.switchTo){   // v508：同上，換過去之前確認闆卡還在
+          db.ref(ROOT+'/lobby/'+r.switchTo+'/name').once('value').then(n=>{
+            if(n.val()&&ttIdSwitchOk()){ try{ localStorage.setItem('tt_me',r.switchTo); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); return; }
+            ttForgetLogin(); showLoginGate();
+          }).catch(()=>showLoginGate());
+          return;
+        }
         if(r.ok){ g.style.display='none'; return; }
         showLoginGate();
       }).catch(()=>showLoginGate());
@@ -7068,13 +7145,65 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
       db.ref(ROOT+'/friends/'+myKey).on('value',s=>{ FR=s.val()||{}; frBadge(); frPaint(); try{ if(cardOpen) pcSocialRender(); }catch(e){} });   // v505：闆卡開著時按鈕跟著更新
       db.ref(ROOT+'/friendReq/'+myKey).on('value',s=>{ FRQ=s.val()||{}; frBadge(); frPaint(); try{ if(cardOpen) pcSocialRender(); }catch(e){} });
       db.ref(ROOT+'/blocks/'+myKey).on('value',s=>{ BLK=s.val()||{}; applyHidden(); if(_dmWith&&window.ttPlayerSuppressed(_dmWith))dmClose(); frPaint(); });
-      db.ref(ROOT+'/dmMeta/'+myKey).on('value',s=>{ DMM=s.val()||{};
+      db.ref(ROOT+'/dmMeta/'+myKey).on('value',s=>{ const prev=DMM; DMM=s.val()||{};
         /* v505：正在看的對話，對方那邊的「未讀 +1」常常比我這邊的「已讀」晚到 → 視窗開著就收回 0 */
-        if(_dmWith&&DMM[_dmWith]&&DMM[_dmWith].unread>0&&document.getElementById('dmM')?.classList.contains('on')){ try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+_dmWith+'/unread').set(0); }catch(e){} }
-        frBadge(); frPaint(); });
+        if(!document.hidden&&_dmWith&&DMM[_dmWith]&&DMM[_dmWith].unread>0&&document.getElementById('dmM')?.classList.contains('on')){ try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+_dmWith+'/unread').set(0); }catch(e){} }
+        frBadge(); frPaint(); try{ dmtCheck(prev); }catch(e){} });
     }catch(e){}
   }
   const bindTimer=setInterval(()=>{ if(myKey){ frBind(); if(_frBound) clearInterval(bindTimer); } },2500);
+  /* v508：切回分頁時，正在看的那段私訊才算已讀 */
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden||!_dmWith||!myKey)return; if(!document.getElementById('dmM')?.classList.contains('on'))return;
+    if(DMM[_dmWith]&&DMM[_dmWith].unread>0) try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+_dmWith+'/unread').set(0); }catch(e){} });
+
+  /* v508 新私訊小卡：那段對話沒開著（或分頁在背景）時，左下聊天框上方（手機在下方分頁上面）跳一張「<名字> 傳來私訊」＋最後一句，
+     點一下打開那段對話（好友 dmOpen、冒險者 staffDmOpen）。只看未讀數變多（剛開頁的第一包不算）；封鎖、屏蔽、已不是好友的不跳；
+     新的蓋掉舊的、6 秒自動收（滑鼠停在上面先不收）；分頁在背景時只記最新一則，切回來跳一次。名字與內容一律 textContent。 */
+  let _dmtInit=false,_dmtPend=null,_dmtK=null,_dmtT=0,_dmtEl=null;
+  const dmtStaff=k=>/^staff_/.test(k);
+  function dmtOk(k){ const m=DMM[k]; if(!k||!m||!(+m.unread>0)||window.ttPlayerSuppressed(k)) return false;
+    if(!dmtStaff(k)&&(!FR[k]||BLK[k])) return false;
+    return !(_dmWith===k&&!document.hidden&&document.getElementById('dmM')?.classList.contains('on')); }   // 正在看這段就不跳
+  function dmtName(k){ const m=DMM[k]||{};
+    if(dmtStaff(k)){ try{ return ttStaffDisplayName(k.slice(6),m.name||'冒險者'); }catch(e){ return m.name||'冒險者'; } }
+    return frLiveName(k)||m.name||(FR[k]&&FR[k].name)||'好友'; }
+  function dmtText(m){ const t=String(m&&m.last||'').replace(/\s+/g,' ').trim();
+    if(!t) return '有一則新訊息'; if(/^\[貼圖[\]:：]/.test(t)) return '傳了一張貼圖'; return t.slice(0,60); }
+  function dmtPaint(k){ _dmtEl.querySelector('.dmt-nm').textContent=dmtName(k); _dmtEl.querySelector('.dmt-pv').textContent=dmtText(DMM[k]);
+    _dmtEl.querySelector('.dmt-go').setAttribute('aria-label',dmtName(k)+' 傳來私訊：'+dmtText(DMM[k])+'，打開對話'); }
+  function dmtPlace(){   // 電腦：放在聊天框（含每日任務標籤；小屋裡是小屋聊天）上面；手機版位置交給 CSS
+    const el=_dmtEl; if(document.documentElement.classList.contains('ttm-on')){ el.style.bottom=''; return; }
+    let top=innerHeight-16;
+    ['chatbox','chattoggle','ttDailyChip','ttHouseChat'].forEach(id=>{ const e=document.getElementById(id); if(!e||!e.getClientRects().length) return;
+      if(getComputedStyle(e).visibility==='hidden') return; const r=e.getBoundingClientRect(); if(r.height) top=Math.min(top,r.top); });
+    el.style.bottom=Math.max(12,Math.min(innerHeight-(el.offsetHeight||64)-8,Math.round(innerHeight-top+10)))+'px'; }
+  function dmtTimer(){ clearTimeout(_dmtT); _dmtT=setTimeout(dmtHide,6000); }
+  function dmtHide(){ clearTimeout(_dmtT); const el=_dmtEl; if(!el||el.hidden) return; el.classList.remove('on'); _dmtK=null;
+    setTimeout(()=>{ if(!el.classList.contains('on')) el.hidden=true; },230); }
+  function dmtShow(k){
+    if(!_dmtEl){ const el=_dmtEl=document.createElement('div'); el.id='ttDmToast'; el.hidden=true; el.setAttribute('role','status'); el.setAttribute('aria-live','polite');
+      el.innerHTML='<button type="button" class="dmt-go"><span class="dmt-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="M4.5 7.5 12 13l7.5-5.5"/></svg></span>'
+        +'<span class="dmt-tx"><span class="dmt-hd"><b class="dmt-nm"></b><span>傳來私訊</span></span><span class="dmt-pv"></span></span></button>'
+        +'<button type="button" class="dmt-x" aria-label="關閉通知">×</button>';
+      el.querySelector('.dmt-go').onclick=()=>{ const k=_dmtK; if(!k) return; const nm=dmtName(k); dmtHide(); if(dmtStaff(k)) staffDmOpen(k.slice(6),nm); else dmOpen(k); };
+      el.querySelector('.dmt-x').onclick=dmtHide;
+      el.addEventListener('pointerenter',()=>clearTimeout(_dmtT)); el.addEventListener('pointerleave',()=>{ if(_dmtK) dmtTimer(); });
+      document.body.appendChild(el); }
+    _dmtK=k; dmtPaint(k); _dmtEl.hidden=false; dmtPlace(); _dmtEl.classList.remove('on'); void _dmtEl.offsetWidth; _dmtEl.classList.add('on'); dmtTimer();
+  }
+  function dmtCheck(prev){
+    if(!_dmtInit){ _dmtInit=true; return; }   // 剛開頁的第一包＝舊的未讀，不跳
+    let pick=null,at=-Infinity;
+    for(const k in DMM){ const m=DMM[k],p=prev&&prev[k]; if(!m) continue;
+      if((+m.unread||0)>(+(p&&p.unread)||0)){ if(dmtOk(k)&&(+m.lastAt||0)>=at){ pick=k; at=+m.lastAt||0; } }
+      else if(k===_dmtK&&p&&m.lastAt!==p.lastAt&&dmtOk(k)) dmtPaint(k);   // 未讀先到、內容後到 → 補上最後一句
+    }
+    if(_dmtK&&!dmtOk(_dmtK)&&_dmtK!==pick) dmtHide();   // 在別處讀過了（未讀歸零）、封鎖了 → 收起來
+    if(!pick) return;
+    if(document.hidden){ _dmtPend=pick; return; }
+    dmtShow(pick);
+  }
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden) return; const k=_dmtPend; _dmtPend=null; if(k&&dmtOk(k)) dmtShow(k); });
   frBind();
 
   /* --- 視窗 --- */
@@ -7101,7 +7230,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     document.body.appendChild(d);
     [w,d].forEach(x=>x.addEventListener('click',e=>{ if(e.target===x){ x.classList.remove('on'); if(x.id==='dmM') dmClose(true); } }));
   }
-  window.frOpen=function(){ ensureWins(); frBind(); frPaint(); gOpen('frM'); };
+  window.frOpen=function(){ ensureWins(); frBind(); frPaint(true); gOpen('frM'); };
 
   /* v498 好友名單防呆(顯示端):
      ・已經是好友的人,殘留的邀請不列在「邀請」(雙方互送邀請時,被接受那張以外的另一張會留下來)
@@ -7122,8 +7251,8 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   }
   function frView(){
     const me=myKey, f={}, q={}; if(!me) return {f:FR,q:FRQ};
-    for(const k in FR){ if(k===me||!frExists(k)){ frDrop('/friends/'+me+'/'+k); continue; } f[k]=frSyncName(k,FR[k]); }
-    for(const k in FRQ){ if(k===me||FR[k]||!frExists(k)){ frDrop('/friendReq/'+me+'/'+k); continue; } q[k]=FRQ[k]; }
+    for(const k in FR){ if(k===me||!frExists(k)){ frDrop('/friends/'+me+'/'+k); continue; } if(BLK[k]) continue; f[k]=frSyncName(k,FR[k]); }   // v508：封鎖的人不列在好友
+    for(const k in FRQ){ if(k===me||FR[k]||!frExists(k)){ frDrop('/friendReq/'+me+'/'+k); continue; } if(BLK[k]) continue; q[k]=FRQ[k]; }
     return {f,q};
   }
   function frBadge(){
@@ -7134,8 +7263,9 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   }
   function rowBtn(lb,fn,warn){ return '<button class="pcGo'+(warn?' warn':'')+'" style="border:none;background:'+(warn?'#F4E3E9':'#F0E7FA')+';color:'+(warn?'#B0567A':'#6E58A6')
     +';font-family:inherit;font-size:12px;font-weight:700;padding:5px 10px;border-radius:9px;cursor:pointer" onclick="'+fn+'">'+lb+'</button>'; }
-  window.frPaint=function(){
+  window.frPaint=function(force){
     const el=document.getElementById('frBody'); if(!el||!window.TTContacts) return;
+    if(!force&&!el.getClientRects().length) return;   // v508：通訊錄沒開著就不重畫（每則私訊都整份重建，還會重新下載好友資料；打開時 frOpen 會重畫）
     const staffList=(()=>{try{return window.TinyTavernUI?.staff?.()||[]}catch(e){return []}})();const staffThreads=Object.entries(DMM).filter(([k,m])=>/^staff_/.test(k)&&m).map(([k,m])=>{const s=staffList.find(x=>'staff_'+x.cid===k);return {id:k,name:(s&&s.name)||ttStaffDisplayName(k.slice(6),m.name||'冒險者'),avatar:s&&s.theme?'tavern-ui/assets/avatar-'+s.theme+'.png?v=260':''};});
     const fv=frView();
     TTContacts.render(el,{friends:fv.f,requests:fv.q,blocked:BLK,messages:DMM,staffThreads,hidden:window.__ttHidden||{},present:new Set([...agents.keys()])},{message:k=>dmOpen(k),staffMessage:k=>staffDmOpen(k.slice(6),(staffThreads.find(t=>t.id===k)||{}).name),remove:k=>frRemove(k),accept:k=>frAccept(k),decline:k=>frDecline(k),block:k=>frBlock(k),unblock:k=>frUnblock(k),unhide:k=>ttUnhide(k)});
@@ -7154,28 +7284,31 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     _frSent[k]=1;   // v505：這次開頁送過邀請的，闆卡上改顯示「邀請已送出」，不會一直重送
     try{ pcSocialRender(); }catch(e){}
   };
+  /* v508：好友動作都等資料庫回覆，沒寫進去要講（原本一律顯示成功，登入失效時其實沒做到） */
+  const frFail=()=>toast('沒有成功，請重新整理或用 Discord 再登入後再試一次');
   window.frAccept=function(k){
     const nm=(FRQ[k]&&FRQ[k].name)||'？';
-    db.ref(ROOT+'/friends/'+myKey+'/'+k).set({name:nm,at:Date.now()});
-    db.ref(ROOT+'/friends/'+k+'/'+myKey).set({name:myName(),at:Date.now()});
-    db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove();
-    db.ref(ROOT+'/friendReq/'+k+'/'+myKey).remove().catch(()=>{});   /* v498 我也邀請過對方的話一起收掉,不然對方會同時看到「好友」和「邀請」 */
-    toast('成為好友了!'); try{ SFX.clink&&SFX.clink(); }catch(e){}
+    Promise.all([db.ref(ROOT+'/friends/'+myKey+'/'+k).set({name:nm,at:Date.now()}),db.ref(ROOT+'/friends/'+k+'/'+myKey).set({name:myName(),at:Date.now()})]).then(()=>{
+      db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove().catch(()=>{});
+      db.ref(ROOT+'/friendReq/'+k+'/'+myKey).remove().catch(()=>{});   /* v498 我也邀請過對方的話一起收掉,不然對方會同時看到「好友」和「邀請」 */
+      toast('成為好友了!'); try{ SFX.clink&&SFX.clink(); }catch(e){}
+    }).catch(frFail);
   };
-  window.frDecline=function(k){ db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove(); };
+  window.frDecline=function(k){ db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove().catch(frFail); };
   window.frRemove=function(k){
-    ttConfirmish('刪除這位好友?',()=>{ db.ref(ROOT+'/friends/'+myKey+'/'+k).remove();
-      db.ref(ROOT+'/friends/'+k+'/'+myKey).remove();
+    ttConfirmish('刪除這位好友?',()=>{ Promise.all([db.ref(ROOT+'/friends/'+myKey+'/'+k).remove(),db.ref(ROOT+'/friends/'+k+'/'+myKey).remove()]).then(()=>toast('已經刪除好友')).catch(frFail);
       db.ref(ROOT+'/dmMeta/'+myKey+'/'+k).remove().catch(()=>{}); });   // v505：對話列表的未讀一起收掉
   };
-  window.frBlock=function(k){
+  window.frBlock=function(k,after){
     const nm=(FRQ[k]&&FRQ[k].name)||(FR[k]&&FR[k].name)||'';
     ttConfirmish('封鎖後會隱藏對方的角色、大廳氣泡及聊天訊息，並停止私訊與好友邀請。確定封鎖?',()=>{
-      db.ref(ROOT+'/blocks/'+myKey+'/'+k).set({name:nm,at:Date.now()});
-      db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove();
-      db.ref(ROOT+'/friends/'+myKey+'/'+k).remove();
-      db.ref(ROOT+'/friends/'+k+'/'+myKey).remove();
+      db.ref(ROOT+'/blocks/'+myKey+'/'+k).set({name:nm,at:Date.now()}).then(()=>toast('已經封鎖')).catch(frFail);
+      db.ref(ROOT+'/friendReq/'+myKey+'/'+k).remove().catch(()=>{});
+      db.ref(ROOT+'/friendReq/'+k+'/'+myKey).remove().catch(()=>{});   // v508：我送給對方、還沒回的邀請也收回（不然對方還能按接受變回好友）
+      db.ref(ROOT+'/friends/'+myKey+'/'+k).remove().catch(()=>{});
+      db.ref(ROOT+'/friends/'+k+'/'+myKey).remove().catch(()=>{});
       db.ref(ROOT+'/dmMeta/'+myKey+'/'+k).remove().catch(()=>{});
+      if(after) after();
     });
   };
   window.frUnblock=function(k){ db.ref(ROOT+'/blocks/'+myKey+'/'+k).remove(); };
@@ -7252,7 +7385,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
       const v=s.val()||{}; const log=document.getElementById('dmLog'); if(!log) return;
       if(_dmWith!==k)return;
       TTDirectMessageLog.render(log,v,myKey);
-      try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
+      if(!document.hidden) try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}   // v508：分頁在背景時不算已讀
     });
     gOpen('dmM');
     setTimeout(()=>{ const i=document.getElementById('dmIn'); if(i) i.focus(); },80);
@@ -7273,7 +7406,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     TTDirectMessageLog.reset(document.getElementById('dmLog'));
     try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
     _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
-    _dmRef.on('value',s=>{const v=s.val()||{};const log=document.getElementById('dmLog');if(!log||_dmWith!==k)return;TTDirectMessageLog.render(log,v,myKey);try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}});
+    _dmRef.on('value',s=>{const v=s.val()||{};const log=document.getElementById('dmLog');if(!log||_dmWith!==k)return;TTDirectMessageLog.render(log,v,myKey);if(!document.hidden)try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}});
     gOpen('dmM');
     try{window.TTDirectMessageDesign?.decorate(k);const h=document.querySelector('#dmM .dm-heading>.contact-avatar');const s=(window.TinyTavernUI?.staff?.()||[]).find(x=>x.cid===cid);if(h&&s&&s.theme){h.replaceChildren();const im=document.createElement('img');im.src='tavern-ui/assets/avatar-'+s.theme+'.png?v=260';im.alt=_dmStaffName;im.className='staff-ava-img';h.classList.add('is-staff');h.append(im);}}catch(e){}
     setTimeout(()=>{const i=document.getElementById('dmIn');if(i)i.focus();},80);
@@ -7288,14 +7421,14 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     const sticker=typeof stickerCode==='string'&&window.TTChatStickers?.decode(stickerCode);
     if(stickerCode!==undefined&&!sticker)return fail('sticker','這張貼圖暫時不能用，換一張試試。');
     const t=sticker?stickerCode:(i.value||'').trim();if(!t)return false;
-    if(window.ttIsMuted())return fail('mute','你目前被禁言中，暫時無法傳私訊。');
+    if(window.ttIsMuted?window.ttIsMuted():!!window.__mute)return fail('mute','你目前被禁言中，暫時無法傳私訊。');
     const isStaff=/^staff_/.test(_dmWith);
     if(isStaff&&!ttStaffDmOk())return fail('tier','進階會員以上才能私訊冒險者。');
     if(!isStaff&&!FR[_dmWith])return fail('friend','你們已不是好友，重新加好友後才能私訊。');
     const k=_dmWith,sender=myKey,senderName=myName(),recipientName=isStaff?_dmStaffName:(FR[_dmWith]?.name||'');
     _dmSending=true;const sendButton=i.parentElement.querySelector('button:not(.dm-sticker-toggle)');if(sendButton){sendButton.disabled=true;sendButton.setAttribute('aria-busy','true');}
     try{const s=isStaff?null:await db.ref(ROOT+'/blocks/'+k+'/'+sender).once('value');
-      if(window.TTLegacySocial?.isolated||myKey!==sender||_dmWith!==k||(!isStaff&&!FR[k])||window.ttIsMuted())return false;
+      if(window.TTLegacySocial?.isolated||myKey!==sender||_dmWith!==k||(!isStaff&&!FR[k])||(window.ttIsMuted?window.ttIsMuted():!!window.__mute))return false;
       if(s&&s.val())return fail('blocked','對方目前無法接收你的私訊。');
       await db.ref(ROOT+'/dm/'+pairKey(sender,k)).push({f:sender,x:t.slice(0,200),at:Date.now()});
       if(!sticker&&myKey===sender&&_dmWith===k&&i.value.trim()===t){i.value='';i.dispatchEvent(new Event('input',{bubbles:true}));}
@@ -7305,7 +7438,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     }catch(e){const c=String(e&&(e.code||e.message)||'');if(/permission/i.test(c))return fail('denied','登入狀態失效了，重新整理頁面，或用 Discord 再登入一次。');return fail('net:'+c,'網路不穩，訊息沒送出，稍後再試一次。');}
     finally{_dmSending=false;if(sendButton){sendButton.disabled=false;sendButton.removeAttribute('aria-busy');}}
   };
-  window.dmBlockCur=function(){ if(_dmWith){ const k=_dmWith; if(/^staff_/.test(k)){toast('冒險者私訊無法封鎖，可以檢舉這段對話');return;} frBlock(k); dmClose(); } };
+  window.dmBlockCur=function(){ if(_dmWith){ const k=_dmWith; if(/^staff_/.test(k)){toast('冒險者私訊無法封鎖，可以檢舉這段對話');return;} frBlock(k,()=>dmClose()); } };   // v508：按取消就不關
   window.dmReport=function(){
     if(!_dmWith) return;
     const k=_dmWith;
@@ -7315,8 +7448,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
           .map(m=>({name:(m.f===myKey)?myName():((FR[k]&&FR[k].name)||'對方'),text:m.x||'',t:m.at||0}));
         db.ref(ROOT+'/reports').push({type:'dm',reason:'私訊檢舉',
           targetName:(FR[k]&&FR[k].name)||'？',targetKey:k,reporterKey:myKey,reporterName:myName(),
-          ctx:ctx,at:Date.now(),status:'open'});
-        toast('已送出,店長會盡快查看');
+          ctx:ctx,at:Date.now(),status:'open'}).then(()=>toast('已送出,店長會盡快查看')).catch(frFail);
       });
     });
   };
@@ -7512,7 +7644,7 @@ function openPcInfo(cid,info,i){
         +'<br><span style="font-weight:400">可以改約其他冒險者,或切到「即時」看看誰現在有空 ✦</span></div>'
         +'<button class="pcGo" disabled style="opacity:.45;cursor:not-allowed">目前無法預約這位冒險者</button>'
       : '<button class="pcGo" onclick="pcPick()">選這位冒險者</button>')
-    +'<div class="pcNote">更精緻的立繪卡面即將登場,現為像素形象</div>';
+    +'';   /* v508：拿掉「立繪卡面即將登場」（營運排程不寫給客人看） */
   try{ drawDollTo(document.getElementById('pcCv'), STAFF_LOOKS[hash(cid)%STAFF_LOOKS.length], 'idle'); }catch(e){}
   /* 已被預約時段(近 7 天):讓客人點 NPC 就看得到、自己避開 */
   try{ staffBookedTimes(cid,list=>{
@@ -7622,14 +7754,14 @@ window.__hasCard=myKey?null:false;
       if(s.val()!=null && s.val()!==''){ window.__hasCard=true; return; }
       if(fromUrl && ++tries<4){ setTimeout(chk,2500); return; }
       window.__hasCard=false;
-      const kick=function(){ try{ localStorage.removeItem('tt_me'); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); };
+      const kick=function(){ try{ localStorage.removeItem('tt_me'); localStorage.removeItem('tt_orders'); }catch(e){} window.ttForgetLogin&&ttForgetLogin(); if(window.ttIdSwitchOk&&!ttIdSwitchOk())return; location.replace(location.pathname); };   // v508：一併忘掉登入記住的舊闆卡，避免換來換去
       /* v237:有綁 Discord 就先看帳號登記的闆卡,找得到就直接換過去(不用重做卡) */
       let dc=null; try{ dc=JSON.parse(localStorage.getItem('tt_dc')||'null'); }catch(e){}
       if(!dc||!dc.id){ kick(); return; }
       db.ref(ROOT+'/accounts/'+dc.id+'/myKey').once('value').then(function(a){
         const k2=a.val(); if(!k2||k2===myKey){ kick(); return; }
         return db.ref(ROOT+'/lobby/'+k2+'/name').once('value').then(function(n2){
-          if(n2.val()){ try{ localStorage.setItem('tt_me',k2); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); }
+          if(n2.val()&&(!window.ttIdSwitchOk||ttIdSwitchOk())){ try{ localStorage.setItem('tt_me',k2); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); }
           else kick();
         });
       }).catch(kick);
@@ -7646,10 +7778,10 @@ window.__hasCard=myKey?null:false;
     const mine=myKey,base={username:dc.username||'',global_name:dc.global_name||'',avatar:dc.avatar||'',seenAt:Date.now()};
     db.ref(ROOT+'/accounts/'+dc.id).once('value').then(s=>{
       const a=s.val()||{};
-      if(a.deleted){try{localStorage.removeItem('tt_dc');localStorage.removeItem('tt_me')}catch{}location.replace(location.pathname);return}
+      if(a.deleted){try{localStorage.removeItem('tt_dc');localStorage.removeItem('tt_me')}catch{}window.ttForgetLogin&&ttForgetLogin();if(window.ttIdSwitchOk&&!ttIdSwitchOk())return;location.replace(location.pathname);return}
       if(a.myKey){
         // Existing ownership wins even if a stale device remembers another character.
-        if(mine!==a.myKey){try{localStorage.setItem('tt_me',a.myKey);localStorage.removeItem('tt_orders')}catch{}location.replace(location.pathname);return}
+        if(mine!==a.myKey){if(window.ttIdSwitchOk&&!ttIdSwitchOk())return;try{localStorage.setItem('tt_me',a.myKey);localStorage.removeItem('tt_orders')}catch{}location.replace(location.pathname);return}
         return db.ref(ROOT+'/accounts/'+dc.id).update(base);
       }
       // Initial legacy registration requires a card created in this browser tab.
@@ -7860,7 +7992,7 @@ function bkSaveSign(v){
 function bkFmt(t){ if(!t) return ''; const d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate(); }
 function bkOrdLine(o){
   const k=o.type||'play';
-  if(k==='topup') return {ic:'coin', txt:'儲值 '+(o.coinAmount||o.amount||0)+' 金幣'+(o.credited||o.status==='done'?'・已入帳':'・核帳中'), cls:(o.credited||o.status==='done')?'ok':''};
+  if(k==='topup') return {ic:'coin', txt:'儲值 '+(o.coinAmount||o.amount||0)+' 金幣'+(o.credited||o.status==='done'?'・已入帳':o.status==='cancelled'?'・沒有完成':'・核帳中'), cls:(o.credited||o.status==='done')?'ok':o.status==='cancelled'?'no':''};   // v508：沒付款被取消的線上儲值不再一直寫「核帳中」
   if(k==='shop'&&o.status==='cancelled') return {ic:'coupon', txt:'「'+esc(o.itemName||o.planName||'')+'」・已取消'+(o.refunded?'(已退回)':''), cls:'no'};   // v505：取消退款的不再顯示「入手了」
   if(k==='shop') return {ic:'gift', txt:'入手了「'+esc(o.itemName||o.planName||'')+'」', cls:'ok'};
   if(k==='member') return {ic:'crown', txt:esc(o.planName||'會員'), cls:'ok'};
@@ -8377,22 +8509,22 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=505"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=508"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=500"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=505"></script>
+<script src="lobby-ui/live.js?v=508"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
-<link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=507"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=507"><script src="lobby-ui/house.js?v=507"></script><script src="lobby-ui/gacha.js?v=506"></script>
+<link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=508"><script src="lobby-ui/house.js?v=508"></script><script src="lobby-ui/house-trip.js?v=508"></script><script src="lobby-ui/gacha.js?v=508"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=499"></script>
-<script src="lobby-ui/order-flow.js?v=505"></script>
+<script src="lobby-ui/order-flow.js?v=508"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
 import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=469';
@@ -8400,15 +8532,16 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=503"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=505"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=503"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=508"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=427"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=492"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=500">
-<script src="lobby-ui/mobile-app.js?v=500"></script>
+<script src="lobby-ui/mobile-app.js?v=508"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
+<link rel="stylesheet" href="lobby-ui/lobby-notes.css?v=508">
 </body>
 </html>
 

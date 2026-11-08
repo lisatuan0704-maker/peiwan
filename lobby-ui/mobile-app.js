@@ -64,6 +64,7 @@ function show(key,{remember=true}={}){
   for(const b of tabBar.children){const on=b.dataset.tab===key;b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;}
   const n=$(t.node);if(n){guard(n);n.classList.add('ttm-tabview');}
   try{t.open();}catch(e){console.warn('[mobile] open '+key,e);}
+  if(!n){const n2=$(t.node);if(n2){guard(n2);n2.classList.add('ttm-tabview');}}   // v508：第一次打開時視窗是 open() 才建出來的，建好再套分頁樣式（不然先閃一下電腦版視窗）
   if(remember)try{sessionStorage.setItem('ttm_tab',key);}catch{}
   layout();
  }finally{busy=false;}

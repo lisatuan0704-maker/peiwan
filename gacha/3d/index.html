@@ -51,6 +51,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelate
 .btn em{font-style:normal;font-family:Coiny,sans-serif;font-size:calc(7px*var(--s));display:flex;align-items:center;gap:calc(2px*var(--s))}
 .btn em i{width:calc(10px*var(--s));height:calc(10px*var(--s));background:url(../img/cat-coin-px48.png) center/contain no-repeat;image-rendering:pixelated}
 .btn[disabled]{opacity:.45;cursor:default}
+/* v508 抽卡鈕第三行「抽完剩／還差 N 貓貓幣」、抽十次上面的保底小貼紙、結果畫面的「去擺放」；按鈕多時換行（往上長） */
+.btns{flex-wrap:wrap;row-gap:calc(12px*var(--s))}
+.btn{position:relative}
+.btn .bal{font-size:calc(5.5px*var(--s));line-height:1.15;white-space:nowrap;opacity:.95}
+.btn .bal.short{color:#fff;background:var(--ink);border-radius:999px;padding:0 calc(4px*var(--s));text-shadow:none}
+.btn[disabled]:has(.bal.short){opacity:.78;filter:grayscale(.6)}   /* 錢不夠：按鈕變灰但「還差 N」看得清楚 */
+.btn .g10{position:absolute;left:50%;top:0;transform:translate(-50%,-72%) rotate(-3deg);font-size:calc(5.5px*var(--s));line-height:1;white-space:nowrap;color:#fff;padding:calc(1.5px*var(--s)) calc(6px*var(--s));background:linear-gradient(100deg,#ffc24a,#ff6fa3);border:calc(1px*var(--s)) solid var(--ink);border-radius:999px;box-shadow:0 calc(1px*var(--s)) 0 var(--ink);text-shadow:0 calc(.8px*var(--s)) 0 rgba(122,58,106,.55);pointer-events:none}
+.btn.go{background:linear-gradient(180deg,#dccbff,#ab8bf0);color:#fff;text-shadow:0 calc(1px*var(--s)) 0 #5a3e9c}
 .links{right:calc(12px*var(--s));bottom:calc(12px*var(--s));display:flex;flex-direction:column;gap:calc(4px*var(--s));align-items:flex-end}
 .links button{font:inherit;font-size:calc(6.5px*var(--s));background:rgba(255,246,236,.92);border:calc(1px*var(--s)) solid var(--ink);border-radius:999px;padding:calc(1px*var(--s)) calc(7px*var(--s));cursor:pointer;color:var(--ink)}
 .plate{transform:translateX(-50%);display:flex;align-items:center;gap:calc(5px*var(--s));white-space:nowrap;font-size:calc(10px*var(--s));padding:calc(2px*var(--s)) calc(10px*var(--s)) calc(2px*var(--s)) calc(4px*var(--s));background:#fff6ec;border:calc(1.5px*var(--s)) solid var(--ink);border-radius:999px;box-shadow:0 calc(2px*var(--s)) 0 var(--ink)}
@@ -125,7 +133,7 @@ html.live .wallet{right:calc(36px*var(--s))}
 .closeX{right:calc(12px*var(--s));top:calc(11px*var(--s));width:calc(18px*var(--s));height:calc(18px*var(--s));display:flex;align-items:center;justify-content:center;font:inherit;font-size:calc(12px*var(--s));line-height:1;color:var(--ink);background:#fff6ec;border:calc(1.5px*var(--s)) solid var(--ink);border-radius:999px;box-shadow:0 calc(1.5px*var(--s)) 0 var(--ink);cursor:pointer;padding:0}
 .closeX:active{transform:translateY(calc(1px*var(--s)));box-shadow:none}
 .msg{left:50%;top:42%;transform:translateX(-50%);max-width:86%;padding:calc(4px*var(--s)) calc(12px*var(--s));font-size:calc(8px*var(--s));text-align:center;color:#fff;background:rgba(28,33,86,.88);border:calc(1px*var(--s)) solid #b78cff;border-radius:calc(8px*var(--s));pointer-events:none!important;animation:msgIn .25s ease-out}
-@media (max-aspect-ratio:5/4){.links{bottom:calc(50px*var(--s))}}   /* 窄畫面：右下的圖鑑／音效鈕移到抽卡鈕上面，不要疊在一起 */
+@media (max-aspect-ratio:5/4){.links{bottom:calc(62px*var(--s))}}   /* 窄畫面：右下的圖鑑／音效鈕移到抽卡鈕上面，不要疊在一起（v508 抽卡鈕多一行小字＋保底貼紙，50→62） */
 @keyframes msgIn{from{opacity:0;transform:translate(-50%,calc(4px*var(--s)))}}
 #err{position:absolute;left:12px;bottom:12px;color:#ffd7e6;font-size:13px;white-space:pre-wrap}
 </style>
@@ -139,6 +147,6 @@ html.live .wallet{right:calc(36px*var(--s))}
   <div id="odds"><div class="card"><button class="x" aria-label="關閉">×</button><small>COLLECTION・RATES</small><h3>家具圖鑑</h3><div id="oddsBody"></div></div></div>
 </div>
 <div id="err"></div>
-<script type="module" src="g3d.js?v=78"></script>
+<script type="module" src="g3d.js?v=79"></script>
 </body>
 </html>

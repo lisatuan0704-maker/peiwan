@@ -14,7 +14,7 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=505';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=508';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);frame.style.visibility='visible';};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }
@@ -137,7 +137,7 @@
       const parts=u.parts.map(([sl,idx])=>{const item=all[sl]?.items?.find(x=>x.idx===idx);if(!item)return null;const slot=baseSlotName[sl];return {id:u.id+'::'+slot,base:idx,slot,name:displayPartName(item.n),category:slot==='acc'?'acc':category(slot),group:slot==='acc'?'head':null,owned:owned||window.TTBaseUnits.partOwned(sl,idx)===true};}).filter(Boolean);
       return parts.length?{id:u.id,name:u.name,type:'時裝',baseUnit:true,kind:u.kind,price:priced?price:null,sale:priced,owned:owned||parts.every(p=>p.owned),retired:false,previewOnly:false,highlightHair:false,doll:null,img:null,featured:0,sourceLayerCount:0,parts}:null;}).filter(Boolean);
   }
-  const saleGroup=slot=>['front','back'].includes(slot)?'hair':['eye','brow'].includes(slot)?'face':slot==='cloth'?'cloth':/^acc\d*$/.test(slot)?slot:null;
+  const saleGroup=slot=>['front','back'].includes(slot)?'hair':['eye','brow'].includes(slot)?'face':slot==='cloth'?'cloth':/^acc\d+$/.test(slot)?slot:null;   // v508：沒編號的 acc（啟程旅人的黑珠耳環）資料庫規則不收單買（只收 acc0～acc11），不列單買，整套照常
   const saleKind=g=>['hair','face','cloth'].includes(g)?g:'acc';
   function partPrice(c,g,grp){const k=wearKinds[grp]||saleKind(g),v=c?.partPrices?.[g]??c?.partPrices?.[k]??partPricing?.[k];   // v443 單一配件可另訂價（有特效的部件 +30），鍵名 accN 與資料庫規則相同
   return Number.isSafeInteger(v)&&v>0?v:null;}
@@ -252,7 +252,7 @@
     if(!draft||!/^#[0-9a-f]{6}$/i.test(draft.main)||!/^#[0-9a-f]{6}$/i.test(draft.tail))throw Error('請選擇有效的主色與髮尾色');
     if(draft.highlight!==undefined&&!/^#[0-9a-f]{6}$/i.test(draft.highlight))throw Error('請選擇有效的挑染色');
     if(!selection?.front||!selection?.back)throw Error('請先選好瀏海與後髮');
-    makeDoll(selection,{},true);
+    makeDoll({front:selection.front,back:selection.back},{},true);   // v508：只檢查這組瀏海＋後髮（原本整套試穿都要已擁有，試穿別的衣服就存不了染髮）
     const record={name:String(draft.name||'專屬染髮').trim().slice(0,24)||'專屬染髮',front:clone(selection.front),back:clone(selection.back),main:draft.main.toLowerCase(),tail:draft.tail.toLowerCase()};
     if(draft.highlight)record.highlight=draft.highlight.toLowerCase();
     const same=s=>s&&(s.highlight||null)===(record.highlight||null)&&['name','main','tail'].every(k=>s[k]===record[k])&&['front','back'].every(k=>{const a=s[k],b=record[k];return !!a&&!!b&&a.slot===b.slot&&(a.base!==undefined||b.base!==undefined?a.base===b.base:a.source===b.source);});
