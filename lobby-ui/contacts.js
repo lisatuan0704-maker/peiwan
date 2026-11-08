@@ -66,7 +66,7 @@ function paint(host){const ui=host._contacts,{data,actions,tab}=ui;
   article.dataset.presence=isPresent(row.id,data)?selectedStatus(row.id):'offline';
   const state=row.kind==='staff'?(window.MEMBERSHIP_ON===false?'冒險者・私訊':'冒險者・會員私訊'):row.kind==='block'?'已封鎖':row.kind==='hide'?'已在你的畫面屏蔽':row.kind==='request'?'想和你成為好友':isPresent(row.id,data)?playerStates[selectedStatus(row.id)]:'未在此大廳';info.append(make('small','contact-presence',state));if(row.kind==='friend'||row.kind==='staff')info.append(make('p','contact-last',data.messages[row.id]?.last||'今天也來聊兩句吧。'));
   const controls=make('div','contact-actions');
-  if(row.kind==='friend'){const unread=Number(data.messages[row.id]?.unread)||0;if(unread)info.append(make('span','contact-unread',unread+' 則未讀'));button(controls,'聊聊 ↗',()=>actions.message(row.id));button(controls,'移除',()=>actions.remove(row.id));}
+  if(row.kind==='friend'){const unread=Number(data.messages[row.id]?.unread)||0;if(unread)info.append(make('span','contact-unread',unread+' 則未讀'));button(controls,'聊聊 ↗',()=>actions.message(row.id));if(window.TTHouse&&!document.documentElement.classList.contains('ttm-on'))button(controls,'小屋',()=>window.TTHouse.visit(row.id,'friend'));button(controls,'移除',()=>actions.remove(row.id));}   // v504 小屋：進好友的小屋一起聊天
   if(row.kind==='staff'){const unread=Number(data.messages[row.id]?.unread)||0;if(unread)info.append(make('span','contact-unread',unread+' 則未讀'));button(controls,'聊聊 ↗',()=>actions.staffMessage?.(row.id));}
   if(row.kind==='request'){button(controls,'接受',()=>actions.accept(row.id));button(controls,'婉拒',()=>actions.decline(row.id));button(controls,'封鎖',()=>actions.block(row.id));}
   if(row.kind==='block')button(controls,'解除封鎖',()=>actions.unblock(row.id));

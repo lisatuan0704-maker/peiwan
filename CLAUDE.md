@@ -1,5 +1,16 @@
 # 小小酒館修改紀錄
 
+## v504 家具扭蛋上線（伺服器抽；需部署主機＋發布新規則）
+使用者 11/08「可以了，上酒館大廳吧」：正式功能（真的扣貓貓幣、家具進小屋背包）、入口在小屋選單、結果由主機抽（防作弊）。
+卡池：人魚卡池（海底人魚屋 34 件）、森林卡池（森林精靈小屋 37 件）、通用（酒館日常＋萬用 82 件，常駐）；每個卡池只抽自己的系列。機率 限定 3／稀有 18／普通 79（同稀有度每件機會一樣）；單抽 120、十連 1,200 貓貓幣；十連保底一件「這個卡池還沒擁有的」稀有以上，稀有以上收齊後保證至少一件稀有以上。
+主機（C:\tinytavern\server，不在 git）：lib/gacha.js＋gacha-pools.json（153 件，跟 gacha/items.json 同源），POST /api/gacha {myKey,pool,n}（Bearer 登入憑證，checkOwner 同儲值：secureV1 members／owners 確認本人）→ 讀 houseInv 算保底 → crypto 亂數抽 → cat/<key>/balance transaction 扣款（不夠回 402 NOT_ENOUGH、不寫任何東西）→ 一次 update：catTx/<key>/<id>{type spend,amount −cost,ref id,note 家具扭蛋・卡池＋單抽／十連}、cat/<key>/lastTx、houseInv/<key>/<家具>/<id>_<序>{ts,src:'gacha'}、gachaLog/<key>/<id>{pool,n,cost,items,ts}；寫入失敗把貓貓幣加回去回 503 BUSY。限流同闆卡 10 分鐘 40 次、同 IP 80 次（TOO_MANY）。GET /api/gacha-info。lib/topup.js 只多匯出 checkOwner。test/gacha.test.js 10 項、topup 22 項照過。部署：server/扭蛋上線步驟.md（pay-v504-貼上主機.txt 整段貼到網頁 SSH，先核對主機檔案是 v498 才換、備份 backup-v498/）。
+網站：gacha/（扭蛋頁，從 tt-room-kit/gacha 用 gacha/sync_to_site.py 複製；3D 模型 153 個約 30MB，抽到才載入；three.js 走 jsdelivr）。gacha/3d/g3d.js 偵測 parent.TTGachaHost＝正式版：錢包與已擁有讀大廳、抽卡交給主機、拿掉試做字樣／重設鈕／測試參數，右上 × 與 Esc 回小屋，錯誤訊息（貓貓幣不夠、要先登入、太快、忙、連不上）；原畫背景 gpt1.png 只有 ?paint 才載。lobby-ui/gacha.js（新）：TTGachaHost（state／sub／pull／close，pull 帶 Firebase 登入憑證打 PAY_API/api/gacha）、開扭蛋視窗時監聽 houseInv/<key>、小屋右下「扭蛋」鈕（插在家具店前面，.tt-house-only，拜訪別人小屋時隱藏）、整頁圓角卡片視窗＋模糊遮罩。lobby.html 只多載入 lobby-ui/gacha.js?v=504。
+小屋：tt-room-kit/house-lobby/build.py 加 GACHA（預設 1）把人魚＋森林 71 件放進 HOUSE_KEYS／圖集／catalog.json（標 gacha:true、price 0、r 稀有度；大小照佔地格數、精緻度照稀有度）；家具店本來就只列酒館日常／萬用，扭蛋家具不會出現在店裡，抽到後在「我的家具」裡擺。重建後用 house-lobby/pin_live.py 把正式站已有家具的圖釘回正式站版本（貓咪單人床、壁爐、電競書桌在試做頁已重畫但還沒給 D 看過，這次不換）。
+規則第十五批（tests/security-rules-v428/build/harden-phase15.cjs，可重複執行，接在第十四批之後；若用 rules-before-v504.json 重跑第十四批要再跑這批）：house 與 houseView 的 layout 多接受「houseInv/<key> 裡有這件」；新增 gachaLog（本人與店員讀、客人不能寫）。test-phase15.cjs 18 項（擺自己有的扭蛋家具、沒有的、別人才有的、多欄位、寫別人小屋、拜訪快照、自己寫背包／抽卡紀錄、讀取權限、店員退款刪除），舊規則下除了店員刪除全部拒絕；phase14 89/89、phase11 25/25 照過。
+驗證：本機模擬資料庫（9273）＋主機真的 lib/gacha.js＋網站真的 lobby-ui/gacha.js 與扭蛋頁（測試台 scratchpad/e2e）：森林十連 3000→1800、10 件進背包（本人憑證照正式規則讀得到）、限定蘑菇小屋演出、× 關閉；沒登入／不是本人 403、餘額不足不扣；房間頁擺出蘑菇小屋、背包縮圖正常、沒有程式錯誤。部署指令在假主機資料夾模擬過一次（核對、備份、解壓、兩組測試）。
+上線順序：①部署主機 ②發布規則 ③推網站。網站先上也不會扣錢（舊主機回 404 → 顯示連不上扭蛋機）。
+- 11/08 commit 時查主機 /api/gacha 仍是 404（主機還沒部署）→ v504 commit 只放小屋串門子＋規則第 14、15 批＋小屋圖集/catalog（含扭蛋家具，家具店不賣、沒抽到不會出現）；扭蛋入口 `lobby-ui/gacha.js`、`gacha/` 資料夾、lobby.html 的 `<script src="lobby-ui/gacha.js?v=504">` 留在工作資料夾未 commit，主機部署後再一起 commit。
+
 ## v502 掛機收益：離線也累積、最多存 8 小時（需發布新規則）
 使用者 11/08：掛機累積收益，最多 8 小時封頂，可以領貓貓幣，要有進度條，新手指南與大廳說明寫進去（之前只有「掛機亂走」開關和每日任務 v479 的「大廳待滿 10 分鐘」本機計時）。店長拍板：①離線也累積（像手遊放置：從上次領取後經過的時間算，關掉網頁也照存）；②「每天只領一次，七天要夠抽一次十連」，十連暫定 1,200、只算掛機 → 每小時 22、存滿 8 小時＝176，每天領一次七天 1,232。
 資料：peiwan/idle/<key> {at,tx,amount}，at＝開始計時或上次領取的伺服器時間。第一次（沒有紀錄）本人寫 {at:伺服器時間} 開始計時；領取＝同一次寫入 idle（at＝伺服器時間、tx、amount）＋ catTx/<key>/<tx>{type:'idle',amount,ref,note:'掛機收益',ts} ＋ cat/<key>/lastTx ＋ cat/<key>/balance 加 amount。
@@ -771,3 +782,18 @@ v297：右下功能收為我的酒館六分頁（通訊錄、信箱、訂單、�
 - 驗證：bubbles-v359（預設遷移、造型選擇、本機／遠端選款一致、發佈、長句字級），bubble-calibration（字數、組字輸入、emoji），chat-stickers、viewport-v352、lobby-v346。更新兩項舊測試環境，使其支援既有 module 與 TTWorldScope。六款短句與 18 字長句本機目視確認，無正式聊天資料寫入。
 
 - Discord 小頭貼載入失敗時，帳號列和闆卡改用本機預設頭像；缺少帳號 ID 時不組出無效頭貼網址。
+
+## 2026/11/08 v504 小屋串門子（Claude；與扭蛋上線同一版）
+- D 原意：在「自己的小屋」跟朋友一起聊天（不是參觀別人家），一間最多 4 人（主人＋3 位）；可以隨機拜訪別人的小屋。
+- 資料（規則第 14 批，`tests/security-rules-v428/build/harden-phase14.cjs`，測試 test-phase14 89 項）：
+  house/<key>/vis（公開預設／只限好友／不公開）；houseView/<key> 擺設快照（客人用它畫房間，讀不到 house 本身）；
+  houseDir/<key>{at,n,on} 隨機名單（公開且擺 5 件以上；on＝主人在家心跳，隨機先挑有人在的）；
+  houseRoom/<主人>/<0～3> 四個座位＝最多 4 人（規則擋第 5 人；45 秒沒心跳可被接手；onDisconnect 自動起身）；
+  houseChat/<主人> 小屋聊天（要坐在座位上、沒禁言）；houseVisit/<主人>/<客人> 來玩紀錄＋讚；houseKick 請離開（10 分鐘內不能再進）。
+- 前端：lobby-ui/house.js（座位、位置每 0.2 秒回報、心跳 15 秒、聊天、串門子側欄、邀請卡、請離開、隨機拜訪），
+  house/room.html 的房間畫面多了 PEERS（其他人當 1×1 地板物件排前後、名牌與泡泡是 DOM 疊層）、spawnAt（四個座位站開）。
+  room.html 是用 patch 改的，同樣改動已寫進 tt-room-kit/house-lobby/house-early.js、house-embed.js（之後 build.py 重建會帶到）。
+- 邀請＝私訊帶 house:<key> 的訊息，dm-log.js 畫成「進他的小屋」邀請卡；通訊錄好友列多一顆「小屋」。
+- 順手修：進小屋換名牌字會把大廳人數 #cnt 一起換掉，大廳 sync() 第一行就報錯、背景不再更新（v494 起就有）→ 改成先收起來、回大廳再放回。
+- 上線前：Firebase 發布規則（含第 14、15 批）→ Push。實測腳本 scratchpad/visit/multi.cjs（三個分身＋模擬資料庫，16 項）。
+- 順手修：大廳入店歡迎卡（#intro）原文有禁用字（虛擬角色／乾淨無擦邊／金流透明），改成「這裡是像素風的小小酒館。找冒險者一起打遊戲、語音聊聊天，或在大廳隨意晃晃——慢慢來，當自己家就好。」

@@ -19,4 +19,6 @@ node test-phase10.cjs rules-before-v493.json $NEW || rc=1
 node test-phase11.cjs rules-before-v494.json $NEW || rc=1
 node test-phase12.cjs rules-before-v502.json $NEW || rc=1
 node test-phase13.cjs rules-before-v503.json $NEW || rc=1
+node test-phase14.cjs rules-before-v504.json $NEW || rc=1
+node test-phase15.cjs rules-before-v504.json $NEW || rc=1
 exit $rc

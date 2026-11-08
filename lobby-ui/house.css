@@ -89,3 +89,61 @@ html body:is(.tt214,:not(.tt214)) #ttMainDock #ttHouseShop span{color:#fff!impor
   text-shadow:0 1px 0 rgba(28,33,86,.9),0 0 3px rgba(28,33,86,.85),0 0 6px rgba(28,33,86,.5)}
 #ttHouseKeys.edit{left:calc((100% - 352px)/2);max-width:calc(100% - 400px)}
 #ttHouseKeys kbd{display:inline-block;font:inherit;font-size:11px;line-height:1.4;padding:0 6px;margin:0 2px;border:1.5px solid #fff;border-radius:5px;background:rgba(255,255,255,.14);box-shadow:0 1px 0 rgba(28,33,86,.6)}
+
+/* v504 小屋串門子：在別人家（tt-house-visit）不能佈置、沒有家具店；自己家才有「串門子」「教學」 */
+body.tt-house-visit .tt-house-only,body.tt-house-visit .tt-own-only,body:not(.tt-house-visit) .tt-visit-only{display:none!important}
+#ttHouseTop .tt-house-btn[hidden]{display:none!important}
+#ttVisitLike.on{color:#fff;background:linear-gradient(180deg,#FF7AA8,#FF3F80);box-shadow:inset 0 0 0 2px rgba(255,255,255,.55),0 4px 0 var(--sk-ink,#1C2156)}
+#ttVisitLike.on svg{fill:#fff}
+#ttHouseVisit{position:relative}
+#ttHouseVisit.dot::after{content:"";position:absolute;right:-4px;top:-4px;width:12px;height:12px;border-radius:50%;background:#FF3F80;border:2.5px solid var(--sk-ink,#1C2156)}
+/* 串門子側欄：跟「我的家具」同一個位置、同一套外觀 */
+body:not(.tt-house-panel) #ttVisitPanel,body:not(.tt-house-on) #ttVisitPanel,body.tt-house-edit #ttVisitPanel{display:none!important}
+#ttVisitPanel{position:fixed;top:92px;right:16px;bottom:16px;width:336px;z-index:72;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;
+  padding:14px 12px 10px;background:var(--sk-paper,#FDFDFF);border:3px solid var(--sk-ink,#1C2156);border-radius:18px;
+  box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3.5px #CFEFFF,6px 6px 0 #FFB6CF,6px 6px 0 3px var(--sk-ink,#1C2156);color:var(--sk-ink,#1C2156);font-family:var(--sk-head,'LINE Seed TW'),sans-serif}
+#ttVisitPanel header{display:flex;align-items:center;gap:10px}
+.tt-vp-close{font:inherit;font-size:13px;font-weight:700;padding:6px 12px;border-radius:12px;border:3px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156)}
+.tt-vp-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:2px 2px 6px;scrollbar-width:thin}
+.tt-vp-sec h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:14px}
+.tt-vp-cnt,.tt-vp-likes{margin-left:auto;font-size:12px;color:var(--sk-mute,#5C6196)}
+.tt-vp-likes{color:#E0457E}
+.tt-vp-vis{display:flex;gap:4px;padding:4px;border:2px solid var(--sk-ink,#1C2156);border-radius:14px;background:#fff}
+.tt-vp-vis button{flex:1;font:inherit;font-size:13px;font-weight:700;padding:7px 4px;border:0;border-radius:10px;background:transparent;color:var(--sk-ink,#1C2156);cursor:pointer}
+.tt-vp-vis button[aria-checked="true"]{background:linear-gradient(180deg,#FF7AA8,#FF3F80);color:#fff}
+.tt-vp-tip,.tt-vp-empty{margin:6px 0 0;font-size:12px;line-height:1.6;color:var(--sk-mute,#5C6196)}
+.tt-vp-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tt-vp-list li{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border:2px solid var(--sk-ink,#1C2156);border-radius:12px;background:linear-gradient(180deg,#fff,#F3F9FF)}
+.tt-vp-list b{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-vp-list span{display:flex;gap:6px}
+.tt-vp-list small{font-size:11px;color:var(--sk-mute,#5C6196);white-space:nowrap}
+.tt-vp-list i{font-style:normal;color:#E0457E}
+.tt-vp-go,.tt-vp-inv,.tt-vp-kick{font:inherit;font-size:12px;font-weight:700;padding:4px 10px;border-radius:9px;border:2px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;white-space:nowrap}
+.tt-vp-inv{background:linear-gradient(180deg,#FF7AA8,#FF3F80);color:#fff}
+.tt-vp-inv:disabled{opacity:.6;cursor:default}
+.tt-vp-kick{background:#FFF0F6}
+.tt-vp-random{width:100%;font:inherit;font-size:15px;font-weight:700;padding:10px;border-radius:14px;border:3px solid var(--sk-ink,#1C2156);cursor:pointer;
+  background:linear-gradient(180deg,#8FD3FF,#5AB4F0);color:#fff;text-shadow:0 1px 0 rgba(28,33,86,.4);box-shadow:0 4px 0 var(--sk-ink,#1C2156)}
+.tt-vp-random:active{transform:translateY(2px);box-shadow:0 2px 0 var(--sk-ink,#1C2156)}
+.tt-vp-sec button:focus-visible,#ttHouseChat button:focus-visible,#ttHouseChat input:focus-visible{outline:3px solid #8FD3FF;outline-offset:2px}
+/* 小屋聊天（左下）：最近幾句＋輸入框 */
+body:not(.tt-house-on) #ttHouseChat{display:none!important}
+#ttHouseChat{position:fixed;left:16px;bottom:16px;width:320px;z-index:71;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;padding:10px 10px 10px;
+  background:rgba(253,253,255,.94);border:3px solid var(--sk-ink,#1C2156);border-radius:16px;box-shadow:inset 0 0 0 2px #fff,0 4px 0 var(--sk-ink,#1C2156);
+  color:var(--sk-ink,#1C2156);font-family:var(--sk-head,'LINE Seed TW'),sans-serif}
+#ttHouseChat header{display:flex;align-items:baseline;gap:8px}
+#ttHouseChat header b{font-size:14px;padding:0 6px;background:linear-gradient(transparent 58%,#FFC6DD 58%)}
+#ttHouseChat header small{margin-left:auto;font-size:11px;color:var(--sk-mute,#5C6196)}
+.tt-hc-log{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;font-size:13px;line-height:1.5;scrollbar-width:thin}
+.tt-hc-log p{margin:0;word-break:break-word}
+.tt-hc-log p b{margin-right:6px;color:#5AB4F0}
+.tt-hc-log p.mine b{color:#E0457E}
+.tt-hc-log .tt-hc-empty{color:var(--sk-mute,#5C6196);font-size:12px}
+.tt-hc-form{display:flex;gap:6px}
+.tt-hc-form input{flex:1;min-width:0;font:inherit;font-size:13px;padding:7px 10px;border:2px solid var(--sk-ink,#1C2156);border-radius:10px;background:#fff;color:var(--sk-ink,#1C2156)}
+.tt-hc-form button{font:inherit;font-size:13px;font-weight:700;padding:6px 12px;border-radius:10px;border:2px solid var(--sk-ink,#1C2156);background:linear-gradient(180deg,#FF7AA8,#FF3F80);color:#fff;cursor:pointer;box-shadow:0 2px 0 var(--sk-ink,#1C2156)}
+#ttHouseKeys{max-width:calc(100% - 720px)}
+/* 私訊裡的小屋邀請卡（dm-log.js） */
+.dm-house-invite{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.dm-house-invite small{font-size:11px;opacity:.75}
+.dm-house-go{font:inherit;font-size:13px;font-weight:700;padding:5px 12px;border-radius:10px;border:2px solid #1C2156;background:linear-gradient(180deg,#FF7AA8,#FF3F80);color:#fff;cursor:pointer;box-shadow:0 2px 0 #1C2156}

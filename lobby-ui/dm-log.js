@@ -16,14 +16,20 @@
   const entries=Object.entries(messages||{}).filter(([,m])=>m&&typeof m==='object').sort(([ak,a],[bk,b])=>(Number(a.at)||0)-(Number(b.at)||0)||ak.localeCompare(bk));
   const keep=new Set(entries.map(([id])=>id));let ownAdded=false,cursor=log.firstChild;
   for(const [id,m] of entries){
-   const mine=m.f===myKey,signature=JSON.stringify([m.f,m.x,m.at,mine]);
+   const mine=m.f===myKey,hk=typeof m.house==='string'&&/^[A-Za-z0-9_-]{1,200}$/.test(m.house)?m.house:'',signature=JSON.stringify([m.f,m.x,m.at,mine,hk]);
    let item=state.rows.get(id);
    if(!item){const row=document.createElement('div');row.className='dm-message'+(mine?' is-mine':'')+(!first?' dm-new':'');row.dataset.messageId=id;row.style.display='flex';row.style.justifyContent=mine?'flex-end':'flex-start';item={row,signature:null};state.rows.set(id,item);if(mine)ownAdded=true;}
    if(item.signature!==signature){
     const row=item.row,group=document.createElement('div'),bubble=document.createElement('span'),content=document.createElement('span');group.className='dm-message-content';bubble.className='dm-bubble';content.className='dm-text';
     const sticker=root.TTChatStickers?.decode(m.x||'');
     row.classList.toggle('is-mine',mine);row.classList.toggle('dm-is-sticker',!!sticker);
-    if(sticker)content.append(root.TTChatStickers.logImage(sticker));else content.textContent=m.x||'';
+    row.classList.toggle('dm-is-house',!!hk);
+    if(sticker)content.append(root.TTChatStickers.logImage(sticker));
+    else if(hk){const card=document.createElement('span'),t=document.createElement('b');card.className='dm-house-invite';t.textContent=m.x||'來我的小屋一起聊天吧！';card.append(t);   // v504 小屋邀請卡：點了就進對方的小屋
+     if(mine){const n=document.createElement('small');n.textContent='小屋邀請已送出';card.append(n);}
+     else{const b=document.createElement('button');b.type='button';b.className='dm-house-go';b.textContent='進他的小屋';b.addEventListener('click',()=>{try{root.TTHouse?.visit(hk,'invite');}catch{}});card.append(b);}
+     content.append(card);}
+    else content.textContent=m.x||'';
     bubble.append(content);group.append(bubble);
     const label=timeText(m.at);
     if(label){const time=document.createElement('time');time.className='dm-time';time.dateTime=new Date(m.at).toISOString();time.textContent=label;time.title='台灣時間 '+date.format(new Date(m.at));group.append(time);}
