@@ -3,10 +3,11 @@
    髮型（前髮＋後髮）300、眼睛（眼睛＋眉毛）200、上衣 150、下衣 150、套裝 300 貓貓幣。
    每一件是一組「草稿」（同當季時裝的格式），店長上架（shopConfig 有同編號、custom、price、cur:'cat'）前客人看不到。
    shopConfig 的 price 是金幣等值價（30／20／15／15／30），結帳與顯示 ×10；規則照 v493 第十批（cur:'cat' 才能付貓貓幣）。
-   名稱沿用 11/05 日常衣櫃樣稿（暫定）。下衣是「下身」配件（身體與上衣之間），可以跟任何上衣搭。 */
+   名稱 v509 依實際圖重取（原本沿用 11/05 樣稿暫定名）。下衣是「下身」配件（身體與上衣之間），可以跟任何上衣搭。 */
 (()=>{const D='img/daily-v494/';
-const NAMES={hair:{A:'蓬鬆長髮',B:'側馬尾',C:'刺刺短髮',D:'柔順短髮'},eye:{A:'星光大眼',B:'溫柔眼',C:'酷酷眼',D:'笑瞇眼'},
- top:{A:'愛心短T',B:'水手領上衣',C:'星星上衣',D:'條紋上衣'},bottom:{A:'直筒長褲',B:'百褶短裙',C:'吊帶褲'},suit:{A:'帽T小洋裝',B:'粉紅蛋糕裙'}};
+// v509 D：名字照實際的圖重取（原本是 11/05 樣稿暫定名）。商城、背包、結帳都讀這裡（shopConfig 的 name 不會蓋過草稿名）
+const NAMES={hair:{A:'俏皮外翹髮',B:'甜心側馬尾',C:'刺蝟短髮',D:'隨性短髮'},eye:{A:'紫晶大眼',B:'森林綠眼',C:'淡定眼',D:'瞇瞇笑眼'},
+ top:{A:'愛心白T',B:'藍白水手衫',C:'金星深藍T',D:'海軍條紋T'},bottom:{A:'黑色直筒褲',B:'深色百褶裙',C:'丹寧吊帶褲'},suit:{A:'森林帽T洋裝',B:'草莓蛋糕裙'}};
 const base={price:null,previewOnly:true,hideUntilLive:true,noParts:true,highlightHair:false,daily:true};
 const out={};
 for(const k of 'ABCD'){const n=NAMES.hair[k];out['daily_hair_'+k]={...base,name:n,dailyKind:'hair',doll:{hair:2},parts:{
