@@ -21,4 +21,5 @@ node test-phase12.cjs rules-before-v502.json $NEW || rc=1
 node test-phase13.cjs rules-before-v503.json $NEW || rc=1
 node test-phase14.cjs rules-before-v504.json $NEW || rc=1
 node test-phase15.cjs rules-before-v504.json $NEW || rc=1
+node test-phase16.cjs rules-before-v505.json $NEW || rc=1
 exit $rc

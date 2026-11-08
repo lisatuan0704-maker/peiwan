@@ -157,19 +157,38 @@ input::placeholder,textarea::placeholder{color:#C3B2DC}
 </style>
 <link rel="stylesheet" href="card-ui/workshop.css?v=256">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
-<link rel="stylesheet" href="card-ui/theme-card.css?v=410">
+<link rel="stylesheet" href="card-ui/theme-card.css?v=410"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=505">
 <script src="card-ui/tavern-scene.js?v=256" defer></script>
 </head>
 <body>
-<div id="notice" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
-  <div class="card welcome-card">
-    <span class="eyebrow">A LITTLE WELCOME / 入店邀請</span>
-    <canvas class="tavern-welcome-art" data-tavern-welcome role="img" aria-label="三位冒險者在酒館等你"></canvas>
-    <h2 id="welcomeTitle">在酒館，留一個位置給你。</h2>
-    <p>選個喜歡的模樣，留下想被叫的名字。<br>你的第一張闆卡，就從這裡開始。</p>
-    <p class="sub">闆卡會成為你在酒館活動時的形象。<br>完成後，也能到大廳的時裝間換裝。</p>
-    <button class="btn full" id="welcomeStart" onclick="notice.style.display='none';document.getElementById('studioTitle').focus()">開始製作 <span aria-hidden="true">→</span></button>
-    <span class="welcome-sign">店長，留給初次來訪的你</span>
+<!-- v505 入店邀請改版：跟大廳入店歡迎卡同一套雜誌風（樣式 lobby-ui/welcome-gate.css），不再是「大圖＋標題＋整排按鈕」 -->
+<div id="notice" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" data-step="1">
+  <div class="dgCard">
+    <div class="dgGeo" aria-hidden="true"><svg viewBox="0 0 780 200">
+      <path class="ln" d="M528 126 H748"/>
+      <path class="dia" d="M591.5 144 L600 152.5 L591.5 161 L583 152.5Z"/>
+      <path class="tri" d="M690 143 L700 159 L680 159Z"/>
+      <path class="star" d="M744 20 Q746 32 758 34 Q746 36 744 48 Q742 36 730 34 Q742 32 744 20Z"/>
+      <path class="star s" d="M352 28 Q353 33 358 34 Q353 35 352 40 Q351 35 346 34 Q351 33 352 28Z"/>
+    </svg></div>
+    <header class="dgHead">
+      <span class="dgEyebrow">A LITTLE WELCOME ／ 入店邀請</span>
+      <span class="dgOutline" aria-hidden="true">HELLO</span>
+      <h2 id="welcomeTitle">在酒館，留一個位置給你。</h2>
+      <p>選個喜歡的模樣，留下想被叫的名字。<br>你的第一張闆卡，就從這裡開始。</p>
+    </header>
+    <div class="dgBody">
+      <figure class="dgArt"><i class="dgDots" aria-hidden="true"></i><div class="dgFrame"><canvas class="tavern-welcome-art" data-tavern-welcome role="img" aria-label="三位冒險者在酒館等你"></canvas></div><figcaption><b>店長，留給初次來訪的你</b></figcaption></figure>
+      <ol class="dgSteps" aria-label="做闆卡三步驟">
+        <li data-n="1"><span class="n">01</span><span class="t">挑選模樣</span><small>髮型、眼睛、衣服，慢慢挑</small></li>
+        <li data-n="2"><span class="n">02</span><span class="t">留下名字</span><small>冒險者會這樣稱呼你</small></li>
+        <li data-n="3"><span class="n">03</span><span class="t">領取闆卡</span><small>帶著它走進大廳</small></li>
+      </ol>
+      <div class="dgFoot">
+        <p class="dgSub">闆卡會成為你在酒館活動時的形象。完成後，也能到大廳的時裝間換裝。</p>
+      </div>
+      <span class="dgCta"><button class="dgBtn" id="welcomeStart" onclick="notice.style.display='none';document.getElementById('studioTitle').focus()">開始製作</button></span>
+    </div>
   </div>
 </div>
 

@@ -164,7 +164,7 @@
       +'<div class="section-caption"><b>貓貓幣</b><span>CAT COINS</span></div><div id="ttCatSlot"></div>'
       +(cfg.note?'<p class="body-note">'+text(cfg.note)+'</p>':'')+'<div class="section-caption"><b>補充一點快樂</b><span>TOP UP</span></div><div class="packages">'
       +(tiers.length?tiers.map((t,i)=>'<button type="button" class="package framed-motion" data-tier="'+i+'"><span class="coupon-id">'+String(i+1).padStart(2,'0')+' / 儲值</span><strong>'+TTCat.gold(26,'c')+' '+Number(t.amt+(t.bonus||0)).toLocaleString()+'</strong>'+(t.bonus>0?'<small class="tt-bonus">含贈送 '+TTCat.gtag(t.bonus,14)+'</small>':'')+'<p>NT$ '+Number(t.amt).toLocaleString()+'</p><span class="coupon-arrow">↗</span>'+motion(i%2)+'</button>').join(''):'<p class="body-note">目前尚未開放儲值，敬請期待。</p>')+'</div>'
-      +'<p class="body-note">1 金幣 = 1 元，可以點冒險者一起玩，也能買時裝。<br>儲值由店長核對，入帳時會收到通知。</p><div class="text-links"><a class="text-btn" href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener">找店長幫忙 ↗</a><button type="button" class="text-btn" id="ttWalletTx">查看交易紀錄 →</button></div><div id="walletTxBox"></div>';
+      +'<p class="body-note">1 金幣 = 1 元，可以點冒險者一起玩，也能買時裝。<br>線上付款自動入帳；銀行轉帳由店長核對，入帳時會收到通知。</p><div class="text-links"><a class="text-btn" href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener">找店長幫忙 ↗</a><button type="button" class="text-btn" id="ttWalletTx">查看交易紀錄 →</button></div><div id="walletTxBox"></div>';
     if(!catHost){catHost=document.createElement('div');catHost.className='tt-cat-slot';TTCat.mount(catHost);}
     $('ttCatSlot').replaceWith(catHost);
     $('topupBody').querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>pickTier(Number(b.dataset.tier)));

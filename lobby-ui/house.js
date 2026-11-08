@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='504';
+const VER='505';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -71,12 +71,14 @@ async function enter(){
   try{
    await loadCatalog();
    const h=(await DB().ref(R()+'/house/'+key).once('value')).val()||{};
-   S.layout=Array.isArray(h.layout)?h.layout:null;S.vis=VIS_NAME[h.vis]?h.vis:'public';
+   S.layout=Array.isArray(h.layout)?h.layout:(h.at?[]:null);S.vis=VIS_NAME[h.vis]?h.vis:'public';   // v505：有存檔時間但沒擺設＝家具全收回背包了（不是新小屋，不再擺入住禮）
   }catch(e){S.layout=null;}
   if(!S.on||S.hk!==key||S.visit)return;
   watch('houseInv/'+key,v=>{S.inv=v||{};renderBag();renderShop();});
   watch('houseVisit/'+key,v=>{S.visitors=v||{};renderPanel();renderTop();});
-  const st=await sit(key);if(st.r==='ok')useSeat(st);
+  const st=await sit(key);
+  if(!S.on||S.hk!==key||S.visit){if(st.r==='ok')st.ref.remove().catch(()=>{});return;}   // v505：坐下的途中按了回大廳，不要再把小屋開起來
+  if(st.r==='ok')useSeat(st);
   startRoom(key);
   pruneChat(key);
   openFrame('我的小屋',()=>{
@@ -89,7 +91,7 @@ async function enter(){
 async function teardown(){flushSave();const seatRef=S.seatRef;S.leaving=true;
  S.on=false;unsub();closePanel();clearInterval(S.pubT);clearInterval(S.beatT);S.pubT=S.beatT=0;
  document.body.classList.remove('tt-house-on','tt-house-edit','tt-house-visit');
- S.frame?.remove();S.frame=null;S.visit=null;S.hk=null;S.seat=null;S.seatRef=null;S.room={};S.chatLog=[];S.chatSeen=new Set();renderChat();
+ S.frame?.remove();S.frame=null;S.visit=null;S.hk=null;S.seat=null;S.seatRef=null;S.room={};S.whoSig=null;S.chatLog=[];S.chatSeen=new Set();renderChat();
  try{gClose('houseShopM');}catch(_){}
  if(seatRef){try{seatRef.onDisconnect().cancel();}catch(_){}try{await seatRef.remove();}catch(_){}}
  S.leaving=false;}
@@ -101,7 +103,7 @@ async function sit(hk){const mk=KEY(),ref=DB().ref(R()+'/houseRoom/'+hk);let cur
  try{cur=(await ref.once('value')).val()||{};}catch(_){return {r:'denied'};}
  const now=Date.now(),own=hk===mk;
  let order=SEATS.filter(s=>cur[s]&&cur[s].k===mk);   // 另一個分頁已經坐著：沿用那個座位
- if(!order.length)order=SEATS.filter(s=>!cur[s]||!(cur[s].at>now-STALE));
+ if(!order.length)order=SEATS.filter(s=>!cur[s]).concat(SEATS.filter(s=>cur[s]&&!(cur[s].at>now-STALE)));   // v505：空位優先，沒有空位才接手斷線的座位
  if(!order.length&&own){const g=SEATS.filter(s=>cur[s]&&cur[s].k!==mk).sort((a,b)=>(cur[a].at||0)-(cur[b].at||0))[0];   // 主人回家客滿：請最久沒動的那位起身
    if(g){try{await ref.child(g).remove();order=[g];}catch(_){}}}
  if(!order.length)return {r:'full'};
@@ -114,16 +116,27 @@ function useSeat(st){S.seat=st.s;S.seatRef=st.ref;S.joinedAt=Date.now();}
 // 同步：看座位（其他人畫進房間）、聽聊天、回報自己的位置
 function startRoom(hk){
  watch('houseRoom/'+hk,v=>{if(S.hk!==hk)return;S.room=v||{};const mine=S.seat&&S.room[S.seat];
-  if(S.seat&&!S.leaving&&(!mine||mine.k!==KEY())){   // 我的座位不見了：被主人請出去，或斷線太久被接走
-   if(S.visit){const nm=S.visit.name;S.seat=null;S.seatRef=null;exit().then(()=>say(nm+' 請你先離開小屋了'));return;}
-   S.seat=null;S.seatRef=null;sit(hk).then(st=>{if(st.r==='ok'&&S.hk===hk)useSeat(st);else say('連線不穩，等一下再試');});}
-  pushPeers();renderPanel();renderChat();});
+  if(S.seat&&!S.leaving&&(!mine||mine.k!==KEY())){   // 我的座位不見了：被主人請出去、網路閃斷被清掉、或分頁在背景心跳變慢被接走
+   // v505：先試著坐回去，坐不下才離開，並照原因說明（原本一律說「主人請你離開」）
+   S.seat=null;S.seatRef=null;
+   sit(hk).then(st=>{if(!S.on||S.hk!==hk||S.seat)return;
+    if(st.r==='ok'){useSeat(st);S.last=null;pubPos();return;}
+    if(S.visit){const nm=S.visit.name;exit().then(()=>say(st.r==='kicked'?nm+' 請你先離開小屋了':st.r==='full'?nm+' 的小屋客滿了，先回大廳囉':st.r==='denied'?nm+' 的小屋現在沒有開放了':'連線不穩，先回大廳囉'));}
+    else say('連線不穩，等一下再試');});}
+  pushPeers();
+  /* v505：座位資料每 0.2 秒就會因為有人走動而更新；面板和聊天只在「有人進出」時重畫
+     （原本每次都重畫：面板的按鈕按下去的瞬間被換掉、點不到；往上捲的聊天紀錄一直被拉回最底） */
+  const who=SEATS.map(s=>{const v=S.room[s];return v&&v.at>Date.now()-STALE*2?v.k+':'+(v.name||''):'';}).join('|');
+  if(who!==S.whoSig){S.whoSig=who;renderPanel();renderChat();}});
  watch('houseChat/'+hk,v=>{if(S.hk!==hk)return;onChat(v||{});},ref=>ref.limitToLast(30));
+ // v505：網路重連後重新設好「斷線自動起身」（舊連線的設定會跟著舊連線消失，關分頁後座位會卡著）
+ const cref=DB().ref('.info/connected'),onConn=s=>{if(s.val()&&S.seatRef&&S.hk===hk){try{S.seatRef.onDisconnect().remove();}catch(_){}S.seatRef.update({at:TS()}).catch(()=>{});}};
+ cref.on('value',onConn);S.subs.push(()=>cref.off('value',onConn));
  clearInterval(S.pubT);clearInterval(S.beatT);S.last=null;
  S.pubT=setInterval(pubPos,200);
  S.beatT=setInterval(()=>{if(!S.seatRef)return;S.seatRef.update({at:TS()}).catch(()=>{});
-   if(!S.visit&&S.vis==='public')DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});},15000);
- if(!S.visit&&S.vis==='public')DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});}
+   if(!S.visit&&S.vis==='public'&&S.listed)DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});},15000);   // v505：有在隨機名單上才報「在家」（不在名單上寫不進去）
+ if(!S.visit&&S.vis==='public'&&S.listed)DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});}
 // 自己的位置：走動時最多每 0.2 秒回報一次，停下來再補最後一次
 function pubPos(){if(!S.seatRef)return;const p=room('me');if(!p)return;const L=S.last;
  if(L&&Math.abs(L.i-p.i)<.05&&Math.abs(L.j-p.j)<.05&&L.f===p.f)return;
@@ -145,7 +158,7 @@ function onChat(v){const fresh=[];
  for(const m of fresh)room('say',m.f===KEY()?'me':m.f,m.x);
  renderChat();}
 async function sendChat(){const inp=$('ttHouseSay');if(!inp)return;const x=inp.value.trim().slice(0,CHAT_MAX);if(!x)return;
- if(window.__mute){say('你目前被禁言中，暫時不能說話');return;}
+ if(window.ttIsMuted?window.ttIsMuted():!!window.__mute){say('你目前被禁言中，暫時不能說話');return;}
  if(!S.seat||!S.hk){say('還沒進到小屋裡，等一下再說');return;}
  inp.value='';
  try{await DB().ref(R()+'/houseChat/'+S.hk).push({f:KEY(),n:myName(),x,s:S.seat,at:TS()});}
@@ -186,7 +199,7 @@ function publish(layout){const key=S.key;if(!key||!DB()||S.visit||!Array.isArray
  const lay=JSON.parse(JSON.stringify(layout)),n=Math.min(999,lay.length),ch={};
  if(S.vis==='private'){ch['houseView/'+key]=null;ch['houseDir/'+key]=null;}
  else{ch['houseView/'+key]={layout:lay,vis:S.vis,at:TS(),name:myName(),n};ch['houseDir/'+key]=S.vis==='public'&&n>=DIR_MIN?{at:TS(),n,on:TS()}:null;}
- return DB().ref(R()).update(ch).catch(()=>{});}
+ return DB().ref(R()).update(ch).then(()=>{S.listed=!!ch['houseDir/'+key];}).catch(()=>{});}
 
 // ---------- 佈置模式 ----------
 function setMode(m){if(S.visit)m='walk';S.mode=m;document.body.classList.toggle('tt-house-edit',m==='edit');if(m==='edit')closePanel();renderKeys();
@@ -267,7 +280,8 @@ async function buy(k){const c=S.byKey[k],p=priceOf(k),key=S.key;if(S.buying||!c|
 // ---------- v504 串門子 ----------
 // 開放設定：存在自己的小屋紀錄（換裝置也記得），快照、隨機名單跟著改；改得更嚴時，現在不該在的人請他們先離開
 async function setVis(v){if(!VIS_NAME[v]||!S.key||S.visit||v===S.vis)return;const old=S.vis;S.vis=v;renderPanel();
- try{await DB().ref(R()+'/house/'+S.key+'/vis').set(v);await publish(room('layout'));
+ try{const lay=room('layout'),upd={vis:v,at:TS()};if(Array.isArray(lay)&&lay.length)upd.layout=JSON.parse(JSON.stringify(lay));
+  await DB().ref(R()+'/house/'+S.key).update(upd);await publish(lay);   // v505：原本只寫 vis，新小屋（還沒動過家具、沒有紀錄）會被規則擋
   if(v!=='public'){const fr=S.friends||(S.friends=(await DB().ref(R()+'/friends/'+S.key).once('value')).val()||{}),ch={};
    for(const s of SEATS){const g=S.room[s];if(g&&g.k!==S.key&&(v==='private'||!fr[g.k]))ch['houseRoom/'+S.key+'/'+s]=null;}
    if(Object.keys(ch).length)await DB().ref(R()).update(ch);}
@@ -285,7 +299,8 @@ async function visit(key,via){
   let view=null,owner=null;
   try{const [v,o]=await Promise.all([DB().ref(R()+'/houseView/'+key).once('value'),DB().ref(R()+'/lobby/'+key).once('value').catch(()=>null)]);view=v.val();owner=o?o.val():null;await loadCatalog();}
   catch(_){view=null;}
-  if(!view||!Array.isArray(view.layout)){if(via!=='random')say('這間小屋現在沒有開放');return false;}
+  if(!view||!(Array.isArray(view.layout)||view.at)){if(via!=='random')say('這間小屋現在沒有開放');return false;}
+  if(!Array.isArray(view.layout))view.layout=[];   // v505：主人把家具全收起來了，空房間照樣可以進
   const name=String((owner&&owner.name)||view.name||'旅人').slice(0,40);
   const st=await sit(key);   // 先在對方家坐好，坐不下就留在原地
   if(st.r!=='ok'){if(via!=='random')say(st.r==='full'?name+' 的小屋客滿了（最多 4 人），等一下再來':st.r==='kicked'?name+' 請你先離開了，過一陣子再來吧':'這間小屋現在沒有開放');return false;}
@@ -326,7 +341,7 @@ async function kick(k){if(S.visit||!S.key)return;const s=SEATS.find(x=>S.room[x]
 // 邀請好友：私訊一張邀請卡（跟一般私訊一樣只限互為好友、封鎖的人收不到）
 async function invite(fk,btn){const mk=KEY();if(!mk||!DB()||!fk)return;
  const fr=S.friends||{};if(!fr[fk]){say('只能邀請好友喔');return;}
- if(window.__mute){say('你目前被禁言中，暫時無法傳私訊');return;}
+ if(window.ttIsMuted?window.ttIsMuted():!!window.__mute){say('你目前被禁言中，暫時無法傳私訊');return;}
  if(S.vis==='private'){say('你的小屋現在是「不公開」，先改成公開或只限好友再邀請');return;}
  if(btn)btn.disabled=true;
  try{const b=await DB().ref(R()+'/blocks/'+fk+'/'+mk).once('value');if(b.val()){say('對方目前無法接收你的私訊');if(btn)btn.disabled=false;return;}

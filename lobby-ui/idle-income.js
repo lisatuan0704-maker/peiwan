@@ -17,9 +17,9 @@ const views=new Set();
 function snow(){return Date.now()+offset;}
 function calc(){
  if(at==null)return null;
- const el=Math.max(0,snow()-at),full=el>=FULL;
- return {el,full,h:Math.min(CAP_H,el/HOUR),pct:Math.min(100,el/FULL*100),left:Math.max(0,FULL-el),
-  amt:full?CAP:Math.max(0,Math.min(CAP,Math.floor((el-SAFE)*RATE/HOUR)))};
+ const el=Math.max(0,snow()-at),full=el-SAFE>=FULL;   // v505 存滿也留 5 秒安全差（原本剛滿 8 小時就給 176，網頁時鐘偏快會被資料庫拒絕）
+ return {el,full,h:Math.min(CAP_H,el/HOUR),pct:Math.min(100,el/FULL*100),left:Math.max(0,FULL+SAFE-el),
+  amt:Math.max(0,Math.min(CAP,Math.floor((el-SAFE)*RATE/HOUR)))};
 }
 function leftText(ms){
  let h=Math.floor(ms/HOUR),m=Math.ceil(ms%HOUR/60000);if(m===60){h++;m=0;}
@@ -52,6 +52,7 @@ async function start(k){   // 第一次：開始計時（只能寫伺服器現�
  if(starting)return;starting=true;
  try{await G('db').ref(G('ROOT')+'/idle/'+k).set({at:root.firebase.database.ServerValue.TIMESTAMP});}
  catch(e){console.warn('[idle] 開始計時',e&&e.code||e);}
+ finally{starting=false;}   // v505 寫完（或失敗）就放開：紀錄被後台刪掉、第一次沒寫成功時，下次讀到空的還能重新開始計時
 }
 async function claim(btn){
  const k=key,c=calc();
@@ -192,7 +193,8 @@ function setup(){
  }
 }
 
-const css=`#ttIdleHud{position:fixed;z-index:71;transform-origin:top left;pointer-events:auto}
+const css=`html.ttm-on .tt-idle-slot{display:none!important}   /* v505 手機：上方個人卡下面已經有一張，錢包頁不要再出現第二張 */
+#ttIdleHud{position:fixed;z-index:71;transform-origin:top left;pointer-events:auto}
 #ttIdleHud.off{display:none}
 #ttIdleHud[hidden],#ttmIdle[hidden],.tt-idle-slot[hidden]{display:none!important}
 #ttIdleHud::before,#ttIdleHud::after{content:"";position:absolute;top:-21px;width:7px;height:27px;border:2.5px solid #1C2156;border-radius:6px;background:linear-gradient(#fff 40%,#FFE3EF);box-shadow:2px 2px 0 rgba(28,33,86,.25);z-index:-1}

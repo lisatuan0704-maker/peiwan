@@ -57,15 +57,16 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
   // v405：部件可單買；同套已選部件合計不低於整套價時改買整套。持有整套或該部件者不計價。
   const by=new Map();
   for(const it of items){if(!it.product||it.owned)continue;const o=it.product;if(!by.has(o.id))by.set(o.id,{o,units:new Map(),whole:false});const e=by.get(o.id);if(it.part?.saleId)e.units.set(it.part.saleId,it.part);else e.whole=true;}
-  const ready=[],unavailable=[];
+  const ready=[],unavailable=[],vip=[];   // v505 VIP 限定套組由當季卡片領取／購買，不在這裡結帳，也不算「尚未開賣」
   for(const {o,units,whole} of by.values()){
+   if(o.vipOnly){vip.push(o);continue;}
    const setOk=o.sale&&!o.previewOnly&&Number.isSafeInteger(Number(o.price))&&Number(o.price)>=0,parts=[...units.values()],partsOk=!whole&&parts.length>0&&parts.every(p=>Number.isSafeInteger(p.salePrice)&&p.salePrice>0);
    const sum=partsOk?parts.reduce((n,p)=>n+p.salePrice,0):Infinity;
    if(partsOk&&(!setOk||sum<Number(o.price)))parts.forEach(p=>ready.push({id:p.saleId,name:o.name+'・'+p.saleLabel,price:p.salePrice,unit:'part'}));
    else if(setOk)ready.push({id:o.id,name:o.name,price:Number(o.price),unit:o.pet?'pet':'set',cur:isCat(o)?'cat':''});
    else unavailable.push(o);
   }
-  return {ready,unavailable,total:ready.filter(x=>!isCat(x)).reduce((n,x)=>n+x.price,0),catTotal:ready.filter(isCat).reduce((n,x)=>n+x.price,0)};
+  return {ready,unavailable,vip,total:ready.filter(x=>!isCat(x)).reduce((n,x)=>n+x.price,0),catTotal:ready.filter(isCat).reduce((n,x)=>n+x.price,0)};
  }
  function removeLook(slot){
   if(saving)return;
@@ -87,7 +88,7 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
   if(!visible)return;
   const items=lookItems(),q=lookQuote(items),scroll=lookPanel.querySelector('.look-items')?.scrollTop||0;
   lookPanel.classList.toggle('is-expanded',lookExpanded);
-  lookPanel.innerHTML='<header><div><small>YOUR LOOK</small><h3>目前搭配 <span>'+items.length+'</span></h3></div><button class="look-expand" type="button" aria-expanded="'+lookExpanded+'" aria-label="展開或收合目前搭配">'+(lookExpanded?'收合':'展開')+'</button></header><div class="look-items">'+items.map(p=>'<article class="look-item"><canvas width="64" height="64" data-look-thumb="'+esc(p.slot)+'" aria-label="'+esc(p.name)+'"></canvas><div><strong>'+esc(p.name)+'</strong><small data-state="'+(p.base?'base':p.owned?'owned':q.unavailable.includes(p.product)?'soon':'price')+'">'+(p.base?'基本款':p.owned?'已擁有':q.unavailable.includes(p.product)?'尚未開賣':p.part?.salePrice?(p.dup?'與同組一起計價':'單買 '+goldT(p.part.salePrice)):p.product.baseUnit?(p.dup?'與同組一起計價':'單買 '+goldT(p.product.price)):(p.product.pet?'單隻 ':'整套 ')+priceT(p.product.price,p.product))+'</small></div><button type="button" class="look-remove" data-look-remove="'+esc(p.slot)+'" aria-label="移除'+esc(p.name)+'" '+(!p.removable||saving?'disabled':'')+' title="'+(p.removable?'移除此部件':'目前為基本款')+'">−</button></article>').join('')+'</div><footer><div class="look-total"><span>'+(area==='bag'?'需購買金額':q.unavailable.length?'可購買部分小計':'需購買金額')+'</span><strong>'+(q.total||!q.catTotal?goldT(q.total,18):'')+(q.total&&q.catTotal?'<small>＋</small>':'')+(q.catTotal?catT(q.catTotal,16):'')+'</strong></div><p class="look-pricing">'+(q.ready.length?'單買或整套自動選划算的 · 已擁有不計價':'目前搭配的已擁有部件不計價')+'</p>'+(q.unavailable.length?'<p class="look-unavailable">另有 '+q.unavailable.length+' 套尚未開賣，未計入金額</p>':'')+(area==='store'?'<button type="button" class="primary look-checkout" '+(!q.ready.length?'disabled':'')+'>'+(q.ready.length?'確認選購 · '+q.ready.length+' 項':q.unavailable.length?'等待開賣':'已全部擁有')+'</button>':'')+'</footer>';
+  lookPanel.innerHTML='<header><div><small>YOUR LOOK</small><h3>目前搭配 <span>'+items.length+'</span></h3></div><button class="look-expand" type="button" aria-expanded="'+lookExpanded+'" aria-label="展開或收合目前搭配">'+(lookExpanded?'收合':'展開')+'</button></header><div class="look-items">'+items.map(p=>'<article class="look-item"><canvas width="64" height="64" data-look-thumb="'+esc(p.slot)+'" aria-label="'+esc(p.name)+'"></canvas><div><strong>'+esc(p.name)+'</strong><small data-state="'+(p.base?'base':p.owned?'owned':q.vip.includes(p.product)?'vip':q.unavailable.includes(p.product)?'soon':'price')+'">'+(p.base?'基本款':p.owned?'已擁有':q.vip.includes(p.product)?'VIP '+esc(p.product.vipOnly)+' 限定':q.unavailable.includes(p.product)?'尚未開賣':p.part?.salePrice?(p.dup?'與同組一起計價':'單買 '+goldT(p.part.salePrice)):p.product.baseUnit?(p.dup?'與同組一起計價':'單買 '+goldT(p.product.price)):(p.product.pet?'單隻 ':'整套 ')+priceT(p.product.price,p.product))+'</small></div><button type="button" class="look-remove" data-look-remove="'+esc(p.slot)+'" aria-label="移除'+esc(p.name)+'" '+(!p.removable||saving?'disabled':'')+' title="'+(p.removable?'移除此部件':'目前為基本款')+'">−</button></article>').join('')+'</div><footer><div class="look-total"><span>'+(area==='bag'?'需購買金額':q.unavailable.length||q.vip.length?'可購買部分小計':'需購買金額')+'</span><strong>'+(q.total||!q.catTotal?goldT(q.total,18):'')+(q.total&&q.catTotal?'<small>＋</small>':'')+(q.catTotal?catT(q.catTotal,16):'')+'</strong></div><p class="look-pricing">'+(q.ready.length?'單買或整套自動選划算的 · 已擁有不計價':'目前搭配的已擁有部件不計價')+'</p>'+(q.unavailable.length?'<p class="look-unavailable">另有 '+q.unavailable.length+' 套尚未開賣，未計入金額</p>':'')+(q.vip.length?'<p class="look-unavailable">另有 '+q.vip.length+' 套 VIP 限定，請在當季卡片入手，未計入金額</p>':'')+(area==='store'?'<button type="button" class="primary look-checkout" '+(!q.ready.length?'disabled':'')+'>'+(q.ready.length?'確認選購 · '+q.ready.length+' 項':q.vip.length?'VIP '+esc(q.vip[0].vipOnly)+' 限定':q.unavailable.length?'等待開賣':'已全部擁有')+'</button>':'')+'</footer>';
   lookPanel.querySelector('.look-expand').onclick=()=>{lookExpanded=!lookExpanded;renderLook();};
   lookPanel.querySelectorAll('[data-look-remove]').forEach(b=>b.onclick=()=>removeLook(b.dataset.lookRemove));
   lookPanel.querySelector('.look-checkout')?.addEventListener('click',openLookCheckout);
@@ -96,7 +97,7 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
  // v501 使用者：穿上的東西一次結帳 → 只留一顆「全部結帳」，結帳頁列出全部、按一次付款（每件仍各自成立一筆訂單）
  function openLookCheckout(){
   data=api.state();const q=lookQuote(lookItems());renderLook();
-  lookDialog.innerHTML='<header><div><small>YOUR SELECTION</small><h2>確認選購</h2></div><button type="button" class="look-close" aria-label="關閉選購清單">×</button></header><p>部件可以單買；同一套選的部件合計比整套貴時，會自動改成買整套。下面這些會一次結帳。</p><div class="look-purchases">'+q.ready.map((o,i)=>'<article><span class="look-no" aria-hidden="true">'+String(i+1).padStart(2,'0')+'</span><div><strong>'+esc(o.name)+'</strong><span>'+(isCat(o)?catT(o.price):goldT(o.price))+(o.unit==='pet'?'／隻':o.unit==='part'?'／單件':'／整套')+'</span></div></article>').join('')+'</div>'+(q.unavailable.length?'<p class="look-unavailable">尚未開賣：'+q.unavailable.map(o=>esc(o.name)).join('、')+'</p>':'')+'<footer><span>需購買金額</span><strong>'+[q.total||!q.catTotal?goldT(q.total):'',q.catTotal?catT(q.catTotal):''].filter(Boolean).join('＋')+'</strong></footer>'+(q.ready.length?'<button class="primary look-buy-all" type="button" data-look-buy-all>全部結帳 · '+q.ready.length+' 項</button>':'');
+  lookDialog.innerHTML='<header><div><small>YOUR SELECTION</small><h2>確認選購</h2></div><button type="button" class="look-close" aria-label="關閉選購清單">×</button></header><p>部件可以單買；同一套選的部件合計比整套貴時，會自動改成買整套。下面這些會一次結帳。</p><div class="look-purchases">'+q.ready.map((o,i)=>'<article><span class="look-no" aria-hidden="true">'+String(i+1).padStart(2,'0')+'</span><div><strong>'+esc(o.name)+'</strong><span>'+(isCat(o)?catT(o.price):goldT(o.price))+(o.unit==='pet'?'／隻':o.unit==='part'?'／單件':'／整套')+'</span></div></article>').join('')+'</div>'+(q.unavailable.length?'<p class="look-unavailable">尚未開賣：'+q.unavailable.map(o=>esc(o.name)).join('、')+'</p>':'')+(q.vip.length?'<p class="look-unavailable">VIP 限定（請在當季卡片入手）：'+q.vip.map(o=>esc(o.name)).join('、')+'</p>':'')+'<footer><span>需購買金額</span><strong>'+[q.total||!q.catTotal?goldT(q.total):'',q.catTotal?catT(q.catTotal):''].filter(Boolean).join('＋')+'</strong></footer>'+(q.ready.length?'<button class="primary look-buy-all" type="button" data-look-buy-all>全部結帳 · '+q.ready.length+' 項</button>':'');
   lookDialog.querySelector('.look-close').onclick=()=>lookDialog.close();
   lookDialog.querySelector('[data-look-buy-all]')?.addEventListener('click',()=>{
    const fresh=api.state(),current=lookQuote(lookItems(fresh)).ready,sig=l=>l.map(o=>o.id+':'+o.price+':'+(o.cur||'')).join('|');
@@ -346,11 +347,11 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
   $('#catalog .catalog-head h2').textContent=area==='bag'?'我的座椅':'座椅';
   $('#subtabs').textContent='設為我的座椅後，回到大廳按 X 使用；移動即收起。';
   $('#pager').replaceChildren();$('#bundlePager').replaceChildren();
-  $('#grid').innerHTML=list.map(o=>'<button class="item" data-seat-item="'+esc(o.id)+'" aria-pressed="'+(o.id===selected)+'"><span class="itemtop"><span class="status">'+(o.id===choice?'已選用':o.owned?'已擁有':'')+'</span></span><span class="thumb"><canvas width="160" height="160" data-seat-thumb="'+esc(o.id)+'"></canvas></span><span class="item-caption"><strong>'+esc(o.name)+'</strong><small>'+(o.owned?'已收藏':'NT$'+esc(o.price))+'</small></span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'目前還沒有已取得的座椅。':'目前沒有上架座椅。')+'</p>';
+  $('#grid').innerHTML=list.map(o=>'<button class="item" data-seat-item="'+esc(o.id)+'" aria-pressed="'+(o.id===selected)+'"><span class="itemtop"><span class="status">'+(o.id===choice?'已選用':o.owned?'已擁有':'')+'</span></span><span class="thumb"><canvas width="160" height="160" data-seat-thumb="'+esc(o.id)+'"></canvas></span><span class="item-caption"><strong>'+esc(o.name)+'</strong><small>'+(o.owned?'已收藏':goldT(o.price))+'</small></span></button>').join('')||'<p class="live-empty">'+(area==='bag'?'目前還沒有已取得的座椅。':'目前沒有上架座椅。')+'</p>';
   $$('[data-seat-item]').forEach(b=>b.onclick=()=>{selected=b.dataset.seatItem;render();});
   $$('[data-seat-thumb]').forEach(cv=>api.seatThumb(cv.dataset.seatThumb,cv));
   $('#detail').hidden=false;
-  $('#detail').innerHTML=current?'<div><small class="overline">TAVERN SEATS</small><h2>'+esc(current.name)+'</h2><p>按 X 使用／收起，移動時自動收起。</p></div><div class="actions"><button class="primary" id="seatAction">'+(current.owned?(current.id===choice?'已設為我的座椅':'設為我的座椅'):'選購座椅 · NT$'+esc(current.price))+'</button></div>':'';
+  $('#detail').innerHTML=current?'<div><small class="overline">TAVERN SEATS</small><h2>'+esc(current.name)+'</h2><p>按 X 使用／收起，移動時自動收起。</p></div><div class="actions"><button class="primary" id="seatAction">'+(current.owned?(current.id===choice?'已設為我的座椅':'設為我的座椅'):'選購座椅 · '+goldT(current.price))+'</button></div>':'';
   if(current){$('#seatAction').disabled=current.owned&&current.id===choice;$('#seatAction').onclick=()=>{if(current.owned){if(api.selectSeat(current.id)){tell('已設為我的座椅，回到大廳按 X 使用。');render();}}else buy(current.id);};}
  }
  // v495 上排分類鈕：點了有果凍感（重畫後套在新按鈕上；減少動態設定不播）
@@ -451,7 +452,7 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
  function dyeCta(){
   const t=data.tickets|0,price=api.dyePrice?.()||299;
   $('#dyeTicket').className='dye-ticket dye-cta'+(t?' has':'');
-  $('#dyeTicket').innerHTML='<span class="dye-cta-art" aria-hidden="true"><i></i><i></i><i></i></span><span class="dye-cta-text"><strong>'+(t?('染髮券 · 剩餘 '+t+' 張'):'漸層染髮 · 先免費試色')+'</strong><small>'+(t?'保存專屬漸層只扣 1 張':'喜歡再買券，一張 NT$'+price)+'</small></span><b>↗</b>';
+  $('#dyeTicket').innerHTML='<span class="dye-cta-art" aria-hidden="true"><i></i><i></i><i></i></span><span class="dye-cta-text"><strong>'+(t?('染髮券 · 剩餘 '+t+' 張'):'漸層染髮 · 先免費試色')+'</strong><small>'+(t?'保存專屬漸層只扣 1 張':'喜歡再買券，一張 '+goldT(price,13))+'</small></span><b>↗</b>';
  }
  function renderDyeShop(){
   const demos=[['#f5a3c7','#b7a6f2','蜜桃薰衣草','PEACH','柔霧粉紫'],['#8fd6c8','#7fb4ef','薄荷晴空','MINT','清透藍綠'],['#f6cf6b','#f28d8d','蜂蜜夕陽','HONEY','暖金珊瑚']];
@@ -521,7 +522,7 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
  function dyeStatus(){
   $('#dyeDialog .ticket-state').textContent='我的染髮券　'+data.tickets+' 張';
   $('#saveDye').disabled=dyeSaving||data.tickets<1;$('#saveDye').textContent=dyeSaving?'保存中…':'使用 1 張並保存';
-  $('#saveDye').hidden=data.tickets<1;$('#buyDyeInDialog').hidden=data.tickets>=1;$('#buyDyeInDialog').textContent='買一張染髮券 NT$'+(api.dyePrice?.()||299)+' →';
+  $('#saveDye').hidden=data.tickets<1;$('#buyDyeInDialog').hidden=data.tickets>=1;$('#buyDyeInDialog').textContent='買一張染髮券 '+(api.dyePrice?.()||299)+' 金幣 →';
   $$('#dyeDialog input, #cancelDye').forEach(el=>el.disabled=dyeSaving);
   $('#dyeTail').disabled=dyeSaving||!$('#dyeGradient').checked;
  }

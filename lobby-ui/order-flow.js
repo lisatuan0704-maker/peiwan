@@ -66,11 +66,13 @@
    const box=$('payCoinInfo');if(!box)return;if(_submitting&&box.querySelector('.of-cart'))return;   // 付款中不重畫（餘額正在一件件扣）
    const items=curPlan.items||[],gold=curPlan.p||0,cat=TTCat.price(curPlan.catP||0),wallet=window.__wallet||0,catBal=window.__cat||0;
    const price=x=>x.cur==='cat'?TTCat.coin(16,'c')+' '+money(TTCat.price(x.p))+' <small>貓貓幣</small>':money(x.p)+' <small>金幣</small>';
-   const lack=[gold>wallet?'金幣還差 '+money(gold-wallet):'',cat>catBal?'貓貓幣還差 '+money(cat-catBal):''].filter(Boolean);
+   const goldShort=gold>wallet,catShort=cat>catBal,lack=[goldShort?'金幣還差 '+money(gold-wallet):'',catShort?'貓貓幣還差 '+money(cat-catBal):''].filter(Boolean);
+   // v505 錢包只能補金幣（貓貓幣兌換關著時，錢包裡沒有能補貓貓幣的地方）→ 只有金幣不夠才放「去錢包」，貓貓幣不夠改提示每日任務與掛機收益
+   const toWallet=goldShort||(catShort&&TTCat.EXCHANGE_ON),catTip=catShort&&!TTCat.EXCHANGE_ON?'貓貓幣可以從每日任務（每天送 '+TTCat.DAILY+'）和掛機收益慢慢存'+(toWallet?'':'，存夠後這頁的付款鈕會自動解鎖'):'';
    box.innerHTML='<div class="of-cart"><div class="of-cart-head"><span>一起結帳</span><b>'+items.length+' 件</b></div><ol>'+items.map((x,i)=>'<li><span class="of-cart-no">'+String(i+1).padStart(2,'0')+'</span><b>'+esc(x.itemName||x.n)+'</b><em>'+price(x)+'</em></li>').join('')+'</ol></div>'
      +(gold||!cat?'<div class="of-payment-line"><span>本次應付</span><strong>'+money(gold)+' <small>金幣</small></strong></div><div class="of-wallet-line">持有 '+money(wallet)+' 金幣 · 付款後剩 '+money(Math.max(0,wallet-gold))+' 金幣</div>':'')
      +(cat?'<div class="of-payment-line"><span>'+(gold?'另付':'本次應付')+'</span><strong>'+TTCat.coin(32,'c')+' '+money(cat)+' <small>貓貓幣</small></strong></div><div class="of-wallet-line">持有 '+money(catBal)+' 貓貓幣 · 付款後剩 '+money(Math.max(0,catBal-cat))+' 貓貓幣</div>':'')
-     +(lack.length?'<div class="of-cart-lack">'+lack.join('、')+'。補足後這頁的付款鈕會自動解鎖　<a href="#" data-of-topup>去錢包 →</a></div>':'')
+     +(lack.length?'<div class="of-cart-lack">'+lack.join('、')+'。'+(toWallet?'補足後這頁的付款鈕會自動解鎖　<a href="#" data-of-topup>去錢包 →</a>':'')+(catTip?(toWallet?'<br>':'')+catTip:'')+'</div>':'')
      +'<p class="of-cart-note">按一次就把上面全部買下。萬一中途有一件沒買成，會停下來告訴你，沒買到的不會扣款。</p>';
    box.querySelector('[data-of-topup]')?.addEventListener('click',e=>{e.preventDefault();try{gClose('shopM3');}catch(_){}shopClose();openTopup();});
    const btn=$('paySubmitBtn');if(btn&&!_submitting){btn.disabled=!!lack.length;btn.style.opacity=lack.length?'.5':'1';btn.textContent='全部結帳';}
