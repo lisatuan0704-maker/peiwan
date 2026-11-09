@@ -824,6 +824,71 @@ v297：右下功能收為我的酒館六分頁（通訊錄、信箱、訂單、�
 - 上線前：Firebase 發布規則（含第 14、15 批）→ Push。實測腳本 scratchpad/visit/multi.cjs（三個分身＋模擬資料庫，16 項）。
 - 順手修：大廳入店歡迎卡（#intro）原文有禁用字（虛擬角色／乾淨無擦邊／金流透明），改成「這裡是像素風的小小酒館。找冒險者一起打遊戲、語音聊聊天，或在大廳隨意晃晃——慢慢來，當自己家就好。」
 
+## 2026/11/09 v512 正式營運事故修正：吊卡倒數、語音登記錯誤、機器人私訊冒險者（Claude；後端 deploy-v511 另外部署）
+- ⚠ 號碼：v510＝11/09 緊急修正（b9c6c87）、v511＝小屋朋友走路修正（0522dd6），兩個都以正式站為底先上；下面「v510 小屋商城」那一段的內容實際跟著 v512 一起上。吊卡／語音錯誤／手札計時／朋友走路在 v510、v511 已經上了，v512 沿用。後端部署腳本名稱仍叫 deploy-v511。
+- D 回報（11/09 正式營運）：①冒險者才剛接單、人沒到齊、還沒開始計時，老闆左上吊卡就在倒數 ②接單後票卡沒語音房、機器人沒私訊冒險者、語音頻道沒建（D 手動開房），老闆票卡跳「語音連線尚未完成，請稍後重試」③要求「一但有指定陪玩的單，請讓機器人傳送私訊通知給陪玩通知叫他接單」。
+- ① lobby.html activeOrder()：冒險者在手札按「開始」（partner startTimer 寫 clientOrders/<id>/servingSince）才算開始；接單但沒開始回傳 waiting:true，
+  吊卡（#playCard.waiting，黃點）只寫「縭 接下你的委託囉／到 Discord 跟冒險者會合，開始玩之後才會開始算時間」，不倒數、沒有續單鈕，openRenew 提示「開始玩之後就可以續單囉」；
+  預約單離開始超過 30 分鐘、或接了 6 小時都沒開始的不掛吊卡；有正在玩的單優先顯示正在玩的。sessionEndOf 不變（partner 續單判斷仍用）。
+- ② 原因在 api 主機：老闆點單後網站要呼叫 /v1/voice/order 把單登記進語音系統（orderVoiceV1），冒險者接單（/v1/voice/accept）、語音房、機器人私訊全部接在這一步後面；
+  主機回了網站沒列過的錯誤代碼，網站一律顯示「語音連線尚未完成」，而且 flush() 遇到錯誤就 break → 第一筆卡住的單會擋住之後所有的單。真正被拒的代碼要在主機上看（ops/diag-voice-v511.sh）。
+  網站（lobby-ui/order-voice.mjs?v=511，lobby 與 partner 都改引用 511）：補列 TOO_MANY_ACTIVE_ORDERS／CHARACTER_REQUIRED／ORDER_GROUP_MISMATCH／INVALID_STAFF／ORDER_ALREADY_LINKED／ORDER_ACCESS_DENIED／INVALID_SESSION／TEMPORARILY_UNAVAILABLE／ORDER_NOT_READY；
+  沒列到的顯示「語音房還沒建好，系統會自動重試（代碼 XXX）」——以後看老闆截圖就知道卡在哪；永久錯誤（ORDER_NOT_ELIGIBLE／ORDER_EXPIRED／ORDER_GROUP_MISMATCH／INVALID_STAFF／ORDER_ALREADY_LINKED／ORDER_ACCESS_DENIED／INVALID_REQUEST）從待登記清單拿掉，
+  其他錯誤換下一筆繼續登記（只有主機忙線／沒有代碼才停下來等下一輪）。
+- ③ 後端新模組 order-voice-bot/staff-order-dm.cjs（ops/deploy-v511.sh，security-v428 分支；以主機現版 20261107-v498b 為底，只新增這個模組＋測試，service-server.cjs 在 orderNotify 那行後面接三行）：
+  監聽 clientOrders（近 2 小時建立的），委託（play）＋有 staffCid＋status confirmed＋還沒接＋沒退款＋非測試單 → 用 DISCORD_BOT_TOKEN 私訊 orderVoiceV1/staffBindings/<cid>.uid（要已驗證且與 staffAccounts 一致）。
+  金幣單＝下單當下；轉帳單＝店長確認收款（pending→confirmed）那一刻。內容：「縭，你有一筆新的委託，請到手札接單！」方案／金額／老闆／時段（預約附日期）／同組人數／手札網址，不 @ 任何人。
+  去重 orderVoiceV1/staffOrderDm/<訂單>（transaction，兩台同時跑、重啟都只發一次）；送之前重讀訂單，已被接走／取消就不發；沒綁定記 not_bound、關私訊記 blocked、不重試；Discord 429 會等。
+  健康檢查多等 STAFF_DM_READY。測試 staff-order-dm.test.cjs 8 項；deploy 腳本用 TT_ROOT 假主機跑過「準備檔案」段（service-server 只多 3 行、node --check 通過）。
+- **語音登記被拒的最可能原因（本機用後端 10 月版 booking-voice 實測）**：registerOrder 要讀 secureV1/characters/<闆卡>/name，這份資料網站不會寫、開店後新做的闆卡都沒有 → CHARACTER_REQUIRED（網站以前顯示「語音連線尚未完成」）→ 沒語音房、沒私訊、手札計時（/v1/voice/time）也被擋。網站寫出的單人／同組委託格式本身沒問題（補上名字就登記成功）。
+  deploy-v511.sh 一併修：booking-voice.cjs 兩處（先讀 peiwan/lobby/<闆卡>/name，角色名字讀不到就用它；找不到預期片段就 SKIP 不動）。實測 scratchpad/v511/t_register_patched.cjs、t_approve.cjs（登記→兩位冒險者各自接單→語音單 confirmed、冒名確認被擋）、後端自己的 booking-voice-test 6 項都過；部署時容器內也會跑 booking-voice-test。
+  主機上的程式可能跟 10 月版不同 → 先跑 diag 看「試跑：被拒 …」是不是 CHARACTER_REQUIRED。
+- 手札計時與報單（service-timer.mjs）不再被語音主機卡住，已在 v510 緊急修正上。
+- ops/diag-voice-v511.sh（只讀）：服務紀錄代碼次數、冒險者 Discord 綁定、36 小時內每組委託在語音系統的狀態（語音單／冒險者確認數／工作階段／私訊結果）；
+  沒登記到的用主機上的 booking-voice.registerOrder「試跑」（只讀資料庫代理：寫入丟錯、transaction 只算不寫）印出被拒代碼。已在本機模擬器實跑：資料庫完全沒變。
+- 測試 scratchpad/v511/t_v511.cjs 8 項（吊卡等待／開始後倒數／續單提示／語音佇列不互擋、代碼顯示）；partner.html 載入無錯。
+- 版本：verTag v512、ver.json 512、lobby-view 512、house.js VER 512（house.js／house.css／house-trip.js?v=512）、partner verTag v419／PT_VER 20。
+- ⚠ 主機那段（診斷＋部署）要在 DigitalOcean 主機 root 終端機跑；Claude 用內建瀏覽器開主機終端機被安全機制擋下，需要 D 本人執行或同意。
+
+## 2026/11/08 v510 小屋商城（壁紙／地板一格一格貼）、進出小屋轉場、進小屋就從大廳消失（Claude；需發布第十九、二十批規則＋店長頁上架）
+- **小屋商城**（D：「壁紙跟地板都要做可以直接貓貓幣購買的」「小屋右下角多一個商城，專門賣之後每個系列的壁紙跟地面」「可以選擇想要哪個牆壁和地板格子，不用全換」）：
+  右下多「商城」鈕（#ttHouseMall，佈置右邊、扭蛋左邊），開的是原本家具店那個視窗（houseShopM，家具店按鈕 v507 起藏著）換標題「小屋商城」（shopHead）。
+  商品：shopConfig house:wall_<系列>／house:floor_<系列>（type 小屋壁紙／小屋地板，price 50＝500 貓貓幣，cur cat），目前 forest、mermaid；
+  購買走家具同一條路（buy：clientOrders＋扣貓貓幣＋catTx＋houseInv/<key>/wall_forest/<訂單>），買一次就能貼任何一格。
+  佈置的背包多兩個分頁「貼壁紙」「鋪地板」：點系列拿在手上（「原本的」＝還原），房間裡點一格貼一格、按住拖曳連續貼（從房間外按住拖曳仍是移動視角），整間貼上／整間還原，Esc 放下。
+  資料 house/<key>/paint {f:{'i_j':系列},w:{'L3'／'R3':系列}}（L＝左牆 i=0 沿 j、R＝右牆 j=0 沿 i），存檔跟擺設同一次 update（只有這次動過 paint 才帶 paint 欄位，舊規則下照樣能存擺設）；
+  拜訪快照 houseView/<key>/paint 一起帶。
+  房間（house/room.html，直接改；同樣程式貼在 tt-room-kit/house-lobby/house-embed.js，room.html 的 drawShell 另外加了 drawPaint()／drawPaintHover() 兩行，重建要記得補）：
+  主題房外殼 2 倍圖 house/paint/<系列>_<14|18|22>.png（tt-room-kit/room/spr/room_<系列>_N_x2__iso_pixel7.png，用到才載），照格子剪下來疊在原本外殼上；同一系列的格子併成一條路徑一次剪（不會有縫）；
+  牆段的剪裁範圍包含牆頂與牆厚，牆角、牆尾多包一點。商城縮圖 house/paint/<系列>_wall.png／_floor.png（從 14 格外殼裁的牆角、菱形地板）。
+  店長頁「上架貓貓幣商品」多這 4 件（cat-shop-import.js?v=510）。之後新系列：把外殼圖放進 house/paint、PAINT_META（room.html）與 PAINTS（house.js）各加一筆、上架。
+- **規則第十九批**（harden-phase19.cjs、test-phase19 16 項）：house／houseView 的 paint 每一格只能是主人 houseInv 裡有的 floor_／wall_<系列>，格子編號 0～99、系列名小寫英文，其他欄位拒絕。
+- **進出小屋轉場**（D：「這應該也要轉場動畫才對」）：house-trip.js TTHouseTrip.curtain(文字,小字)——九條斜色條關上、中間深紫牌子「回小屋囉／回大廳囉」、換好畫面（房間畫好）才拉開（至少 0.9 秒，8 秒保險）。enter()／exit() 都有；隨機拜訪照舊用選角過場。
+- **進小屋就從大廳消失**（D：「他們進小屋應該就會移動到小屋了吧，怎麼會還在大廳」）：在小屋裡（body.tt-house-on）位置封包 m='house'，presence.js 收到 house 就不在大廳畫面上（仍算在線，好友照樣看得到、邀得到）；回大廳換回 hall。舊版分頁會把 house 當大廳（更新提醒會讓大家換新版）。
+- **冒險者上班＝手札開著＋勾上班**（11/08 晚實際發生：冒險者打卡後關掉手札、人不見了，大廳仍顯示待接單，老闆點了三人即時單沒人接；取消時只退成一筆——
+  退款要「那位冒險者的手札」或店長頁開著才會處理，另兩筆卡著，老闆重按又因 cancelReq 已存在被規則擋，跳「送出失敗」。D：「他們要開著頁面並勾選上班才上班，頁面一關掉就是離線」）：
+  partner.html（verTag v418、PT_VER 19）：上班時 armDuty＝伺服器 onDisconnect 寫下班＋每分鐘寫 seen；網路閃斷重連（.info/connected）自動補回上班；
+  開頁時資料庫說上班但 seen 舊／沒有＝上次沒下班留下的 → 收成下班，seen 很新＝另一台開著 → 一起接手回報。原本「斷線不算下班」的設計拿掉。
+  lobby.html：staffLive()——上班中但 150 秒沒 seen 一律當離線（舊版手札、關掉網頁、當機都算），STAFF_ALL 與站崗燈號都吃這份，每 30 秒重算。staffStatus 規則沒有欄位限制，不用改規則。
+- **取消申請修正**（D 11/09「一起做」，退款處理要放哪：「那就店長頁吧，我自己的頁面最清楚」→ 不讓其他冒險者的手札代退；那位冒險者自己的手札處理自己的單照舊）：
+  老闆端（lobby.html）：新增 myCancelReqs（cancelReq 依 myKey 查詢，要 Discord 登入；讀不到時看本機 tt_cancelreq）與 cancelStateOf(id,o)＝'pending'／'failed'／null；
+  已申請的單重新整理後顯示「取消處理中，確認後金幣會退回你的錢包」、不再給取消鈕（cancelReq 一筆單只能送一次，以前重按就「送出失敗」）；
+  沒退成（例如冒險者已接單）顯示「這筆沒辦法自動取消…需要幫忙可以回報問題」（不露 why 原文，裡面有「陪玩」）；送出被拒時先查這一筆，已經存在就當處理中。
+  舊版訂單卡與新版票卡（lobby-ui/live.js?v=510）都吃 cancelStateOf；原本掛在訂單物件上的 cancelPending 會被訂單監聽換掉、重整就沒了，已拿掉。
+  店長頁（admin.html）：coLoaded——訂單資料載完才處理取消申請（以前取消申請常先讀到，超過 10 分鐘的會被判「找不到這筆訂單」不退款）；
+  客訂分頁上方新增「↩ 取消申請」卡（cancelCardHtml）：處理中、沒有自動退款的（要你看一下，附「取消並退款」＝原本的 coCancelRefund）、最近 24 小時已退款（收合）。
+  規則不用改（發布中與新版規則都已重播：讀自己的允許、讀別人的拒絕、同一筆重送拒絕、被拒後查這一筆允許）。
+  測試 scratchpad/cancel/t_cancel.cjs 17 項（大廳＋店長頁，本機預覽＋模擬資料庫）、t_rules.cjs 14 項；payment-safety-v273、mobile-v353、hub-actions-v299、social-v347 通過。
+- **錢包用金幣兌換貓貓幣**（D：「兌換按鈕應該直接設在錢包裡，可以自己輸入要多少貓貓幣、需要多少金幣，一鍵兌換」）：lobby-ui/cat-coin.js EXCHANGE_ON=true（v493 關掉的原因已不在：現在貓貓幣能轉扭蛋、買壁紙地板、擴建、買日常時裝）。
+  錢包貓貓幣區：快速選 1,000／3,700／11,000、輸入「想要多少貓貓幣」（10 的倍數，無條件進位）→ 即時顯示需要幾金幣、加送、兌換後餘額；金幣不夠鎖住並給「去儲值」；
+  ttConfirm 確認後走原本的 exchange()；planFor 會挑「拿到至少想要的數量、金幣最少」的換法。介面實測電腦／手機各 39 項（助手，scratchpad/exch）。guide.html 錢包章節同步。cat-coin.js?v=510。
+  **匯率改成 1 金幣＝5 貓貓幣**（D 11/09：算出 NT$1,000 原本能抽 91 抽〔一抽約 NT$11〕太便宜，「五貓一金」）：加送照比例 350 金幣→150（共 1,900）、1,000 金幣→500（共 5,500）。
+  cat-coin.js 拆出 EX＝5 給兌換用（gain／planFor／parseWant／輸入框步進），商品標價 price() 照舊 ×RATE（10），規則的 catAmount＝amount×10 不變。
+  規則第二十批（harden-phase20.cjs、test-phase20 13 項）：catTx 兌換 amount＝coin×5＋(350?150:1000?500:0)，舊匯率一律拒絕；test-phase9 的兌換案例改成新匯率（剩那兩項 11/07 前的舊每日任務測試照舊失敗）。
+  換算（森林卡池模擬一萬次）：NT$1,000＝1,000 金幣＝5,500 貓貓幣≈45 抽（一抽約 NT$24）；3 件限定全拿平均約 NT$1,800、整套 37 件平均約 NT$3,300。免費玩家（每日任務＋掛機）不受影響。
+- 版本：verTag v510、ver.json 510、lobby-view 510、house.js VER 510（room.html?v=510）、house.css／house-trip.js／presence.js／cat-coin.js ?v=510。
+- 測試（scratchpad/paint/t_paint.cjs，本機預覽＋模擬資料庫）19 項：轉場出現／拉開、pos m=house、商城四件、買壁紙扣 500 進背包、買完直接拿著貼、貼 8 段牆、鋪 7 格地板、存檔與快照、Esc 放下、回大廳轉場、m 換回 hall、沒有頁面錯誤。
+
 ## 2026/11/08 v509 日常系列（貓貓幣免費時裝）重新取名
 D：「新的免費時裝跟眼睛你是不是用原檔案名，幫忙取一下部件名字」——原本是 11/05 樣稿暫定名，有幾件跟圖對不上（蓬鬆長髮其實是外翹中長髮、柔順短髮其實是亂翹短髮）。
 tavern-ui/daily-v494.js NAMES：髮型 俏皮外翹髮／甜心側馬尾／刺蝟短髮／隨性短髮；眼睛 紫晶大眼／森林綠眼／淡定眼／瞇瞇笑眼；

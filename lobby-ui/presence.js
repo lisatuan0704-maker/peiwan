@@ -22,7 +22,7 @@
   }
   function receive(a,p,now,legacyClamp){
     if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return false;
-    const map=p.m==='forest'?'forest':'hall';
+    const map=p.m==='forest'?'forest':p.m==='house'?'house':'hall';   // v510 在小屋裡＝不在大廳畫面上
     let point=[Math.max(0,Math.min(1,p.x)),Math.max(0,Math.min(1,p.y))];
     // 舊版可能回報門牆內的位置；新版已在本人端完成碰撞，不再由觀看者重算。
     if(p.v!==1&&legacyClamp)point=legacyClamp(point,map);

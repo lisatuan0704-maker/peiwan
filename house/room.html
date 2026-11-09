@@ -360,7 +360,9 @@ function drawShell(){
   g.save();g.setTransform(1,0,0,1,0,0);if(HTHOOK.bg)HTHOOK.bg();else{g.fillStyle=isNight()?'#1c1218':getComputedStyle(document.body).getPropertyValue('--panel');g.fillRect(0,0,cv.width,cv.height);}g.restore();
   drawOutside(performance.now());   // 房間外面的景（熱帶：沙灘海浪），畫在房間底下
   const rk=K(THEMES[theme].room+'_'+N),s=SPR[rk],o=iso(N/2,N/2);if(s&&IMG[rk])g.drawImage(IMG[rk],Math.round(o.x-s.ax),Math.round(o.y-s.ay),s.w,s.h);
+  drawPaint();   // v510 壁紙／地板
   if(mode==='edit'){if(HTHOOK.grid)HTHOOK.grid();else{g.strokeStyle='rgba(255,236,226,.28)';g.lineWidth=.5;for(let k=0;k<=N;k++){let a=iso(k,0),b=iso(k,N);line(a,b);a=iso(0,k);b=iso(N,k);line(a,b);}}}
+  drawPaintHover();
 }
 function diamond(x,y){g.beginPath();g.moveTo(x,y);g.lineTo(x+TW,y+TH);g.lineTo(x,y+2*TH);g.lineTo(x-TW,y+TH);g.closePath();}
 function line(a,b){g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();}
@@ -1998,6 +2000,65 @@ window.TTRoom={ready,
   setDoll,
   hint:t=>setHint(t),
   roomRect(){const b=roomOnly(),[S,,,,tx,ty]=viewT();return {left:(b.x0*S+tx)/DPR,top:(b.y0*S+ty)/DPR,width:(b.x1-b.x0)*S/DPR,height:(b.y1-b.y0)*S/DPR};}};
+// ===== v510 壁紙／地板（D 11/08：小屋商城賣各系列的壁紙跟地板，可以選要貼哪幾面牆、哪幾格地板，不用整間換）=====
+// 主題房的外殼（2 倍圖 house/paint/<系列>_<大小>.png，用到才載）照格子剪下來疊在原本的外殼上；同一個系列的格子併成一條路徑一次剪，格子之間不會有縫。
+// PAINT.f['i_j']＝這格地板用哪個系列；PAINT.w['L3'／'R3']＝第幾段牆（L：左牆 i=0、沿 j；R：右牆 j=0、沿 i）。
+var PAINT_META={forest:{14:{w:460,h:388,ax:230,ay:261.03},18:{w:588,h:452,ax:294,ay:293.03},22:{w:716,h:516,ax:358,ay:325.03}},
+ mermaid:{14:{w:460,h:388,ax:230,ay:261.03},18:{w:588,h:452,ax:294,ay:293.03},22:{w:716,h:516,ax:358,ay:325.03}}};
+var PAINT={f:{},w:{}},PTOOL=null,PHOVER=null,PDRAG=null,PIMG={};
+const paintOk=t=>Object.prototype.hasOwnProperty.call(PAINT_META,t);
+function cleanPaint(p){const o={f:{},w:{}};if(p&&typeof p==='object'){
+  for(const [c,t] of Object.entries(p.f||{}))if(/^\d{1,2}_\d{1,2}$/.test(c)&&paintOk(t))o.f[c]=t;
+  for(const [c,t] of Object.entries(p.w||{}))if(/^[LR]\d{1,2}$/.test(c)&&paintOk(t))o.w[c]=t;}return o;}
+function paintImg(t){const k=t+'_'+N;if(k in PIMG)return PIMG[k];PIMG[k]=null;if(!PAINT_META[t]||!PAINT_META[t][N])return null;
+  const im=new Image();im.onload=()=>{PIMG[k]=im;};im.src='paint/'+k+'.png?v=510';return null;}
+const P_WT=.32,P_CAP=10;   // 牆厚（格）、牆頂收邊（像素）
+function wallPoly(side,c){const H=WALL_H*Z2PX,P=(a,b)=>side==='L'?iso(a,b):iso(b,a),U=(p,h)=>({x:p.x,y:p.y-h});
+  const c0=c===0?-P_WT:c,c1=c===N-1?c+1+P_WT:c+1;   // 牆角和牆尾多包一點，連牆頂、牆的厚度一起換
+  return [P(0,c0),P(0,c1),U(P(0,c1),H),U(P(-P_WT,c1),H+P_CAP),U(P(-P_WT,c0),H+P_CAP),U(P(0,c0),H)];}
+function pPoly(pts){g.moveTo(pts[0].x,pts[0].y);for(let k=1;k<pts.length;k++)g.lineTo(pts[k].x,pts[k].y);g.closePath();}
+function pTile(i,j){const p=iso(i,j);pPoly([p,{x:p.x+TW,y:p.y+TH},{x:p.x,y:p.y+2*TH},{x:p.x-TW,y:p.y+TH}]);}
+function pCell(c){if(c.includes('_')){const [i,j]=c.split('_').map(Number);if(i<N&&j<N){pTile(i,j);return true;}return false;}
+  const n=+c.slice(1);if(n<N){pPoly(wallPoly(c[0],n));return true;}return false;}
+function paintDraw(t,cells,alpha){const im=paintImg(t),s=PAINT_META[t]&&PAINT_META[t][N];if(!im||!s)return;const o=iso(N/2,N/2);
+  g.save();g.beginPath();let any=false;for(const c of cells)any=pCell(c)||any;
+  if(any){g.clip();if(alpha)g.globalAlpha=alpha;g.drawImage(im,Math.round(o.x-s.ax),Math.round(o.y-s.ay),s.w,s.h);}g.restore();}
+function drawPaint(){if(!PAINT)return;const by={};
+  for(const [c,t] of Object.entries(PAINT.f))(by[t]=by[t]||[]).push(c);
+  for(const [c,t] of Object.entries(PAINT.w))(by[t]=by[t]||[]).push(c);
+  for(const t in by)paintDraw(t,by[t]);}
+function drawPaintHover(){if(!PTOOL||!PHOVER||mode!=='edit')return;
+  if(PTOOL.theme)paintDraw(PTOOL.theme,[PHOVER],.85);
+  g.save();g.beginPath();pCell(PHOVER);g.fillStyle=PTOOL.theme?'rgba(255,255,255,.12)':'rgba(255,255,255,.3)';g.fill();
+  g.setLineDash([3,2]);g.lineWidth=1.2;g.strokeStyle='#FF4F8B';g.stroke();g.restore();}
+function wallAt(p){const side=p.x<O.x?'L':'R',c=side==='L'?(O.x-p.x)/TW:(p.x-O.x)/TW;if(c<0||c>=N)return null;
+  const z=(O.y+c*TH-p.y)/Z2PX;return z>=-.05&&z<=WALL_H+.35?side+Math.floor(c):null;}
+function paintCellAt(p){if(!PTOOL)return null;if(PTOOL.kind==='w')return wallAt(p);
+  const [i,j]=toTile(p).map(Math.floor);return i>=0&&j>=0&&i<N&&j<N?i+'_'+j:null;}
+function applyPaint(c){if(!c||!PTOOL)return false;const box=PTOOL.kind==='w'?PAINT.w:PAINT.f,t=PTOOL.theme;
+  if(t?box[c]===t:!box[c])return false;if(t)box[c]=t;else delete box[c];return true;}
+function paintChanged(){try{HOST&&HOST.paintChanged&&HOST.paintChanged(JSON.parse(JSON.stringify(PAINT)));}catch(e){}}
+// 拿著壁紙／地板時：點一格貼一格、按住拖曳連續貼；從房間外面按住拖曳照樣移動視角；不會點到家具
+cv.addEventListener('pointerdown',e=>{if(!PTOOL||mode!=='edit'||e.button!==0)return;const c=paintCellAt(toCanvas(e));if(!c)return;
+  e.stopImmediatePropagation();PDRAG={ch:applyPaint(c)};try{cv.setPointerCapture(e.pointerId);}catch(_){}},true);
+cv.addEventListener('pointermove',e=>{if(!PTOOL||mode!=='edit')return;if(drag&&!PDRAG)return;   // 正在拖曳視角
+  const c=paintCellAt(toCanvas(e));PHOVER=c;cv.style.cursor=c?'crosshair':'';e.stopImmediatePropagation();
+  if(PDRAG&&c&&applyPaint(c))PDRAG.ch=true;},true);
+cv.addEventListener('pointerup',e=>{if(PDRAG){e.stopImmediatePropagation();const ch=PDRAG.ch;PDRAG=null;if(ch)paintChanged();return;}
+  if(PTOOL&&mode==='edit'&&!(drag&&drag.moved)){e.stopImmediatePropagation();drag=null;$('stage').style.cursor='';}},true);
+cv.addEventListener('pointerleave',()=>{PHOVER=null;});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&PTOOL){PTOOL=null;PHOVER=null;PDRAG=null;cv.style.cursor='';try{HOST&&HOST.paintDropped&&HOST.paintDropped();}catch(_){}}});   // 焦點在房間時按 Esc 也能放下
+PAINT=cleanPaint(HOST&&HOST.initialPaint&&HOST.initialPaint());
+for(const t of new Set([...Object.values(PAINT.f),...Object.values(PAINT.w)]))paintImg(t);
+Object.assign(window.TTRoom,{
+  paintTool(t){PTOOL=t&&(t.kind==='f'||t.kind==='w')?{kind:t.kind,theme:paintOk(t.theme)?t.theme:''}:null;PHOVER=null;PDRAG=null;cv.style.cursor='';
+    if(PTOOL&&held)cancel();if(PTOOL&&PTOOL.theme)paintImg(PTOOL.theme);return !!PTOOL;},
+  paint:()=>JSON.parse(JSON.stringify(PAINT)),
+  setPaint(p){PAINT=cleanPaint(p);for(const t of new Set([...Object.values(PAINT.f),...Object.values(PAINT.w)]))paintImg(t);},
+  paintFill(kind,theme){const box={};if(theme&&!paintOk(theme))return;   // 整間貼上／整間還原
+    if(kind==='f'){if(theme)for(let i=0;i<N;i++)for(let j=0;j<N;j++)box[i+'_'+j]=theme;PAINT.f=box;}
+    else{if(theme)for(const s of 'LR')for(let c=0;c<N;c++)box[s+c]=theme;PAINT.w=box;}
+    if(theme)paintImg(theme);paintChanged();}});
 
 })();
 </script>

@@ -150,6 +150,17 @@ function close(now,msg){const r=R;if(!r)return Promise.resolve();
    return sleep(1500).then(()=>close(true));}
  R=null;clearInterval(r.timer);removeEventListener('keydown',r.key,true);r.root.remove();return Promise.resolve();}
 
+
+// ---------- v510 進出小屋的轉場（D 11/08：進小屋也要有轉場動畫）----------
+// 九條斜色條關上 → 中間牌子「回小屋囉／回大廳囉」→ 後面換好畫面再拉開（至少停 0.9 秒）。curtain() 回 {covered（關好了）, open()}
+function curtain(text,sub){const old=document.getElementById('ttCurtain');if(old)old.remove();
+ const el=document.createElement('div');el.id='ttCurtain';el.setAttribute('role','status');
+ el.innerHTML='<div class="shut">'+'<i></i>'.repeat(9)+'</div><div class="lab"><small>'+esc(sub||'TINY TAVERN')+'</small><b>'+esc(text)+'</b><i class="dot"></i></div>';
+ document.body.append(el);const t0=performance.now();let done=false;
+ requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('on')));
+ return {covered:sleep(reduce()?40:560),
+  async open(){if(done)return;done=true;await sleep(Math.max(0,(reduce()?80:900)-(performance.now()-t0)));el.classList.add('off');await sleep(reduce()?40:640);el.remove();}};}
+
 // ---------- 樣式 ----------
 const css=document.createElement('style');css.id='ttTripCss';css.textContent=`
 #ttTrip{--ink:#1C2156;--pink:#FF4F8B;--lav:#C08CFF;--sky:#7FD3F7;--paper:#FDFDFF;position:fixed;inset:0;z-index:390;display:grid;place-items:center;overflow:hidden;
@@ -565,7 +576,28 @@ ${[1,2,3,4,5,6,7,8,9].map(n=>'#ttTrip.sh .shut i:nth-child('+n+'){--n:'+(n%2?n:1
 @keyframes tpTurn{to{transform:rotateY(-95deg);opacity:0}}
 #ttTrip.v-H .tp-go{bottom:-70px}
 
-@media (prefers-reduced-motion:reduce){#ttTrip *,#ttTrip *::before,#ttTrip *::after{animation:none!important;transition:none!important}}
+
+/* ===== v510 進出小屋轉場 ===== */
+#ttCurtain{position:fixed;inset:0;z-index:396;overflow:hidden;pointer-events:auto}
+#ttCurtain .shut{position:absolute;inset:-12% -14%;display:flex;transform:skewX(-14deg)}
+#ttCurtain .shut i{flex:1;--s:-1;transform:translateY(calc(var(--s)*118%));transition:transform .48s cubic-bezier(.7,0,.2,1);transition-delay:calc(var(--n)*40ms)}
+#ttCurtain .shut i:nth-child(even){--s:1}
+#ttCurtain .shut i:nth-child(4n+1){background:linear-gradient(180deg,#FFC2D8,#FF94BA)}
+#ttCurtain .shut i:nth-child(4n+2){background:radial-gradient(circle,rgba(255,255,255,.18) 1.4px,transparent 1.9px) 0 0/12px 12px,linear-gradient(180deg,#3D2E7C,#221A52)}
+#ttCurtain .shut i:nth-child(4n+3){background:linear-gradient(180deg,#D6F3FF,#9FDDF8)}
+#ttCurtain .shut i:nth-child(4n){background:repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 2px,transparent 2px 12px),linear-gradient(180deg,#EADCFF,#C9AEFF)}
+${[1,2,3,4,5,6,7,8,9].map(n=>'#ttCurtain .shut i:nth-child('+n+'){--n:'+(n%2?n:10-n)+'}').join('')}
+#ttCurtain.on .shut i{transform:none}
+#ttCurtain.off .shut i{transform:translateY(calc(var(--s)*-118%));transition-duration:.52s}
+#ttCurtain .lab{position:absolute;left:50%;top:50%;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 46px 18px;color:#fff;background:linear-gradient(90deg,#2E2462,#5B44A8);
+ clip-path:polygon(18px 0,100% 0,calc(100% - 18px) 100%,0 100%);transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .32s cubic-bezier(.2,.9,.3,1.3) .34s,opacity .2s .34s}
+#ttCurtain .lab small{font:400 13px/1 'TT Title','Rammetto One',sans-serif;letter-spacing:4px;color:#FFC6DD}
+#ttCurtain .lab b{font-size:30px;font-weight:900;letter-spacing:4px}
+#ttCurtain .lab .dot{position:absolute;right:26px;top:12px;width:10px;height:10px;background:#FFE7A3;transform:rotate(45deg);animation:tpSpinR 2.4s linear infinite}
+#ttCurtain.on .lab{transform:translate(-50%,-50%) scale(1);opacity:1}
+#ttCurtain.off .lab{transform:translate(-50%,-50%) scale(1.1);opacity:0;transition:transform .25s,opacity .2s}
+
+@media (prefers-reduced-motion:reduce){#ttCurtain *,#ttTrip *,#ttTrip *::before,#ttTrip *::after{animation:none!important;transition:none!important}}
 `;
 document.head.append(css);
 
@@ -592,5 +624,5 @@ async function demo(s,cands,withFail){const keep=STYLE;STYLE=s;   // 試看時�
  finally{STYLE=keep;}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',demoPanel);else demoPanel();
 
-window.TTHouseTrip={open,search,show,fail,done,close,STYLES,get style(){return STYLE;},set style(v){if(STYLES[v])STYLE=v;}};
+window.TTHouseTrip={open,search,show,fail,done,close,curtain,STYLES,get style(){return STYLE;},set style(v){if(STYLES[v])STYLE=v;}};
 })();

@@ -18,8 +18,8 @@ const data=()=>({secureV1:{members:{discord_100000000000000001:{active:true,key:
  catTx:{k1:{c0:{type:'exchange',coin:500,amount:5000,ref:'c0'}}}}});
 const inc=n=>({'.sv':{increment:n}});
 const TS={'.sv':'timestamp'};
-const bonus=c=>c===350?200:c===1000?1000:0;
-const ex=(k,tx,coin,o={})=>{const amt=o.amount??coin*10+bonus(coin);const r={
+const bonus=c=>c===350?150:c===1000?500:0;   // v510 起 1 金幣＝5 貓貓幣（第二十批）
+const ex=(k,tx,coin,o={})=>{const amt=o.amount??coin*5+bonus(coin);const r={
  ['walletTx/'+k+'/'+tx]:{type:o.wtype??'exchange',amount:o.wamount??-coin,ref:tx,ts:1},
  ['wallet/'+k+'/balance']:inc(o.wdelta??-coin),
  ['wallet/'+k+'/lastTx']:tx,
@@ -40,9 +40,9 @@ const dailyCoin=(tx,o={})=>({['dailyTask/k1']:{day:TODAY,tx,chat:'m1',at:TS,amou
 const drop=(o,...keys)=>{const c={...o};for(const k of keys)delete c[k];return c;};
 // [名稱, 身分, 方法, 路徑, 內容, 預期, 時間（now／after）, 前置]
 const cases=[
- ['兌換 100 金幣 → 1000 貓貓幣','me','PATCH','peiwan',ex('k1','e1',100),true],
- ['兌換 350 金幣 → 3500＋加送 200','me','PATCH','peiwan',ex('k1','e2',350),true],
- ['兌換 1000 金幣 → 10000＋加送 1000','me','PATCH','peiwan',ex('k1','e3',1000),true],
+ ['兌換 100 金幣 → 500 貓貓幣','me','PATCH','peiwan',ex('k1','e1',100),true],
+ ['兌換 350 金幣 → 1750＋加送 150','me','PATCH','peiwan',ex('k1','e2',350),true],
+ ['兌換 1000 金幣 → 5000＋加送 500','me','PATCH','peiwan',ex('k1','e3',1000),true],
  ['沒有貓貓幣錢包也能兌換（小華）','other','PATCH','peiwan',ex('k2','e4',100),true],
  ['兌換 100 卻寫 1200 貓貓幣','me','PATCH','peiwan',ex('k1','e5',100,{amount:1200}),false],
  ['兌換 349 自稱有加送','me','PATCH','peiwan',ex('k1','e6',349,{amount:3690}),false],

@@ -4,11 +4,12 @@
    小屋家具：shopConfig/house:<家具>{name,price,cur:'cat',type:'小屋家具',active:true}（不列在清單裡，價格表在 house/catalog.json）。
    price 一律是金幣等值價，客人看到、扣款都是 ×10 貓貓幣（v493 規則：只有 cur:'cat' 的商品能用貓貓幣買）。
    v507：小屋擴建 house:size18（3,000 貓貓幣）、house:size22（6,000 貓貓幣），type '小屋擴建'；扭蛋家具（catalog gacha:true、price 0）不上架
-   （上架成 0 元的話，客人可以自己寫一張 0 元訂單把扭蛋家具拿走）。 */
+   （上架成 0 元的話，客人可以自己寫一張 0 元訂單把扭蛋家具拿走）。
+   v510：小屋壁紙／地板 house:wall_<系列>／house:floor_<系列>（type 小屋壁紙／小屋地板，各 500 貓貓幣）。 */
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const box=document.createElement('section');box.className='card';
-box.innerHTML='<h2>貓貓幣商品上架</h2><p>日常系列 17 件（髮型 300／眼睛 200／上衣 150／下衣 150／套裝 300 貓貓幣）、小屋第一批家具 78 件（小件 100～200、中件 150～300、大件 300～500 貓貓幣；入住禮 4 件免費，不用上架），以及小屋擴建兩級（18×18 3,000、22×22 6,000 貓貓幣）。只新增還沒有的商品，已有的不覆寫；上架前會先下載一份商城備份。</p>'
+box.innerHTML='<h2>貓貓幣商品上架</h2><p>日常系列 17 件（髮型 300／眼睛 200／上衣 150／下衣 150／套裝 300 貓貓幣）、小屋第一批家具 78 件（小件 100～200、中件 150～300、大件 300～500 貓貓幣；入住禮 4 件免費，不用上架），小屋擴建兩級（18×18 3,000、22×22 6,000 貓貓幣），以及小屋商城的壁紙／地板（森林精靈小屋、海底人魚屋，各 500 貓貓幣）。只新增還沒有的商品，已有的不覆寫；上架前會先下載一份商城備份。</p>'
  +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="catShopPublish">上架貓貓幣商品</button><span id="catShopStatus" style="font-size:13px"></span></div>';
 document.getElementById('pgMain').append(box);
 async function wanted(){
@@ -16,6 +17,8 @@ async function wanted(){
  for(const c of cat){if(c.starter||c.gacha)continue;if(!Number.isSafeInteger(c.price)||c.price%10)throw Error('家具價格有誤：'+c.name);out['house:'+c.k]={name:c.name,price:c.price/10,cur:'cat',type:'小屋家具',active:true};}
  out['house:size18']={name:'小屋擴建・18×18',price:300,cur:'cat',type:'小屋擴建',active:true};   // v507
  out['house:size22']={name:'小屋擴建・22×22',price:600,cur:'cat',type:'小屋擴建',active:true};
+ for(const [t,n] of [['forest','森林精靈小屋'],['mermaid','海底人魚屋']]){   // v510 小屋商城：每個系列的壁紙、地板各 500 貓貓幣（買一次就能貼任何一格）
+  out['house:wall_'+t]={name:n+'・壁紙',price:50,cur:'cat',type:'小屋壁紙',active:true};out['house:floor_'+t]={name:n+'・地板',price:50,cur:'cat',type:'小屋地板',active:true};}
  const P=window.TTDailyPrices||{};
  for(const [id,d] of Object.entries(window.TTSeasonDrafts||{})){if(!d.daily)continue;const p=P[d.dailyKind];if(!Number.isSafeInteger(p)||p<=0)throw Error('日常系列價格有誤：'+d.name);out[id]={name:d.name,price:p,cur:'cat',custom:true,active:true,type:'時裝'};}
  return out;}

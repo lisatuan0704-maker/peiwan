@@ -572,8 +572,8 @@ function enter(){
   db.ref(ROOT+"/reports").on("value",s=>{reports=s.val()||{};sweepResolved();renderReports();});
   db.ref(ROOT+"/mutes").on("value",s=>{mutes=s.val()||{};renderReports();});
   db.ref(ROOT+"/orderIssues").on("value",s=>{orderIssues=s.val()||{};sweepResolved();renderReports();});
-  db.ref(ROOT+"/clientOrders").on("value",s=>{clientOrders=s.val()||{};scheduleVipSync();sweepExpiredOrders();processCancelReqAdmin();renderClientOrders();renderCustomers();notifyPending();sweepTableSeats();});
-  db.ref(ROOT+"/cancelReq").on("value",s=>{cancelReq=s.val()||{};processCancelReqAdmin();});
+  db.ref(ROOT+"/clientOrders").on("value",s=>{clientOrders=s.val()||{};coLoaded=true;scheduleVipSync();sweepExpiredOrders();processCancelReqAdmin();renderClientOrders();renderCustomers();notifyPending();sweepTableSeats();});
+  db.ref(ROOT+"/cancelReq").on("value",s=>{cancelReq=s.val()||{};processCancelReqAdmin();renderClientOrders();});
   db.ref(ROOT+"/renewReq").on("value",s=>{renewReq=s.val()||{};processRenewReqAdmin();});
   setInterval(()=>{ sweepExpiredOrders(); processCancelReqAdmin(); processRenewReqAdmin(); }, 60000);
   db.ref(ROOT+"/config/pay").on("value",s=>{payCfg=s.val()||{};renderClientOrders();});
@@ -1380,7 +1380,10 @@ function sweepExpiredOrders(){
 /* ===== 客人的「取消申請 / 續單申請」後援處理 =====
    正常情況由陪玩端即時處理;陪玩沒開頁面時,這裡補上,錢不會卡住。 */
 let cancelReq={}, renewReq={};
+/* v510：取消申請常比整包訂單先讀到，那時 clientOrders 還是空的 → 舊程式把超過 10 分鐘的申請判成「找不到這筆訂單」、不退款。訂單資料載完才開始處理。 */
+let coLoaded=false;
 function processCancelReqAdmin(){
+  if(!coLoaded) return;
   Object.entries(cancelReq||{}).forEach(([coid,req])=>{
     if(!req||req.done) return;
     const co=clientOrders[coid];
@@ -1523,6 +1526,34 @@ function notifyPending(){
   }catch(e){}
 }
 /* 待核帳急件面板:手機上一眼看完、一鍵確認(儲值優先,因為卡住客人拿不到金幣) */
+/* v510 取消申請一覽（D 11/09：「店長頁吧，我自己的頁面最清楚」）：老闆按的取消在這裡看得到——
+   處理中（這頁開著會自動退款）、沒有自動退成的（要你看一下，可直接取消並退款）、最近 24 小時退好的。 */
+function cancelCardHtml(){
+  const now=Date.now(), rows=Object.entries(cancelReq||{}).map(([id,r])=>[id,r||{},clientOrders[id]]);
+  const wait=rows.filter(([,r])=>!r.done).sort((a,b)=>(a[1].at||0)-(b[1].at||0));
+  const fail=rows.filter(([,r,o])=>r.done&&!r.ok&&now-r.done<7*86400000&&o&&o.status==='confirmed'&&!o.refunded).sort((a,b)=>(a[1].at||0)-(b[1].at||0));
+  const okd=rows.filter(([,r])=>r.done&&r.ok&&now-r.done<86400000).sort((a,b)=>(b[1].done||0)-(a[1].done||0));
+  if(!wait.length&&!fail.length&&!okd.length) return '';
+  const ago=t=>{ const m=Math.max(0,Math.round((now-(t||0))/60000)); return m<60?m+' 分鐘前':m<1440?Math.round(m/60)+' 小時前':Math.round(m/1440)+' 天前'; };
+  const who=(r,o)=>esc((o&&o.name)||(lobbyChars[r.myKey]&&lobbyChars[r.myKey].name)||'?');
+  const row=([id,r,o],tail)=>'<div style="border:2px solid #E8D9F2;border-radius:11px;padding:9px 12px;margin-bottom:8px;background:#fff">'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline"><b>'+esc(r.planName||(o&&o.planName)||'訂單')+'</b>'
+    +'<b style="color:#D96A8B">'+(Number(r.amount)||Number(o&&o.amount)||0)+' 金幣</b>'
+    +'<span style="font-size:12.5px;color:var(--ink-soft)">'+who(r,o)+(r.staffCid?'・指定 '+esc(TTStaffNames.display((o&&o.staffName)||'',r.staffCid)):'')+'</span>'
+    +'<span style="margin-left:auto;font-size:12px;color:var(--ink-soft)">'+ago(r.at)+'申請</span></div>'
+    +(r.reason?'<div style="font-size:12.5px;color:#7A6A96;margin-top:3px">取消原因：'+esc(String(r.reason).slice(0,120))+'</div>':'')
+    +tail+'</div>';
+  return '<div class="card" style="border:3px solid '+(fail.length?'#E86A6A':'#B9A3E3')+'">'
+    +'<h2 style="color:#8E68C8">↩ 取消申請'+(wait.length?'（處理中 '+wait.length+'）':'')+(fail.length?'<span style="color:#C0392B">（要你看一下 '+fail.length+'）</span>':'')+'</h2>'
+    +'<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:9px">老闆按「取消並退回金幣」會送到這裡；這頁開著時，還沒被接的金幣單會自動退款。</div>'
+    +fail.map(x=>row(x,'<div style="font-size:12.5px;color:#C0392B;margin-top:4px">沒有自動退款：'+esc(x[1].why||'')+'</div>'
+      +'<div style="margin-top:7px"><button onclick="coCancelRefund('+ja(x[0])+')" style="border:none;background:linear-gradient(180deg,#F19FBE,#D96A8B);color:#fff;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer">取消並退款</button>'
+      +'<span style="font-size:12px;color:var(--ink-soft);margin-left:8px">冒險者真的已經在陪了就不用退，跟老闆說一聲即可</span></div>')).join('')
+    +wait.map(x=>row(x,'<div style="font-size:12px;color:#8E68C8;margin-top:4px">'+(coLoaded?'處理中…':'訂單資料載入中，載完會自動處理')+'</div>')).join('')
+    +(okd.length?'<details style="margin-top:4px"><summary style="cursor:pointer;font-size:12.5px;color:#2F8A5C;font-weight:700">✓ 最近 24 小時已退款 '+okd.length+' 筆</summary><div style="margin-top:8px">'
+      +okd.map(x=>row(x,'<div style="font-size:12px;color:#2F8A5C;margin-top:4px">✓ 已退回 '+(Number(x[1].refunded)||Number(x[1].amount)||0)+' 金幣・'+ago(x[1].done)+'</div>')).join('')+'</div></details>':'')
+    +'</div>';
+}
 function urgentCardHtml(list){
   const wait=list.filter(([,o])=>o.status==='pending'&&o.payChannel!=='oen')   /* v499 線上付款由系統自動入帳，不列待核帳 */
     .sort((a,b)=>{ const at=a[1].type==='topup'?0:1, bt=b[1].type==='topup'?0:1;
@@ -1598,7 +1629,7 @@ function renderClientOrders(){
   const pending=all.filter(([,o])=>o.status==='pending'&&o.payChannel!=='oen').length;
   const badge=document.getElementById("coBadge");
   if(badge){ badge.style.display=pending?"inline":"none"; badge.textContent=pending; }
-  const topCards=urgentCardHtml(all.slice().sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)))+payCardHtml()+topupCardHtml();
+  const topCards=urgentCardHtml(all.slice().sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)))+cancelCardHtml()+payCardHtml()+topupCardHtml();
   if(!all.length){ el.innerHTML=topCards+'<div class="card"><p style="color:var(--ink-soft)">還沒有客人訂單 ☕</p></div>'; return; }
   /* 分類標籤(帶筆數) */
   const cnt={}; CO_TABS.forEach(([k])=>cnt[k]=0);
@@ -2865,7 +2896,7 @@ body.dark #qnavPop button{color:#D8CBEE}
 })();
 </script>
 <script src="season-shop-import.js?v=482"></script>
-<script src="cat-shop-import.js?v=507"></script>
+<script src="cat-shop-import.js?v=510"></script>
 <script src="lobby-ui/account-review.js?v=437"></script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support-admin.mjs?v=427"></script></body>

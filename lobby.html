@@ -1458,10 +1458,10 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/walk-parts.js?v=270"></script>
 <script src="js/tt-seats.js?v=2"></script>
 <script src="lobby-ui/seats.js?v=373"></script>
-<script src="lobby-ui/presence.js?v=483"></script>
+<script src="lobby-ui/presence.js?v=510"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/payment-safety.js?v=492"></script>
-<script src="lobby-ui/cat-coin.js?v=502"></script>
+<script src="lobby-ui/cat-coin.js?v=510"></script>
 <script src="lobby-ui/cancel-reason.js?v=432"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=501">
@@ -1699,7 +1699,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v511</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v512</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3336,14 +3336,15 @@ function tick(now){
       }
     }
     // Approved static NPC feet may overlap furniture; do not move them to a walking cell.
-    if(!(a.staff&&a.state==='post'&&STAFF_LAYOUT[a.cid])&&(a.isMe||!posMap[a.key]||a.staff||a.slime||a.cloak)){ const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : MAPS[a.mapLoc||'hall'].floor);
+    if(!(a.staff&&a.state==='post'&&STAFF_LAYOUT[a.cid])&&(a.isMe||!posMap[a.key]||a.staff||a.slime||a.cloak)){ const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : (MAPS[a.mapLoc]||MAPS.hall).floor);
       let c=clampIn(fl,a.x,a.y);
       if(fl===MAPS.hall.floor)c=TTScene.nearest([c[0]*1600,c[1]*900]).map((v,i)=>v/(i?900:1600));
       a.x=c[0]; a.y=c[1]; }
     /* 位置與停止狀態一起回報；只有成功送出才記住，失敗會重試。 */
-    if(a.isMe && window.TTRoomSession?.active) TTRoomSession.offer(TTPresence.packet(a,curMap,Date.now()));
+    const pmap=document.body.classList.contains('tt-house-on')?'house':curMap;   // v510 D：進小屋就從大廳消失（還算在線，好友照樣看得到、邀得到），回大廳再出現
+    if(a.isMe && window.TTRoomSession?.active) TTRoomSession.offer(TTPresence.packet(a,pmap,Date.now()));
     if(!TTWorldScope.isolated && a.isMe && a.key===myKey && typeof db!=='undefined' && db && myKey){
-      const packet=TTPresence.packet(a,curMap,Date.now());
+      const packet=TTPresence.packet(a,pmap,Date.now());
       const changed=TTPresence.changed(packet,a._sentPosition);
       const stopped=a._sentPosition?.w===1&&packet.w===0;
       if(!a._positionSending&&now>=(a._positionRetryAt||0)&&
@@ -3666,7 +3667,7 @@ function setStaffServe(a, busy){
   else { a.led.className='led g'; a.led.textContent='待接單'; }
   /* 清掉可能殘留的森林行程與斗篷客,拉回崗位 */
   if(a.cloakA){ const c=a.cloakA; c.state='leave'; c.follow=null;
-    const dd=MAPS[c.mapLoc||'hall'].door; const cc=clampIn(MAPS[c.mapLoc||'hall'].floor, dd.x, dd.y+0.05);
+    const dd=(MAPS[c.mapLoc]||MAPS.hall).door; const cc=clampIn((MAPS[c.mapLoc]||MAPS.hall).floor, dd.x, dd.y+0.05);
     c.tx=cc[0]; c.ty=cc[1]; a.cloakA=null; }
   a.mapLoc='hall'; a.state='post'; if(a.post){ a.tx=a.post[0]; a.ty=a.post[1]; a.x=a.post[0]; a.y=a.post[1]; }
   return;
@@ -3720,7 +3721,15 @@ function syncResidentStaff(all){
     idx++;
   });
 }
-if(db) db.ref(ROOT+'/staffStatus').on('value',snap=>syncResidentStaff(snap.val()));
+/* v510 D：「要開著頁面並勾選上班才上班，頁面一關掉就是離線」。冒險者手札上班中每分鐘寫 seen；這裡把「上班中但 150 秒沒回報」的一律當離線
+   （關掉網頁、瀏覽器當掉、舊版手札都一樣），名簿、通訊錄、點單、站崗燈號都吃這份（STAFF_ALL 也是）。 */
+let STAFF_RAW={},staffSrvOff=0;
+if(db) db.ref('.info/serverTimeOffset').on('value',s=>{staffSrvOff=+s.val()||0;});
+function staffLive(all){const now=Date.now()+staffSrvOff,out={};
+  for(const [cid,st] of Object.entries(all||{})){if(!st||!st.on){out[cid]=st;continue;}out[cid]=+st.seen>0&&now-st.seen<150000?st:{...st,on:false,busy:false,stale:true};}return out;}
+window.ttStaffLive=all=>staffLive(all||STAFF_RAW);
+if(db) db.ref(ROOT+'/staffStatus').on('value',snap=>{STAFF_RAW=snap.val()||{};syncResidentStaff(staffLive(STAFF_RAW));});
+setInterval(()=>{try{syncResidentStaff(staffLive(STAFF_RAW));}catch(e){}try{STAFF_ALL=staffLive(STAFF_RAW);}catch(e){}},30000);   // 沒有新資料也要定時重算（冒險者斷線沒送下班時）
 
 /* ====== 聊天泡泡 + 紀錄 ====== */
 /* v238:小人圖最上面一排有顏色的位置(0~1),泡泡才能貼著頭頂 */
@@ -4842,6 +4851,7 @@ function notifyOrder(o){
 }
 const ORD_ST={pending:['待付款確認',33,'#C97B2B'],confirmed:['已確認',66,'#57A87C'],done:['已完成',100,'#8E68C8']};
 let myOrdersCache={};
+let myCancelReqs=null;   // v510 我送過的取消申請（cancelReq 依 myKey 讀）；null＝還沒讀到（沒登入／讀取被拒），先看本機紀錄
 let _ordTab='active', _ordOpen=new Set();
 const ORD_PER=7;
 let _ordPage=0;
@@ -4939,8 +4949,10 @@ function renderMyOrders(){
       +resv
       +'<div style="font-size:11.5px;color:#A5798D;margin-top:2px">'+new Date(o.createdAt).toLocaleString('zh-TW')+'</div>'
       +'<div style="display:flex;margin:12px 4px 2px">'+dots+'</div>'
-      +(o.cancelPending
-         ? '<div style="margin-top:9px;background:#F4EEFB;border-radius:9px;padding:9px 11px;font-size:11.5px;color:#7A5FB0;text-align:center">取消處理中…金幣會退回你的錢包 ✦</div>'
+      +(cancelStateOf(id,o)==='failed'
+         ? '<div style="margin-top:9px;background:#FBEFF3;border-radius:9px;padding:9px 11px;font-size:11.5px;color:#B5517A;text-align:center">這筆沒辦法自動取消（可能已經有冒險者接單了），需要幫忙可以回報問題，店長會處理。</div>'
+         : cancelStateOf(id,o)
+         ? '<div style="margin-top:9px;background:#F4EEFB;border-radius:9px;padding:9px 11px;font-size:11.5px;color:#7A5FB0;text-align:center">取消處理中…確認後金幣會退回你的錢包 ✦</div>'
          : canSelfCancel(o)
          ? '<div style="margin-top:9px;background:#F7F3FC;border-radius:9px;padding:8px 11px;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'
            +'<span style="font-size:11.5px;color:#8E7AB0;flex:1;min-width:150px">還沒有陪陪接單,現在取消可以馬上拿回金幣。</span>'
@@ -4967,25 +4979,49 @@ function canSelfCancel(o){
   return o.status==='confirmed' && !o.accepted && !o.refunded && o.paidBy==='wallet' && (+o.amount||0)>0 && !!myKey;
 }
 function cancelReqSent(){ try{ return JSON.parse(localStorage.getItem('tt_cancelreq')||'{}'); }catch(e){ return {}; } }
+/* v510 這筆單的取消申請狀態：'pending' 處理中／'failed' 沒有成立（例如冒險者已接單）／null 沒申請過。
+   cancelReq 一筆訂單只能送一次（資料庫規則），所以已經送過的單不再顯示取消鈕（以前重新整理後還有鈕，再按就「送出失敗」）。
+   退款由那位冒險者的手札或店長頁處理（D 11/09：交給店長頁）。 */
+function cancelStateOf(id,o){
+  if(!o||o.status!=='confirmed'||o.refunded) return null;
+  const r=myCancelReqs?myCancelReqs[id]:null;
+  if(r) return (r.done&&!r.ok)?'failed':'pending';
+  if(!myCancelReqs&&cancelReqSent()[id]) return 'pending';
+  return null;
+}
+function markCancelSent(id,req){
+  const m=cancelReqSent(); m[id]=Date.now(); try{ localStorage.setItem('tt_cancelreq',JSON.stringify(m)); }catch(e){}
+  if(myCancelReqs&&!myCancelReqs[id]) myCancelReqs[id]=req||{at:Date.now()};
+}
 let _cancelling=false;
 function selfCancel(id){
-  const o=myOrdersCache[id]; if(!canSelfCancel(o)||_cancelling) return;
+  const o=myOrdersCache[id]; if(!o||_cancelling) return;
+  const cs=cancelStateOf(id,o);
+  if(cs){ toast(cs==='pending'?'這筆已經申請取消了，正在處理中':'這筆沒辦法自動取消，需要幫忙可以回報問題'); renderMyOrders(); return; }
+  if(!canSelfCancel(o)) return;
   /* v432: 取消要填原因（店長與冒險者看得到），避免一直預約又取消 */
   _cancelling=true;
   (window.TTCancelReason?TTCancelReason.ask({title:o.planName||'訂單',amount:+o.amount||0}):Promise.resolve(confirm('要取消這筆「'+(o.planName||'訂單')+'」嗎?')?'（未填寫）':null)).then(reason=>{
   if(!reason){ _cancelling=false; return; }
   if(!canSelfCancel(myOrdersCache[id])){ _cancelling=false; toast('這筆訂單狀態已變更，無法自行取消'); return; }
-  db.ref(ROOT+'/cancelReq/'+id).set({ myKey, staffCid:o.staffCid||null, planName:o.planName||'', amount:+o.amount||0, reason, at:Date.now() })
+  const req={ myKey, staffCid:o.staffCid||null, planName:o.planName||'', amount:+o.amount||0, reason, at:Date.now() };
+  db.ref(ROOT+'/cancelReq/'+id).set(req)
     .then(()=>{
       _cancelling=false;
-      const m=cancelReqSent(); m[id]=Date.now(); try{ localStorage.setItem('tt_cancelreq',JSON.stringify(m)); }catch(e){}
       /* 先在畫面上標成處理中,不然卡片完全沒變化,客人會以為沒按到而重複按 */
-      if(myOrdersCache[id]) myOrdersCache[id].cancelPending=true;
-      if(window.lobbyNotify) lobbyNotify({ok:true,icon:'receipt',title:'取消申請已送出',sub:'金幣會退回你的錢包,通常幾秒內完成 ✦',onclick:()=>{ try{ shopOpen(4); }catch(e3){} }});
+      markCancelSent(id,req);
+      if(window.lobbyNotify) lobbyNotify({ok:true,icon:'receipt',title:'取消申請已送出',sub:'確認後金幣會退回你的錢包 ✦',onclick:()=>{ try{ shopOpen(4); }catch(e3){} }});
       else toast('取消申請已送出');
       renderMyOrders();
     })
-    .catch(()=>{ _cancelling=false; toast('送出失敗,請稍後再試'); });
+    .catch(()=>{
+      /* v510 被拒最常見的原因＝這筆已經申請過（另一個分頁、或重新整理前按過）→ 查一下，有就當處理中 */
+      db.ref(ROOT+'/cancelReq/'+id).once('value').then(s=>{
+        _cancelling=false;
+        if(s.exists()){ markCancelSent(id,s.val()); if(myCancelReqs) myCancelReqs[id]=s.val(); toast('這筆已經申請過取消了，正在處理中'); renderMyOrders(); }
+        else toast('送出失敗,請稍後再試');
+      }).catch(()=>{ _cancelling=false; toast('送出失敗,請稍後再試'); });
+    });
   }).catch(()=>{ _cancelling=false; });
 }
 
@@ -5035,9 +5071,8 @@ function unitPerHour(o){
   return Math.round(orig/(mins/60));
 }
 /* 現在正在進行、可以續單的那一筆
-   v510（11/09 緊急修正）D：「冒險者才剛接單、人都沒到齊、還沒開始計時就放倒數」→ 冒險者在手札按「開始」（servingSince）才算開始；
-   接單了但還沒開始的回傳 waiting:true（吊卡只說已接單、不倒數、不能續單）。有正在玩的就優先給正在玩的那筆。
-   （手札接單不會寫 acceptedAt，所以以前其實是從「老闆下單」那一刻開始倒數） */
+   v511 D：「冒險者才剛接單、人都沒到齊、還沒開始計時就放倒數」→ 冒險者在手札按「開始」（servingSince）才算開始；
+   接單了但還沒開始的回傳 waiting:true（吊卡只說已接單、不倒數、不能續單）。有正在玩的就優先給正在玩的那筆。 */
 function activeOrder(){
   const ids=Object.keys(myOrdersCache||{}), now=Date.now();
   let wait=null;
@@ -5672,6 +5707,22 @@ function mergeCloudOrders(){
 }
 if(db) mergeCloudOrders();
 if(typeof claimMe==='function'){ const _cm2=claimMe; claimMe=function(k){ _cm2(k); setTimeout(mergeCloudOrders,500); }; }
+/* v510 讀「我送過的取消申請」（要 Discord 登入；登入身分或闆卡換了就重新接） */
+(function(){ let sub=null;
+  function refresh(){ try{ if(shopM4.style.display==='flex') renderMyOrders(); }catch(e){} }
+  function watch(){ if(typeof db==='undefined'||!db) return;
+    const u=firebase.auth&&firebase.auth().currentUser, k=(u&&typeof myKey!=='undefined')?myKey:null, sid=k?u.uid+'|'+k:null;
+    if(sub&&sub.sid===sid) return;
+    if(sub){ try{ sub.ref.off('value',sub.h); }catch(e){} }
+    sub=null; myCancelReqs=null;
+    if(!sid){ refresh(); return; }
+    const ref=db.ref(ROOT+'/cancelReq').orderByChild('myKey').equalTo(k);
+    const h=s=>{ if(!sub||sub.sid!==sid) return; myCancelReqs=s.val()||{}; refresh(); };
+    sub={sid,ref,h}; ref.on('value',h,()=>{});   // 讀取被拒：維持 null，用本機紀錄
+  }
+  try{ firebase.auth().onAuthStateChanged(()=>setTimeout(watch,0)); }catch(e){}
+  try{ watch(); setInterval(watch,5000); }catch(e){}
+})();
 if(DEMO_MODE){
   const demos=['demo1','demo2','demo3'];
   setTimeout(()=>{
@@ -7049,7 +7100,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
 /* ================= v40:點單選陪玩(票卡流程,修復 shopStep 未定義) ================= */
 let STAFF_ALL={}, STAFF_CARDS={}, selStaff=null, pkMode='now';
 if(typeof db!=='undefined' && db){
-  try{ db.ref(ROOT+'/staffStatus').on('value',s=>{ STAFF_ALL=s.val()||{}; }); }catch(e){}
+  try{ db.ref(ROOT+'/staffStatus').on('value',s=>{ STAFF_ALL=window.ttStaffLive?ttStaffLive(s.val()||{}):(s.val()||{}); }); }catch(e){}
   try{ db.ref(ROOT+'/staffCards').on('value',s=>{ STAFF_CARDS=s.val()||{}; }); }catch(e){}
 }
 function shopStep(kind){
@@ -8532,18 +8583,18 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=508"></script>
+<script src="lobby-ui/live.js?v=510"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=508"><script src="lobby-ui/house.js?v=511"></script><script src="lobby-ui/house-trip.js?v=508"></script><script src="lobby-ui/gacha.js?v=508"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=512"><script src="lobby-ui/house.js?v=512"></script><script src="lobby-ui/house-trip.js?v=512"></script><script src="lobby-ui/gacha.js?v=508"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=499"></script>
 <script src="lobby-ui/order-flow.js?v=508"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
-import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=510';
+import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=511';
 const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)});
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});

@@ -439,7 +439,7 @@ button:not(:disabled):active{scale:.94}
     <h1>🕯️ Tiny Tavern・角色手札</h1>
     <p>TINY TAVERN · PARTNER</p>
   </header>
-  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v418</div>
+  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v419</div>
 
   <div id="pgLogin">
     <div class="card lgCard">
@@ -634,19 +634,26 @@ function syncDutyUI(){
   const w=document.getElementById('offDutyWarn');
   if(w) w.style.display=(punchChk&&punchChk.checked)?'none':'block';
 }
+/* v510 D：「他們要開著頁面並勾選上班才上班，頁面一關掉就是離線」（冒險者失蹤時大廳還顯示待接單，老闆點了單沒人接）。
+   上班＝這個頁面記得 dutyOn；伺服器 onDisconnect 在網頁關掉／斷線時自動寫下班；網頁還開著、只是網路閃斷，重連後自動補回上班；
+   上班中每分鐘寫一次 seen（大廳超過 150 秒沒看到 seen 就當離線，連舊版手札、瀏覽器當掉都算）。 */
+let dutyOn=false,dutyHb=0;
+const TS=()=>firebase.database.ServerValue.TIMESTAMP;
+function armDuty(){if(!staffRef)return;try{staffRef.onDisconnect().update({on:false,busy:false,updatedAt:TS()}).catch(()=>{});}catch(e){}
+  clearInterval(dutyHb);dutyHb=setInterval(()=>{if(dutyOn&&staffRef)staffRef.update({seen:TS()}).catch(()=>{});},60000);}
+function disarmDuty(){clearInterval(dutyHb);dutyHb=0;if(staffRef)try{staffRef.onDisconnect().cancel().catch(()=>{});}catch(e){}}
 function punch(on){
   if(!staffRef||!me) return;
   const prev=!on;
   const rollback=()=>{ if(punchChk) punchChk.checked=prev; punchTxt.textContent=prev?'上班中 🏮':'下班中'; syncDutyUI();
     ptNotify('打卡沒有成功','網路好像不太穩,請再按一次'); };
   if(on){
-    staffRef.update({on:true, name:me.name||'店員', busy:false, updatedAt:firebase.database.ServerValue.TIMESTAMP})
-      .catch(rollback);
-    // 值班由本人明確切換；短暫斷線不能代替下班。
-    try{ staffRef.onDisconnect().cancel().catch(()=>{}); }catch(e){}
+    dutyOn=true;armDuty();
+    staffRef.update({on:true, name:me.name||'店員', busy:false, seen:TS(), updatedAt:TS()})
+      .catch(()=>{dutyOn=false;disarmDuty();rollback();});
     punchTxt.textContent='上班中 🏮';
   }else{
-    try{ staffRef.onDisconnect().cancel(); }catch(e){}
+    dutyOn=false;disarmDuty();
     staffRef.update({on:false, busy:false, updatedAt:firebase.database.ServerValue.TIMESTAMP})
       .catch(rollback);
     punchTxt.textContent='下班中';
@@ -676,11 +683,17 @@ function renderPartnerAvatar(root,id,person){
 function renderPartnerArt(id){const root=document.getElementById('partnerCompanions'),info=PARTNER_ART[id];root.replaceChildren();root.hidden=!info;if(!info)return;for(const role of ['staff','pet']){const figure=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');img.src='img/companions-v352/'+info.asset+'-'+role+'.gif?v=356';img.alt=role==='staff'?info.name:info.name+'的寵物';if(role==='pet')img.className='pet';label.textContent=role==='staff'?info.name:'寵物';figure.append(img,label);root.append(figure)}}
 function boot(){
   booted=true;
+  /* v510 網路閃斷重連：頁面還開著而且勾著上班 → 重新登記斷線下班、補寫上班（伺服器那邊可能已經因為斷線寫了下班） */
+  db.ref('.info/serverTimeOffset').on('value',o=>{window.__ptOff=+o.val()||0;});
+  db.ref('.info/connected').on('value',c=>{if(c.val()===true&&dutyOn&&staffRef){armDuty();staffRef.update({on:true,seen:TS(),updatedAt:TS()}).catch(()=>{});}});
   pgLogin.style.display="none"; pgMain.style.display="block";renderPartnerArt(cid);
   staffRef = db.ref(ROOT+"/staffStatus/"+cid);
-  try{ staffRef.onDisconnect().cancel().catch(()=>{}); }catch(e){}
   staffRef.on("value",s=>{
     const st=s.val();
+    /* v510：資料庫說上班、但這個頁面沒按過上班——
+       另一台還開著（seen 很新）就一起接手回報；上次沒正常下班留下來的（seen 太舊或沒有）就收成下班 */
+    if(st&&st.on&&!dutyOn){if(+st.seen>0&&Date.now()+(window.__ptOff||0)-st.seen<150000){dutyOn=true;armDuty();}else{staffRef.update({on:false,busy:false,updatedAt:TS()}).catch(()=>{});}}
+    else if(!(st&&st.on)&&dutyOn){dutyOn=false;disarmDuty();}
     punchChk.checked=!!(st&&st.on);
     punchTxt.textContent=punchChk.checked?'上班中 🏮':'下班中';
     syncDutyUI();
@@ -1258,7 +1271,7 @@ function nextBlockAfter(fromMs,skipCoid){
   return best;
 }
 let _renewReq={}, _cancelReq={};
-const PT_VER='19';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
+const PT_VER='20';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
 function reqResult(node,coid,ok,why,extra){
   db.ref(ROOT+'/'+node+'/'+coid).update(Object.assign({done:Date.now(), ok:!!ok, why:why||'', ver:PT_VER},extra||{}));
 }
@@ -1600,5 +1613,5 @@ const openLogs=new Set();
 import {mountBinding} from './lobby-ui/partner-binding.mjs?v=427';
 let binding;const timer=setInterval(()=>{if(auth.currentUser&&cid){clearInterval(timer);binding=mountBinding({root:document.getElementById('partnerDiscordBinding'),getUser:()=>auth.currentUser,getCid:()=>cid})}},500);
 window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
-</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=510';import {installBookingSound} from './lobby-ui/booking-sound.mjs?v=308';const bookingSound=installBookingSound({root:document.getElementById('bookingSoundControl'),getUser:()=>auth.currentUser,notice:ptNotify});const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});const {createServiceTimer}=await import('./lobby-ui/service-timer.mjs?v=510');Object.assign(window,createServiceTimer({getOrder:id=>orders[id],request:(path,body)=>orderVoice.serviceTime(body),originals:{startTimer,pauseTimer,resumeTimer,endTimer},confirm:msg=>window.confirm(msg),notify:msg=>ptNotify(msg,'')}));mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>{orderVoice.update(items);bookingSound.update(items)},notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script><script src="lobby-ui/partner-dark-fix.js?v=477"></script></body>
+</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=511';import {installBookingSound} from './lobby-ui/booking-sound.mjs?v=308';const bookingSound=installBookingSound({root:document.getElementById('bookingSoundControl'),getUser:()=>auth.currentUser,notice:ptNotify});const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});const {createServiceTimer}=await import('./lobby-ui/service-timer.mjs?v=511');Object.assign(window,createServiceTimer({getOrder:id=>orders[id],request:(path,body)=>orderVoice.serviceTime(body),originals:{startTimer,pauseTimer,resumeTimer,endTimer},confirm:msg=>window.confirm(msg),notify:msg=>ptNotify(msg,'')}));mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>{orderVoice.update(items);bookingSound.update(items)},notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script><script src="lobby-ui/partner-dark-fix.js?v=477"></script></body>
 </html>

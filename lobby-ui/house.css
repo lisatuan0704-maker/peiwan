@@ -187,3 +187,22 @@ body:not(.tt-house-on) #ttHouseChat{display:none!important}
 .dm-house-invite{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .dm-house-invite small{font-size:11px;opacity:.75}
 .dm-house-go{font:inherit;font-size:13px;font-weight:700;padding:5px 12px;border-radius:10px;border:2px solid #1C2156;background:linear-gradient(180deg,#FF7AA8,#FF3F80);color:#fff;cursor:pointer;box-shadow:0 2px 0 #1C2156}
+
+/* ===== v510 小屋商城（壁紙／地板）＋ 佈置的「貼壁紙／鋪地板」 ===== */
+.tt-hb-tabs{flex-wrap:wrap}
+.tt-hb-tabs button{padding:5px 11px}
+.tt-pm-set{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.tt-pm-set h3{margin:0;display:flex;align-items:center;gap:10px;font-size:17px}
+.tt-pm-set h3 span{font:400 13px/1 'TT Title','Rammetto One',sans-serif;color:#fff;background:var(--sk-ink,#1C2156);padding:5px 10px;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+.tt-pm-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.tt-pm-card h4{margin:0;font-size:15px}
+.tt-pm-pic{width:100%;height:160px;display:grid;place-items:center;border-radius:10px;background:radial-gradient(circle,rgba(28,33,86,.08) 1.2px,transparent 1.7px) 0 0/10px 10px,linear-gradient(160deg,#F3EEFF,#FFF5F9)}
+.tt-pm-pic img{max-width:92%;max-height:148px;image-rendering:pixelated}
+.tt-hs-buy.own .lbl{background:linear-gradient(180deg,#7FD89A,#3FB46B)}
+.tt-hb-paint .tt-hb-pic img{object-fit:contain}
+.tt-hb-paint.on{border-color:#FF4F8B;background:#FFF0F6;box-shadow:0 0 0 3px rgba(255,79,139,.3)}
+.tt-hb-orig{width:58%;height:58%;border:3px dashed #C3CBEE;border-radius:12px;background:repeating-linear-gradient(-45deg,#fff 0 6px,#F4F1FF 6px 12px)}
+.tt-hb-pacts{grid-column:1/-1;display:flex;gap:8px;margin-top:4px}
+.tt-hb-pacts button{flex:1;font:inherit;font-size:13px;font-weight:700;padding:8px;border-radius:10px;border:2px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156)}
+.tt-hb-pacts button:hover:not(:disabled){background:#FFF0F6}
+.tt-hb-pacts button:disabled{opacity:.45;cursor:default;box-shadow:none}
