@@ -1895,15 +1895,32 @@ function peerSprite(id,c){const key='__p_'+id;c=c&&c.width?c:BLANK;SPR[key]={w:c
 function setPeers(list){const seen=new Set();
   for(const p of list||[]){if(!p||!p.id)continue;seen.add(p.id);let P=PEERS.get(p.id);
     if(!P){const key=peerSprite(p.id,p.doll),el=document.createElement('div');el.className='hs-name';PL.append(el);
-      P={it:{t:key,i:p.i-.5,j:p.j-.5,dir:0,peer:true,f:p.f||1,bob:0},ti:p.i,tj:p.j,el,doll:p.doll,t:0};PEERS.set(p.id,P);}
+      P={it:{t:key,i:p.i-.5,j:p.j-.5,dir:0,peer:true,f:p.f||1,bob:0},ti:p.i,tj:p.j,el,doll:p.doll,t:0,q:[]};PEERS.set(p.id,P);}
     else if(p.doll&&p.doll!==P.doll){peerSprite(p.id,p.doll);P.doll=p.doll;}
-    P.ti=p.i;P.tj=p.j;if(p.f)P.it.f=p.f;P.el.textContent=p.name||'';}
+    P.ti=p.i;P.tj=p.j;P.el.textContent=p.name||'';peerSample(P,p);}
   for(const [id,P] of PEERS)if(!seen.has(id)){P.el.remove();P.bub?.remove();delete DEF[P.it.t];PEERS.delete(id);}}
-function peerStep(dt){const sp=2.6*(dt||16)/1000;
-  for(const P of PEERS.values()){const ci=P.it.i+.5,cj=P.it.j+.5,di=P.ti-ci,dj=P.tj-cj,d=Math.hypot(di,dj);
-    if(d>5){P.it.i=P.ti-.5;P.it.j=P.tj-.5;P.it.bob=0;continue;}
-    if(d>.02){const k=Math.min(1,sp/d);P.it.i+=di*k;P.it.j+=dj*k;P.t+=dt||16;P.it.bob=reduceMotion.matches?0:Math.abs(Math.sin(P.t/1000*5.5*Math.PI))*1.6;}
-    else P.it.bob=0;}}
+/* v511 D：「我在小屋看朋友走路超怪」「朋友很像在抖動」——原本用固定每秒 2.6 格追最新位置（真人走 3.5 格），追到就停、彈跳歸零，
+   位置又被取整到整數像素 → 走一下停一下、上下抖、越走越落後（超過 5 格直接瞬移）。
+   現在照遊戲常見做法：收到的位置排成時間線，畫面固定晚 0.25 秒，在兩筆位置之間平滑補動作；走路彈跳整段連續；位置用小數畫（跟自己的小人一樣）。 */
+const PEER_DELAY=250,PEER_SPD=.0035;   // 每毫秒 0.0035 格＝跟自己走路一樣快
+// 時間線用「距離÷走路速度」排（大家走路一樣快），不用收到的時間——網路忽快忽慢時，朋友才不會跟著忽快忽慢
+function peerSample(P,p){const now=performance.now(),q=P.q||(P.q=[]),L=q[q.length-1],f=p.f<0?-1:1;
+  if(L&&Math.abs(L.i-p.i)<.001&&Math.abs(L.j-p.j)<.001&&L.f===f)return;
+  let t=now;
+  if(L){const walk=Math.hypot(p.i-L.i,p.j-L.j)/PEER_SPD,head=now-PEER_DELAY+30;
+    if(now-L.t>400+walk)q.push({t:Math.max(head,now-walk),i:L.i,j:L.j,f:L.f});   // 停了一陣子才又開始走：從現在往回推起步時間，不會一出發就跳一段
+    else t=Math.max(L.t+walk,head);}   // 連續走：照走路速度接在上一筆後面；不排到已經播過的時間（不會瞬移）
+  q.push({t,i:p.i,j:p.j,f});if(q.length>40)q.splice(0,q.length-40);}
+function peerStep(dt){dt=dt||16;const rt=performance.now()-PEER_DELAY;
+  for(const P of PEERS.values()){const q=P.q||[];if(!q.length)continue;
+    while(q.length>1&&q[1].t<=rt)q.shift();
+    const a=q[0],b=q[1];let i=a.i,j=a.j,f=a.f,moving=false;
+    if(b&&rt>a.t){const far=Math.hypot(b.i-a.i,b.j-a.j);
+      if(far>5){i=b.i;j=b.j;f=b.f;q.shift();}   // 剛進門、斷線重連這種一次跳很遠的，直接到
+      else{const k=Math.min(1,(rt-a.t)/Math.max(1,b.t-a.t));i=a.i+(b.i-a.i)*k;j=a.j+(b.j-a.j)*k;f=b.f;moving=far>.01;}}
+    P.it.i=i-.5;P.it.j=j-.5;P.it.f=f;
+    P.walk=moving?180:Math.max(0,(P.walk||0)-dt);   // 兩筆位置之間短暫停一下也不收起彈跳
+    if(P.walk>0&&!reduceMotion.matches){P.t+=dt;P.it.bob=Math.abs(Math.sin(P.t/1000*5.5*Math.PI))*1.6;}else{P.it.bob=0;P.t=0;}}}
 const scr=(i,j,up)=>{const p=iso(i,j),[S,,,,tx,ty]=viewT();return {x:(p.x*S+tx)/DPR,y:((p.y-up)*S+ty)/DPR};};
 function peerLabels(){const meH=(SPR[DOLL()]||{}).ay||56;
   for(const P of PEERS.values()){const s=SPR[P.it.t]||{},h=(s.ay||meH)+4+(P.it.bob||0),q=scr(P.it.i+.5,P.it.j+.5,h);
@@ -1922,7 +1939,7 @@ function spawnAt(n){const B=blocked(null),o=SPAWN[Math.max(0,n|0)%4],ti=Math.max
   for(let i=1;i<N-1;i++)for(let j=1;j<N-1;j++){if(B.has(i+','+j))continue;const d=Math.hypot(i-ti,j-tj);if(d<bd){bd=d;best=[i,j];}}if(best){me.i=best[0]+.5;me.j=best[1]+.5;me.path=[];}}
 {const _s=solidList;solidList=function(){const l=_s();for(const P of PEERS.values())l.push(P.it);return l;};}
 {const _pk=pick;pick=function(p){const o=_pk(p);return o&&o.peer?null:o;};}
-{const _ro=rectOf;rectOf=function(it){const r=_ro(it);if(it&&it.peer){r.flip=it.f<0;if(it.bob)r.y-=Math.round(it.bob);}return r;};}
+{const _ro=rectOf;rectOf=function(it){const r=_ro(it);if(it&&it.peer){const s=sprOf(it),a=anchorOf(it);r.flip=it.f<0;r.x=a.x-(r.flip?s.w-s.ax:s.ax);r.y=a.y-s.ay-(it.bob||0);}return r;};}
 {const _dr=draw;draw=function(now,dt){peerStep(dt);_dr(now,dt);peerLabels();};}
 {const _b=boot;boot=function(){_b();try{setDoll(HOST&&HOST.dollCanvas&&HOST.dollCanvas());}catch(e){}frameRoom();readyFn();};}
 addEventListener('resize',()=>{if(!held)frameRoom();});
