@@ -1,5 +1,21 @@
 # 小小酒館修改紀錄
 
+## 2026/11/10 v513 VIP 升級恭喜附老闆小人動圖（需發布第二十一批規則＋主機 deploy-v513）
+- D：VIP 升級在 Discord 只讓 TT 說話的「✦｜酒館名人牆」公告，每一級都 @所有人＋@ 老闆的 Discord（文字不用闆卡名）；獎勵清單 TT 私訊本人（D 定稿文字）。
+  公告附去背動圖：雜誌字卡（名字頁籤＝闆卡名、VIP＋菱形數字、等級名、右下 HALL OF FAME No.xxx）＋老闆「當下」闆卡小人（呼吸壓扁、頭髮擺動、眨眼）＋兩顆星，顏色跟等級。
+  試做與 D 看過的版本在 C:\tinytavern\VIP升級動圖試做\v4雜誌字卡（D 否決過：碰杯點字圖、闆卡場景圖、小人點字圖、彩紙酒泡特效〔廉價〕、圓角貓耳腮紅卡〔AI 感〕）。
+- 流程：主機 vip-celebrate.cjs 發現升級 → orderVoiceV1/vipCelebrate/seq 編期數 → 寫 peiwan/vipCardReq/<闆卡>{lv,no,at} → 老闆的大廳 lobby-ui/vip-card.js（每 3 秒看登入）讀到就用 me().b.doll／b.name
+  畫 36 格 480×500 GIF（gifenc 1.0.3 jsdelivr、1 位元透明、約 700KB，4～9 秒）交到 peiwan/vipCard/<闆卡>/<等級> → 主機收到（檢查 GIF 檔頭、≤2MB）頻道＋私訊都附圖，發完刪單子和圖；
+  24 小時沒交圖只發文字。兩台同時跑搶 claim、重啟從 pending 接著等；一次跳兩級只恭喜最高那級。TTVipCardGif.render({doll,name,lv,no}) 可單獨畫一張。
+- 規則第二十一批（tests/security-rules-v428/build/harden-phase21.cjs、test-phase21 23 項；快照 rules-before-v513.json）：vipCardReq 本人與店員讀、只有店長寫；
+  vipCard 本人只能交「請畫的那一級」、data:image/gif;base64、小於 2.4MB、不能覆蓋，店員讀與刪。
+- 教訓：部件圖（含閉眼圖）第一次用到才開始載，沒載好就畫會少一層（D 抓到眨眼那格臉上沒眼睛）→ 重畫到前後兩次一模一樣才算。
+  Windows 字型的空白點字比有點的窄（10.4 對 12.05px），點字圖在 Discord 電腦版會歪，別再用點字圖。
+- 版本：verTag v513、ver.json 513、lobby-view 513、vip-card.js?v=513。
+- 驗證：本機預覽＋模擬資料庫整輪（firebase-admin 跑真的機器人模組＋真的大廳網頁＋假 Discord）：儲值 → 請畫圖單 → 大廳交圖 → 公告附 GIF（@ Discord、不寫闆卡名）＋私訊附 GIF → 單子和圖清掉；
+  全新瀏覽器四套時裝眨眼正常；正式規則重播交圖允許、再交拒絕；規則 11、12、14～21 批全過；機器人測試 VIP 10＋私訊冒險者 8 項。
+- 上線順序：①Firebase 發布規則（第二十一批）②網站 v513 ③主機 deploy-v513（取代還沒跑的 v511／v512，已部署的部分自動跳過）。順序反了也不會壞：沒有規則就讀不到請畫圖單，24 小時後只發文字。
+
 ## 2026/11/09 v511 小屋裡朋友走路一頓一頓、上下抖（以 v510 緊急修正為底）
 - D：「我在小屋看朋友走路超怪」「朋友很像在抖動」。原因（house/room.html peerStep）：朋友的小人用固定每秒 2.6 格追最新位置（真人走 3.5 格）、追到就停、彈跳歸零，
   畫的位置又被 rectOf 取整到整數像素 → 走一下停一下、上下抖、越走越落後（超過 5 格直接瞬移）。
