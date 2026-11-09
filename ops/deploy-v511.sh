@@ -1,7 +1,9 @@
 #!/bin/bash
 # 小小酒館後端 v511：指定冒險者的委託一成立，機器人就私訊那位冒險者「有新委託，請到手札接單」（D 11/09）。
 # 金幣付款＝下單當下；轉帳＝店長確認收款那一刻。每筆只發一次，冒險者沒綁 Discord 或關閉私訊會記下來、不重試。
-# 新增 order-voice-bot/staff-order-dm.cjs（＋測試），service-server.cjs 只在訂單通知那行後面多接一行。其他功能完全不變。
+# 新增 order-voice-bot/staff-order-dm.cjs（＋測試），service-server.cjs 只在訂單通知那行後面多接一行。
+# 另外修語音登記：開店後新做的闆卡沒有 secureV1/characters 名字 → 登記被拒 CHARACTER_REQUIRED（接單後沒語音房、沒私訊、手札計時被擋）；
+# 改成讀不到時用大廳闆卡名字（booking-voice.cjs 兩處；程式跟預期不同就跳過這項）。其他功能完全不變。
 # 在主機的 root 終端機執行。任何一步失敗都會停止；健康檢查失敗會自動還原舊版。
 set -euo pipefail
 R="${TT_ROOT:-}"
@@ -139,13 +141,28 @@ assert s.count(a)==1
 open(p,'w',encoding='utf-8',newline='').write(s.replace(a,b))
 print('已接上')
 PY
+say "語音登記：沒有角色名字時改用大廳闆卡名字"
+python3 - "$DST/order-voice-bot/booking-voice.cjs" <<'PY'
+import sys
+# v511：老闆沒有 secureV1/characters/<闆卡>/name（開店後新做的闆卡沒人寫這份）→ 語音登記被拒 CHARACTER_REQUIRED。
+# 改成讀不到時用大廳闆卡 peiwan/lobby/<闆卡>/name。找不到預期的程式片段就不動（印 SKIP），不影響其他部署。
+p=sys.argv[1];s=open(p,encoding='utf-8',newline='').read()
+a1="const orders=await Promise.all(ids.map(async id=>(await db.ref('peiwan/clientOrders/'+id).once('value')).val()));"
+a2="const name=secure.characters?.[m.key]?.name;"
+if s.count(a1)!=1 or s.count(a2)!=1 or 'lobbyName' in s:
+    print('SKIP booking-voice 跟預期不同（或已改過），角色名字備援這項跳過');sys.exit(0)
+s=s.replace(a1,"const lobbyName=await db.ref('peiwan/lobby/'+m.key+'/name').once('value').then(x=>x.val(),()=>null);"+a1)
+s=s.replace(a2,"const name=secure.characters?.[m.key]?.name||(typeof lobbyName==='string'&&lobbyName.trim()?lobbyName.trim():null);")
+open(p,'w',encoding='utf-8',newline='').write(s)
+print('PATCHED 語音登記：沒有角色名字時改用大廳闆卡名字')
+PY
 if [ -n "$R" ]; then echo "TEST_ROOT: 檔案準備完成"; exit 0; fi
 say "建置 docker 映像（約 1～3 分鐘）"
 cd "$DST"
 docker build -t tinytavern-service:$TAG . > build.log 2>&1 || { tail -20 build.log; echo "建置失敗，正式服務沒有變動。"; exit 1; }
-for f in order-voice-bot/staff-order-dm.cjs order-voice-bot/service-server.cjs; do docker run --rm --network none --entrypoint node tinytavern-service:$TAG --check $f; done
+for f in order-voice-bot/staff-order-dm.cjs order-voice-bot/service-server.cjs order-voice-bot/booking-voice.cjs; do docker run --rm --network none --entrypoint node tinytavern-service:$TAG --check $f; done
 T="order-voice-bot/staff-order-dm.test.cjs"
-for x in order-voice-bot/notify-oen-v498b.test.cjs order-voice-bot/notify-v466.test.cjs order-voice-bot/staff-names.test.cjs; do if [ -f "$x" ]; then T="$T $x"; fi; done
+for x in order-voice-bot/booking-voice-test.cjs order-voice-bot/notify-oen-v498b.test.cjs order-voice-bot/notify-v466.test.cjs order-voice-bot/staff-names.test.cjs; do if [ -f "$x" ]; then T="$T $x"; fi; done
 docker run --rm --network none --entrypoint node tinytavern-service:$TAG --test $T > test.log 2>&1 || { tail -30 test.log; echo "測試失敗，正式服務沒有變動。"; exit 1; }
 grep -E '^(# |ℹ )(tests|pass|fail) ' test.log || true
 cp -p "$UNIT" "$UNIT.before-v511"
