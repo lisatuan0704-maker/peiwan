@@ -1461,13 +1461,13 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/presence.js?v=510"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/payment-safety.js?v=492"></script>
-<script src="lobby-ui/cat-coin.js?v=510"></script>
+<script src="lobby-ui/cat-coin.js?v=516"></script>
 <script src="lobby-ui/cancel-reason.js?v=432"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=501">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
 <script src="card-ui/tavern-scene.js?v=265" defer></script>
-<link rel="stylesheet" href="lobby-ui/membership.css?v=256">
+<link rel="stylesheet" href="lobby-ui/membership.css?v=516">
 <link rel="stylesheet" href="lobby-ui/chat-skins.css?v=373">
 <script src="lobby-ui/chat-skins.js?v=373"></script>
 <link rel="stylesheet" href="lobby-ui/stickers.css?v=376">
@@ -1650,7 +1650,7 @@ body.artBub.bub3s .npc .bub{
   <label for="tuProof">轉帳截圖（付款證明）</label>
   <input type="file" id="tuProof" accept="image/*">
   <img id="tuProofPrev" style="max-width:100%;max-height:150px;display:none;margin-top:8px;border:2px solid #E8C7D4">
-  <p class="warn">※ 儲值送出後,店長核帳確認即入帳金幣,可在錢包查看紀錄。</p>
+  <p class="warn">※ 儲值送出後,店長核帳確認即入帳金幣(轉帳加送的貓貓幣也一起入帳),可在錢包查看紀錄。</p>
   </section>
   <div class="btns"><button class="sc-back" onclick="openTopup()">‹ 上一步</button><button class="sc-go" id="tuSubmitBtn" onclick="submitTopup()">送出儲值</button></div>
 </div></div>
@@ -1699,7 +1699,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v515</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v516</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -4613,7 +4613,8 @@ function renderTopup(){
   let tierHtml;
   if(!tiers.length){ tierHtml='<div style="text-align:center;color:#A5798D;font-size:13px;padding:16px 0">目前尚未開放儲值,敬請期待 ✦</div>'; }
   else { tierHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+tiers.map((t,i)=>{
-      const bonus=t.bonus>0?'<div style="color:#3E9E6B;font-size:12px;font-weight:700;margin-top:2px">送 '+t.bonus+' 金幣</div>':'';
+      const bonus=(t.bonus>0?'<div style="color:#3E9E6B;font-size:12px;font-weight:700;margin-top:2px">送 '+t.bonus+' 金幣</div>':'')
+        +(t.catBonus>0?'<div style="color:#3E9E6B;font-size:12px;font-weight:700;margin-top:2px">銀行轉帳送 '+t.catBonus+' 貓貓幣</div>':'');   // v516 轉帳加送貓貓幣
       const get=t.amt+(t.bonus||0);
       return '<button onclick="pickTier('+i+')" style="border:none;background:linear-gradient(180deg,#FFF7DE,#FBEFC0);box-shadow:inset 0 0 0 2px #F0D98A;border-radius:12px;padding:12px 8px;cursor:pointer;font-family:inherit;text-align:center">'
         +'<div style="font-size:19px;font-weight:800;color:#B8860B">'+get+' 金幣</div>'+bonus
@@ -4650,13 +4651,13 @@ function pickTier(i){
   const get=curTier.amt+(curTier.bonus||0);
   document.getElementById('tuPayInfo').innerHTML=
     '<div class="tu-receipt"><div><span>儲值金額</span><b>NT$'+curTier.amt+'</b></div>'+
-    '<div><span>入帳金幣</span><b>'+get+' <small>金幣</small></b>'+(curTier.bonus>0?'<small class="tu-bonus">內含贈送 '+curTier.bonus+' 金幣</small>':'')+'</div></div>'+
-    '<div class="tu-section-heading"><span>01 / ONLINE PAYMENT</span><h4>線上付款</h4><p>'+(ONLINE_PAYMENT_READY?esc(ttPayMethodsText())+'都可以，付款完成金幣自動入帳。':'線上付款準備中，可以先用銀行轉帳。')+'</p></div>'+
+    '<div><span>入帳金幣</span><b>'+get+' <small>金幣</small></b>'+(curTier.bonus>0?'<small class="tu-bonus">內含贈送 '+curTier.bonus+' 金幣</small>':'')+(curTier.catBonus>0?'<small class="tu-bonus">銀行轉帳再送 '+curTier.catBonus+' 貓貓幣</small>':'')+'</div></div>'+
+    '<div class="tu-section-heading"><span>01 / ONLINE PAYMENT</span><h4>線上付款</h4><p>'+(ONLINE_PAYMENT_READY?esc(ttPayMethodsText())+'都可以，付款完成金幣自動入帳'+(curTier.catBonus>0?'（線上付款沒有加送貓貓幣）':'')+'。':'線上付款準備中，可以先用銀行轉帳。')+'</p></div>'+
     '<div id="tuEmailBox"'+(((window.__payCfg||{}).needEmail)?'':' hidden')+'><label for="tuEmail">Email（電子發票會寄到這裡）</label><input type="email" id="tuEmail" maxlength="120" autocomplete="email" placeholder="例:boss@example.com"></div>'+
     '<button type="button" id="tuOnlineBtn"'+(ONLINE_PAYMENT_READY?'':' disabled aria-disabled="true"')+' onclick="tuPayOnline()" style="display:block;width:100%;margin:10px 0 4px;border:none;cursor:pointer;'+
       'background:linear-gradient(180deg,#F19FBE,#D96A8B);color:#fff;font-family:inherit;font-size:14.5px;font-weight:800;padding:12px;border-radius:12px;box-shadow:0 4px 12px rgba(200,90,130,.3)">'+
       (ONLINE_PAYMENT_READY?'線上付款 NT$'+curTier.amt+'・自動入帳':'線上付款準備中')+'</button>'+
-    '<div class="tu-bank-divider">或使用銀行轉帳</div>'+
+    '<div class="tu-bank-divider">'+(curTier.catBonus>0?'或使用銀行轉帳・加送 '+curTier.catBonus+' 貓貓幣 ✦':'或使用銀行轉帳')+'</div>'+
     '<div class="tu-bank-account" style="display:flex;align-items:center;gap:8px;margin:7px 0;flex-wrap:wrap">匯款帳號:<b style="color:#5A4880">'+esc(payAccShown())+'</b>'+
     '<button type="button" onclick="(function(b){try{navigator.clipboard.writeText(payAccShown())}catch(e){}b.textContent=\'已複製 ✓\';setTimeout(()=>b.textContent=\'複製\',1500)})(this)" style="border:none;background:#F0E7FA;color:#6E58A6;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;cursor:pointer">複製</button></div>'+
     (PAY_NOTE?'<div style="font-size:12px;color:#8E7AB0">'+esc(PAY_NOTE)+'</div>':'');
@@ -4769,14 +4770,15 @@ function submitTopup(){
   const _tb=document.getElementById('tuSubmitBtn'); if(_tb) _tb.disabled=true;
   const _fuse3=submitGuard('tuSubmitBtn','送出儲值');
   const get=curTier.amt+(curTier.bonus||0);
-  const o={ type:'topup', planName:'儲值 '+get+' 金幣', amount:curTier.amt, coinAmount:get, bonus:curTier.bonus||0,
+  const catB=Math.max(0,Math.floor(Number(curTier.catBonus)||0));   // v516 轉帳加送貓貓幣（顯示用；入帳數量由店長頁照方案算）
+  const o={ type:'topup', planName:'儲值 '+get+' 金幣', amount:curTier.amt, coinAmount:get, bonus:curTier.bonus||0, ...(catB?{catBonus:catB}:{}),
     name, last5, hasProof:true, status:'pending', createdAt:Date.now(),
     payDue:Date.now()+PAY_MINS*60000, myKey:myKey||null };
   const ref=db.ref(ROOT+'/clientOrders').push();
   db.ref(ROOT).update({['clientOrders/'+ref.key]:o,['clientOrderProofs/'+ref.key]:tuProofData}).then(()=>{
     const ids=myOrderIds(); ids.push(ref.key); try{ localStorage.setItem('tt_orders',JSON.stringify(ids)); }catch(e){}
     tuProofData=null; shopClose();
-    if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'儲值已送出!',sub:'店長核帳確認後,'+get+' 金幣會入帳',onclick:()=>shopOpen(4),hold:8000});
+    if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'儲值已送出!',sub:'店長核帳確認後,'+get+' 金幣'+(catB?'＋'+catB+' 貓貓幣':'')+'會入帳',onclick:()=>shopOpen(4),hold:8000});
     else toast('儲值已送出,待店長確認');
     try{ notifyOrder(o); }catch(e){}
     try{watchMyOrders();}catch(_){}
@@ -8589,14 +8591,14 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=469"></script>
-<script src="lobby-ui/live.js?v=514"></script>
+<script src="lobby-ui/live.js?v=516"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
 <link rel="stylesheet" href="lobby-ui/house.css?v=512"><script src="lobby-ui/house.js?v=512"></script><script src="lobby-ui/house-trip.js?v=512"></script><script src="lobby-ui/gacha.js?v=508"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
-<script src="lobby-ui/membership.js?v=499"></script>
+<script src="lobby-ui/membership.js?v=516"></script>
 <script src="lobby-ui/order-flow.js?v=514"></script>
 <script type="module">
 import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=431';
@@ -8612,7 +8614,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=492"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=500">
-<script src="lobby-ui/mobile-app.js?v=508"></script>
+<script src="lobby-ui/mobile-app.js?v=516"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
 <script src="lobby-ui/vip-card.js?v=513"></script>
 <link rel="stylesheet" href="lobby-ui/order-guide.css?v=514"><script src="lobby-ui/order-guide.js?v=514"></script>

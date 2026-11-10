@@ -1,5 +1,18 @@
 # 小小酒館修改紀錄
 
+## 2026/11/11 v516 儲值：銀行轉帳加送貓貓幣、線上付款（信用卡等）不加送（Claude）
+- D：「想盡量鼓勵大家用轉帳的方式，轉帳送貓貓幣而不是送金幣；信用卡的話就沒優惠」。
+- 儲值方案 config/topup/tiers 多一欄 catBonus（店長頁「儲值設定」的「轉帳送貓貓幣」，取代「送金幣」）；儲存時 bonus 一律存 0。
+  付款主機（server/lib/topup.js）是照 bonus 算金幣的 → 線上付款＝原價金幣、不送，主機不用改。
+- 入帳：店長頁按「確認收款」（銀行轉帳單，payChannel 不是 oen）→ 原本的 credited 旗標搶到才入帳：金幣照舊＋貓貓幣 cat/<闆卡>/balance += 方案 catBonus
+  （照店長設定算，不信任客人送的數字），記 clientOrders/<單>/catCredited、catTx type 'topup'「銀行轉帳儲值加送」，入帳信寫「＋N 貓貓幣」。
+  取消已入帳的儲值單：金幣扣回之外，catCredited 的貓貓幣也扣回（catTx adjust「儲值取消扣回加送」）。資料庫規則不用改（clientOrders 沒欄位白名單、cat 店長可寫）。
+- 客人端：錢包方案卡（live.js／手機 mobile-app.js／舊版 renderTopup）「銀行轉帳送 N 貓貓幣」；付款頁（membership.js）方案有加送時「銀行轉帳」鈕掛綠色「加送 N 貓貓幣」徽章、
+  而且預設先選銀行轉帳（沒加送的方案照舊預設線上付款）；線上付款說明加「（線上付款沒有加送貓貓幣）」。送出儲值單帶 catBonus（顯示用）。cat-coin.js 交易紀錄標籤 topup＝「儲值加送」。
+- 版本：verTag v516、ver.json 516、lobby-view 516（v515 是主工作階段的商城 VIP3 修正）、live.js／mobile-app.js／cat-coin.js／membership.js／membership.css ?v=516。
+- 驗證：本機預覽（模擬資料庫 namespace topup515）：方案卡、付款頁（有加送預設轉帳＋徽章、沒加送預設線上）、手機儲值頁、送出轉帳單 → 店長頁確認收款 金幣 +350／貓貓幣 +300／catTx／入帳信 →
+  取消扣回金幣與貓貓幣；線上付款單不送；儲存方案 bonus 存 0、負數變 0。
+- 上線後：店長到「儲值設定」填每個方案要送多少貓貓幣、按儲存（全部 0＝跟以前一樣）。
 ## 2026/11/11 v515 VIP 3 限定套組（疾風喵行／喵頻連線）商城只給 VIP 3 看（Claude）
 - D：「這兩個從商城移除，因為一般買不到，VIP 3 時商城才會出現」——撤回 v460／v461 的「先放出來給大家看」。
 - tavern-ui-bridge.js：catalog() 的 VIP 限定商品多 vipHidden（未達等級、沒擁有、不是 ?preview）；state() 給商城的清單把 vipHidden 拿掉。

@@ -615,16 +615,23 @@ function coSet(id,st){
   /* 儲值訂單確認收款 → 金幣入帳。
      用 transaction 搶 credited 旗標,連點兩下 / 兩台裝置同時按都只會入帳一次 */
   if(o && o.type==='topup' && o.myKey && (st==='confirmed'||st==='done') && !o.credited){
-    const add=topupCredit(o);
+    const add=topupCredit(o), cat=topupCatBonus(o);
     db.ref(ROOT+"/clientOrders/"+id+"/credited").transaction(cur=>{ if(cur) return; return true; },
       (e2,ok2)=>{
         if(e2||!ok2) return;   // 別人已經入帳過了
         db.ref(ROOT+"/wallet/"+o.myKey+"/balance").transaction(cur=>((cur||0)+add), (err,committed,snap)=>{
           if(!err&&committed){ const balAfter=(snap&&snap.val())||add;
             db.ref(ROOT+"/walletTx/"+o.myKey).push({type:'topup',amount:add,balAfter,ref:id,note:'儲值入帳',ts:Date.now()});
-            db.ref(ROOT+'/mail/'+o.myKey).push({title:'儲值已入帳・'+add+' 金幣',
-              text:'你的儲值已經確認收款,'+add+' 金幣已經進到錢包了 ✦\n\n可以直接去點單或逛時裝店囉,謝謝支持!',
+            db.ref(ROOT+'/mail/'+o.myKey).push({title:'儲值已入帳・'+add+' 金幣'+(cat?'＋'+cat+' 貓貓幣':''),
+              text:'你的儲值已經確認收款,'+add+' 金幣已經進到錢包了 ✦'+(cat?'\n銀行轉帳加送的 '+cat+' 貓貓幣也一起入帳囉!':'')+'\n\n可以直接去點單或逛時裝店囉,謝謝支持!',
               from:'店長',at:Date.now()});
+          }
+        });
+        /* v516 轉帳加送貓貓幣：跟著 credited 旗標只會發一次；記下 catCredited，取消時照這個數字扣回 */
+        if(cat>0) db.ref(ROOT+"/cat/"+o.myKey+"/balance").transaction(cur=>((cur||0)+cat), (err,committed,snap)=>{
+          if(!err&&committed){ const balAfter=(snap&&snap.val())||cat;
+            db.ref(ROOT+"/clientOrders/"+id+"/catCredited").set(cat);
+            db.ref(ROOT+"/catTx/"+o.myKey).push({type:'topup',amount:cat,balAfter,ref:id,note:'銀行轉帳儲值加送',ts:Date.now()});
           }
         });
       });
@@ -642,7 +649,7 @@ function coCancelRefund(id){
   const isTopup=(o.type==='topup');
   const back=isTopup?topupCredit(o):isCat?(Number(o.catAmount)||0):(Number(o.amount)||0),unit=isCat?'貓貓幣':'金幣';
   if(isWallet||isCat) msg='取消並退回 '+back+' '+unit+'給客人?';
-  else if(isTopup&&o.credited) msg='這是已入帳的儲值單。取消將從客人錢包扣回 '+back+' 金幣,確定?'+(o.payChannel==='oen'?'\n\n⚠ 這筆是線上付款：客人付的錢要另外到應援後台（金流列表 → 這筆交易 → 退款）退給客人。':'');
+  else if(isTopup&&o.credited) msg='這是已入帳的儲值單。取消將從客人錢包扣回 '+back+' 金幣'+((Number(o.catCredited)||0)>0?'和加送的 '+o.catCredited+' 貓貓幣':'')+',確定?'+(o.payChannel==='oen'?'\n\n⚠ 這筆是線上付款：客人付的錢要另外到應援後台（金流列表 → 這筆交易 → 退款）退給客人。':'');
   else if(isTopup&&o.payChannel==='oen'&&o.status==='pending') msg='這筆線上儲值還沒付款完成（系統會自動入帳，不用手動確認）。\n仍要取消嗎?取消後客人若還是付款成功，系統仍會入帳。';
   else msg='取消這筆訂單?(此單非金幣支付,款項請另行退還給客人)';
   if(!confirm(msg)) return;
@@ -665,6 +672,10 @@ function coCancelRefund(id){
         if(!err&&ok2){ const balAfter=(snap&&snap.val())||0;
           db.ref(ROOT+'/'+(isCat?'catTx':'walletTx')+'/'+o.myKey).push({type:isTopup?'adjust':'refund',amount:delta,balAfter,ref:id,note:(isTopup?'儲值取消扣回':'訂單取消退款')+'・'+(o.planName||''),ts:Date.now()}); }
       });
+      /* v516 已入帳的轉帳儲值取消：加送的貓貓幣一起扣回（扣到 0 為止） */
+      const catBack=isTopup?(Number(o.catCredited)||0):0;
+      if(catBack>0) db.ref(ROOT+'/cat/'+o.myKey+'/balance').transaction(cur=>Math.max(0,(cur||0)-catBack),(err,ok3,snap)=>{
+        if(!err&&ok3) db.ref(ROOT+'/catTx/'+o.myKey).push({type:'adjust',amount:-catBack,balAfter:(snap&&snap.val())||0,ref:id,note:'儲值取消扣回加送',ts:Date.now()}); });
       coMailCancel(o,!isTopup,back,unit);
       if(o.type==='shop'&&o.itemId==='dyeTicket'&&o.myKey){ if(o.status==='confirmed'||o.status==='done') db.ref(ROOT+'/owned/'+o.myKey+'/dyeTickets').transaction(function(c){ return Math.max(0,(Number.isSafeInteger(c)?c:0)-1); }); }
       else if(o.type==='shop'&&o.itemId&&o.myKey){ db.ref(ROOT+'/owned/'+o.myKey+'/'+o.itemId).remove(); }
@@ -1467,12 +1478,15 @@ function payCardHtml(){
 let topupCfg={tiers:[],note:''};
 var wallets={};
 var cats={};   /* v492 貓貓幣餘額 cat/<key>/balance */
-function tuAddTier(){ topupCfg.tiers.push({amt:0,bonus:0}); renderClientOrders(); }
+/* v516 D：「鼓勵大家用轉帳，轉帳送貓貓幣而不是送金幣；信用卡就沒優惠」
+   → 方案只設「轉帳送貓貓幣」（catBonus），店長確認轉帳收款時跟金幣一起入帳；送金幣（bonus）一律存 0，
+     付款主機（線上付款）是照 bonus 算的，所以線上付款＝原價金幣、不送。 */
+function tuAddTier(){ topupCfg.tiers.push({amt:0,bonus:0,catBonus:0}); renderClientOrders(); }
 function tuDelTier(i){ topupCfg.tiers.splice(i,1); renderClientOrders(); }
-function tuSet(i,k,v){ if(topupCfg.tiers[i]) topupCfg.tiers[i][k]=parseInt(v,10)||0; }
+function tuSet(i,k,v){ if(topupCfg.tiers[i]) topupCfg.tiers[i][k]=Math.max(0,parseInt(v,10)||0); }
 function saveTopupCfg(){
   const note=(document.getElementById('tuNoteInput')||{}).value||'';
-  const tiers=topupCfg.tiers.filter(t=>t&&t.amt>0).map(t=>({amt:t.amt,bonus:t.bonus||0}));
+  const tiers=topupCfg.tiers.filter(t=>t&&t.amt>0).map(t=>({amt:t.amt,bonus:0,catBonus:Math.max(0,Math.floor(Number(t.catBonus)||0))}));
   db.ref(ROOT+'/config/topup').set({tiers,note:note.trim(),updatedAt:Date.now()})
     .then(()=>{ const m=document.getElementById('tuCfgMsg'); if(m){m.textContent='已儲存 ✔';setTimeout(()=>m.textContent='',2000);} });
 }
@@ -1480,11 +1494,12 @@ function topupCardHtml(){
   const rows=(topupCfg.tiers||[]).map((t,i)=>
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px">'
     +'付 NT$ <input type="number" value="'+(t.amt||0)+'" onchange="tuSet('+i+',\'amt\',this.value)" style="width:80px;padding:5px 7px;font-size:13px">'
-    +'送金幣 <input type="number" value="'+(t.bonus||0)+'" onchange="tuSet('+i+',\'bonus\',this.value)" style="width:70px;padding:5px 7px;font-size:13px">'
-    +'<span style="font-size:12px;color:var(--ink-soft)">＝入帳 '+((t.amt||0)+(t.bonus||0))+' 金幣</span>'
+    +'轉帳送貓貓幣 <input type="number" min="0" value="'+(t.catBonus||0)+'" onchange="tuSet('+i+',\'catBonus\',this.value)" style="width:80px;padding:5px 7px;font-size:13px">'
+    +'<span style="font-size:12px;color:var(--ink-soft)">＝入帳 '+(t.amt||0)+' 金幣'+((t.catBonus||0)>0?'（轉帳另送 '+(t.catBonus||0)+' 貓貓幣）':'')+'</span>'
+    +((t.bonus||0)>0?'<span style="font-size:11.5px;color:#C2537D">舊的送金幣 '+t.bonus+' 按儲存後會改成 0</span>':'')
     +'<button onclick="tuDelTier('+i+')" style="border:none;background:none;color:#C2537D;font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit">刪除</button></div>').join('');
   return '<div class="card"><h2>🪙 儲值設定</h2>'
-    +'<p style="font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:10px">設定客人的儲值方案(1 金幣＝1 元)。「送金幣」是活動贈送,可留 0。客人儲值後在「客人訂單」以「儲值」標記出現,你確認收款即自動入帳金幣。</p>'
+    +'<p style="font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:10px">設定客人的儲值方案(1 金幣＝1 元)。「轉帳送貓貓幣」只有<b>銀行轉帳</b>才送:客人轉帳後在「客人訂單」以「儲值」標記出現,你確認收款時金幣和加送的貓貓幣一起自動入帳。線上付款(信用卡、超商、ATM)照原價入帳金幣、不加送。可留 0。</p>'
     +(rows||'<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">尚未設定方案,點下方新增。</div>')
     +'<button onclick="tuAddTier()" style="border:2px dashed #C9B6E6;background:none;color:#8E68C8;font-family:inherit;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;margin:4px 0 12px">＋ 新增方案</button>'
     +'<label style="font-size:12.5px;display:block;margin-bottom:10px">錢包頁說明文字(選填)<br><input id="tuNoteInput" value="'+esc(topupCfg.note||'')+'" placeholder="例:儲值即贈金幣,週年慶加碼中!" style="width:100%;max-width:460px;padding:7px 9px;font-size:13px;margin-top:4px"></label>'
@@ -1574,7 +1589,7 @@ function urgentCardHtml(list){
           ?'<span style="margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:#E86A6A;padding:2px 9px;border-radius:7px">等了 '+mins+' 分鐘</span></div>'
           :'<span style="margin-left:auto;font-size:12px;color:var(--ink-soft)">'+mins+' 分鐘前</span></div>')
         +'<div style="font-size:12.5px;color:var(--ink-soft);margin-top:4px">'+esc(o.name||'?')
-        +(isT?('　→ 入帳 <b style="color:#B8860B">'+topupCredit(o)+'</b> 金幣'+(topupTampered(o)?' <b style="color:#C0392B">⚠ 客人送出的金幣數（'+esc(o.coinAmount)+'）與方案不符，已改以方案計算</b>':'')):('　'+esc(o.planName||'')))+'</div>'
+        +(isT?('　→ 入帳 <b style="color:#B8860B">'+topupCredit(o)+'</b> 金幣'+(topupCatBonus(o)?'＋轉帳加送 <b style="color:#3E9E6B">'+topupCatBonus(o)+'</b> 貓貓幣':'')+(topupTampered(o)?' <b style="color:#C0392B">⚠ 客人送出的金幣數（'+esc(o.coinAmount)+'）與方案不符，已改以方案計算</b>':'')):('　'+esc(o.planName||'')))+'</div>'
         +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
         +'<button onclick="coSet('+ja(id)+',\'confirmed\')" style="flex:1;min-width:150px;border:none;background:linear-gradient(180deg,#8FD3AE,#57A87C);color:#fff;font-family:inherit;font-size:16px;font-weight:700;padding:14px;border-radius:11px;cursor:pointer">✔ 確認收款</button>'
         +'<button onclick="coToggle('+ja(id)+');showTab(6)" style="border:none;background:#F4E3E9;font-family:inherit;font-size:13px;padding:14px 16px;border-radius:11px;cursor:pointer">看截圖</button>'
@@ -1657,7 +1672,7 @@ function renderClientOrders(){
     return '<div style="border:2px solid '+(o.status==='done'?'#D8D0D4':'#E8C7D4')+';padding:11px 13px;margin-bottom:10px;background:'+(o.status==='done'?'#FAFAFA':'#FFF')+'">'
       +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">'
       +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">'+(o.paidBy==='cat'?(Number(o.catAmount)||0)+' 貓貓幣（金幣等值 '+(Number(o.amount)||0)+'）':'NT$'+(Number(o.amount)||0))+'</b>'+lowPriceWarn(o)
-      +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+topupCredit(o)+' 金幣'+(topupTampered(o)?' ⚠ 金幣數被改過':'')+(o.credited?'・已入帳':'')+'</span>':'')
+      +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+topupCredit(o)+' 金幣'+((o.credited?(Number(o.catCredited)||0):topupCatBonus(o))?'＋'+(o.credited?Number(o.catCredited):topupCatBonus(o))+' 貓貓幣':'')+(topupTampered(o)?' ⚠ 金幣數被改過':'')+(o.credited?'・已入帳':'')+'</span>':'')
       +(o.payChannel==='oen'?'　'+oenBadge(o):'')
       +(o.paidBy==='wallet'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">金幣支付</span>':'')
       +(o.paidBy==='cat'?'　<span style="background:#FCE8DA;color:#B5643C;font-size:12px;font-weight:700;padding:2px 8px">貓貓幣支付</span>':'')
@@ -1940,6 +1955,13 @@ function oenBadge(o){
     +(o.payAlert?'<div style="margin-top:6px;background:#FDECEF;border-left:4px solid #C0392B;padding:6px 10px;font-size:12.5px;color:#B03A5B;font-weight:700">⚠ '+esc(o.payAlert)+'</div>':'');
 }
 function topupTampered(o){ const c=Number(o&&o.coinAmount); return o&&o.coinAmount!=null&&!(Number.isSafeInteger(c)&&c===topupCredit(o)); }
+/* v516: 銀行轉帳儲值加送的貓貓幣——照店長設定的方案（catBonus），線上付款（payChannel oen）不送；不信任客人送出的數字 */
+function topupCatBonus(o){
+  if(!o||o.type!=='topup'||o.payChannel==='oen') return 0;
+  const amt=Math.max(0,Math.floor(Number(o.amount)||0));
+  const t=((topupCfg&&topupCfg.tiers)||[]).find(x=>x&&Number(x.amt)===amt);
+  return t?Math.max(0,Math.floor(Number(t.catBonus)||0)):0;
+}
 function months(){
   const set=new Set(Object.values(orders).map(o=>o.month).filter(Boolean));
   const now=new Date(); set.add(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`);

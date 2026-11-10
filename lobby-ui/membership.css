@@ -33,6 +33,7 @@
 #topupPayM .tu-method-grid button[aria-pressed=true]{border-color:#537b98;background:#eaf2f8;box-shadow:inset 0 0 0 1px #537b98,0 4px 12px #516e9212;color:#304f6b}
 #topupPayM .tu-method-grid button[data-method=bank][aria-pressed=true]{border-color:#88749d;box-shadow:inset 0 0 0 1px #88749d;background:#f1ecf6;color:#67517f}
 #topupPayM .tu-method-grid button[aria-pressed=true] i{opacity:1}
+#topupPayM .tu-method-bonus{display:inline-block;margin-top:5px;font-style:normal;font-size:11px;font-weight:700;color:#2f7d58;background:#e3f4ea;border:1px solid #9fd2b5;border-radius:999px;padding:1px 8px;white-space:nowrap}
 #topupPayM .tu-method-grid button:hover{transform:translateY(-2px);border-color:#8495ae}
 #topupPayM .tu-method-body{margin-top:20px;padding:19px 20px;border:1px solid #d5dfeb;background:#fff;border-radius:10px;animation:memberReveal .28s ease both}
 #topupPayM .tu-bank-view{background:#fff;border-color:#d8cbe2}

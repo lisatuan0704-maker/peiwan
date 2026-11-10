@@ -128,12 +128,12 @@ const wallet=(()=>{
    +(list.length?(
    '<section class="ttm-step" data-step="1"><h3><i><u>1</u></i><span class="hl">選一個儲值方案</span></h3>'
    +'<p class="ttm-guide">儲值金額由酒館固定提供，不用自己輸入，點一下想要的方案就好。</p><div class="ttm-tiers" role="radiogroup" aria-label="儲值方案">'
-   +list.map((x,i)=>'<button type="button" role="radio" data-tier="'+i+'" aria-pressed="'+(i===tier)+'" aria-checked="'+(i===tier)+'"><b>'+fmt(x.amt+(x.bonus||0))+' <small>金幣</small></b><span>付 NT$ '+fmt(x.amt)+'</span>'+(x.bonus>0?'<em>含贈送 '+fmt(x.bonus)+'</em>':'')+'<span class="pick">'+(i===tier?'✓ 已選擇':'點我選這個')+'</span></button>').join('')+'</div></section>'
+   +list.map((x,i)=>'<button type="button" role="radio" data-tier="'+i+'" aria-pressed="'+(i===tier)+'" aria-checked="'+(i===tier)+'"><b>'+fmt(x.amt+(x.bonus||0))+' <small>金幣</small></b><span>付 NT$ '+fmt(x.amt)+'</span>'+(x.bonus>0?'<em>含贈送 '+fmt(x.bonus)+'</em>':'')+(x.catBonus>0?'<em>銀行轉帳送 '+fmt(x.catBonus)+' 貓貓幣</em>':'')+'<span class="pick">'+(i===tier?'✓ 已選擇':'點我選這個')+'</span></button>').join('')+'</div></section>'
    +'<section class="ttm-step ttm-online'+(tier<0?' locked':'')+'"><h3><i><u>↗</u></i><span class="hl">線上付款・自動入帳</span></h3>'
-   +'<p class="ttm-sub">'+(online?esc(window.ttPayMethodsText?ttPayMethodsText():'信用卡')+'都可以，付款完成金幣自動入帳，不用上傳截圖。':'線上付款準備中，可以先用下面的銀行轉帳。')+'</p>'
+   +'<p class="ttm-sub">'+(online?esc(window.ttPayMethodsText?ttPayMethodsText():'信用卡')+'都可以，付款完成金幣自動入帳，不用上傳截圖'+(t&&t.catBonus>0?'（線上付款沒有加送貓貓幣）':'')+'。':'線上付款準備中，可以先用下面的銀行轉帳。')+'</p>'
    +'<div id="ttmTuEmailBox"'+(needEmail?'':' hidden')+'><label for="ttmTuEmail">Email（電子發票會寄到這裡）</label><input id="ttmTuEmail" type="email" maxlength="120" autocomplete="email" placeholder="例：boss@example.com"></div>'
    +'<button type="button" class="ttm-primary" id="ttmTuOnline"'+(online&&t?'':' disabled')+'>'+(online?(t?'線上付款 NT$ '+fmt(t.amt):'先選上面的方案'):'線上付款準備中')+'</button></section>'
-   +'<p class="ttm-paydivider">或用銀行轉帳（店長核對後入帳）</p>'
+   +'<p class="ttm-paydivider">或用銀行轉帳（店長核對後入帳）'+(t&&t.catBonus>0?'・加送 '+fmt(t.catBonus)+' 貓貓幣 ✦':'')+'</p>'
    +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="2"><h3><i><u>2</u></i><span class="hl">轉帳到酒館帳戶</span></h3>'
    +'<div class="ttm-bank">'+(acc.code?'<div class="ttm-row"><span>銀行</span><b>('+esc(acc.code)+') '+esc(acc.bank)+'</b><button type="button" class="ttm-copy" data-copy="'+esc(acc.code)+'" data-label="複製代碼">複製代碼</button></div>':'')
    +'<div class="ttm-row ttm-acct"><span>帳號</span><b>'+esc(acc.number)+'</b><button type="button" class="ttm-copy main" data-copy="'+esc(acc.digits)+'" data-label="複製帳號">複製帳號</button></div>'
@@ -147,7 +147,7 @@ const wallet=(()=>{
    +'<img id="ttmTuPrev" alt="轉帳截圖預覽"'+(proof?' src="'+proof+'"':' hidden')+'><span class="ttm-up-again"'+(proof?'':' hidden')+'>換一張</span></label>'
    +'<p class="ttm-sub">截圖需看得到轉帳金額與時間。</p></section>'
    +'<button type="button" class="ttm-primary" id="ttmTuSend" disabled>送出儲值</button>'
-   +'<p class="ttm-sub ttm-center">送出後店長核帳，確認入帳就會把金幣加進你的錢包。<br>有問題可按上方「聯絡客服」。</p>'
+   +'<p class="ttm-sub ttm-center">送出後店長核帳，確認入帳就會把金幣'+(t&&t.catBonus>0?'和加送的貓貓幣':'')+'加進你的錢包。<br>有問題可按上方「聯絡客服」。</p>'
   ):'<div class="ttm-done"><b>目前尚未開放儲值</b><p class="ttm-sub">敬請期待；有需要請按上方「聯絡客服」。</p></div>');
   const nameEl=page.querySelector('#ttmTuName');if(nameEl)nameEl.value=keep.name??dcName();
   const lastEl=page.querySelector('#ttmTuLast5');if(lastEl&&keep.last5)lastEl.value=keep.last5;

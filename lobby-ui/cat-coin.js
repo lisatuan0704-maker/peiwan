@@ -53,7 +53,7 @@ async function exchange(coin){
  return {tx,coin,got};
 }
 
-const TX_LABEL={exchange:'金幣兌換',spend:'消費',daily:'每日任務',idle:'掛機收益',welcome:'見面禮',event:'活動獎勵',harvest:'小屋收成',adjust:'店長調整',refund:'退回',convert:'轉換'};
+const TX_LABEL={topup:'儲值加送',exchange:'金幣兌換',spend:'消費',daily:'每日任務',idle:'掛機收益',welcome:'見面禮',event:'活動獎勵',harvest:'小屋收成',adjust:'店長調整',refund:'退回',convert:'轉換'};
 function txRows(rows){
  if(!rows.length)return '<p class="tt-cat-empty">還沒有貓貓幣紀錄</p>';
  return rows.map(t=>{const d=new Date(t.ts||0),pos=(t.amount||0)>0;
