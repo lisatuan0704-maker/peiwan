@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='520';
+const VER='521';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -164,13 +164,13 @@ function startRoom(hk){watchOffset();
  const cref=DB().ref('.info/connected'),onConn=s=>{if(s.val()&&S.seatRef&&S.hk===hk){try{S.seatRef.onDisconnect().remove();}catch(_){}S.seatRef.update({at:TS()}).catch(()=>{});}};
  cref.on('value',onConn);S.subs.push(()=>cref.off('value',onConn));
  clearInterval(S.pubT);clearInterval(S.beatT);S.last=null;
- S.pubT=setInterval(pubPos,200);
+ S.pubT=setInterval(pubPos,100);   // v521：0.2 → 0.1 秒（小屋最多 4 人，流量很小），朋友看到的你更即時
  S.beatT=setInterval(()=>{renderExpand();if(!S.seatRef)return;S.seatRef.update({at:TS()}).catch(()=>{});
    if(!S.visit&&S.vis==='public'&&S.listed)DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});},15000);   // v505：有在隨機名單上才報「在家」（不在名單上寫不進去）
  if(!S.visit&&S.vis==='public'&&S.listed)DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});}
-// 自己的位置：走動時最多每 0.2 秒回報一次，停下來再補最後一次
+// 自己的位置：走動時最多每 0.1 秒回報一次，停下來再補最後一次
 function pubPos(){if(!S.seatRef)return;const p=room('me');if(!p)return;const L=S.last;
- if(L&&Math.abs(L.i-p.i)<.05&&Math.abs(L.j-p.j)<.05&&L.f===p.f)return;
+ if(L&&Math.abs(L.i-p.i)<.05&&Math.abs(L.j-p.j)<.05&&L.f===p.f&&(p.moving||(L.i===p.i&&L.j===p.j)))return;   // v521：停下時最後那一小段也要送（原本差不到 0.05 格就不送，朋友那邊停的位置會差一點）
  S.last={i:p.i,j:p.j,f:p.f};S.seatRef.update({i:r2(Math.max(-2,Math.min(30,p.i))),j:r2(Math.max(-2,Math.min(30,p.j))),f:p.f<0?-1:1,at:TS()}).catch(()=>{});}
 // 其他人：座位上的人（不含自己、不含斷線的），小人圖從大廳資料讀一次存起來
 function pushPeers(){if(!S.frame)return;const mk=KEY(),now=SNOW(),list=[];
