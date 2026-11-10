@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='512';
+const VER='520';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -69,6 +69,8 @@ function newClear(k){const n=newGet(true);if(!n||(!n.k[k]&&!isNew(k)))return;del
 
 // ---------- 進出小屋 ----------
 function dollCanvasOf(doll){const c=document.createElement('canvas');c.width=c.height=64;try{window.drawDollTo(c,doll||{},'idle');}catch(_){}return c;}
+// v520：別人的時裝部件圖第一次用到才開始載，剛拿到資料就畫會少圖層 → 1.2 秒、3.5 秒後各重畫一次
+function redrawDoll(k,doll){[1200,3500].forEach(ms=>setTimeout(()=>{if(S.dolls[k]===undefined||!S.frame)return;S.dolls[k]=dollCanvasOf(doll);pushPeers();},ms));}
 function myDollCanvas(){try{const a=typeof me==='function'?me():null;return dollCanvasOf((a&&a.b&&a.b.doll)||{});}catch(_){return dollCanvasOf({});}}
 // 名牌：第一次進小屋（自己的或別人的）記下大廳原本的字，回大廳再換回來
 // v504：名牌第二行裡有大廳人數 #cnt（大廳背景照樣在更新它），換字前先把它收進隱藏的盒子，不然大廳會找不到而報錯
@@ -177,7 +179,7 @@ function pushPeers(){if(!S.frame)return;const mk=KEY(),now=SNOW(),list=[];
   list.push({id:v.k,name:v.name||'旅人',i:+v.i||0,j:+v.j||0,f:v.f<0?-1:1,doll:d||null});}
  room('setPeers',list);}
 function loadDoll(k){if(S.dollWait[k])return;S.dollWait[k]=1;
- DB().ref(R()+'/lobby/'+k+'/doll').once('value').then(s=>{S.dolls[k]=dollCanvasOf(s.val()||{});}).catch(()=>{S.dolls[k]=dollCanvasOf({});}).finally(()=>{S.dollWait[k]=0;pushPeers();});}
+ DB().ref(R()+'/lobby/'+k+'/doll').once('value').then(s=>{const d=s.val()||{};S.dolls[k]=dollCanvasOf(d);redrawDoll(k,d);}).catch(()=>{S.dolls[k]=dollCanvasOf({});}).finally(()=>{S.dollWait[k]=0;pushPeers();});}
 
 // ---------- v504 小屋聊天 ----------
 function onChat(v){const fresh=[];
@@ -438,7 +440,7 @@ async function visit(key,via){
   useSeat(st);
   try{window.TinyTavernUI?.close?.();window.TTHub?.close?.();window.dmClose?.();}catch(_){}
   S.visit={key,name,layout:view.layout,size:sizeOk(view.size),paint:view.paint||null,via,likes:0,liked:false};S.key=mk;S.hk=key;S.on=true;S.mode='walk';
-  if(owner&&owner.doll)S.dolls[key]=dollCanvasOf(owner.doll);
+  if(owner&&owner.doll){S.dolls[key]=dollCanvasOf(owner.doll);redrawDoll(key,owner.doll);}
   document.body.classList.add('tt-house-on','tt-house-visit');document.body.classList.remove('tt-house-edit');
   setSign('Tiny Tavern・拜訪小屋',name+' 的小屋');
   if(via==='random')S.seen.add(key);

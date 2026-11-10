@@ -1897,7 +1897,7 @@ function peerSprite(id,c){const key='__p_'+id;c=c&&c.width?c:BLANK;SPR[key]={w:c
 function setPeers(list){const seen=new Set();
   for(const p of list||[]){if(!p||!p.id)continue;seen.add(p.id);let P=PEERS.get(p.id);
     if(!P){const key=peerSprite(p.id,p.doll),el=document.createElement('div');el.className='hs-name';PL.append(el);
-      P={it:{t:key,i:p.i-.5,j:p.j-.5,dir:0,peer:true,f:p.f||1,bob:0},ti:p.i,tj:p.j,el,doll:p.doll,t:0,q:[]};PEERS.set(p.id,P);}
+      P={it:{t:key,i:p.i-.5,j:p.j-.5,dir:0,peer:true,f:p.f||1,bob:0},ti:p.i,tj:p.j,el,doll:p.doll,t:0,q:[]};P.it._P=P;P.seed=[...String(p.id)].reduce((h,ch)=>(h*31+ch.charCodeAt(0))%997,7)/997*6;PEERS.set(p.id,P);}
     else if(p.doll&&p.doll!==P.doll){peerSprite(p.id,p.doll);P.doll=p.doll;}
     P.ti=p.i;P.tj=p.j;P.el.textContent=p.name||'';peerSample(P,p);}
   for(const [id,P] of PEERS)if(!seen.has(id)){P.el.remove();P.bub?.remove();delete DEF[P.it.t];PEERS.delete(id);}}
@@ -1943,6 +1943,20 @@ function spawnAt(n){const B=blocked(null),o=SPAWN[Math.max(0,n|0)%4],ti=Math.max
 {const _pk=pick;pick=function(p){const o=_pk(p);return o&&o.peer?null:o;};}
 {const _ro=rectOf;rectOf=function(it){const r=_ro(it);if(it&&it.peer){const s=sprOf(it),a=anchorOf(it);r.flip=it.f<0;r.x=a.x-(r.flip?s.w-s.ax:s.ax);r.y=a.y-s.ay-(it.bob||0);}return r;};}
 {const _dr=draw;draw=function(now,dt){peerStep(dt);_dr(now,dt);peerLabels();};}
+/* v520 D：「朋友進來看小屋，看起來很糊、還沒有待機擠壓動畫」——朋友原本當成一般家具 blit（沒有腳底影子、沒有踏步擠壓、站著不呼吸），
+   改成跟自己的小人（drawMe）一模一樣的畫法：腳底影子、走路雙拍彈跳＋落地擠壓＋微傾、站著呼吸（每個人錯開節奏）、走進光池跟著亮。 */
+function peerPose(P,now){let bob=0,rot=0,sqx=1,sqy=1;
+  if(P.walk>0){const tt=P.t/1000,ph=(tt*5.5+P.seed)%1,jump=Math.abs(Math.sin(ph*Math.PI)),step=Math.floor(tt*5.5+P.seed)%2,heavy=step?1:.86;
+    bob=-jump*1.9*heavy;const landing=jump<.25;sqy=landing?(1-.042*heavy):1+jump*.021;sqx=landing?(1+.035*heavy):1;rot=Math.sin(tt*11+P.seed)*.75+(step?1:-1)*(landing?1.9:.7);}
+  else{const pulse=Math.max(0,Math.sin(now/1000*2.3*Math.PI+P.seed));sqx=1+pulse*.031;sqy=1-pulse*.044;}
+  if(reduceMotion.matches){bob=0;rot=0;sqx=1;sqy=1;}return {bob,rot,sqx,sqy};}
+function drawPeer(o,now){const P=o._P,s=SPR[o.t];if(!s||IMG[o.t]===BLANK)return;const a=anchorOf(o),{bob,rot,sqx,sqy}=peerPose(P,now);o.bob=-bob;   // 名牌跟著跳
+  const lift=Math.min(1,-bob/1.9);g.fillStyle='rgba(90,36,30,.28)';g.beginPath();g.ellipse(a.x,a.y,11*(1-.15*lift),5*(1-.15*lift),0,0,Math.PI*2);g.fill();
+  g.save();g.translate(a.x,a.y+bob);g.rotate(rot*Math.PI/180);g.scale((o.f<0?-1:1)*sqx,sqy);g.drawImage(IMG[o.t],-s.ax,-s.ay);
+  const lk=projLayers().length?poolLight(o.i+.5,o.j+.5):0;if(lk>.02){g.globalCompositeOperation='lighter';g.globalAlpha=lk;g.drawImage(IMG[o.t],-s.ax,-s.ay);}
+  g.restore();}
+{const _di=drawItem;drawItem=function(o,now){if(o&&o.peer&&o._P)return drawPeer(o,now);return _di(o,now);};
+ const _li=litItem;litItem=function(o){if(o&&o.peer)return;return _li(o);};}
 {const _b=boot;boot=function(){_b();try{setDoll(HOST&&HOST.dollCanvas&&HOST.dollCanvas());}catch(e){}frameRoom();readyFn();};}
 addEventListener('resize',()=>{if(!held)frameRoom();});
 // v507 小屋擴建：大廳付好款叫這個，房間直接變大（原本的家具都留在原位）；外殼還沒載就先載

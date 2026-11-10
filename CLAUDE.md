@@ -1,5 +1,17 @@
 # 小小酒館修改紀錄
 
+## 2026/11/11 v520 小屋裡的朋友看起來糊、沒有待機擠壓（Claude）
+- D：「我朋友進來看小屋，看起來很糊，還沒有待機擠壓動畫」。
+- 原因：house/room.html 的朋友小人（PEERS）當成一般家具 blit——沒有腳底影子、沒有走路踏步擠壓與微傾、站著不呼吸，跟自己的小人（drawMe）畫法不同；
+  朋友的 64px 小人圖（lobby-ui/house.js dollCanvasOf）拿到資料就畫一次、之後不再重畫，時裝部件圖還沒載好就會少圖層。
+  本機 1.25 倍縮放實測，同一套衣服時兩邊的像素其實都是最近鄰、沒有被柔化；看起來「糊」主要是少了影子／動作、站著完全不動。
+- 修法：room.html 新增 peerPose／drawPeer（照 drawMe：腳底影子、雙拍彈跳＋落地擠壓＋微傾、站著呼吸〔每人依 id 錯開節奏〕、光池跟著亮），drawItem 遇到朋友改走 drawPeer，litItem 略過朋友；
+  名牌高度跟著彈跳。house.js 新增 redrawDoll：朋友（含拜訪時的主人）小人 1.2 秒、3.5 秒後各重畫一次。
+  順手修：大廳 tick 裡別人在小屋（mapLoc 'house'）時 MAPS 沒有這張圖會丟錯（訪客分頁實測到 Cannot read properties of undefined (reading 'floor')），改成退回大廳地板。
+- ⚠ room.html 這次直接改；tt-room-kit/house-lobby/house-embed.js 的朋友那段還停在 v504 版（v511 起就沒同步），重建 room.html 前要先把 v511＋v520 的朋友程式搬回去。
+- 版本：verTag v520、ver.json 520、lobby-view 520、house.js VER 520（room.html?v=520）、lobby 載入 house.js?v=520。
+- 驗證：scratchpad/peer/t8.cjs（本機模擬資料庫兩個分身、1.25 倍縮放、放大 3 段）：朋友改用跟自己一樣的畫法、縮放每幀在變（待機擠壓）、每幀兩個腳底影子、名牌正常、兩邊沒有程式錯誤。
+
 ## 2026/11/11 v519 私訊通知小卡：同一則只跳一次（Claude）
 - D 回報：「明明已讀了還是重複看到通知」（#ttDmToast「無名 傳來私訊／傳了一張貼圖」）。
 - 原因（本機兩個分身重現）：大廳同時開在兩個地方（兩個分頁／視窗、電腦＋手機）時，正在讀的那邊會把 dmMeta 未讀歸 0，
