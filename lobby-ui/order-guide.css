@@ -1,0 +1,121 @@
+/* v514 點單「想玩什麼」＋點完單的引導（委託進度卡、接下來說明卡）——整站主題色：深藍描邊、粉紅重點、天藍虹光 */
+
+/* ---------- 想玩什麼（點單第二步：休閒／競技方案） ---------- */
+html body .tt-order-flow .of-game{display:grid;gap:16px}
+.of-game-plan{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;gap:10px;padding:12px 16px;border:2px solid var(--sk-ink,#1C2156);border-radius:12px;background:linear-gradient(170deg,#fff,#F4FAFF);box-shadow:inset 0 0 0 2px #CFEFFF}
+.of-game-plan>span{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--sk-mute,#5C6196)}
+.of-game-plan>b{font-size:16px;color:var(--sk-ink,#1C2156);overflow-wrap:anywhere}
+.of-game-plan>em{font-style:normal;font:700 18px 'Tavern Numerals','TT Latin',sans-serif;color:var(--sk-pink,#FF4F8B);white-space:nowrap}
+.of-game-plan>em small{font:700 10px 'TT Huninn','LINE Seed TW',sans-serif;color:var(--sk-mute,#5C6196);margin-left:3px}
+html body .tt-order-flow label.of-game-label{display:grid;gap:4px;margin:2px 0 0!important}
+.of-game-label b{font-size:16px;color:var(--sk-ink,#1C2156)!important}
+.of-game-label small{font-size:12px;font-weight:400;color:var(--sk-mute,#5C6196)}
+.of-game-field{position:relative}
+html body #shopM2 #ofGameIn{font-size:16px!important;font-weight:700;padding:14px 66px 14px 15px!important;border:3px solid var(--sk-ink,#1C2156)!important;border-radius:12px!important;background:#fff!important;color:var(--sk-ink,#1C2156)!important;box-shadow:0 3px 0 var(--sk-ink,#1C2156)!important;transition:box-shadow .15s,translate .15s}
+html body #shopM2 #ofGameIn:focus{outline:0;box-shadow:0 3px 0 var(--sk-ink,#1C2156),0 0 0 4px #7FD3F7!important}
+html body #shopM2 #ofGameIn::placeholder{color:#A9B0DA;font-weight:400}
+.of-game-field i{position:absolute;right:15px;top:50%;translate:0 -50%;font:700 11px 'Tavern Numerals','TT Latin',sans-serif;font-style:normal;color:#A9B0DA;pointer-events:none}
+.of-game-hot>span{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:1px;color:var(--sk-pink,#FF4F8B);margin-bottom:9px}
+.of-game-hot>span::before{content:"";width:9px;height:9px;border:2px solid currentColor;rotate:45deg;flex:none;animation:ofSpin 4s linear infinite}
+@keyframes ofSpin{to{rotate:405deg}}
+.of-game-chips{display:flex;flex-wrap:wrap;gap:8px}
+html body .tt-order-flow .of-game-chips button{border:2px solid var(--sk-ink,#1C2156)!important;border-radius:999px!important;background:#fff!important;color:var(--sk-ink,#1C2156)!important;font:700 13px 'TT Latin','TT Huninn','LINE Seed TW',sans-serif;padding:7px 14px!important;cursor:pointer;box-shadow:0 2px 0 var(--sk-ink,#1C2156)!important;transition:translate .12s,background .12s;min-height:0}
+html body .tt-order-flow .of-game-chips button:hover{translate:0 -2px;background:#F4FAFF!important}
+html body .tt-order-flow .of-game-chips button.on{background:var(--sk-pink,#FF4F8B)!important;color:#fff!important}
+html body .tt-order-flow button.of-game-unsure{justify-self:start;border:2px dashed #A9B0DA!important;border-radius:10px!important;background:transparent!important;color:var(--sk-mute,#5C6196)!important;font:700 12.5px 'TT Huninn','LINE Seed TW',sans-serif;padding:8px 14px!important;cursor:pointer;box-shadow:none!important}
+html body .tt-order-flow button.of-game-unsure.on,html body .tt-order-flow button.of-game-unsure:hover{border-color:var(--sk-pink,#FF4F8B)!important;color:var(--sk-pink,#FF4F8B)!important}
+
+/* ---------- 左上角委託進度卡（沿用 #playCard 的位置，換成主題款） ---------- */
+:is(#playCard,.tt-quest-m>div).tt-quest{position:relative;overflow:hidden;background:linear-gradient(160deg,#fff 0%,#FBFAFF 55%,#F1EEFF 100%);border:3px solid var(--sk-ink,#1C2156);border-radius:14px;box-shadow:0 4px 0 var(--sk-ink,#1C2156),0 12px 26px rgba(28,33,86,.18);padding:12px 13px 11px;min-width:212px}
+:is(#playCard,.tt-quest-m>div).tt-quest::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:var(--sk-topband,linear-gradient(90deg,#FF8DB8,#C9A6FF,#7FD3F7))}
+:is(#playCard,.tt-quest-m>div).tt-quest::after{content:"";position:absolute;right:-18px;bottom:-18px;width:58px;height:58px;border:2px solid #D8D2FF;rotate:45deg;opacity:.7;pointer-events:none;animation:qcTurn 9s linear infinite}
+@keyframes qcTurn{to{rotate:405deg}}
+.qc-kick{display:flex;justify-content:space-between;align-items:center;gap:8px;font:900 9px 'Tavern Numerals','TT Latin',sans-serif;letter-spacing:2.2px;color:var(--sk-pink,#FF4F8B)}
+.qc-kick em{font-style:normal;letter-spacing:1px;color:#A9B0DA}
+:is(#playCard,.tt-quest-m>div).tt-quest .pcHead{display:flex;gap:6px;font-size:14px;color:var(--sk-ink,#1C2156);margin-top:5px;align-items:flex-start}
+:is(#playCard,.tt-quest-m>div).tt-quest .pcHead b{color:var(--sk-ink,#1C2156);line-height:1.35}
+:is(#playCard,.tt-quest-m>div).tt-quest .pcDot{display:inline-block;width:8px;height:8px;border-radius:50%;animation:pcDot 1.4s ease-in-out infinite;margin-top:5px;flex:none;background:#F5A623;box-shadow:0 0 0 3px rgba(245,166,35,.25)}
+:is(#playCard,.tt-quest-m>div).tt-quest.s2 .pcDot{background:#3FBF85;box-shadow:0 0 0 3px rgba(63,191,133,.25)}
+:is(#playCard,.tt-quest-m>div).tt-quest.is-alert .pcDot{background:var(--sk-pink,#FF4F8B);box-shadow:0 0 0 3px rgba(255,79,139,.25)}
+.qc-sub{position:relative;font-size:12px;line-height:1.6;color:var(--sk-mute,#5C6196);margin-top:4px}
+.qc-steps{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.qc-steps li{display:grid;justify-items:center;gap:4px;font-size:10px;font-weight:700;color:#A9B0DA;white-space:nowrap}
+.qc-steps li i{width:100%;height:5px;border-radius:3px;background:#E3E6F7}
+.qc-steps li.done{color:var(--sk-ink,#1C2156)}.qc-steps li.done i{background:var(--sk-ink,#1C2156)}
+.qc-steps li.now{color:var(--sk-pink,#FF4F8B)}
+.qc-steps li.now i{background:linear-gradient(90deg,#FF4F8B,#C08CFF,#6FD0F5,#FF4F8B);background-size:300% 100%;animation:qcFlow 2.2s linear infinite}
+@keyframes qcFlow{to{background-position:-300% 0}}
+.qc-acts{position:relative;display:flex;gap:7px;margin-top:10px}
+:is(#playCard,.tt-quest-m>div).tt-quest .qc-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:34px;border:2px solid var(--sk-ink,#1C2156);border-radius:10px;background:#fff;color:var(--sk-ink,#1C2156);font:700 12.5px 'TT Huninn','LINE Seed TW',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156);padding:6px 10px;transition:translate .12s,box-shadow .12s;white-space:nowrap}
+:is(#playCard,.tt-quest-m>div).tt-quest .qc-btn:hover{translate:0 -1px}
+:is(#playCard,.tt-quest-m>div).tt-quest .qc-btn:active{translate:0 2px;box-shadow:0 1px 0 var(--sk-ink,#1C2156)}
+:is(#playCard,.tt-quest-m>div).tt-quest .qc-more{flex:0 0 auto;color:var(--sk-mute,#5C6196)}
+:is(#playCard,.tt-quest-m>div).tt-quest .qc-go{background:var(--sk-pink,#FF4F8B);color:#fff;font-weight:900}
+:is(#playCard,.tt-quest-m>div).tt-quest.is-ready{animation:h2in .5s cubic-bezier(.34,1.56,.64,1) both,qcGlow 1.8s ease-in-out .5s infinite}
+@keyframes qcGlow{50%{box-shadow:0 4px 0 var(--sk-ink,#1C2156),0 0 0 5px rgba(255,79,139,.25),0 12px 26px rgba(28,33,86,.18)}}
+#playCardHostM :is(#playCard,.tt-quest-m>div).tt-quest{padding:13px 15px 12px}
+.tt-quest-m{margin:0 0 14px}
+.tt-quest-m>.tt-quest{padding:14px 15px 13px}
+.tt-quest-m .qc-sub{font-size:13px}
+#playCardHostM :is(#playCard,.tt-quest-m>div).tt-quest .qc-sub{font-size:13px}
+#playCardHostM :is(#playCard,.tt-quest-m>div).tt-quest .qc-steps li{font-size:11px}
+
+/* ---------- 接下來說明卡 ---------- */
+.tt-guide{position:fixed;inset:0;z-index:230;display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px));background:rgba(28,33,86,.42);backdrop-filter:blur(8px);opacity:0;transition:opacity .2s}
+.tt-guide.on{opacity:1}
+.tt-guide[hidden]{display:none!important}
+.tg-card{position:relative;width:min(560px,100%);max-height:calc(100dvh - 40px);overflow:auto;border:3px solid var(--sk-ink,#1C2156);border-radius:20px;background:linear-gradient(165deg,#fff 0%,#FAF8FF 45%,#EEE9FF 100%);box-shadow:0 6px 0 var(--sk-ink,#1C2156),0 26px 60px rgba(20,18,60,.35);color:var(--sk-ink,#1C2156);translate:0 18px;scale:.97;transition:translate .32s cubic-bezier(.34,1.56,.64,1),scale .32s cubic-bezier(.34,1.56,.64,1);scrollbar-width:thin}
+.tt-guide.on .tg-card{translate:0 0;scale:1}
+.tg-card::before{content:"";position:sticky;top:0;display:block;height:6px;background:var(--sk-topband,linear-gradient(90deg,#FF8DB8,#C9A6FF,#7FD3F7));z-index:2}
+.tg-x{position:absolute;right:14px;top:16px;z-index:3;width:34px;height:34px;border:3px solid var(--sk-ink,#1C2156);border-radius:9px;background:#fff;color:var(--sk-ink,#1C2156);font:900 20px/1 'TT Latin',sans-serif;cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156)}
+.tg-head{position:relative;overflow:hidden;padding:20px 24px 16px;isolation:isolate}
+.tg-head small{display:block;font:900 10.5px 'Tavern Numerals','TT Latin',sans-serif;letter-spacing:2.5px;color:var(--sk-pink,#FF4F8B)}
+.tg-head h2{display:inline-block;margin:10px 0 0;padding:10px 30px 12px 18px;font:700 25px 'Tavern Numerals','TT Latin','TT Huninn','LINE Seed TW',sans-serif;letter-spacing:1px;color:#fff;background:var(--sk-ink,#1C2156);clip-path:polygon(4% 0,100% 0,95% 100%,0 100%,0 26%)}
+.tg-ghost{position:absolute;right:58px;top:14px;z-index:-1;font:700 66px/1 'Tavern Numerals','TT Latin',sans-serif;letter-spacing:5px;color:transparent;-webkit-text-stroke:2px rgba(176,150,255,.45)}
+.tg-body{padding:0 24px}
+.tg-alert{margin:0 0 12px;padding:10px 13px;border:2px solid var(--sk-pink,#FF4F8B);border-radius:12px;background:#FFF0F5;color:#C2335F;font-size:13px;font-weight:700;line-height:1.6}
+.tg-game{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;padding:9px 13px;border:2px solid var(--sk-ink,#1C2156);border-radius:12px;background:#fff;box-shadow:inset 0 0 0 2px #CFEFFF}
+.tg-game span{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--sk-mute,#5C6196);white-space:nowrap}
+.tg-game b{font-size:15px;overflow-wrap:anywhere}
+.tg-steps{position:relative;list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.tg-steps::before{content:"";position:absolute;left:21px;top:20px;bottom:20px;width:2px;background:repeating-linear-gradient(180deg,#C9C5EE 0 5px,transparent 5px 9px)}
+.tg-steps li{position:relative;display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:start;padding:10px 12px 10px 0;border-radius:12px;opacity:0;translate:-10px 0;animation:tgIn .4s cubic-bezier(.34,1.56,.64,1) forwards;animation-delay:calc(.08s + var(--i)*.07s)}
+@keyframes tgIn{to{opacity:1;translate:0 0}}
+.tg-steps li>b{position:relative;z-index:1;display:grid;place-items:center;width:44px;height:44px;font:700 15px 'Tavern Numerals','TT Latin',sans-serif;color:#A9B0DA;background:#fff;border:2px solid #D3D8F2;border-radius:12px}
+.tg-steps li strong{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:15px;color:#8C90BC;margin-top:3px}
+.tg-steps li strong em{font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:1px;color:#fff;background:var(--sk-pink,#FF4F8B);padding:2px 8px;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%)}
+.tg-steps li span{display:block;font-size:12.5px;line-height:1.65;color:var(--sk-mute,#5C6196);margin-top:3px}
+.tg-steps li.done>b{background:var(--sk-ink,#1C2156);border-color:var(--sk-ink,#1C2156);color:#fff}
+.tg-steps li.done strong{color:var(--sk-ink,#1C2156)}
+.tg-steps li.now{background:linear-gradient(100deg,#fff 0%,#FFF2F7 60%,#F3EEFF 100%);box-shadow:inset 0 0 0 2px #FFC6DD}
+.tg-steps li.now>b{border:3px solid var(--sk-ink,#1C2156);color:var(--sk-pink,#FF4F8B);box-shadow:0 3px 0 var(--sk-ink,#1C2156)}
+.tg-steps li.now>b::after{content:"";position:absolute;inset:-7px;border:2px solid #FF8DB8;border-radius:15px;animation:tgPing 1.6s ease-out infinite}
+@keyframes tgPing{from{opacity:.9;scale:.85}to{opacity:0;scale:1.18}}
+.tg-steps li.now strong{color:var(--sk-ink,#1C2156)}
+.tg-wait{margin:18px 0 0;padding:14px 0 0;border-top:2px dashed #D3D8F2}
+.tg-wait h3{margin:0 0 10px;font-size:15px;color:var(--sk-ink,#1C2156)}
+.tg-wait h3 small{display:block;font:900 10px 'Tavern Numerals','TT Latin',sans-serif;letter-spacing:2.2px;color:#37B6E3;margin-bottom:3px}
+.tg-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:9px}
+.tg-tile{position:relative;overflow:hidden;display:grid;gap:3px;text-align:left;padding:11px 12px;border:2px solid var(--sk-ink,#1C2156);border-radius:12px;background:#fff;color:var(--sk-ink,#1C2156);font-family:'TT Huninn','LINE Seed TW',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156);transition:translate .12s}
+.tg-tile::before{content:"";position:absolute;inset:0 auto 0 -40%;width:30%;background:linear-gradient(90deg,transparent,rgba(127,211,247,.35),transparent);transform:skewX(-20deg);transition:left .45s}
+.tg-tile:hover{translate:0 -2px}.tg-tile:hover::before{left:120%}
+.tg-tile b{font-size:13.5px}
+.tg-tile small{font-size:11px;line-height:1.45;color:var(--sk-mute,#5C6196)}
+.tg-note{margin:12px 0 0;font-size:11.5px;color:#8C90BC}
+.tg-foot{position:sticky;bottom:0;display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:16px;padding:14px 24px;border-top:2px solid #E3E6F7;background:rgba(255,255,255,.88);backdrop-filter:blur(10px)}
+.tg-off{margin-right:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sk-mute,#5C6196);cursor:pointer}
+.tg-off input{accent-color:var(--sk-pink,#FF4F8B);width:16px;height:16px}
+.tg-ok{min-width:120px;min-height:42px;border:3px solid var(--sk-ink,#1C2156);border-radius:12px;background:var(--sk-pink,#FF4F8B);color:#fff;font:900 14px 'TT Huninn','LINE Seed TW',sans-serif;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 0 var(--sk-ink,#1C2156)}
+.tg-ok:active{translate:0 3px;box-shadow:0 1px 0 var(--sk-ink,#1C2156)}
+.tg-x:focus-visible,.tg-ok:focus-visible,.tg-tile:focus-visible{outline:3px solid #37B6E3;outline-offset:3px}
+@media(max-width:600px){
+ .tg-head{padding:18px 18px 14px}.tg-head h2{font-size:21px;padding:9px 24px 11px 15px}.tg-ghost{font-size:50px;right:52px}
+ .tg-body{padding:0 16px}.tg-foot{padding:12px 16px}
+ .tg-steps li{grid-template-columns:38px minmax(0,1fr);gap:10px}.tg-steps li>b{width:38px;height:38px;font-size:13px}.tg-steps::before{left:18px}
+ .tg-tiles{grid-template-columns:1fr 1fr}
+ html body .tt-order-flow .of-game-chips button{font-size:12.5px;padding:7px 12px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .tg-steps li{animation:none;opacity:1;translate:0 0}.tg-steps li.now>b::after,.qc-steps li.now i,:is(#playCard,.tt-quest-m>div).tt-quest::after,:is(#playCard,.tt-quest-m>div).tt-quest.is-ready,.of-game-hot>span::before{animation:none}
+ .tg-card,.tt-guide{transition:none}
+}

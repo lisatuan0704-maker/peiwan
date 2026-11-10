@@ -1595,7 +1595,7 @@ function coPass(o){
   if(_coSt!=='all'){ const st=o.status||'pending'; if(_coSt==='active'){ if(st!=='confirmed') return false; } else if(st!==_coSt) return false; }
   if(_coRange!=='all'){ const d=Date.now()-(o.createdAt||0); const lim={d1:86400000,d7:7*86400000,d30:30*86400000}[_coRange]; if(lim&&d>lim) return false; }
   if(_coStaff!=='all'){ if((o.staffName||'（未指定）')!==_coStaff) return false; }
-  if(_coQ){ const hay=[(o.name||''),(o.planName||''),(o.last5||''),(o.staffName||'')].join(' ').toLowerCase(); if(hay.indexOf(_coQ)<0) return false; }
+  if(_coQ){ const hay=[(o.name||''),(o.planName||''),(o.last5||''),(o.staffName||''),(o.game||'')].join(' ').toLowerCase(); if(hay.indexOf(_coQ)<0) return false; }
   return true;
 }
 function coPill(on,label,fn){
@@ -1664,6 +1664,7 @@ function renderClientOrders(){
       +(o.staffName?'　<span style="background:#EFE4FB;color:#8E68C8;font-size:12px;font-weight:700;padding:2px 8px">指定:'+esc(TTStaffNames.display(o.staffName,o.staffCid))+'</span>':'')
       +(o.groupId?'<div style="font-size:12px;color:#856c94;margin-top:7px">同組 '+Number(o.groupSize)+' 位：'+esc((o.groupStaffNames||[]).join('、'))+'｜整組實付 NT$'+Number(o.groupAmount)+'，本筆分攤 NT$'+Number(o.amount)+'｜組別 '+esc(o.groupId)+'</div>':'')
       +(o.booking&&o.reserveAt?'　<span style="background:#FFF0DA;color:#C97B2B;font-size:12px;font-weight:700;padding:2px 8px">預約:'+(function(t){const d=new Date(t);const W=["日","一","二","三","四","五","六"];return (d.getMonth()+1)+"/"+d.getDate()+"(週"+W[d.getDay()]+") "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");})(o.reserveAt)+'</span>':(o.booking?'　<span style="background:#FFF0DA;color:#C97B2B;font-size:12px;padding:2px 8px">預約·時段待定</span>':''))
+      +(o.game?'　<span style="background:#FFF3D6;color:#8A5A2B;font-size:12px;font-weight:700;padding:2px 8px">想玩:'+esc(o.game)+'</span>':'')
       +(overdue?'　<span style="color:#C0392B;font-size:12px;font-weight:700">⚠ 逾時未確認</span>':'')
       +'<div style="font-size:12px;color:var(--ink-soft);margin-top:2px">'
       +esc(o.name||'?')+'｜末五碼 <b>'+esc(o.last5||'-----')+'</b>｜'+new Date(o.createdAt||0).toLocaleString("zh-TW")+'</div>'

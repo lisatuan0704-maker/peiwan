@@ -4,6 +4,13 @@
  const $=id=>document.getElementById(id), money=n=>Number(n).toLocaleString('zh-TW');
  const previous={open:shopOpen,pick:pickPlan,reserve:openReserve,coin:payWithCoins,transfer:submitOrder,coinInfo:renderCoinInfo};
  let submitting=false,reserveToken=0;
+ // v514 D：休閒／競技這類「遊戲」方案，點下去先問這次想玩什麼（自己打字，下面放熱門選項點一下就帶入）；存進訂單 game 給冒險者看
+ const GAMES={comp:['特戰英豪','英雄聯盟','傳說對決','APEX 英雄','鬥陣特攻 2','漫威爭鋒','絕地求生','CS2','第五人格','永劫無間'],
+  casual:['鵝鴨殺','猛獸派對','蛋仔派對','糖豆人','Minecraft','R.E.P.O.','致命公司','恐鬼症','你畫我猜','Pico Park']};
+ const UNSURE='還沒想好，見面再聊';
+ let game='';
+ const gameKind=p=>/遊戲/.test(p?.n||'')?(/競技/.test(p.n)?'comp':'casual'):null;
+ const cleanGame=v=>String(v||'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/\s+/g,' ').trim().slice(0,30);
  function members(){if(curKind!=='play'||!selStaff)return [];return selStaff.members||[selStaff];}
  const displayName=p=>window.ttStaffDisplayName?.(p.cid,p.name)||p.name;
  function count(){return Math.max(1,members().length);}
@@ -29,7 +36,7 @@
  function summary(){
    if(curKind!=='play'||!curPlan)return '';
    const unit=curPlan.unitPrice??curPlan.p,qty=curPlan.quantity||1;
-   return '<div class="of-receipt"><div><span>方案</span><b>'+esc(curPlan.n)+'</b></div><div><span>每位冒險者</span><b>NT$ '+money(unit)+'</b></div><div><span>冒險者人數</span><b>'+qty+' 位</b></div>'+(curBooking&&curReserveAt?'<div><span>預約時間</span><b>'+esc(fmtRes(curReserveAt))+'</b></div>':'')+'<div class="of-total"><span>方案合計</span><strong>'+money(unit)+' <i>× '+qty+' ＝</i> '+money(curPlan.p)+'</strong></div><small>優惠券如有使用，會從整筆合計折抵一次。</small></div>';
+   return '<div class="of-receipt"><div><span>方案</span><b>'+esc(curPlan.n)+'</b></div>'+(gameKind(curPlan)&&game?'<div><span>想玩</span><b>'+esc(game)+'</b></div>':'')+'<div><span>每位冒險者</span><b>NT$ '+money(unit)+'</b></div><div><span>冒險者人數</span><b>'+qty+' 位</b></div>'+(curBooking&&curReserveAt?'<div><span>預約時間</span><b>'+esc(fmtRes(curReserveAt))+'</b></div>':'')+'<div class="of-total"><span>方案合計</span><strong>'+money(unit)+' <i>× '+qty+' ＝</i> '+money(curPlan.p)+'</strong></div><small>優惠券如有使用，會從整筆合計折抵一次。</small></div>';
  }
  function checkout(){
    if(curKind==='shop'){
@@ -47,8 +54,11 @@
  function validPlan(){const p=playItems().find(x=>x.id===curPlan?.id);if(!p||p.p!==(curPlan.unitPrice??curPlan.p))throw Error('方案價格已更新，請返回重新選擇');return p;}
  shopOpen=function(step,kind){
    if(submitting){toast('正在送出這組點單，請稍候');return;}
+   if(step===1)game='';
    const result=previous.open(step,kind);
+   $('shopM2').querySelector('.of-game-go')?.remove();
    if(step===2&&curKind==='play'){
+     $('shopM2').querySelector('.sc-back').onclick=()=>backFromPlans();
      heading('shopM2','CHOOSE YOUR PLAN / 今天想怎麼玩','選一個，一起玩。',1);context('shopM2');
      $('m2list').innerHTML=playItems().map((p,i)=>'<button type="button" class="planBtn" data-of-plan="'+esc(p.id)+'"><span class="of-plan-number">'+String(i+1).padStart(2,'0')+'</span><span class="of-plan-name"><b>'+esc(p.n)+'</b><small>這個方案會套用到所選的 '+count()+' 位冒險者</small></span><span class="pp">NT$ '+money(p.p)+'<small>／每位冒險者</small></span><span class="of-plan-arrow" aria-hidden="true">→</span></button>').join('');
      $('m2list').querySelectorAll('[data-of-plan]').forEach(b=>b.onclick=()=>pickPlan(b.dataset.ofPlan));
@@ -59,8 +69,29 @@
  };
  pickPlan=function(id){
    if(curKind!=='play')return previous.pick(id);
-   try{validate();const p=playItems().find(x=>x.id===id);if(!p)throw Error('這個方案已下架，請重新選擇');const price=pricing(p.p,count());curPlan={...p,unitPrice:p.p,quantity:count(),p:price.total};curBooking=pkMode==='book';curReserveAt=null;if(curBooking)openReserve(()=>shopOpen(3));else shopOpen(3);}catch(e){toast(e.message);}
+   try{validate();const p=playItems().find(x=>x.id===id);if(!p)throw Error('這個方案已下架，請重新選擇');if(gameKind(p))return askGame(p);game='';go(p);}catch(e){toast(e.message);}
  };
+ function go(p){const price=pricing(p.p,count());curPlan={...p,unitPrice:p.p,quantity:count(),p:price.total};curBooking=pkMode==='book';curReserveAt=null;if(curBooking)openReserve(()=>shopOpen(3));else shopOpen(3);}
+ function askGame(p){
+   const kind=gameKind(p),list=GAMES[kind],modal=$('shopM2'),box=$('m2list'),back=modal.querySelector('.sc-back');
+   heading('shopM2','WHAT TO PLAY / 想玩什麼','這次，想玩哪一款？',1);context('shopM2');
+   modal.querySelector('.of-ghost').textContent='GAME';
+   box.innerHTML='<div class="of-game"><div class="of-game-plan"><span>已選方案</span><b>'+esc(p.n)+'</b><em>NT$ '+money(p.p)+'<small>／每位冒險者</small></em></div>'
+     +'<label class="of-game-label" for="ofGameIn"><b>打上想玩的遊戲</b><small>什麼遊戲都可以，冒險者會先看到，好提前準備</small></label>'
+     +'<div class="of-game-field"><input id="ofGameIn" maxlength="30" autocomplete="off" enterkeyhint="next" placeholder="例如：'+esc(list[0])+'"><i aria-live="polite">0／30</i></div>'
+     +'<div class="of-game-hot"><span>'+(kind==='comp'?'熱門競技':'熱門休閒')+'・點一下直接帶入</span><div class="of-game-chips">'+list.map(g=>'<button type="button" data-of-game="'+esc(g)+'">'+esc(g)+'</button>').join('')+'</div></div>'
+     +'<button type="button" class="of-game-unsure" data-of-game="'+esc(UNSURE)+'">'+esc(UNSURE)+'</button></div>';
+   let next=modal.querySelector('.of-game-go');if(!next){next=document.createElement('button');next.type='button';next.className='sc-go of-game-go';next.textContent='就玩這個，下一步 →';modal.querySelector('.btns').append(next);}
+   const input=$('ofGameIn'),counter=box.querySelector('.of-game-field i');
+   const sync=()=>{game=cleanGame(input.value);counter.textContent=[...input.value].length+'／30';next.disabled=!game;box.querySelectorAll('[data-of-game]').forEach(b=>b.classList.toggle('on',b.dataset.ofGame===game));};
+   const submit=()=>{if(!game){toast('先打上想玩的遊戲，或點一個選項');input.focus();return;}try{validate();go(p);}catch(e){toast(e.message);}};
+   input.value=game;sync();
+   input.oninput=sync;input.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();submit();}};
+   box.querySelectorAll('[data-of-game]').forEach(b=>b.onclick=()=>{input.value=b.dataset.ofGame;sync();if(b.classList.contains('of-game-unsure'))submit();else input.focus();});
+   next.onclick=submit;
+   back.textContent='← 換一個方案';back.onclick=()=>shopOpen(2,'play');
+   if(!matchMedia('(pointer:coarse)').matches)setTimeout(()=>input.focus(),60);
+ }
  // v501 商城一起結帳：列出全部商品與總額（金幣、貓貓幣分開算），按一次付款由 payCartWithCoins 逐件付
  function cartInfo(){
    const box=$('payCoinInfo');if(!box)return;if(_submitting&&box.querySelector('.of-cart'))return;   // 付款中不重畫（餘額正在一件件扣）
@@ -113,8 +144,8 @@
  };
  function coupon(){const use=payMethod==='coin'?_coinCoupon:!!$('useCoupon')?.checked;const vi=window.__vipInfo?.();return use&&couponsLeft()>0&&vi?.lv?Number(vi.cur.disc)||0:0;}
  function makeRecords(snapshot,ids,groupId){
-   const {list,plan,price,name,last5,booking,reserveAt,key,method,createdAt}=snapshot;
-   return list.map((p,i)=>({id:ids[i],order:{plan:plan.id,planName:plan.n,amount:price.shares[i].amount,origAmount:price.unit,couponUsed:price.discount>0,couponDisc:price.shares[i].discount,type:'play',itemId:null,itemName:null,name,last5:method==='coin'?null:last5,hasProof:method!=='coin',...(method==='coin'?{paidBy:'wallet'}:{}),staffName:p.name,staffCid:p.cid,booking,reserveAt:booking?reserveAt:null,status:method==='coin'?'confirmed':'pending',createdAt,payDue:createdAt+PAY_MINS*60000,myKey:key,groupId,groupSize:list.length,groupStaffNames:list.map(x=>x.name),groupTotal:price.total,groupAmount:price.amount,groupCouponDisc:price.discount,unitPrice:price.unit}}));
+   const {list,plan,price,name,last5,booking,reserveAt,key,method,createdAt,game}=snapshot;
+   return list.map((p,i)=>({id:ids[i],order:{plan:plan.id,planName:plan.n,amount:price.shares[i].amount,origAmount:price.unit,couponUsed:price.discount>0,couponDisc:price.shares[i].discount,type:'play',itemId:null,itemName:null,name,last5:method==='coin'?null:last5,hasProof:method!=='coin',...(method==='coin'?{paidBy:'wallet'}:{}),staffName:p.name,staffCid:p.cid,booking,reserveAt:booking?reserveAt:null,status:method==='coin'?'confirmed':'pending',createdAt,payDue:createdAt+PAY_MINS*60000,myKey:key,groupId,groupSize:list.length,groupStaffNames:list.map(x=>x.name),groupTotal:price.total,groupAmount:price.amount,groupCouponDisc:price.discount,unitPrice:price.unit,...(game?{game}:{})}}));
  }
  async function submitGroup(method){
    if(submitting||_submitting)return;
@@ -125,7 +156,7 @@
      if(!name)throw Error('請填稱呼或 Discord 名');if(method!=='coin'&&!/^\d{5}$/.test(last5))throw Error('帳號末五碼需為 5 位數字');if(method!=='coin'&&!proofData)throw Error('請上傳轉帳截圖');
      const list=members().map(p=>({...p})),price=pricing(curPlan.unitPrice,list.length,coupon());
      if(method==='coin'&&(window.__wallet||0)<price.amount)throw Error('餘額不足，請先儲值');
-     snap={list,plan:{...curPlan},price,name,last5,booking:curBooking,reserveAt:curReserveAt,key:myKey,method,createdAt:Date.now(),proof:proofData};
+     snap={list,plan:{...curPlan},price,name,last5,booking:curBooking,reserveAt:curReserveAt,key:myKey,method,createdAt:Date.now(),proof:proofData,game:gameKind(curPlan)?game:''};
    }catch(e){toast(e.message);return;}
    submitting=_submitting=true;const btn=$('paySubmitBtn');btn.disabled=true;btn.textContent='正在確認與送出…';
    const stopWait=submitGuard('paySubmitBtn','送出訂單');
@@ -149,11 +180,12 @@
      records.forEach(({order})=>{try{notifyOrder(order);}catch(_){}});
      const title=method==='coin'?'已完成這組付款':'這組預約已送出';
      if(window.lobbyNotify)lobbyNotify({ok:true,icon:'receipt',title,sub:snap.list.map(displayName).join('、')+' · '+snap.plan.n+' · 合計 '+money(snap.price.amount),onclick:()=>shopOpen(4),hold:8000});else toast(title);
+     try{window.TTOrderGuide?.after(records.map(r=>r.id),records[0].order,records.map(r=>r.order));}catch(_){}
    }catch(e){
      if(e.ids)rememberPaymentIds(e.ids);toast(e.message||'這組點單未成立，請重試');
    }finally{stopWait();submitting=_submitting=false;btn.disabled=false;btn.textContent=method==='coin'?'用金幣支付':'送出訂單';}
  }
  submitOrder=function(){if(curKind==='shop'&&curPlan?.cart){toast('一起結帳請用金幣付款');return;}if(curKind==='play'&&members().length>1)return submitGroup('transfer');return previous.transfer();};
  payWithCoins=function(){if(curKind==='play'&&members().length>1)return submitGroup('coin');return previous.coin();};
- window.TTOrderFlow={pricing,duration,makeRecords,members};
+ window.TTOrderFlow={pricing,duration,makeRecords,members,game:()=>curKind==='play'&&gameKind(curPlan)?game:''};
 })();

@@ -439,7 +439,7 @@ button:not(:disabled):active{scale:.94}
     <h1>🕯️ Tiny Tavern・角色手札</h1>
     <p>TINY TAVERN · PARTNER</p>
   </header>
-  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v419</div>
+  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v420</div>
 
   <div id="pgLogin">
     <div class="card lgCard">
@@ -819,6 +819,7 @@ function clientInbox(){
           +'<b style="font-size:13.5px;color:#5A3D4E">'+esc(o.planName||'訂單')+'</b>'
           +'<span style="margin-left:auto;font-weight:800;font-size:15px;color:#C2537D">NT$'+(o.amount||0)+'</span></div>'
           +'<div style="font-size:12.5px;color:#8A6A7A;margin-top:4px">客人:'+esc(o.name||'?')+'　'+fmt(o.createdAt)+'</div>'
+          +(o.game?'<div style="margin-top:6px;font-size:13px;color:#5A3D4E;background:#FFF3D6;border-radius:8px;padding:5px 10px;display:inline-block"><b style="color:#B07A1E">想玩</b>　'+esc(o.game)+'</div>':'')   // v514 老闆點單時填的想玩遊戲
           +'<div style="display:flex;justify-content:flex-end;margin-top:9px">'
           +(onDuty
             ? '<button onclick="grabPoolOrder('+ja(id)+')" style="border:none;background:linear-gradient(180deg,#F5C56B,#E0A233);color:#fff;font-family:inherit;font-size:13px;font-weight:700;padding:9px 20px;border-radius:9px;cursor:pointer">我接這張 ›</button>'
@@ -849,6 +850,7 @@ function clientInbox(){
           :'<span style="background:#DFF3E7;color:#2F8A5C;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:7px">即時</span><b style="font-size:14px;color:#5A3D4E">'+esc(o.planName||'即時單')+'</b>')
       +'<span style="margin-left:auto;font-weight:800;font-size:16px;color:#C2537D">NT$'+(o.amount||0)+'</span></div>'
       +'<div style="font-size:12.5px;color:#8A6A7A;margin-top:4px">'+(bk?esc(o.planName||'')+'　':'')+'客人:'+esc(o.name||'?')+'　'+fmt(o.createdAt)+(soon?'　<span style="color:#D96A8B;font-weight:700">⏰ 24小時內</span>':'')+'</div>'
+      +(o.game?'<div style="margin-top:6px;font-size:13px;color:#5A3D4E;background:#FFF3D6;border-radius:8px;padding:5px 10px;display:inline-block"><b style="color:#B07A1E">想玩</b>　'+esc(o.game)+'</div>':'')
       +(declined
         ? '<div style="margin-top:6px;font-size:12px;color:#B03A5B;font-weight:700">已回報無法接單,等店長處理(退款或改期)</div>'
         : '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:9px">'
@@ -1271,7 +1273,7 @@ function nextBlockAfter(fromMs,skipCoid){
   return best;
 }
 let _renewReq={}, _cancelReq={};
-const PT_VER='20';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
+const PT_VER='21';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
 function reqResult(node,coid,ok,why,extra){
   db.ref(ROOT+'/'+node+'/'+coid).update(Object.assign({done:Date.now(), ok:!!ok, why:why||'', ver:PT_VER},extra||{}));
 }
@@ -1456,6 +1458,7 @@ function render(){
       <div data-voice-order="${esc(o.clientOrderId||'')}" style="margin:8px 0"></div>
       <div class="top"><span class="no">📄 ${o.no}</span><span class="amt">NT$ ${(+o.amount||0).toLocaleString()}</span></div>
       <div class="meta">${esc(o.serviceName)}${o.mode==='package'?'':' × '+o.qty}｜客人：${esc(o.customer)}</div>
+      ${(clientBookings&&clientBookings[o.clientOrderId]&&clientBookings[o.clientOrderId].game)?`<div class="note">想玩：${esc(clientBookings[o.clientOrderId].game)}</div>`:""}
       ${o.reserveAt?`<div style="font-size:12.5px;color:#8E68C8;font-weight:700;margin:2px 0 4px">🕐 預約 ${fmtResP(o.reserveAt)}${(o.reserveAt-Date.now()>0&&o.reserveAt-Date.now()<1800000)?' <span style="color:#D96A8B">・快到了!</span>':''}</div>`:''}
       ${o.note? `<div class="note">💬 ${esc(o.note)}</div>`:""}
       ${serving? `
