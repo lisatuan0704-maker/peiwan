@@ -1,5 +1,15 @@
 # 小小酒館修改紀錄
 
+## 2026/11/11 v518 VIP 頭像框換了，闆卡和別人看到的還是花圈框（Claude）
+- 客人回報：頭像框明明換成 VIP 1（藍調樂手），闆卡上看起來還是原本的花圈框。
+- 原因：publishProfile（lobby.html 約 2483 行）用 `typeof curFrame` 讀目前戴的框，但 curFrame 是頭像框那段 IIFE（約 6687～7105 行）裡的 let，外面永遠讀不到
+  → VIP 框從來沒寫進 lobby/<key>/pub/frm；左上角 HUD 與手帳用的是本機 curFrame 所以看起來有換，闆卡（drawFullCard 讀 pub.frm）、通訊錄、小屋名片、拜訪過場都是花圈框。
+  夥伴角色框（companion_*）是主機 equipFrame 寫的，不受影響。
+- 修法：publishProfile 改用 window.__curFrame()，花圈框或 __frameUsable()（VIP 等級／夥伴框解鎖確認了）才發佈；自己的闆卡直接用目前戴的框（不等發佈）。規則不用改（pub.frm 只擋 companion_ 要主機紀錄）。
+- 版本：verTag v518、ver.json 518、lobby-view 518（v517 給私訊小卡修正的 session）。
+- 驗證：本機模擬資料庫兩個分身（scratchpad/frm/t1.cjs 7 項）：VIP 1 客人選藍調樂手 → pub.frm＝vip1、HUD／自己的闆卡／別人開他的闆卡都是藍調樂手框；換回花圈框發佈 wr1；本機硬改 tt_frame=vip3（沒解鎖）不會發佈。
+- 已上線的客人：重新整理（或換一次框）就會發佈出去。
+
 ## 2026/11/11 v516 儲值：銀行轉帳加送貓貓幣、線上付款（信用卡等）不加送（Claude）
 - D：「想盡量鼓勵大家用轉帳的方式，轉帳送貓貓幣而不是送金幣；信用卡的話就沒優惠」。
 - 儲值方案 config/topup/tiers 多一欄 catBonus（店長頁「儲值設定」的「轉帳送貓貓幣」，取代「送金幣」）；儲存時 bonus 一律存 0。
