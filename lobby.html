@@ -1699,7 +1699,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v518</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v519</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -7236,7 +7236,14 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   /* v508 新私訊小卡：那段對話沒開著（或分頁在背景）時，左下聊天框上方（手機在下方分頁上面）跳一張「<名字> 傳來私訊」＋最後一句，
      點一下打開那段對話（好友 dmOpen、冒險者 staffDmOpen）。只看未讀數變多（剛開頁的第一包不算）；封鎖、屏蔽、已不是好友的不跳；
      新的蓋掉舊的、6 秒自動收（滑鼠停在上面先不收）；分頁在背景時只記最新一則，切回來跳一次。名字與內容一律 textContent。 */
-  let _dmtInit=false,_dmtPend=null,_dmtK=null,_dmtT=0,_dmtEl=null;
+  let _dmtInit=false,_dmtPend=null,_dmtK=null,_dmtT=0,_dmtEl=null,_dmtWait=0,_dmtCand=null;
+  /* v517：同一則私訊只通知一次。大廳同時開在兩個地方（兩個分頁、電腦＋手機）時，正在讀的那邊把未讀歸 0 之前，
+     另一邊會先閃一下小卡 → 選到之後等 1.2～1.6 秒再確認還是未讀才跳；本機記下每段對話「通知過／讀過」到哪一則（lastAt），
+     重整、未讀數來回跳、別的分頁先跳過都不會再跳同一則。 */
+  const dmtSeenKey=()=>'tt_dmt_seen_'+myKey;
+  function dmtSeen(){ try{ return JSON.parse(localStorage.getItem(dmtSeenKey())||'{}')||{}; }catch(e){ return {}; } }
+  function dmtMark(k,at){ at=+at||0; if(!k||!at) return; try{ const s=dmtSeen(); if((+s[k]||0)>=at) return; s[k]=at; localStorage.setItem(dmtSeenKey(),JSON.stringify(s)); }catch(e){} }
+  const dmtFresh=k=>{ const m=DMM[k]; return !!m&&(+m.lastAt||0)>(+dmtSeen()[k]||0); };
   const dmtStaff=k=>/^staff_/.test(k);
   function dmtOk(k){ const m=DMM[k]; if(!k||!m||!(+m.unread>0)||window.ttPlayerSuppressed(k)) return false;
     if(!dmtStaff(k)&&(!FR[k]||BLK[k])) return false;
@@ -7276,11 +7283,16 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
       else if(k===_dmtK&&p&&m.lastAt!==p.lastAt&&dmtOk(k)) dmtPaint(k);   // 未讀先到、內容後到 → 補上最後一句
     }
     if(_dmtK&&!dmtOk(_dmtK)&&_dmtK!==pick) dmtHide();   // 在別處讀過了（未讀歸零）、封鎖了 → 收起來
+    for(const k in DMM){ const m=DMM[k],p=prev&&prev[k]; if(m&&!(+m.unread>0)&&p&&+p.unread>0) dmtMark(k,m.lastAt); }   // v517：未讀從有變 0＝讀到最後一則了（只看 0 不行：新訊息的內容常比未讀 +1 先到）
     if(!pick) return;
-    if(document.hidden){ _dmtPend=pick; return; }
-    dmtShow(pick);
+    _dmtCand=pick; clearTimeout(_dmtWait);
+    _dmtWait=setTimeout(()=>{ const k=_dmtCand; _dmtCand=null;
+      if(!k||!dmtOk(k)||!dmtFresh(k)) return;   // 這段時間在別處讀掉了、或這則已經通知過
+      if(document.hidden){ _dmtPend=k; return; }
+      dmtMark(k,DMM[k].lastAt); dmtShow(k); },1200+Math.random()*400);
   }
-  document.addEventListener('visibilitychange',()=>{ if(document.hidden) return; const k=_dmtPend; _dmtPend=null; if(k&&dmtOk(k)) dmtShow(k); });
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden) return; const k=_dmtPend; _dmtPend=null;
+    if(k&&dmtOk(k)&&dmtFresh(k)){ dmtMark(k,DMM[k].lastAt); dmtShow(k); } });
   frBind();
 
   /* --- 視窗 --- */
