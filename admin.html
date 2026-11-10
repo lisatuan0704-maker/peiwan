@@ -2187,11 +2187,17 @@ function seedSvcs(){
 /* v437: 三位冒險者一律用繪師正式立繪頭像（不再用白盒期的 img/dog-*.png 或 emoji） */
 const OFFICIAL_AVATAR={'-OxY46ezlpnRt64hUIw9':'tavern-ui/assets/avatar-KABUKI.png','-OxY7C4vDkgsr1zcyWbk':'tavern-ui/assets/avatar-RIRA.png','-OzbfbQcF6J6fIR6YYGh':'tavern-ui/assets/avatar-MOMO.png'};
 function charFace(id,c){ const src=OFFICIAL_AVATAR[id]||(c&&c.avatar); return src?'<img class="face sm" src="'+esc(src)+'" alt="" style="object-fit:cover;border-radius:50%"> ':esc((c&&c.emoji)||'✨')+' '; }
+/* v514: 冒險者在店裡用小帳接單、手冊綁的是大帳 → 掌櫃在這裡填小帳的 Discord ID，機器人開房權限與私訊改給小帳 */
+function setOrderDiscord(id,el){
+  const v=el.value.trim();
+  if(v&&!/^\d{17,20}$/.test(v)){alert('Discord ID 是 17～20 位數字。\n取得方法：Discord 設定 → 進階 → 開啟開發者模式，再對小帳按右鍵 →「複製使用者 ID」。');el.value=(chars[id]&&chars[id].orderDiscordId)||'';return;}
+  db.ref(ROOT+'/characters/'+id+'/orderDiscordId').set(v||null).catch(e=>alert('儲存失敗：'+e.message));
+}
 function renderChars(){
   const list=Object.entries(chars);
   tab3.innerHTML=`<div class="card">
     <h2>角色名冊（真人身分只存在這裡，客人／客服前台只見角色）</h2>
-    ${list.length? `<table><tr><th>角色</th><th>介紹</th><th>帳號</th><th>分潤%</th><th>啟用</th><th></th></tr>
+    ${list.length? `<table><tr><th>角色</th><th>介紹</th><th>帳號</th><th>接單 Discord（小帳）</th><th>分潤%</th><th>啟用</th><th></th></tr>
       ${list.map(([id,c])=>`<tr>
         <td>${charFace(id,c)}<b>${esc(TTStaffNames.display(c.name,id))}</b><br>
           ${OFFICIAL_AVATAR[id]?`<span style="font-size:11px;color:var(--ink-soft)">正式立繪</span>`:`<input placeholder="img/xxx.png" value="${esc(c.avatar||'')}" style="width:140px;font-size:11px;padding:4px;margin-top:4px" onchange="db.ref(ROOT+'/characters/${id}/avatar').set(this.value.trim()||null)">`}</td>
@@ -2201,6 +2207,7 @@ function renderChars(){
           : (inviteOf(id,'char')
             ? `邀請碼 <b class="mono" style="font-size:10px">${inviteOf(id,'char')}</b>`
             : `<button class="btn sm" onclick="makeInvite('${id}','char')">產生邀請碼</button>`)}</td>
+        <td><input placeholder="小帳的 Discord ID" value="${esc(c.orderDiscordId||'')}" inputmode="numeric" maxlength="20" style="width:160px;font-size:11px;padding:4px" onchange="setOrderDiscord('${id}',this)"><div style="font-size:10px;color:var(--ink-soft);margin-top:2px">填了：語音房、聊天室、TT 私訊都給小帳<br>不填：用手冊綁的帳號</div></td>
         <td><input type="number" value="${c.share!=null?c.share:80}" style="width:60px" onchange="db.ref(ROOT+'/characters/${id}/share').set(Number(this.value))"></td>
         <td><button class="btn sm ${c.active?'ok':'ghost'}" onclick="db.ref(ROOT+'/characters/${id}/active').set(${!c.active})">${c.active?'啟用中':'停用'}</button></td>
         <td><button class="btn sm ghost" data-record-id="${customerAttr(id)}" data-record-name="${customerAttr(c.name)}" onclick="if(confirm('刪除角色「'+this.dataset.recordName+'」？單子紀錄會保留'))db.ref(ROOT+'/characters/'+this.dataset.recordId).remove()">刪</button></td>
