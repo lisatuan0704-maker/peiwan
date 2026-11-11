@@ -439,7 +439,7 @@ button:not(:disabled):active{scale:.94}
     <h1>🕯️ Tiny Tavern・角色手札</h1>
     <p>TINY TAVERN · PARTNER</p>
   </header>
-  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v421</div>
+  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v422</div>
 
   <div id="pgLogin">
     <div class="card lgCard">
@@ -630,9 +630,15 @@ auth.onAuthStateChanged(u=>{ if(u&&!booted&&!registering) afterAuth(); });
 function logout(){ auth.signOut().then(()=>location.reload()); }
 
 let staffRef=null;
+/* 11/11 D：冒險者「我打卡上班了」公開單還是寫「打卡上班後就能接」——新單分頁只在單子有變動時才重畫，打卡不會重畫。
+   上下班狀態一變就重畫一次，「我接這張」馬上出現。 */
+let dutyShown=null;
 function syncDutyUI(){
+  const on=!!(punchChk&&punchChk.checked);
   const w=document.getElementById('offDutyWarn');
-  if(w) w.style.display=(punchChk&&punchChk.checked)?'none':'block';
+  if(w) w.style.display=on?'none':'block';
+  const changed=dutyShown!==null&&dutyShown!==on;dutyShown=on;
+  if(changed&&typeof render==='function'){try{render();}catch(e){console.warn('重畫新單失敗',e);}}
 }
 /* v510 D：「他們要開著頁面並勾選上班才上班，頁面一關掉就是離線」（冒險者失蹤時大廳還顯示待接單，老闆點了單沒人接）。
    上班＝這個頁面記得 dutyOn；伺服器 onDisconnect 在網頁關掉／斷線時自動寫下班；網頁還開著、只是網路閃斷，重連後自動補回上班；
@@ -1273,7 +1279,7 @@ function nextBlockAfter(fromMs,skipCoid){
   return best;
 }
 let _renewReq={}, _cancelReq={};
-const PT_VER='22';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
+const PT_VER='23';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
 function reqResult(node,coid,ok,why,extra){
   db.ref(ROOT+'/'+node+'/'+coid).update(Object.assign({done:Date.now(), ok:!!ok, why:why||'', ver:PT_VER},extra||{}));
 }
