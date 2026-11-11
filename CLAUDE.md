@@ -8,10 +8,14 @@
 - Discord 體驗綁定：體驗手札 → Discord 授權（identify）→ dc.html 新分支（只在 OAuth state 跟體驗手札記下的相同才走；取消授權時 30 分鐘內且沒有其他正式流程才帶回）→ 只把 Discord ID 交回體驗手札，不寫 tt_dc、不碰正式綁定。
 - TT 私訊：控制台（要在同一個瀏覽器登入過掌櫃頁）每次發單／續單／測試寫 peiwan/interviewDm/<id>{to,kind,room,who,plan,amount,mins,name,book,reserveAt,game,at:伺服器時間}；
   主機 order-voice-bot/interview-dm.cjs 收到就由 TT 私訊面試者（同正式委託新單私訊的樣子、標「面試體驗」、附體驗手札連結），結果寫回 <id>/result（sent／blocked／failed／expired／limited），控制台顯示；
-  只處理 5 分鐘內的新請求（不補發）、每筆一次（orderVoiceV1/interviewDm/<id> transaction）、一小時最多 60 則。TT 私訊不成功時，有填備用小房間 Webhook 才改在小房間 @ 她。
+  不補發：主機只發「按下後 20 秒內」送得出去的（請求的 at 是伺服器時間、ct 是按下時的估計，晚寫進來或處理時超過 20 秒都標 expired；主機時間用 .info/serverTimeOffset 對齊），
+  控制台等 35 秒沒結果就改用備用通知並刪掉請求；每筆一次（orderVoiceV1/interviewDm/<id> transaction，送訊息帶 nonce＋enforce_nonce，重試不會重複）、一小時最多 60 則。
+  TT 沒私訊時（沒綁定、沒登入掌櫃、規則沒發布、主機沒回應、她關私訊）控制台跳提示＋寫進動態；有填備用小房間 Webhook 才改在小房間 @ 她。控制台登入後會先試讀 interviewDm，讀不到就顯示「規則還沒發布」。
+  「我自己先開來看」開的是 &peek=1 店長預覽（只能看、不登入、不綁定、不送任何動作，免得 TT 私訊到店長）；同一間房有人用不同暱稱登入時，之前的 Discord 綁定作廢。
 - 規則第二十三批（tests/security-rules-v428/build/harden-phase23.cjs、test-phase23 14 項，GitHub Actions sec-ci/interview1111 全過；快照 rules-before-interview1111.json）：interviewDm 只有店長讀寫、to 是 Discord ID、room 格式、at 必須是伺服器現在。
   同一次 CI：第 6、7、9 批各有 2～3 項失敗，是開幕禮／11/07 前每日任務的日期測試，改動前一樣失敗。
-- 主機：ops/deploy-interviewdm-1111.sh（security-v428）只新增 interview-dm.cjs＋測試，service-server.cjs 在 staffDm 那行後接一行；本機假主機（以 20261111-voicepool 為底）跑過：檔案核對、只多 3 行、語法、測試 18 項；已部署過會停止。
+- 主機：ops/deploy-interviewdm-1111.sh（security-v428）只新增 interview-dm.cjs＋測試，service-server.cjs 在 staffDm 那行後接一行；本機假主機（以 20261111-voicepool 為底）跑過：檔案核對、只多 3 行、語法、測試 21 項（interview-dm 11＋staff-order-dm 10）；
+  已部署過會停止；換版本後任何一步失敗 trap ERR 還原。結尾提醒還要發布規則。兩輪多代理審查（頁面 13 項、TT 私訊 9 項，全部修掉）。
 
 ## 2026/11/11 隨機單（不指定）的「確認語音」按了沒反應（Claude；網站 partner v423＋主機 20261111-voicepool，11/11 都已上線）
 - D：「陪玩說她按了確認語音沒反應..這個問題怎麼又來了 可以好好排修嗎」「他是隨機單的確認語音」。

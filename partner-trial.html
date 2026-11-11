@@ -517,12 +517,13 @@ button:not(:disabled):active{scale:.94}
 const ROOM=(new URLSearchParams(location.search).get('room')||'').replace(/[^A-Za-z0-9]/g,'').slice(0,32);
 const NTFY='https://ntfy.sh/tt-iv-'+ROOM;
 const LS='tt_iv_'+ROOM;
+const PEEK=new URLSearchParams(location.search).get('peek')==='1';   // 店長預覽：只能看，不登入、不綁定、不送出任何動作
 const $=id=>document.getElementById(id);
 const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 let local={};try{local=JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){}
-const saveLocal=()=>{try{localStorage.setItem(LS,JSON.stringify(local))}catch(e){}};
-const S={orders:{},on:false,dc:null};
+const saveLocal=()=>{if(PEEK)return;try{localStorage.setItem(LS,JSON.stringify(local))}catch(e){}};
+const S={orders:{},on:false,dc:null,nm:''};
 const seen=new Set();let openTime=Infinity;
 
 /* 事件從公開的通道來:欄位一律整理成固定格式再用 */
@@ -548,10 +549,11 @@ function apply(e){
   else if(e.t==='reset'){S.orders={};S.on=false;S.dc=null;}   // 換下一位:單子、打卡、Discord 綁定都清掉
   else if(e.t==='duty'){S.on=!!e.on;}
   else if(e.t==='bind'){S.dc=cleanDc(e.dc);}
+  else if(e.t==='hello'){const n=String(e.name||'').slice(0,20);if(S.nm&&n!==S.nm)S.dc=null;S.nm=n;}   // 換了一個人登入：之前的綁定不算
 }
 /* 狀態=依伺服器順序重播所有事件;自己剛送出、還沒回聲的事件排在最後 */
 const log=[],pending=[];
-function rebuild(){S.orders={};S.on=false;S.dc=null;log.forEach(apply);pending.forEach(apply);}
+function rebuild(){S.orders={};S.on=false;S.dc=null;S.nm='';log.forEach(apply);pending.forEach(apply);}
 function send(e,n){
   fetch(NTFY,{method:'POST',body:JSON.stringify(e)}).then(r=>{if(!r.ok)throw 0;}).catch(()=>{
     if(!pending.includes(e))return;                                   // 回聲已經到了
@@ -560,7 +562,7 @@ function send(e,n){
     ptNotify('網路好像不穩','剛剛的動作沒送出,請再按一次');
   });
 }
-function pub(e){e.from='trial';e.at=Date.now();e.eid=rid();seen.add(e.eid);pending.push(e);rebuild();render();send(e,0);}
+function pub(e){if(PEEK)return;e.from='trial';e.at=Date.now();e.eid=rid();seen.add(e.eid);pending.push(e);rebuild();render();send(e,0);}
 function onLive(e){
   if(e.t==='order'){const o=S.orders[e.id];if(!o)return;beep();flashTitle('新單');
     ptNotify('新單來囉!','「'+(o.name||'老闆')+'」已付款'+(o.book?'・預約 '+fmtRes(o.reserveAt):'')+',到「新單」分頁接單 ✦');showTab(0);}
@@ -771,10 +773,15 @@ function enter(){
   let back=null;try{back=JSON.parse(sessionStorage.getItem('tt_interview_dc_result')||'null');sessionStorage.removeItem('tt_interview_dc_result');}catch(e){}
   if(back&&back.room===ROOM&&cleanDc(back.dc)){setTimeout(()=>{pub({t:'bind',dc:cleanDc(back.dc)});ptNotify('Discord 綁定完成!','有新單時 TT 會私訊你 ✦');},400);}
 }
+if(PEEK){
+  document.querySelector('.ivBanner').textContent='✦ 店長預覽 ✦　這裡只能看，按鈕不會送出；面試者用的是沒有 peek 的連結';
+  document.addEventListener('click',e=>{const t=e.target.closest('button,input,label,textarea');if(!t||t.closest('.tabs'))return;e.preventDefault();e.stopPropagation();ptNotify('店長預覽','預覽只能看，按鈕不會送出');},true);
+}
 if(!ROOM){$('pgNoRoom').style.display='';}
 else{
   connect();
-  if(local.name) enter();
+  if(PEEK){local=Object.assign({},local,{name:'店長預覽'});enter();}
+  else if(local.name) enter();
   else{$('pgLogin').style.display='';
     const go=()=>{const n=$('lgName').value.trim();if(!n){ptNotify('先寫個暱稱吧','');return;}local.name=n;saveLocal();pub({t:'hello',name:n});enter();};
     $('lgBtn').onclick=go;$('lgName').addEventListener('keydown',e=>{if(e.key==='Enter')go();});}

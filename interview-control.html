@@ -149,7 +149,7 @@ function setRoom(code){
 $('newRoom').onclick=()=>{if(!guard())return;if(ROOM&&!confirm('開新房間給下一位面試者？\n舊連結之後就收不到新單。'))return;setRoom(newCode());$('prevRoom').style.display='none';toast('新房間開好了，記得把新連結給她');};
 $('room').onchange=()=>setRoom($('room').value);
 $('copyLink').onclick=()=>{navigator.clipboard.writeText($('trialLink').textContent).then(()=>toast('連結已複製'),()=>toast('複製失敗，請手動選取'));};
-$('openTrial').onclick=()=>window.open($('trialLink').textContent,'_blank');
+$('openTrial').onclick=()=>window.open($('trialLink').textContent+'&peek=1','_blank');   // 店長預覽：只能看，不會登入／綁定（不然 TT 會私訊到店長）
 
 /* ---------- 事件 ---------- */
 let log=[],pending=[],seen=new Set();
@@ -178,7 +178,7 @@ function apply(e){
   else if(e.t==='reset'){S.orders={};S.on=false;S.dc=null;S.card=null;}
   else if(e.t==='duty'){S.on=!!e.on;}
   else if(e.t==='bind'){const d=e.dc;S.dc=(d&&/^\d{5,25}$/.test(String(d.id))&&d.username)?{id:String(d.id),username:String(d.username).slice(0,40)}:null;}
-  else if(e.t==='hello'){S.name=String(e.name||'').slice(0,20);}
+  else if(e.t==='hello'){const n=String(e.name||'').slice(0,20);if(S.name&&n!==S.name){S.dc=null;S.card=null;}S.name=n;}   // 換了一個人登入：之前的 Discord 綁定不算她的
   else if(e.t==='card'){S.card=cleanCard(e);}
 }
 function rebuild(){S.orders={};S.on=false;S.dc=null;S.name='';S.card=null;log.forEach(apply);pending.forEach(apply);}
@@ -308,37 +308,54 @@ $('testHook').onclick=()=>notifyDc('測試通知','這是面試體驗的測試�
 
 /* ---------- TT 私訊（主機 order-voice-bot/interview-dm.cjs 收 peiwan/interviewDm；要用掌櫃身分登入）---------- */
 const FB_CFG={apiKey:"AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",authDomain:"my-shop-0520.firebaseapp.com",databaseURL:"https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"my-shop-0520",storageBucket:"my-shop-0520.firebasestorage.app",messagingSenderId:"430482271005",appId:"1:430482271005:web:967059c91a9b7970bdcff4"};
-let fdb=null,isAdmin=false;
+let fdb=null,isAdmin=false,rulesOk=null,srvOff=0;
+const isDenied=e=>/permission/i.test(String(e&&(e.code||e.message)));
+function paintAdmin(u){
+  let t,c='#B03A5B';
+  if(!isAdmin)t=u?'這個帳號不是掌櫃':'還沒登入';
+  else if(rulesOk===false)t='已登入，但資料庫規則還沒發布，TT 還不能私訊';
+  else if(rulesOk===null)t='已登入，檢查中…';
+  else{t='✓ 已登入（可以請 TT 私訊）';c='#2F8A5C';}
+  $('ttAdmin').textContent=t;$('ttAdmin').style.color=c;$('ttLogin').style.display=isAdmin?'none':'';
+}
 try{
   firebase.initializeApp(FB_CFG);fdb=firebase.database();
+  fdb.ref('.info/serverTimeOffset').on('value',s=>{srvOff=Number(s.val())||0;});
   firebase.auth().onAuthStateChanged(async u=>{
     let ok=false;
     if(u){try{const a=(await fdb.ref('peiwan/config/adminUid').once('value')).val();ok=!!a&&a===u.uid;}catch(e){}}
-    isAdmin=ok;
-    $('ttAdmin').textContent=ok?'✓ 已登入（可以請 TT 私訊）':(u?'這個帳號不是掌櫃':'還沒登入');
-    $('ttAdmin').style.color=ok?'#2F8A5C':'#B03A5B';
-    $('ttLogin').style.display=ok?'none':'';
+    isAdmin=ok;rulesOk=null;paintAdmin(u);
+    if(ok)fdb.ref('peiwan/interviewDm').limitToLast(1).once('value').then(()=>{rulesOk=true;paintAdmin(u);},e=>{rulesOk=isDenied(e)?false:true;paintAdmin(u);});   // 規則沒發布時連讀都會被拒
   });
 }catch(e){$('ttAdmin').textContent='載入失敗，請重新整理';}
 $('ttLogin').onclick=()=>window.open('admin.html','_blank');
 function setTtLast(t,color){const b=$('ttLast');b.textContent=t;b.style.color=color||'';}
-const TT_STATE={sent:['TT 私訊已送達 ✓','#2F8A5C'],blocked:['她關閉了私訊，TT 送不到（請她在伺服器隱私設定打開私訊）','#B03A5B'],failed:['TT 私訊失敗','#B03A5B'],expired:['太久沒送出，已取消（不會補發）','#B03A5B'],limited:['這一小時私訊太多，先停一下','#B03A5B']};
+const TT_STATE={sent:['TT 私訊已送達 ✓','#2F8A5C'],blocked:['她關閉了私訊，TT 送不到（請她在伺服器隱私設定打開私訊）','#B03A5B'],failed:['TT 私訊失敗','#B03A5B'],expired:['TT 太久沒送出，已取消（不會補發）','#B03A5B'],limited:['這一小時私訊太多，先停一下','#B03A5B']};
+const TT_WAIT=35000;   // 主機只發按下後 20 秒內送得出去的；控制台等 35 秒，超過就改用備用通知、刪掉請求
 function ttDm(kind,o,fallback){
   const label={order:'新單',renew:'續單',test:'測試'}[kind]||kind;
   const fb=()=>{if(fallback)fallback();};
-  if(!S.dc){setTtLast(label+'：她還沒綁定 Discord，TT 沒有私訊','#C97B2B');fb();return;}
-  if(!fdb||!isAdmin){setTtLast(label+'：這台電腦還沒登入掌櫃頁，TT 沒有私訊','#B03A5B');fb();return;}
+  const skip=why=>{setTtLast(label+'：'+why,'#B03A5B');addLogText('TT 沒有私訊（'+label+'）：'+why);toast((kind==='test'?'':label+'送出了，但 ')+'TT 沒有私訊：'+why);fb();};
+  if(!S.dc){skip('她還沒綁定 Discord');return;}
+  if(!fdb||!isAdmin){skip('這台電腦還沒登入掌櫃頁');return;}
+  if(rulesOk===false){skip('資料庫規則還沒發布');return;}
   const ref=fdb.ref('peiwan/interviewDm').push();
   setTtLast(label+'：請 TT 私訊中…','#8A7BB0');
-  ref.set({to:S.dc.id,kind,room:ROOM,who:S.name||'',plan:String(o.plan||''),amount:Number(o.amount)||0,mins:Number(o.mins)||0,name:String(o.name||''),book:!!o.book,reserveAt:Number(o.reserveAt)||0,game:String(o.game||''),at:firebase.database.ServerValue.TIMESTAMP})
-   .then(()=>{
-     let done=false;const rr=ref.child('result');
-     const tm=setTimeout(()=>{if(done)return;done=true;rr.off('value',h);setTtLast(label+'：主機沒有回應（TT 私訊功能可能還沒上線）','#B03A5B');addLogText('TT 私訊（'+label+'）主機沒有回應');fb();},25000);
-     const h=rr.on('value',s=>{const r=s.val();if(!r||done)return;done=true;rr.off('value',h);clearTimeout(tm);
-       const st=TT_STATE[r.state]||['TT 私訊：'+r.state,'#B03A5B'];setTtLast(label+'：'+st[0],st[1]);addLogText('TT 私訊（'+label+'）'+st[0]);
-       if(r.state!=='sent')fb();},()=>{});
-   })
-   .catch(e=>{const pd=/permission/i.test(String(e&&(e.code||e.message)));setTtLast(label+'：'+(pd?'資料庫規則還沒發布，TT 沒有私訊':'網路不穩，沒送出'),'#B03A5B');fb();});
+  let done=false,tm=0;const rr=ref.child('result');
+  const finish=(r,late)=>{
+    const st=TT_STATE[r.state]||['TT 私訊：'+r.state,'#B03A5B'];
+    if(late){addLogText('TT 私訊（'+label+'）後來的結果：'+st[0]);return;}
+    setTtLast(label+'：'+st[0],st[1]);addLogText('TT 私訊（'+label+'）'+st[0]);
+    if(r.state!=='sent'){toast('TT 私訊沒有送到：'+st[0]);fb();}
+  };
+  const h=rr.on('value',s=>{const r=s.val();if(!r)return;rr.off('value',h);clearTimeout(tm);finish(r,done);done=true;},()=>{});
+  tm=setTimeout(()=>{if(done)return;done=true;
+    setTtLast(label+'：主機沒有回應（TT 私訊功能可能還沒上線）','#B03A5B');addLogText('TT 私訊（'+label+'）主機沒有回應');toast('TT 沒有回應，這則沒有私訊');
+    ref.remove().catch(()=>{});setTimeout(()=>rr.off('value',h),60000);fb();},TT_WAIT);
+  ref.set({to:S.dc.id,kind,room:ROOM,who:S.name||'',plan:String(o.plan||''),amount:Number(o.amount)||0,mins:Number(o.mins)||0,name:String(o.name||''),book:!!o.book,reserveAt:Number(o.reserveAt)||0,game:String(o.game||''),ct:Date.now()+srvOff,at:firebase.database.ServerValue.TIMESTAMP})
+   .catch(e=>{if(done)return;done=true;clearTimeout(tm);rr.off('value',h);
+     if(isDenied(e)){rulesOk=false;paintAdmin(true);}
+     const why=isDenied(e)?'資料庫規則還沒發布':'網路不穩，沒送出';setTtLast(label+'：TT 沒有私訊（'+why+'）','#B03A5B');addLogText('TT 沒有私訊（'+label+'）：'+why);toast('TT 沒有私訊：'+why);fb();});
 }
 $('ttTest').onclick=()=>{if(!guard())return;ttDm('test',{},null);};
 
