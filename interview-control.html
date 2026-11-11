@@ -9,6 +9,7 @@
 <link href="tavern-ui/assets/fonts/lineseed.css?v=257" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="lobby-ui/staff-app.js?v=524"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
 :root{--bg:#F4EEFB;--card:#fff;--ink:#3E2D57;--soft:#8A7BB0;--pri:#8E68C8;--line:#E3D8F3;--ok:#2F8A5C;--bad:#B03A5B}
@@ -319,9 +320,9 @@ function paintAdmin(u){
   $('ttAdmin').textContent=t;$('ttAdmin').style.color=c;$('ttLogin').style.display=isAdmin?'none':'';
 }
 try{
-  firebase.initializeApp(FB_CFG);fdb=firebase.database();
+  const staffApp=ttStaffApp(FB_CFG);fdb=staffApp.database();   // v524：掌櫃登入在 tt-staff app（跟掌櫃頁同一格）
   fdb.ref('.info/serverTimeOffset').on('value',s=>{srvOff=Number(s.val())||0;});
-  firebase.auth().onAuthStateChanged(async u=>{
+  staffApp.auth().onAuthStateChanged(async u=>{
     let ok=false;
     if(u){try{const a=(await fdb.ref('peiwan/config/adminUid').once('value')).val();ok=!!a&&a===u.uid;}catch(e){}}
     isAdmin=ok;rulesOk=null;paintAdmin(u);

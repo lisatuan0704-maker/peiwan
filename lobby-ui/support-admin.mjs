@@ -1,5 +1,5 @@
 import {replyUpdates} from './support-core.mjs?v=427';
-const auth=firebase.auth(),db=firebase.database(),root=document.getElementById('tab10');
+const staffApp=window.ttStaffApp(),auth=staffApp.auth(),db=staffApp.database(),root=document.getElementById('tab10');
 let ref=null,rows={},version=0,busy=new Set(),drafts=new Map(),expanded=new Set();
 function el(tag,text,cls){const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;}
 function render(){const sorted=Object.entries(rows).flatMap(([uid,tickets])=>Object.entries(tickets||{}).map(([id,t])=>({uid,id,...t}))).sort((a,b)=>b.at-a.at);

@@ -16,6 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="lobby-ui/staff-app.js?v=524"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
 <script src="tavern-ui/season-v291.js?v=441"></script><script src="tavern-ui/season-v292.js?v=445"></script><script src="tavern-ui/season-v293.js?v=445"></script><script src="tavern-ui/daily-v494.js?v=509"></script><script src="tavern-ui/outfit-splits.js?v=441"></script>
@@ -501,7 +502,7 @@ body.dark *::-webkit-scrollbar-thumb{background:#4A3F70}
     <div id="tab8" style="display:none"></div>
     <div id="tab9" style="display:none"></div>
     <div id="tab10" style="display:none"></div>
-    <button class="logout" style="background:none;border:none;color:var(--grape);font-family:inherit;font-size:12px;text-decoration:underline;cursor:pointer;display:block;margin:0 auto" onclick="firebase.auth().signOut().then(()=>location.reload())">登出店長帳號</button>
+    <button class="logout" style="background:none;border:none;color:var(--grape);font-family:inherit;font-size:12px;text-decoration:underline;cursor:pointer;display:block;margin:0 auto" onclick="auth.signOut().then(()=>location.reload())">登出店長帳號</button>
   </div>
 </div>
 
@@ -517,13 +518,14 @@ const firebaseConfig = {
   appId: "1:430482271005:web:967059c91a9b7970bdcff4",
   measurementId: "G-NN7HQ5W8T1"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+/* v524：後台登入存在自己的 tt-staff app（lobby-ui/staff-app.js），不再跟大廳的客人 Discord 登入搶同一格 */
+const staffApp=ttStaffApp(firebaseConfig);
+const db = staffApp.database();
 const ROOT = "peiwan";
 const PROG = {pending:"待核對",confirmed:"待開始",serving:"服務中",done:"已完成",settled:"已結算",disputed:"回報中"};
 const COMPANY_CUT = 20; // 公司抽成 %，陪玩拿 80
 
-const auth=firebase.auth();
+const auth=staffApp.auth();
 const EMAIL_DOMAIN="@peiwan-tavern.com";
 function toEmail(u){return u.toLowerCase()+EMAIL_DOMAIN;}
 function genCode(){return Math.random().toString(36).slice(2,8).toUpperCase();}
@@ -2925,9 +2927,9 @@ body.dark #qnavPop button{color:#D8CBEE}
     btn.style.display=(m&&m.style.display!=='none'&&m.offsetParent!==null)?'':'none'; },1200);
 })();
 </script>
-<script src="season-shop-import.js?v=482"></script>
-<script src="cat-shop-import.js?v=510"></script>
+<script src="season-shop-import.js?v=524"></script>
+<script src="cat-shop-import.js?v=524"></script>
 <script src="lobby-ui/account-review.js?v=437"></script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
-<script type="module" src="lobby-ui/support-admin.mjs?v=427"></script></body>
+<script type="module" src="lobby-ui/support-admin.mjs?v=524"></script></body>
 </html>

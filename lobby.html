@@ -1699,7 +1699,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v522</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v524</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2950,11 +2950,21 @@ function syncBadge(){
   let s=window.__APPV;
   if(window.TTRoomWorld?.active){el.textContent=s+' · 房間連線';return;}
   if(typeof db!=='undefined' && db){
-    s+=' · 同步 讀'+(posReadOK?'✓':'…')+' 寫'+(posWriteOK?'✓':'…');
-    if(posErr) s+=' ⚠'+posErr;
+    const bad=window.__ttLoginBad||window.__ttWriteDenied;
+    s+=' · 同步 讀'+(posReadOK?'✓':'…')+' 寫'+(bad?'✕':(posWriteOK?'✓':'…'));
+    if(bad) s+=' ⚠請重新登入'; else if(posErr) s+=' ⚠'+posErr;
   }
   el.textContent=s;
 }
+/* v524：資料庫拒絕寫入（多半是登入身分不對）→ 左下角改「寫✕」、提示一次、重新檢查登入（不是這張闆卡的客人登入就請他用 Discord 再登入） */
+window.ttWriteDenied=function(e){
+  if(!/permission/i.test(String(e&&(e.code||e.message)||''))) return;
+  try{ console.warn('[寫入被拒]',e&&(e.code||e.message)); }catch(_){}
+  if(window.__ttWriteDenied) return;
+  window.__ttWriteDenied=true; syncBadge();
+  try{ toast('登入狀態失效了，請重新整理頁面，或用 Discord 再登入一次'); }catch(_){}
+  try{ window.ttRecheckLogin&&window.ttRecheckLogin(); }catch(_){}
+};
 /* ===== 眨眼:移動與待機共用8～16秒間隔，只短暫閉眼140ms ===== */
 (function(){
   function canBlink(){
@@ -7023,6 +7033,30 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
       cardEl.querySelector('.dgSub').textContent='我們只會讀取你的 Discord 名稱與頭像。換了裝置，登入同一個 Discord 就會找回你的闆卡。';
       g.style.display='flex';
     }
+    /* v524：進大廳以後登入身分被換掉（同一個瀏覽器別的分頁登入了別的帳號、或登出）也要重新檢查。
+       以前只在進門檢查一次：舊版掌櫃後台跟大廳共用登入，掌櫃一登入就把客人的 Discord 登入蓋掉，大廳照常顯示、左下角還寫「寫✓」，
+       私訊未讀、錢包其實全部寫不進去。現在不是這張闆卡的客人登入 → 擋回「用 Discord 登入」。 */
+    let loginWatching=false;
+    function loginLost(){ window.__ttLoginBad=true; try{ syncBadge(); }catch(e){} showLoginGate(); }
+    function checkLogin(){
+      return TTSecureLogin.check(firebase.auth(),db,ROOT,myKey).then(r=>{
+        if(r.switchTo){   // v508：同上，換過去之前確認闆卡還在
+          db.ref(ROOT+'/lobby/'+r.switchTo+'/name').once('value').then(n=>{
+            if(n.val()&&ttIdSwitchOk()){ try{ localStorage.setItem('tt_me',r.switchTo); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); return; }
+            ttForgetLogin(); loginLost();
+          }).catch(()=>loginLost());
+          return;
+        }
+        if(r.ok){ g.style.display='none'; window.__ttLoginBad=false; try{ syncBadge(); }catch(e){} watchLogin(); return; }
+        loginLost();
+      }).catch(()=>loginLost());
+    }
+    function watchLogin(){
+      if(loginWatching) return; loginWatching=true;
+      let last=(firebase.auth().currentUser||{}).uid||null;
+      firebase.auth().onAuthStateChanged(u=>{ const uid=u?u.uid:null; if(uid===last) return; last=uid; window.__ttWriteDenied=false; checkLogin(); });   // 換了身分，之前的「寫不進去」重新算
+    }
+    window.ttRecheckLogin=function(){ if(myKey&&typeof firebase!=='undefined'&&firebase.auth&&window.TTSecureLogin) checkLogin(); };
     charExists(function(has){
       if(!has){   // 真的沒有闆卡(或已被刪)才導去做卡;不清 tt_me,避免同步延遲把人卡死
         /* 已用 Discord 登入、但這台裝置沒記住闆卡：直接找回帳號擁有的闆卡 */
@@ -7041,17 +7075,7 @@ const AICON={mug:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACL
         return;
       }
       if(typeof firebase==='undefined'||!firebase.auth||!window.TTSecureLogin){ showLoginGate(); return; }
-      TTSecureLogin.check(firebase.auth(),db,ROOT,myKey).then(r=>{
-        if(r.switchTo){   // v508：同上，換過去之前確認闆卡還在
-          db.ref(ROOT+'/lobby/'+r.switchTo+'/name').once('value').then(n=>{
-            if(n.val()&&ttIdSwitchOk()){ try{ localStorage.setItem('tt_me',r.switchTo); localStorage.removeItem('tt_orders'); }catch(e){} location.replace(location.pathname); return; }
-            ttForgetLogin(); showLoginGate();
-          }).catch(()=>showLoginGate());
-          return;
-        }
-        if(r.ok){ g.style.display='none'; return; }
-        showLoginGate();
-      }).catch(()=>showLoginGate());
+      checkLogin();
     });
   })();
   /* 未綁定 Discord 的客人:進場後給一次溫和提示(不擋門),鼓勵綁定以便換裝置找回與點單帶名 */
@@ -7218,6 +7242,8 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   window.ttPlayerSuppressed=k=>!!(k&&k!==myKey&&(Object.hasOwn(window.__ttHidden||{},k)||Object.hasOwn(BLK,k)));
   function myName(){ try{ return (agents.get(myKey).b.name)||'？'; }catch(e){ return '？'; } }
   function pairKey(a,b){ return [a,b].sort().join('~'); }
+  /* v524：未讀歸零以前是 try{set(0)}catch{}——非同步被拒根本接不到，登入身分不對時永遠消不掉、也看不出來 → 被拒交給 ttWriteDenied */
+  function dmRead(k){ if(!k||!myKey) return; try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0).catch(e=>{ try{ window.ttWriteDenied(e); }catch(_){} }); }catch(e){} }
   function frBind(){
     if(_frBound||!myKey||typeof db==='undefined'||!db) return; _frBound=true;
     try{
@@ -7226,14 +7252,14 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
       db.ref(ROOT+'/blocks/'+myKey).on('value',s=>{ BLK=s.val()||{}; applyHidden(); if(_dmWith&&window.ttPlayerSuppressed(_dmWith))dmClose(); frPaint(); });
       db.ref(ROOT+'/dmMeta/'+myKey).on('value',s=>{ const prev=DMM; DMM=s.val()||{};
         /* v505：正在看的對話，對方那邊的「未讀 +1」常常比我這邊的「已讀」晚到 → 視窗開著就收回 0 */
-        if(!document.hidden&&_dmWith&&DMM[_dmWith]&&DMM[_dmWith].unread>0&&document.getElementById('dmM')?.classList.contains('on')){ try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+_dmWith+'/unread').set(0); }catch(e){} }
+        if(!document.hidden&&_dmWith&&DMM[_dmWith]&&DMM[_dmWith].unread>0&&document.getElementById('dmM')?.classList.contains('on')){ dmRead(_dmWith); }
         frBadge(); frPaint(); try{ dmtCheck(prev); }catch(e){} });
     }catch(e){}
   }
   const bindTimer=setInterval(()=>{ if(myKey){ frBind(); if(_frBound) clearInterval(bindTimer); } },2500);
   /* v508：切回分頁時，正在看的那段私訊才算已讀 */
   document.addEventListener('visibilitychange',()=>{ if(document.hidden||!_dmWith||!myKey)return; if(!document.getElementById('dmM')?.classList.contains('on'))return;
-    if(DMM[_dmWith]&&DMM[_dmWith].unread>0) try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+_dmWith+'/unread').set(0); }catch(e){} });
+    if(DMM[_dmWith]&&DMM[_dmWith].unread>0) dmRead(_dmWith); });
 
   /* v508 新私訊小卡：那段對話沒開著（或分頁在背景）時，左下聊天框上方（手機在下方分頁上面）跳一張「<名字> 傳來私訊」＋最後一句，
      點一下打開那段對話（好友 dmOpen、冒險者 staffDmOpen）。只看未讀數變多（剛開頁的第一包不算）；封鎖、屏蔽、已不是好友的不跳；
@@ -7470,13 +7496,13 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     document.getElementById('dmTitle').textContent='私訊・'+(frLiveName(k)||(FR[k]&&FR[k].name)||'？');
     {const h=document.getElementById('dmHint');if(h)h.textContent='';const w=document.getElementById('dmWarnBtn');if(w)w.hidden=false;const f=document.getElementById('dmFoot');if(f)f.hidden=false;}
     TTDirectMessageLog.reset(document.getElementById('dmLog'));
-    try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
+    dmRead(k);
     _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
     _dmRef.on('value',s=>{
       const v=s.val()||{}; const log=document.getElementById('dmLog'); if(!log) return;
       if(_dmWith!==k)return;
       TTDirectMessageLog.render(log,v,myKey);
-      if(!document.hidden) try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}   // v508：分頁在背景時不算已讀
+      if(!document.hidden) dmRead(k);   // v508：分頁在背景時不算已讀
     });
     gOpen('dmM');
     setTimeout(()=>{ const i=document.getElementById('dmIn'); if(i) i.focus(); },80);
@@ -7495,9 +7521,9 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
     document.getElementById('dmTitle').textContent='私訊・'+_dmStaffName;
     {const h=document.getElementById('dmHint');if(h)h.textContent=ttStaffDmOk()?'':'會員已到期，只能查看紀錄';const w=document.getElementById('dmWarnBtn');if(w)w.hidden=true;const f=document.getElementById('dmFoot');if(f)f.hidden=ttStaffDmOk();}
     TTDirectMessageLog.reset(document.getElementById('dmLog'));
-    try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}
+    dmRead(k);
     _dmRef=db.ref(ROOT+'/dm/'+pairKey(myKey,k)).limitToLast(60);
-    _dmRef.on('value',s=>{const v=s.val()||{};const log=document.getElementById('dmLog');if(!log||_dmWith!==k)return;TTDirectMessageLog.render(log,v,myKey);if(!document.hidden)try{ db.ref(ROOT+'/dmMeta/'+myKey+'/'+k+'/unread').set(0); }catch(e){}});
+    _dmRef.on('value',s=>{const v=s.val()||{};const log=document.getElementById('dmLog');if(!log||_dmWith!==k)return;TTDirectMessageLog.render(log,v,myKey);if(!document.hidden)dmRead(k);});
     gOpen('dmM');
     try{window.TTDirectMessageDesign?.decorate(k);const h=document.querySelector('#dmM .dm-heading>.contact-avatar');const s=(window.TinyTavernUI?.staff?.()||[]).find(x=>x.cid===cid);if(h&&s&&s.theme){h.replaceChildren();const im=document.createElement('img');im.src='tavern-ui/assets/avatar-'+s.theme+'.png?v=260';im.alt=_dmStaffName;im.className='staff-ava-img';h.classList.add('is-staff');h.append(im);}}catch(e){}
     setTimeout(()=>{const i=document.getElementById('dmIn');if(i)i.focus();},80);
@@ -8623,7 +8649,7 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=503"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=508"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=524"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=508"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=427"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>

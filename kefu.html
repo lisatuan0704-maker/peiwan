@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="lobby-ui/staff-app.js?v=524"></script>
 <style>
 :root{
   --void:#160C06; --outline:#241407;
@@ -446,12 +447,13 @@ const firebaseConfig = {
   appId: "1:430482271005:web:967059c91a9b7970bdcff4",
   measurementId: "G-NN7HQ5W8T1"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+/* v524：後台登入存在自己的 tt-staff app（lobby-ui/staff-app.js），不再跟大廳的客人 Discord 登入搶同一格 */
+const staffApp=ttStaffApp(firebaseConfig);
+const db = staffApp.database();
 const ROOT = "peiwan";
 const PROG = {pending:"待核對",confirmed:"待開始",serving:"服務中",done:"已完成",settled:"已結算",disputed:"回報中"};
 
-const auth=firebase.auth();
+const auth=staffApp.auth();
 const EMAIL_DOMAIN="@peiwan-tavern.com";
 function toEmail(u){return u.toLowerCase()+EMAIL_DOMAIN;}
 let kefu=null, kefuId=null, chars={}, svcs={}, orders={};

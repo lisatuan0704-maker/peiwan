@@ -25,7 +25,7 @@ async function wanted(){
 async function refresh(){try{const w=await wanted(),now=(await db.ref(ROOT+'/shopConfig').once('value')).val()||{},have=Object.keys(w).filter(id=>now[id]).length,total=Object.keys(w).length;
   $('catShopStatus').textContent=have===total?'已全部上架（'+total+' 件）':'已上架 '+have+'／'+total+' 件';$('catShopPublish').disabled=have===total;}catch(e){$('catShopStatus').textContent=e.message;}}
 $('catShopPublish').onclick=async()=>{const btn=$('catShopPublish');btn.disabled=true;
- try{const owner=(await db.ref(ROOT+'/config/adminUid').once('value')).val();if(!firebase.auth().currentUser||firebase.auth().currentUser.uid!==owner)throw Error('請先登入店長帳號');
+ try{const owner=(await db.ref(ROOT+'/config/adminUid').once('value')).val();if(!auth.currentUser||auth.currentUser.uid!==owner)throw Error('請先登入店長帳號');
   const w=await wanted(),ref=db.ref(ROOT+'/shopConfig'),before=(await ref.once('value')).val()||{};
   const add=Object.keys(w).filter(id=>!before[id]);if(!add.length){$('catShopStatus').textContent='都已經上架了';return;}
   const blob=new Blob([JSON.stringify(before,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='商城上架前備份-v494.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
@@ -40,5 +40,5 @@ $('catShopPublish').onclick=async()=>{const btn=$('catShopPublish');btn.disabled
 // 只在「商城」分頁顯示（同 v413）
 const sync=()=>{box.style.display=document.getElementById('tb8')?.classList.contains('on')?'':'none';};
 const orig=window.showTab;if(typeof orig==='function'){window.showTab=function(){const r=orig.apply(this,arguments);sync();return r;};}
-sync();try{firebase.auth().onAuthStateChanged(()=>refresh());}catch(e){refresh();}
+sync();try{auth.onAuthStateChanged(()=>refresh());}catch(e){refresh();}
 })();

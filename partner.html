@@ -16,6 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="lobby-ui/staff-app.js?v=524"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <style>
 :root{
@@ -439,7 +440,7 @@ button:not(:disabled):active{scale:.94}
     <h1>🕯️ Tiny Tavern・角色手札</h1>
     <p>TINY TAVERN · PARTNER</p>
   </header>
-  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v423</div>
+  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v424</div>
 
   <div id="pgLogin">
     <div class="card lgCard">
@@ -556,12 +557,13 @@ const firebaseConfig = {
   appId: "1:430482271005:web:967059c91a9b7970bdcff4",
   measurementId: "G-NN7HQ5W8T1"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+/* v524：後台登入存在自己的 tt-staff app（lobby-ui/staff-app.js），不再跟大廳的客人 Discord 登入搶同一格 */
+const staffApp=ttStaffApp(firebaseConfig);
+const db = staffApp.database();
 const ROOT = "peiwan";
 const PROG = {pending:"待核對",confirmed:"待開始",serving:"服務中",done:"已完成",settled:"已結算",disputed:"回報中"};
 
-const auth=firebase.auth();
+const auth=staffApp.auth();
 const EMAIL_DOMAIN="@peiwan-tavern.com";
 function toEmail(u){return u.toLowerCase()+EMAIL_DOMAIN;}
 let cid=null, me=null, orders={}, ticker=null, regMode=false, booted=false, registering=false;
@@ -1279,7 +1281,7 @@ function nextBlockAfter(fromMs,skipCoid){
   return best;
 }
 let _renewReq={}, _cancelReq={};
-const PT_VER='24';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
+const PT_VER='25';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
 function reqResult(node,coid,ok,why,extra){
   db.ref(ROOT+'/'+node+'/'+coid).update(Object.assign({done:Date.now(), ok:!!ok, why:why||'', ver:PT_VER},extra||{}));
 }

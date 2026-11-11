@@ -1,5 +1,30 @@
 # 小小酒館修改紀錄
 
+## 2026/11/12 v524 私訊看過還顯示「1 則未讀」＋通訊錄卡片粉色條凸出（Claude）
+- D 回報：好友「無名」的私訊看過了，我的酒館 → 通訊錄還寫「1 則未讀」；好友卡片左邊的粉色條凸出卡片圓角。
+- 未讀原因（11/12 在 D 的 Chrome 正式站唯讀查到）：D 的大廳登入身分其實是**掌櫃帳號**，不是客人的 Discord 登入。
+  admin.html／partner.html／kefu.html／interview-control.html／時裝調整室跟大廳全都用預設的 Firebase app，同網域登入存在同一格 →
+  同一個瀏覽器登入掌櫃後台就把大廳的客人登入蓋掉。規則 dmMeta 讀取放行店長、寫入只認客人本人 → 大廳讀得到未讀、`set(0)` 全被拒，
+  又寫成 `try{set(0)}catch{}`（非同步被拒接不到），所以永遠消不掉；大廳只在進門檢查一次登入，左下角還顯示「寫✓」（pos 規則放行店長）。
+  反過來也一樣：在大廳用 Discord 登入會把掌櫃後台踢掉（admin 跳「登入身分已變更」）。
+- 改法（沒動規則、金流、訂單）：
+  ①新 lobby-ui/staff-app.js：後台頁改用具名 app `tt-staff`（`ttStaffApp(firebaseConfig)` 取代 `firebase.initializeApp`，之後一律用它的 .auth()／.database()），
+  登入另存一格、跟大廳互不影響。admin／partner／kefu／interview-control／tavern-ui/outfit-studio（outfit-studio-auth.js）、dc.html 的冒險者 Discord 綁定那段都改了；
+  admin 載入的 season-shop-import.js、cat-shop-import.js 改用 admin 的全域 auth，support-admin.mjs 用 ttStaffApp()。
+  舊版存在預設格的後台登入（帳號密碼登入）第一次開新版後台會自動搬到 tt-staff（updateCurrentUser）再把預設格登出還給大廳 → 掌櫃／冒險者不用重打密碼；客人的 Discord 登入（自訂憑證）一律不動。
+  ⚠ 之後新增後台頁也要用 ttStaffApp，不要再呼叫 firebase.auth()／firebase.database()；大廳（客人）照舊用預設 app。
+  ②lobby.html：進門檢查改成 checkLogin()，通過後盯著登入身分（onAuthStateChanged），被換成不是這張闆卡的客人登入（別的分頁登入別的帳號、登出）就擋回「用 Discord 登入酒館」；
+  未讀歸零集中成 dmRead()，被拒交給 window.ttWriteDenied：提示一次「登入狀態失效了…」、重新檢查登入；左下角登入不對或寫入被拒時顯示「寫✕ ⚠請重新登入」（不再寫✓）。
+- 粉色條：v503 為了不切到內容把卡片改 overflow:visible，方角的 ::before 色條就從 14px 圓角凸出去。theme-skin.css 色條改 14px 寬、左上左下圓角 12px（14−外框 2），只在最左 5px 畫顏色（冒險者那條藍紫同樣改）。手機版是另一套樣式，沒有這條。
+- 驗證（scratchpad/h：python 伺服器＋假的 Firebase 登入服務＋記憶體假資料庫，不連正式站）：
+  大廳（假資料庫，dmMeta 寫入照正式規則只認 discord_）：客人登入打開私訊未讀 1→0、通訊錄不再顯示未讀；大廳開著時模擬別的分頁登入掌櫃 → 馬上擋回登入、左下「寫✕」；再用 Discord 登入 → 放行、未讀可歸零；
+  一開頁就是掌櫃登入 → 直接擋回登入；登入沒問題但寫入被拒 → 提示一次、「寫✕」。
+  後台（真的 Firebase SDK 8.10.1＋假專案＋假登入服務）：舊版掌櫃登入在預設格 → 開新版自動搬到 tt-staff、預設格清空；大廳 Discord 登入後再開後台、後台登出重登，大廳登入都不受影響，重新整理兩邊都還在。
+  admin（自動進後台、線上客服分頁過店長檢查）、partner（只顯示工作帳號登入、不碰大廳的 Discord）、interview-control（看得到掌櫃登入）、outfit-studio、kefu、dc.html 冒險者綁定（帶的是工作帳號憑證）都沒有程式錯誤。
+  粉色條：桌機 1536×864（≈125% 縮放的畫面，大廳 scale 1.2）放大看上下圓角都收在框裡；舊樣式能重現凸出。手機 375 另一套樣式沒有色條。
+- D 要做的：重新整理大廳 → 會跳「用 Discord 登入酒館」→ 登入一次；掌櫃後台、冒險者手札重新整理（舊登入會自動搬過去，不用重打密碼）。冒險者也一樣重新整理就好。
+- 版本：verTag v524、ver.json 524、lobby-view 524、theme-skin.css?v=524、partner verTag v424／PT_VER 25（v523 留給還沒推的闆卡分享 session）。
+
 ## 2026/11/11 專屬聊天室／語音房不再「時間到就收」（Claude；主機 deploy-roomstay-1111，等 D 貼）
 - D：「老闆明明有續單...不要在加限時功能了。規則就是創立 然後語音頻道全部人退出後刪掉聊天室跟語音頻道」。截圖：剛邀完朋友，下一個按鈕就回「這間房已經結束囉」。
 - 原因：續單（partner.html processRenew）只在 clientOrders 加 extraMins／amount，主機 orderVoiceV1/orders 的 endAt 不會變；
