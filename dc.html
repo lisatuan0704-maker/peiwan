@@ -96,6 +96,27 @@ const ROOT='peiwan';
       if(!avatarRefresh||!avatarRefresh.id||!avatarRefresh.key||avatarRefresh.id!==current?.id||avatarRefresh.key!==localStorage.getItem('tt_me')||!Number.isFinite(avatarRefresh.at)||Date.now()-avatarRefresh.at<0||Date.now()-avatarRefresh.at>600000)throw Error('expired refresh');
     }
   }catch(e){ fail('頭貼更新已過期，請回大廳重新開始。');return; }
+  /* 面試體驗版手札：只取回 Discord 帳號交回 partner-trial.html，不綁定任何正式帳號、不寫資料庫（過期的標記直接丟掉，照常走下面的流程） */
+  if(!avatarRefresh&&sessionStorage.getItem('tt_interview_dc_v1')){
+    let iv=null;try{iv=JSON.parse(sessionStorage.getItem('tt_interview_dc_v1'));}catch(e){}
+    sessionStorage.removeItem('tt_interview_dc_v1');
+    const room=String(iv&&iv.room||'').replace(/[^A-Za-z0-9]/g,'').slice(0,32);
+    if(room&&Number.isFinite(iv.at)&&Date.now()-iv.at>=0&&Date.now()-iv.at<600000){
+      const cb=window.__ttDiscordCallback||{};delete window.__ttDiscordCallback;
+      const backUrl='partner-trial.html?room='+room;
+      const back=msg=>{card.innerHTML='<h1>綁定沒有完成</h1><p>'+TTDiscordAuth.escapeText(msg)+'</p><a class="btn" href="'+backUrl+'">回體驗手札</a>';};
+      if(!cb.token){back(cb.error||'請回體驗手札重新按「綁定 Discord」。');return;}
+      fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+cb.token},redirect:'error',signal:AbortSignal.timeout(10000)})
+        .then(r=>{if(!r.ok)throw Error('http '+r.status);return r.json();})
+        .then(u=>{
+          if(!/^[0-9]{16,22}$/.test(u.id||'')||!u.username)throw Error('invalid user');
+          sessionStorage.setItem('tt_interview_dc_result',JSON.stringify({room,dc:{id:u.id,username:u.username,global_name:u.global_name||null}}));
+          card.innerHTML='<h1>綁定成功！</h1><div class="nm">@'+TTDiscordAuth.escapeText(u.username)+'</div><p>正在回到體驗手札…</p><a class="btn" href="'+backUrl+'">回體驗手札</a>';
+          setTimeout(()=>{location.replace(backUrl);},900);
+        }).catch(()=>back('連不上 Discord，請稍後再試一次。'));
+      return;
+    }
+  }
   if(!avatarRefresh&&sessionStorage.getItem('tt_voice_login_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=421').then(m=>m.finishVoiceLogin(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
   if(!avatarRefresh&&sessionStorage.getItem('tt_voice_rehearsal_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/voice-rehearsal.mjs?v=407').then(m=>m.finishRehearsal(callback,firebase.auth(),card)).catch(()=>card.textContent='無法載入，請返回大廳重試。');return;}
   if(!avatarRefresh&&sessionStorage.getItem('tt_partner_discord_bind_v1')){const callback=window.__ttDiscordCallback;delete window.__ttDiscordCallback;import('./lobby-ui/partner-binding.mjs?v=427').then(m=>m.finishBinding(callback,firebase.auth(),card)).catch(()=>{card.textContent='無法載入綁定功能，請返回冒險者手札重試。'});return;}
