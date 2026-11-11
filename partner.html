@@ -439,7 +439,7 @@ button:not(:disabled):active{scale:.94}
     <h1>🕯️ Tiny Tavern・角色手札</h1>
     <p>TINY TAVERN · PARTNER</p>
   </header>
-  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v422</div>
+  <div id="verTag" style="position:fixed;left:8px;bottom:6px;z-index:60;font-size:10px;color:var(--ink-soft);opacity:.6">v423</div>
 
   <div id="pgLogin">
     <div class="card lgCard">
@@ -1279,7 +1279,7 @@ function nextBlockAfter(fromMs,skipCoid){
   return best;
 }
 let _renewReq={}, _cancelReq={};
-const PT_VER='23';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
+const PT_VER='24';   // 角色手札版本 —— 會跟著結果回傳,方便判斷陪玩那台跑的是哪一版
 function reqResult(node,coid,ok,why,extra){
   db.ref(ROOT+'/'+node+'/'+coid).update(Object.assign({done:Date.now(), ok:!!ok, why:why||'', ver:PT_VER},extra||{}));
 }
@@ -1622,5 +1622,5 @@ const openLogs=new Set();
 import {mountBinding} from './lobby-ui/partner-binding.mjs?v=427';
 let binding;const timer=setInterval(()=>{if(auth.currentUser&&cid){clearInterval(timer);binding=mountBinding({root:document.getElementById('partnerDiscordBinding'),getUser:()=>auth.currentUser,getCid:()=>cid})}},500);
 window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
-</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=511';import {installBookingSound} from './lobby-ui/booking-sound.mjs?v=308';const bookingSound=installBookingSound({root:document.getElementById('bookingSoundControl'),getUser:()=>auth.currentUser,notice:ptNotify});const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});const {createServiceTimer}=await import('./lobby-ui/service-timer.mjs?v=511');Object.assign(window,createServiceTimer({getOrder:id=>orders[id],request:(path,body)=>orderVoice.serviceTime(body),originals:{startTimer,pauseTimer,resumeTimer,endTimer},confirm:msg=>window.confirm(msg),notify:msg=>ptNotify(msg,'')}));mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>{orderVoice.update(items);bookingSound.update(items)},notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script><script src="lobby-ui/partner-dark-fix.js?v=477"></script></body>
+</script><script type="module">import {mountVoiceInbox} from './lobby-ui/voice-rehearsal.mjs?v=306';import {installOrderVoice} from './lobby-ui/order-voice.mjs?v=523';import {installBookingSound} from './lobby-ui/booking-sound.mjs?v=308';const bookingSound=installBookingSound({root:document.getElementById('bookingSoundControl'),getUser:()=>auth.currentUser,notice:ptNotify});const orderVoice=installOrderVoice({auth,partner:true,notice:msg=>ptNotify(msg,'')});const {createServiceTimer}=await import('./lobby-ui/service-timer.mjs?v=511');Object.assign(window,createServiceTimer({getOrder:id=>orders[id],request:(path,body)=>orderVoice.serviceTime(body),originals:{startTimer,pauseTimer,resumeTimer,endTimer},confirm:msg=>window.confirm(msg),notify:msg=>ptNotify(msg,'')}));mountVoiceInbox({root:document.getElementById('partnerVoiceInbox'),auth,render:false,onItems:items=>{orderVoice.update(items);bookingSound.update(items)},notify:()=>ptNotify('語音房已準備好','請查看預約時間與進房連結。')});</script><script src="lobby-ui/partner-dark-fix.js?v=477"></script></body>
 </html>
