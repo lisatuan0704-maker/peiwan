@@ -558,10 +558,14 @@ function onLive(e){
 }
 function connect(){
   const es=new EventSource(NTFY+'/sse?since=all');
+  let histMax=0;
+  /* ntfy 的連線時間是具名事件「open」(onmessage 收不到);連線之後才發的單才跳通知 */
+  es.addEventListener('open',ev=>{if(!ev.data||openTime!==Infinity)return;try{const m=JSON.parse(ev.data);if(m.time)openTime=m.time;}catch(x){}});
+  setTimeout(()=>{if(openTime===Infinity)openTime=histMax+1;},4000);
   es.onmessage=ev=>{
     let m;try{m=JSON.parse(ev.data)}catch(x){return}
-    if(m.event==='open'){if(openTime===Infinity)openTime=m.time;return;}
     if(m.event!=='message')return;
+    if(openTime===Infinity&&m.time>histMax)histMax=m.time;
     let e;try{e=JSON.parse(m.message)}catch(x){return}
     if(!e||!e.eid)return;
     if(seen.has(e.eid)){const i=pending.findIndex(p=>p.eid===e.eid);if(i<0)return;pending.splice(i,1);log.push(e);rebuild();render();return;}
