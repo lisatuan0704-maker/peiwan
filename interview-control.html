@@ -7,6 +7,9 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>面試控制台｜Tiny Tavern</title>
 <link href="tavern-ui/assets/fonts/lineseed.css?v=257" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
 :root{--bg:#F4EEFB;--card:#fff;--ink:#3E2D57;--soft:#8A7BB0;--pri:#8E68C8;--line:#E3D8F3;--ok:#2F8A5C;--bad:#B03A5B}
 *{box-sizing:border-box}
@@ -31,6 +34,7 @@ button{font:inherit;border:none;border-radius:10px;padding:10px 16px;cursor:poin
 .link{font-size:13px;word-break:break-all;background:#F7F3FC;border-radius:10px;padding:9px 11px;margin-top:6px}
 .st{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
 .st span{color:var(--soft)}
+.st b{word-break:break-word}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px}
 .ord{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}
 .ord .t{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
@@ -39,31 +43,43 @@ button{font:inherit;border:none;border-radius:10px;padding:10px 16px;cursor:poin
 .log{font-size:12.5px;max-height:240px;overflow-y:auto}
 .log div{padding:4px 0;border-bottom:1px dashed var(--line)}
 .hint{font-size:12px;color:var(--soft);line-height:1.7;margin:6px 0 0}
-#toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:#5A3D7E;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;display:none;z-index:9}
+#toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:#5A3D7E;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;display:none;z-index:9;max-width:92vw;text-align:center}
+#conn{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#B03A5B;color:#fff;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;display:none;z-index:9}
 details summary{cursor:pointer;font-size:13px;color:var(--pri)}
+#prevRoom a{color:var(--pri);cursor:pointer;text-decoration:underline}
 </style>
 </head>
 <body>
 <div id="toast"></div>
+<div id="conn">連線中斷，重新連線中…</div>
 <div class="wrap">
   <h1>✦ 面試控制台 <span style="font-size:13px;color:var(--soft);font-weight:400">發單給面試者的體驗版手札</span></h1>
   <div class="grid">
     <div>
       <div class="card">
         <h2>① 面試房間</h2>
-        <div class="row"><input id="room" placeholder="房間代碼" style="flex:1"><button class="ghost" id="newRoom">開新房間</button></div>
+        <div class="row"><input id="room" placeholder="房間代碼" style="flex:1"><button class="ghost" id="newRoom">換下一位（開新房間）</button></div>
+        <p class="hint" id="prevRoom" style="display:none"></p>
         <label>給面試者的連結（複製貼到她的小房間）</label>
         <div class="link" id="trialLink"></div>
         <div class="row" style="margin-top:8px"><button class="pri" id="copyLink">複製連結</button><button class="ghost" id="openTrial">我自己先開來看</button></div>
+        <p class="hint">每位面試者都用新的房間。打開這一頁就會自動開一間新的。</p>
       </div>
       <div class="card" style="margin-top:16px">
-        <h2>② Discord 通知</h2>
-        <label>她小房間的 Webhook 網址（只存在你這台電腦）</label>
-        <input id="hook" placeholder="https://discord.com/api/webhooks/...">
-        <div class="row" style="margin-top:8px"><button class="ghost" id="testHook">送一則測試通知</button></div>
-        <details style="margin-top:8px"><summary>Webhook 怎麼拿？</summary>
-          <p class="hint">在 Discord 對她的應徵小房間按右鍵 →「編輯頻道」→「整合」→「Webhook」→「新 Webhook」→ 名字改成「小小酒館・新單通知」→「複製 Webhook 網址」→ 貼到上面。<br>
-          她在體驗頁按「綁定 Discord」之後，每次發單都會在小房間 @她，她的 Discord 就會跳通知。</p></details>
+        <h2>② TT 私訊通知</h2>
+        <div class="st">
+          <span>掌櫃登入</span><b id="ttAdmin">檢查中…</b>
+          <span>她的 Discord</span><b id="ttDc">還沒綁定</b>
+          <span>最近一則</span><b id="ttLast">—</b>
+        </div>
+        <div class="row" style="margin-top:10px"><button class="ghost" id="ttLogin" style="display:none">打開掌櫃頁登入</button><button class="ghost" id="ttTest">請 TT 私訊她一則測試</button></div>
+        <p class="hint">她在體驗手札按「綁定 Discord」之後，你每發一張單、每次續單，TT 都會像正式委託一樣私訊她。<br>這台電腦要先登入過掌櫃頁（同一個瀏覽器）才能請 TT 發私訊。</p>
+        <details style="margin-top:8px"><summary>（備用）她小房間的 Webhook</summary>
+          <p class="hint">TT 私訊發不出去時（她關閉私訊、主機沒回應），改在她的應徵小房間 @ 她。不填也可以。<br>
+          取得方式：對她的應徵小房間按右鍵 →「編輯頻道」→「整合」→「Webhook」→「新 Webhook」→「複製 Webhook 網址」。</p>
+          <input id="hook" placeholder="https://discord.com/api/webhooks/...">
+          <div class="row" style="margin-top:8px"><button class="ghost" id="testHook">送一則測試到小房間</button></div>
+        </details>
       </div>
       <div class="card" style="margin-top:16px">
         <h2>③ 冒險者狀態</h2>
@@ -71,6 +87,10 @@ details summary{cursor:pointer;font-size:13px;color:var(--pri)}
           <span>名字</span><b id="sName">還沒進來</b>
           <span>打卡</span><b id="sDuty">—</b>
           <span>Discord</span><b id="sDc">未綁定</b>
+          <span>預約</span><b id="sNb">—</b>
+          <span>不接單時段</span><b id="sCal">—</b>
+          <span>心情便利貼</span><b id="sMood">—</b>
+          <span>常玩</span><b id="sGames">—</b>
         </div>
       </div>
     </div>
@@ -78,7 +98,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--pri)}
       <div class="card">
         <h2>④ 發一張新單</h2>
         <div class="seg"><button id="kNow" class="on">即時（現在）</button><button id="kBook">預約</button></div>
-        <div id="bookBox" style="display:none"><label>預約時間</label><input type="datetime-local" id="resAt"></div>
+        <div id="bookBox" style="display:none"><label>預約時間（台灣時間）</label><input type="datetime-local" id="resAt"></div>
         <label>方案</label><select id="plan"></select>
         <div class="row">
           <div style="flex:1"><label>時數</label><select id="hrs"><option value="1">1 小時</option><option value="2">2 小時</option><option value="3">3 小時</option></select></div>
@@ -93,7 +113,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--pri)}
       <div class="card" style="margin-top:16px">
         <h2>⑤ 這場的訂單</h2>
         <div id="orders"></div>
-        <div class="row" style="margin-top:12px"><button class="danger" id="reset">清空這場體驗</button></div>
+        <div class="row" style="margin-top:12px"><button class="danger" id="reset">清空這場（單子、打卡、Discord 綁定）</button></div>
       </div>
       <div class="card" style="margin-top:16px">
         <h2>⑥ 動態</h2>
@@ -107,10 +127,13 @@ details summary{cursor:pointer;font-size:13px;color:var(--pri)}
 const $=id=>document.getElementById(id);
 const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-function toast(t){const b=$('toast');b.textContent=t;b.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>b.style.display='none',3000);}
-const W=['日','一','二','三','四','五','六'];
-const hm=ms=>{const d=new Date(ms);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
-const fmtRes=ms=>{const d=new Date(ms);return (d.getMonth()+1)+'/'+d.getDate()+'(週'+W[d.getDay()]+') '+hm(ms);};
+function toast(t){const b=$('toast');b.textContent=t;b.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>b.style.display='none',3200);}
+/* 時間一律用台灣時間（這台電腦的時區可能不是台灣） */
+const W=['日','一','二','三','四','五','六'],p2=v=>String(v).padStart(2,'0');
+const tw=ms=>new Date(Number(ms)+8*3600000);
+const hm=ms=>{const d=tw(ms);return p2(d.getUTCHours())+':'+p2(d.getUTCMinutes());};
+const fmtRes=ms=>{const d=tw(ms);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+'(週'+W[d.getUTCDay()]+') '+hm(ms);};
+let lastBtn=0;const guard=()=>{const t=Date.now();if(t-lastBtn<700)return false;lastBtn=t;return true;};   // 連點只算一下
 
 /* ---------- 房間 ---------- */
 let ROOM='',NTFY='',es=null;
@@ -123,26 +146,27 @@ function setRoom(code){
   try{history.replaceState(null,'','?room='+ROOM);}catch(e){}
   connect();
 }
-$('newRoom').onclick=()=>{if(ROOM&&!confirm('開新房間後，舊連結就不會再收到單。確定嗎？'))return;setRoom(newCode());toast('新房間開好了，記得把新連結給她');};
+$('newRoom').onclick=()=>{if(!guard())return;if(ROOM&&!confirm('開新房間給下一位面試者？\n舊連結之後就收不到新單。'))return;setRoom(newCode());$('prevRoom').style.display='none';toast('新房間開好了，記得把新連結給她');};
 $('room').onchange=()=>setRoom($('room').value);
 $('copyLink').onclick=()=>{navigator.clipboard.writeText($('trialLink').textContent).then(()=>toast('連結已複製'),()=>toast('複製失敗，請手動選取'));};
 $('openTrial').onclick=()=>window.open($('trialLink').textContent,'_blank');
 
 /* ---------- 事件 ---------- */
 let log=[],pending=[],seen=new Set();
-const S={orders:{},on:false,dc:null,name:'',last:0};
-/* 事件從公開的通道來:欄位一律整理成固定格式再用 */
+const S={orders:{},on:false,dc:null,name:'',card:null};
+/* 事件從公開的通道來：欄位一律整理成固定格式再用 */
 const okId=x=>typeof x==='string'&&/^[A-Za-z0-9]{1,40}$/.test(x);
 const int=x=>Math.max(0,Math.round(+x||0));
 function cleanO(o){o=o||{};return {plan:String(o.plan||'委託').slice(0,40),mins:int(o.mins),amount:int(o.amount),name:String(o.name||'老闆').slice(0,20),game:String(o.game||'').slice(0,30),note:String(o.note||'').slice(0,80),book:!!o.book,reserveAt:int(o.reserveAt)};}
+function cleanCard(e){return {nb:!!e.nb,mood:String(e.mood||'').slice(0,40),games:String(e.games||'').slice(0,30),
+  cal:(Array.isArray(e.cal)?e.cal:[]).slice(0,8).map(x=>({s:int(x&&x.s),e:int(x&&x.e),why:String(x&&x.why||'').slice(0,24)})).filter(x=>x.e>x.s)};}
 function apply(e){
   if(e.id!==undefined&&!okId(e.id))return;
   const at=int(e.at);
   const o=e.id&&S.orders[e.id];
-  if(e.from==='trial')S.last=Math.max(S.last,at);
   if(e.t==='order'&&!S.orders[e.id]) S.orders[e.id]=Object.assign(cleanO(e.o),{id:e.id,status:'new',createdAt:at,accum:0,running:false,renewMins:0});
   else if(e.t==='renew'&&o){const mi=int(e.mins);o.mins+=mi;o.amount+=int(e.amount);o.renewMins+=mi;}
-  else if(e.t==='cancel'&&o&&o.status==='new'){o.status='cancelled';}
+  else if(e.t==='cancel'&&o&&(o.status==='new'||o.status==='declined')){o.status='cancelled';}
   else if(e.t==='act'&&o){
     if(e.act==='accept'&&o.status==='new') o.status='accepted';
     else if(e.act==='decline'&&o.status==='new'){o.status='declined';o.reason=String(e.reason||'').slice(0,100);}
@@ -151,22 +175,34 @@ function apply(e){
     else if(e.act==='resume'&&o.status==='serving'&&!o.running){o.running=true;o.segStart=at;}
     else if(e.act==='end'&&o.status==='serving'){if(o.running)o.accum+=Math.max(0,at-o.segStart);o.running=false;o.status='done';o.doneAt=at;}
   }
-  else if(e.t==='reset'){S.orders={};}
+  else if(e.t==='reset'){S.orders={};S.on=false;S.dc=null;S.card=null;}
   else if(e.t==='duty'){S.on=!!e.on;}
   else if(e.t==='bind'){const d=e.dc;S.dc=(d&&/^\d{5,25}$/.test(String(d.id))&&d.username)?{id:String(d.id),username:String(d.username).slice(0,40)}:null;}
   else if(e.t==='hello'){S.name=String(e.name||'').slice(0,20);}
+  else if(e.t==='card'){S.card=cleanCard(e);}
 }
-function rebuild(){S.orders={};S.on=false;S.dc=null;S.name='';S.last=0;log.forEach(apply);pending.forEach(apply);}
+function rebuild(){S.orders={};S.on=false;S.dc=null;S.name='';S.card=null;log.forEach(apply);pending.forEach(apply);}
+/* 送出：失敗會用同一個事件編號重送兩次（兩邊都會去重），真的送不出去就把畫面退回原狀；回傳 Promise<是否送出> */
+function send(e,n){
+  return fetch(NTFY,{method:'POST',body:JSON.stringify(e)}).then(r=>{if(!r.ok)throw 0;return true;}).catch(()=>{
+    if(!pending.includes(e))return true;
+    if(n<2)return new Promise(r=>setTimeout(r,1200*(n+1))).then(()=>send(e,n+1));
+    pending.splice(pending.indexOf(e),1);seen.delete(e.eid);rebuild();render();
+    toast('網路不穩，沒送出，請再按一次');addLogText('沒送出（網路不穩）');return false;
+  });
+}
 function pub(e){
-  if(!NTFY){toast('先開一個房間');return false;}
+  if(!NTFY){toast('先開一個房間');return Promise.resolve(false);}
   e.from='ctl';e.at=Date.now();e.eid=rid();seen.add(e.eid);pending.push(e);rebuild();addLog(e);render();
-  fetch(NTFY,{method:'POST',body:JSON.stringify(e)}).catch(()=>toast('網路不穩，沒送出，請再按一次'));
-  return true;
+  return send(e,0);
 }
-function connect(){
-  if(es)es.close();log=[];pending=[];seen=new Set();rebuild();render();$('log').innerHTML='';
-  es=new EventSource(NTFY+'/sse?since=all');
-  es.onmessage=ev=>{
+function setConn(ok){$('conn').style.display=ok?'none':'block';}
+function openStream(){
+  if(es)try{es.close();}catch(x){}
+  const my=es=new EventSource(NTFY+'/sse?since=all');
+  my.addEventListener('open',ev=>{if(!ev.data)setConn(true);});
+  my.onerror=()=>{if(es!==my)return;setConn(false);if(my.readyState===2)setTimeout(()=>{if(es===my)openStream();},3000);};
+  my.onmessage=ev=>{
     let m;try{m=JSON.parse(ev.data)}catch(x){return}
     if(m.event!=='message')return;
     let e;try{e=JSON.parse(m.message)}catch(x){return}
@@ -175,68 +211,89 @@ function connect(){
     seen.add(e.eid);log.push(e);rebuild();addLog(e);render();
   };
 }
+function connect(){log=[];pending=[];seen=new Set();rebuild();render();$('log').innerHTML='';openStream();}
 const ACT={accept:'接單了',decline:'回報無法接單',start:'開始計時',pause:'暫停計時',resume:'繼續計時',end:'結束陪玩 ✔'};
 function addLog(e){
   let t='';const o=S.orders[e.id];const nm=o?('「'+o.name+'」'):'';
   if(e.from==='trial'){
-    if(e.t==='hello')t='冒險者「'+e.name+'」進來了';
+    if(e.t==='hello')t='冒險者「'+String(e.name||'').slice(0,20)+'」進來了';
     else if(e.t==='duty')t=e.on?'打卡上班':'打卡下班';
-    else if(e.t==='bind')t=e.dc?('綁定 Discord @'+e.dc.username):'解除 Discord 綁定';
-    else if(e.t==='act')t=nm+' '+ACT[e.act]+(e.act==='decline'&&e.reason?'（'+e.reason+'）':'');
+    else if(e.t==='bind')t=S.dc?('綁定 Discord @'+S.dc.username):'解除 Discord 綁定';
+    else if(e.t==='act')t=nm+' '+(ACT[e.act]||'')+(e.act==='decline'&&o&&o.reason?'（'+o.reason+'）':'');
+    else if(e.t==='card')t='更新了冒險者卡（心情／常玩／預約／不接單時段）';
   }else{
-    if(e.t==='order')t='送出新單 '+nm;else if(e.t==='renew')t=nm+' 續單 +'+e.mins+' 分';else if(e.t==='cancel')t=nm+' 老闆取消';else if(e.t==='reset')t='清空這場體驗';
+    if(e.t==='order')t='送出新單 '+nm;else if(e.t==='renew')t=nm+' 續單 +'+int(e.mins)+' 分';else if(e.t==='cancel')t=nm+' 老闆取消';else if(e.t==='reset')t='清空這場（單子、打卡、Discord 綁定）';
   }
   if(!t)return;
-  const d=document.createElement('div');d.innerHTML='<b style="color:'+(e.from==='trial'?'#2F8A5C':'#8E68C8')+'">'+hm(e.at)+'</b>　'+esc(t);
+  const d=document.createElement('div');d.innerHTML='<b style="color:'+(e.from==='trial'?'#2F8A5C':'#8E68C8')+'">'+hm(int(e.at)||Date.now())+'</b>　'+esc(t);
   $('log').prepend(d);
 }
+function addLogText(t){const d=document.createElement('div');d.innerHTML='<b style="color:#C97B2B">'+hm(Date.now())+'</b>　'+esc(t);$('log').prepend(d);}
 const STL={new:['等她接單','#C97B2B','#FFF0DA'],accepted:['已接單・待開始','#2F8A5C','#DFF3E7'],serving:['陪玩中','#fff','#61B98A'],done:['已完成','#8E68C8','#EFE4FB'],declined:['無法接單','#B03A5B','#F4E3E9'],cancelled:['已取消','#8A7BB0','#EEE']};
 function render(){
   $('sName').textContent=S.name||'還沒進來';
   $('sDuty').innerHTML=S.name?('<span class="dot" style="background:'+(S.on?'#61B98A':'#C9B6C0')+'"></span>'+(S.on?'上班中':'下班中')):'—';
   $('sDc').textContent=S.dc?('已綁定 @'+S.dc.username):'未綁定';
+  $('ttDc').textContent=S.dc?('@'+S.dc.username+'（已綁定）'):'還沒綁定';
+  const c=S.card;
+  $('sNb').textContent=c?(c.nb?'已暫停接受新預約':'開放預約中'):'—';
+  $('sCal').textContent=c&&c.cal.length?c.cal.map(x=>fmtRes(x.s)+'~'+hm(x.e)+' '+x.why).join('、'):'—';
+  $('sMood').textContent=c&&c.mood||'—';
+  $('sGames').textContent=c&&c.games||'—';
   const os=Object.values(S.orders).sort((a,b)=>b.createdAt-a.createdAt);
   $('orders').innerHTML=os.length?os.map(o=>{const s=STL[o.status];
     return '<div class="ord"><div class="t"><span class="chip" style="color:'+s[1]+';background:'+s[2]+'">'+s[0]+'</span><b>'+esc(o.plan)+'</b><span style="margin-left:auto;font-weight:800;color:#C2537D">NT$'+o.amount+'</span></div>'
       +'<div class="m">'+(o.book?'預約 '+fmtRes(o.reserveAt):'即時')+'｜老闆：'+esc(o.name)+'｜'+o.mins+' 分'+(o.renewMins?'（續 +'+o.renewMins+'）':'')+(o.reason?'｜原因：'+esc(o.reason):'')+'</div>'
-      +((o.status==='accepted'||o.status==='serving')?'<div class="row" style="margin-top:6px"><button class="ghost" data-renew="'+o.id+'" style="padding:6px 12px;font-size:13px">老闆續單 +1 小時</button></div>':'')
-      +(o.status==='new'?'<div class="row" style="margin-top:6px"><button class="danger" data-cancel="'+o.id+'" style="padding:6px 12px;font-size:13px">老闆取消</button></div>':'')
+      +((o.status==='accepted'||o.status==='serving')?'<div class="row" style="margin-top:6px"><button class="ghost" data-renew="'+esc(o.id)+'" style="padding:6px 12px;font-size:13px">老闆續單 +1 小時</button></div>':'')
+      +(o.status==='new'?'<div class="row" style="margin-top:6px"><button class="danger" data-cancel="'+esc(o.id)+'" style="padding:6px 12px;font-size:13px">老闆取消</button></div>':'')
+      +(o.status==='declined'?'<div class="row" style="margin-top:6px"><button class="danger" data-cancel="'+esc(o.id)+'" style="padding:6px 12px;font-size:13px">幫老闆退款（取消這張單）</button></div>':'')
       +'</div>';}).join(''):'<p class="hint">還沒有單，從上面發一張吧。</p>';
 }
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.renew){const o=S.orders[b.dataset.renew];if(!o)return;const per=Math.round(o.amount/(o.mins/60));
-    if(pub({t:'renew',id:o.id,mins:60,amount:per})){notifyDc('老闆續單了 +60 分鐘','「'+o.name+'」的單延長了，金幣已入袋');toast('已送出續單');}}
-  if(b.dataset.cancel){pub({t:'cancel',id:b.dataset.cancel});toast('已取消');}
+  if(b.dataset.renew){if(!guard())return;const o=S.orders[b.dataset.renew];if(!o)return;const per=o.mins>0?Math.round(o.amount/(o.mins/60)):o.amount;
+    pub({t:'renew',id:o.id,mins:60,amount:per}).then(ok=>{if(!ok)return;toast('已送出續單');
+      ttDm('renew',{plan:o.plan,name:o.name,mins:60,amount:per},()=>notifyDc('老闆續單了 +60 分鐘','「'+o.name+'」的單延長了，金幣已入袋'));});}
+  if(b.dataset.cancel){if(!guard())return;pub({t:'cancel',id:b.dataset.cancel}).then(ok=>{if(ok)toast('已取消，金幣退回給老闆');});}
 });
-$('reset').onclick=()=>{if(confirm('清空這場所有的單？')){pub({t:'reset'});toast('已清空');}};
+$('reset').onclick=()=>{if(!guard())return;if(confirm('清空這場的單子、打卡和 Discord 綁定？\n（面試中途按的話，她要重新綁定一次 Discord）'))pub({t:'reset'}).then(ok=>{if(ok)toast('已清空');});};
 
 /* ---------- 發單 ---------- */
 let kind='now';
 $('kNow').onclick=()=>{kind='now';$('kNow').classList.add('on');$('kBook').classList.remove('on');$('bookBox').style.display='none';};
 $('kBook').onclick=()=>{kind='book';$('kBook').classList.add('on');$('kNow').classList.remove('on');$('bookBox').style.display='';
-  if(!$('resAt').value){const d=new Date(Date.now()+86400000);d.setMinutes(0,0,0);d.setHours(21);$('resAt').value=new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,16);}};
+  if(!$('resAt').value)$('resAt').value=tw(Date.now()+86400000).toISOString().slice(0,10)+'T21:00';};   // 預設：明天晚上 9 點（台灣時間）
 let PLANS=[{name:'Valorant',price:350},{name:'競技類遊戲',price:350},{name:'今天想聊天嗎？',price:250},{name:'休閒小遊戲',price:280}];
 function fillPlans(){$('plan').innerHTML=PLANS.map((p,i)=>'<option value="'+i+'">'+esc(p.name)+'（NT$'+p.price+'/小時）</option>').join('');calcAmt();}
 function calcAmt(){const p=PLANS[+$('plan').value]||PLANS[0];$('amt').value=p.price*(+$('hrs').value||1);}
 $('plan').onchange=calcAmt;$('hrs').onchange=calcAmt;
 fetch('https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app/peiwan/config/services.json').then(r=>r.json()).then(d=>{
-  const a=Object.values(d||{}).filter(x=>x&&x.active&&x.name&&x.price).sort((x,y)=>(x.order||0)-(y.order||0)).map(x=>({name:x.name,price:+x.price}));
+  const a=Object.values(d||{}).filter(x=>x&&x.active&&x.name&&x.price).sort((x,y)=>(x.order||0)-(y.order||0)).map(x=>({name:String(x.name),price:+x.price}));
   if(a.length){PLANS=a;fillPlans();}}).catch(()=>{});
 fillPlans();
 const BOSS=['旅行的貓頭鷹','愛喝奶茶的熊','迷路的勇者','半夜不睡的狐狸','想贏一場的兔兔','路過的魔法師','只想聊天的企鵝','早睡失敗的小羊'];
 $('dice').onclick=()=>{$('boss').value=BOSS[Math.floor(Math.random()*BOSS.length)];};$('dice').onclick();
+/* 正式店裡會擋下的情況，先問一聲（面試時可以拿來示範） */
+function warnings(o){
+  const w=[],c=S.card;
+  if(!o.book&&!S.on)w.push('她現在是「下班中」：正式店裡老闆看不到她，也點不到她的即時單。');
+  if(o.book&&c&&c.nb)w.push('她勾了「暫停接受新預約」：正式店裡老闆預約不到她。');
+  if(o.book&&c){const s=o.reserveAt,e=s+o.mins*60000;const hit=c.cal.find(x=>x.s<e&&x.e>s);if(hit)w.push('這個時段她標了不接單（'+hit.why+'）：正式店裡這段是暗的、預約不到。');}
+  return w;
+}
 $('send').onclick=()=>{
   if(!ROOM){toast('先開一個房間');return;}
+  if(!guard())return;
   const p=PLANS[+$('plan').value]||PLANS[0];const hrs=+$('hrs').value||1;
   const o={plan:p.name+'・'+hrs+' 小時',mins:hrs*60,amount:Math.max(0,Math.round(+$('amt').value||0)),name:$('boss').value.trim()||'神秘老闆',game:$('game').value.trim(),note:$('note').value.trim(),book:kind==='book'};
-  if(o.book){const t=new Date($('resAt').value).getTime();if(!t){toast('請選預約時間');return;}o.reserveAt=t;}
+  if(o.book){const v=$('resAt').value;const t=v?new Date(v+':00+08:00').getTime():NaN;if(!t){toast('請選預約時間');return;}o.reserveAt=t;}
+  const w=warnings(o);if(w.length&&!confirm(w.join('\n')+'\n\n還是要送這張單嗎？'))return;
   const id=rid();
-  if(!pub({t:'order',id,o}))return;
-  notifyDc('新單來囉！','老闆「'+o.name+'」已付款｜'+(o.book?'預約 '+fmtRes(o.reserveAt):'即時')+'｜'+o.plan+'｜NT$'+o.amount+(o.game?'｜想玩：'+o.game:'')+'\n到角色手札的「新單」分頁接單 ✦');
-  toast('新單送出了');$('dice').onclick();$('note').value='';
+  pub({t:'order',id,o}).then(ok=>{if(!ok)return;toast('新單送出了');
+    ttDm('order',o,()=>notifyDc('新單來囉！','老闆「'+o.name+'」已付款｜'+(o.book?'預約 '+fmtRes(o.reserveAt):'即時')+'｜'+o.plan+'｜NT$'+o.amount+(o.game?'｜想玩：'+o.game:'')+'\n到角色手札的「新單」分頁接單 ✦'));});
+  $('dice').onclick();$('note').value='';
 };
 
-/* ---------- Discord ---------- */
+/* ---------- （備用）小房間 Webhook ---------- */
 const HOOK_RE=/^https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/;
 try{$('hook').value=localStorage.getItem('tt_iv_hook')||'';}catch(e){}
 $('hook').onchange=()=>{const v=$('hook').value.trim();$('hook').value=v;try{localStorage.setItem('tt_iv_hook',v)}catch(e){};if(v&&!HOOK_RE.test(v))toast('這看起來不是 Webhook 網址');};
@@ -244,15 +301,52 @@ function notifyDc(title,body,force){
   const url=$('hook').value.trim();if(!HOOK_RE.test(url)){if(force)toast('還沒貼 Webhook 網址');return;}
   const mention=S.dc&&/^\d{5,25}$/.test(S.dc.id)?'<@'+S.dc.id+'> ':'';
   fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'小小酒館・新單通知',content:mention+'**'+title+'**（面試體驗）\n'+body,allowed_mentions:{users:mention?[S.dc.id]:[]}})})
-    .then(r=>{if(!r.ok)throw Error(r.status);if(force)toast('測試通知送出了，去 Discord 看看');})
-    .catch(()=>toast('Discord 通知沒送出，請檢查 Webhook 網址'));
+    .then(r=>{if(!r.ok)throw Error(r.status);addLogText('小房間通知已送出（備用）');if(force)toast('測試通知送出了，去 Discord 看看');})
+    .catch(()=>toast('小房間通知沒送出，請檢查 Webhook 網址'));
 }
 $('testHook').onclick=()=>notifyDc('測試通知','這是面試體驗的測試訊息，收到就代表設定好了 ✦',true);
 
-/* ---------- 開始 ---------- */
+/* ---------- TT 私訊（主機 order-voice-bot/interview-dm.cjs 收 peiwan/interviewDm；要用掌櫃身分登入）---------- */
+const FB_CFG={apiKey:"AIzaSyCXUrJCDqAuB7LmrZhp8SCYM6tVLXWDevc",authDomain:"my-shop-0520.firebaseapp.com",databaseURL:"https://my-shop-0520-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"my-shop-0520",storageBucket:"my-shop-0520.firebasestorage.app",messagingSenderId:"430482271005",appId:"1:430482271005:web:967059c91a9b7970bdcff4"};
+let fdb=null,isAdmin=false;
+try{
+  firebase.initializeApp(FB_CFG);fdb=firebase.database();
+  firebase.auth().onAuthStateChanged(async u=>{
+    let ok=false;
+    if(u){try{const a=(await fdb.ref('peiwan/config/adminUid').once('value')).val();ok=!!a&&a===u.uid;}catch(e){}}
+    isAdmin=ok;
+    $('ttAdmin').textContent=ok?'✓ 已登入（可以請 TT 私訊）':(u?'這個帳號不是掌櫃':'還沒登入');
+    $('ttAdmin').style.color=ok?'#2F8A5C':'#B03A5B';
+    $('ttLogin').style.display=ok?'none':'';
+  });
+}catch(e){$('ttAdmin').textContent='載入失敗，請重新整理';}
+$('ttLogin').onclick=()=>window.open('admin.html','_blank');
+function setTtLast(t,color){const b=$('ttLast');b.textContent=t;b.style.color=color||'';}
+const TT_STATE={sent:['TT 私訊已送達 ✓','#2F8A5C'],blocked:['她關閉了私訊，TT 送不到（請她在伺服器隱私設定打開私訊）','#B03A5B'],failed:['TT 私訊失敗','#B03A5B'],expired:['太久沒送出，已取消（不會補發）','#B03A5B'],limited:['這一小時私訊太多，先停一下','#B03A5B']};
+function ttDm(kind,o,fallback){
+  const label={order:'新單',renew:'續單',test:'測試'}[kind]||kind;
+  const fb=()=>{if(fallback)fallback();};
+  if(!S.dc){setTtLast(label+'：她還沒綁定 Discord，TT 沒有私訊','#C97B2B');fb();return;}
+  if(!fdb||!isAdmin){setTtLast(label+'：這台電腦還沒登入掌櫃頁，TT 沒有私訊','#B03A5B');fb();return;}
+  const ref=fdb.ref('peiwan/interviewDm').push();
+  setTtLast(label+'：請 TT 私訊中…','#8A7BB0');
+  ref.set({to:S.dc.id,kind,room:ROOM,who:S.name||'',plan:String(o.plan||''),amount:Number(o.amount)||0,mins:Number(o.mins)||0,name:String(o.name||''),book:!!o.book,reserveAt:Number(o.reserveAt)||0,game:String(o.game||''),at:firebase.database.ServerValue.TIMESTAMP})
+   .then(()=>{
+     let done=false;const rr=ref.child('result');
+     const tm=setTimeout(()=>{if(done)return;done=true;rr.off('value',h);setTtLast(label+'：主機沒有回應（TT 私訊功能可能還沒上線）','#B03A5B');addLogText('TT 私訊（'+label+'）主機沒有回應');fb();},25000);
+     const h=rr.on('value',s=>{const r=s.val();if(!r||done)return;done=true;rr.off('value',h);clearTimeout(tm);
+       const st=TT_STATE[r.state]||['TT 私訊：'+r.state,'#B03A5B'];setTtLast(label+'：'+st[0],st[1]);addLogText('TT 私訊（'+label+'）'+st[0]);
+       if(r.state!=='sent')fb();},()=>{});
+   })
+   .catch(e=>{const pd=/permission/i.test(String(e&&(e.code||e.message)));setTtLast(label+'：'+(pd?'資料庫規則還沒發布，TT 沒有私訊':'網路不穩，沒送出'),'#B03A5B');fb();});
+}
+$('ttTest').onclick=()=>{if(!guard())return;ttDm('test',{},null);};
+
+/* ---------- 開始：網址沒有房間就開一間新的（每位面試者一間），上一場的房間留一個連結 ---------- */
 let init=new URLSearchParams(location.search).get('room');
-try{init=init||localStorage.getItem('tt_iv_ctl_room');}catch(e){}
+let prev='';try{prev=localStorage.getItem('tt_iv_ctl_room')||'';}catch(e){}
 setRoom(init||newCode());
+if(!init&&prev&&prev!==ROOM){const p=$('prevRoom');p.style.display='';p.innerHTML='上一場的房間：<a id="goPrev">'+esc(prev)+'</a>（不小心關掉頁面、面試還沒結束時，點這裡回去）';$('goPrev').onclick=()=>{setRoom(prev);p.style.display='none';};}
 </script>
 </body>
 </html>

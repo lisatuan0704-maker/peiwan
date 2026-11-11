@@ -96,13 +96,19 @@ const ROOT='peiwan';
       if(!avatarRefresh||!avatarRefresh.id||!avatarRefresh.key||avatarRefresh.id!==current?.id||avatarRefresh.key!==localStorage.getItem('tt_me')||!Number.isFinite(avatarRefresh.at)||Date.now()-avatarRefresh.at<0||Date.now()-avatarRefresh.at>600000)throw Error('expired refresh');
     }
   }catch(e){ fail('頭貼更新已過期，請回大廳重新開始。');return; }
-  /* 面試體驗版手札：只取回 Discord 帳號交回 partner-trial.html，不綁定任何正式帳號、不寫資料庫（過期的標記直接丟掉，照常走下面的流程） */
+  /* 面試體驗版手札：只取回 Discord 帳號交回 partner-trial.html，不綁定任何正式帳號、不寫資料庫。
+     只有「授權回來的 state 跟體驗手札發起時記下的一樣」才算體驗綁定；在 Discord 按取消（沒有 state）時，
+     30 分鐘內、而且沒有其他正式流程在等，才帶回體驗手札。其餘照常走下面的正式流程（標記一律丟掉）。 */
   if(!avatarRefresh&&sessionStorage.getItem('tt_interview_dc_v1')){
     let iv=null;try{iv=JSON.parse(sessionStorage.getItem('tt_interview_dc_v1'));}catch(e){}
     sessionStorage.removeItem('tt_interview_dc_v1');
     const room=String(iv&&iv.room||'').replace(/[^A-Za-z0-9]/g,'').slice(0,32);
-    if(room&&Number.isFinite(iv.at)&&Date.now()-iv.at>=0&&Date.now()-iv.at<600000){
-      const cb=window.__ttDiscordCallback||{};delete window.__ttDiscordCallback;
+    const cb0=window.__ttDiscordCallback||{},age=Date.now()-Number(iv&&iv.at);
+    const mine=!!(room&&iv.state&&cb0.state&&cb0.state===iv.state);
+    const otherFlow=['tt_voice_login_v1','tt_voice_rehearsal_v1','tt_partner_discord_bind_v1','tt_card_login_v438'].some(k=>sessionStorage.getItem(k));
+    const cancelled=!!(room&&!cb0.token&&!otherFlow&&age>=0&&age<1800000);
+    if(mine||cancelled){
+      const cb=cb0;delete window.__ttDiscordCallback;
       const backUrl='partner-trial.html?room='+room;
       const back=msg=>{card.innerHTML='<h1>綁定沒有完成</h1><p>'+TTDiscordAuth.escapeText(msg)+'</p><a class="btn" href="'+backUrl+'">回體驗手札</a>';};
       if(!cb.token){back('Discord 授權沒有完成，請回體驗手札再按一次「綁定 Discord」。');return;}

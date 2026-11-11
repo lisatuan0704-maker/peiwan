@@ -529,13 +529,14 @@ const seen=new Set();let openTime=Infinity;
 const okId=x=>typeof x==='string'&&/^[A-Za-z0-9]{1,40}$/.test(x);
 const int=x=>Math.max(0,Math.round(+x||0));
 function cleanO(o){o=o||{};return {plan:String(o.plan||'委託').slice(0,40),mins:int(o.mins),amount:int(o.amount),name:String(o.name||'老闆').slice(0,20),game:String(o.game||'').slice(0,30),note:String(o.note||'').slice(0,80),book:!!o.book,reserveAt:int(o.reserveAt)};}
+function cleanDc(d){return (d&&/^\d{5,25}$/.test(String(d.id))&&d.username)?{id:String(d.id),username:String(d.username).slice(0,40)}:null;}
 function apply(e){
   if(e.id!==undefined&&!okId(e.id))return;
   const at=int(e.at);
   const o=e.id&&S.orders[e.id];
   if(e.t==='order'&&!S.orders[e.id]) S.orders[e.id]=Object.assign(cleanO(e.o),{id:e.id,status:'new',createdAt:at,accum:0,running:false,renewMins:0});
   else if(e.t==='renew'&&o){const mi=int(e.mins);o.mins+=mi;o.amount+=int(e.amount);o.renewMins+=mi;}
-  else if(e.t==='cancel'&&o&&o.status==='new'){o.status='cancelled';}
+  else if(e.t==='cancel'&&o&&(o.status==='new'||o.status==='declined')){o.status='cancelled';}
   else if(e.t==='act'&&o){
     if(e.act==='accept'&&o.status==='new') o.status='accepted';
     else if(e.act==='decline'&&o.status==='new'){o.status='declined';o.reason=String(e.reason||'').slice(0,100);}
@@ -544,30 +545,41 @@ function apply(e){
     else if(e.act==='resume'&&o.status==='serving'&&!o.running){o.running=true;o.segStart=at;}
     else if(e.act==='end'&&o.status==='serving'){if(o.running)o.accum+=Math.max(0,at-o.segStart);o.running=false;o.status='done';o.doneAt=at;}
   }
-  else if(e.t==='reset'){S.orders={};}
+  else if(e.t==='reset'){S.orders={};S.on=false;S.dc=null;}   // 換下一位:單子、打卡、Discord 綁定都清掉
   else if(e.t==='duty'){S.on=!!e.on;}
-  else if(e.t==='bind'){S.dc=e.dc||null;}
+  else if(e.t==='bind'){S.dc=cleanDc(e.dc);}
 }
 /* 狀態=依伺服器順序重播所有事件;自己剛送出、還沒回聲的事件排在最後 */
 const log=[],pending=[];
 function rebuild(){S.orders={};S.on=false;S.dc=null;log.forEach(apply);pending.forEach(apply);}
-function pub(e){
-  e.from='trial';e.at=Date.now();e.eid=rid();seen.add(e.eid);pending.push(e);rebuild();render();
-  fetch(NTFY,{method:'POST',body:JSON.stringify(e)}).catch(()=>ptNotify('網路好像不穩','剛剛的動作沒送出,請再按一次'));
+function send(e,n){
+  fetch(NTFY,{method:'POST',body:JSON.stringify(e)}).then(r=>{if(!r.ok)throw 0;}).catch(()=>{
+    if(!pending.includes(e))return;                                   // 回聲已經到了
+    if(n<2){setTimeout(()=>send(e,n+1),1200*(n+1));return;}            // 同一個事件編號重送,兩邊都會去重
+    pending.splice(pending.indexOf(e),1);seen.delete(e.eid);rebuild();render();   // 真的送不出去:畫面退回原狀
+    ptNotify('網路好像不穩','剛剛的動作沒送出,請再按一次');
+  });
 }
+function pub(e){e.from='trial';e.at=Date.now();e.eid=rid();seen.add(e.eid);pending.push(e);rebuild();render();send(e,0);}
 function onLive(e){
-  if(e.t==='order'){const o=S.orders[e.id];if(!o)return;beep();
+  if(e.t==='order'){const o=S.orders[e.id];if(!o)return;beep();flashTitle('新單');
     ptNotify('新單來囉!','「'+(o.name||'老闆')+'」已付款'+(o.book?'・預約 '+fmtRes(o.reserveAt):'')+',到「新單」分頁接單 ✦');showTab(0);}
-  else if(e.t==='renew'){beep();ptNotify('老闆續單了! +'+e.mins+' 分鐘','這單延長了,金幣已入袋 ✦');}
+  else if(e.t==='renew'){beep();flashTitle('續單');ptNotify('老闆續單了! +'+int(e.mins)+' 分鐘','這單延長了,金幣已入袋 ✦');}
   else if(e.t==='cancel'){ptNotify('老闆取消了這筆單','金幣已自動退回給老闆,不用處理 ✦');}
-  else if(e.t==='reset'){ptNotify('店長重新開始了體驗','單子都清空囉');}
+  else if(e.t==='reset'){ptNotify('店長重新開始了體驗','單子、打卡和 Discord 綁定都清空囉');}
 }
+let es=null,fbT=0,histMax=0;
+function setConn(ok){const b=$('ivConn');if(b)b.style.display=ok?'none':'block';}
 function connect(){
-  const es=new EventSource(NTFY+'/sse?since=all');
-  let histMax=0;
+  if(es)try{es.close();}catch(x){}
+  es=new EventSource(NTFY+'/sse?since=all');
   /* ntfy 的連線時間是具名事件「open」(onmessage 收不到);連線之後才發的單才跳通知 */
-  es.addEventListener('open',ev=>{if(!ev.data||openTime!==Infinity)return;try{const m=JSON.parse(ev.data);if(m.time)openTime=m.time;}catch(x){}});
-  setTimeout(()=>{if(openTime===Infinity)openTime=histMax+1;},4000);
+  es.addEventListener('open',ev=>{
+    if(!ev.data){setConn(true);   // 原生的「連上了」:舊紀錄會馬上跟著來,5 秒後還沒拿到 ntfy 的時間就以收到的最後一筆為界
+      if(openTime===Infinity&&!fbT)fbT=setTimeout(()=>{if(openTime===Infinity)openTime=histMax+1;},5000);return;}
+    if(openTime!==Infinity)return;try{const m=JSON.parse(ev.data);if(m.time)openTime=m.time;}catch(x){}
+  });
+  es.onerror=()=>{setConn(false);if(es.readyState===2)setTimeout(connect,3000);};   // 被伺服器斷掉(不會自己重連)就自己重連
   es.onmessage=ev=>{
     let m;try{m=JSON.parse(ev.data)}catch(x){return}
     if(m.event!=='message')return;
@@ -581,15 +593,22 @@ function connect(){
   };
 }
 
-/* ---------- 小工具 ---------- */
+/* ---------- 小工具(時間一律用台灣時間) ---------- */
 let toastT=0;
 function ptNotify(t,sub){const b=$('ptToast');b.innerHTML=esc(t)+(sub?'<div style="font-size:12px;font-weight:400;margin-top:2px;opacity:.95">'+esc(sub)+'</div>':'');b.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>b.style.display='none',4200);}
 let actx=null;
-function beep(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;[880,1175].forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(.0001,t+i*.16);g.gain.exponentialRampToValueAtTime(.25,t+i*.16+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.16+.3);o.connect(g).connect(actx.destination);o.start(t+i*.16);o.stop(t+i*.16+.32);});}catch(e){}}
-const W=['日','一','二','三','四','五','六'];
-function fmtRes(ms){const d=new Date(ms);return (d.getMonth()+1)+'/'+d.getDate()+'(週'+W[d.getDay()]+') '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
-function fmt(t){return t?new Date(t).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';}
-function hms(sec){sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');}
+function unlockAudio(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();}catch(e){}}
+['pointerdown','keydown'].forEach(n=>document.addEventListener(n,unlockAudio,{passive:true}));
+function beep(){try{unlockAudio();const t=actx.currentTime;[880,1175].forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(.0001,t+i*.16);g.gain.exponentialRampToValueAtTime(.25,t+i*.16+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.16+.3);o.connect(g).connect(actx.destination);o.start(t+i*.16);o.stop(t+i*.16+.32);});}catch(e){}}
+const baseTitle=document.title;let titleT=0;
+function flashTitle(t){if(!document.hidden)return;clearInterval(titleT);let on=false;titleT=setInterval(()=>{document.title=(on=!on)?'【'+t+'】小小酒館':baseTitle;},900);}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){clearInterval(titleT);document.title=baseTitle;}});
+const W=['日','一','二','三','四','五','六'],p2=v=>String(v).padStart(2,'0');
+const tw=ms=>new Date(Number(ms)+8*3600000);   // 台灣時間(沒有夏令時間),之後用 getUTC*
+function fmtRes(ms){const d=tw(ms);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+'(週'+W[d.getUTCDay()]+') '+p2(d.getUTCHours())+':'+p2(d.getUTCMinutes());}
+function fmt(ms){if(!ms)return '';const d=tw(ms);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+' '+p2(d.getUTCHours())+':'+p2(d.getUTCMinutes());}
+function hmTw(ms){const d=tw(ms);return p2(d.getUTCHours())+':'+p2(d.getUTCMinutes());}
+function hms(sec){sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return [h,m,s].map(p2).join(':');}
 function elapsed(o){return (o.accum+(o.running?Date.now()-o.segStart:0))/1000;}
 function no(o){return 'T'+String(o.id).slice(-4).toUpperCase();}
 function openBox(html){$('box').innerHTML=html;$('mask').style.display='flex';}
@@ -621,8 +640,8 @@ function render(){
       +(o.note?'<div class="note" style="margin-top:6px">💬 '+esc(o.note)+'</div>':'')
       +(dec?'<div style="margin-top:6px;font-size:12px;color:#B03A5B;font-weight:700">已回報無法接單,等店長處理(退款或改期)</div>'
         :'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:9px">'
-          +'<button data-dec="'+o.id+'" style="border:none;background:#F4E3E9;color:#B03A5B;font-family:inherit;font-size:12.5px;padding:9px 14px;border-radius:9px;cursor:pointer">無法接單</button>'
-          +'<button data-acc="'+o.id+'" style="border:none;background:linear-gradient(180deg,#8FD3AE,#61B98A);color:#fff;font-family:inherit;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer">接單 ›</button></div>')
+          +'<button data-dec="'+esc(o.id)+'" style="border:none;background:#F4E3E9;color:#B03A5B;font-family:inherit;font-size:12.5px;padding:9px 14px;border-radius:9px;cursor:pointer">無法接單</button>'
+          +'<button data-acc="'+esc(o.id)+'" style="border:none;background:linear-gradient(180deg,#8FD3AE,#61B98A);color:#fff;font-family:inherit;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer">接單 ›</button></div>')
       +'</div>';}).join(''):'<div class="empty">目前沒有新單,泡杯茶等等吧 ☕</div>')+'</div>';
 
   const run=list(['accepted','serving']);
@@ -634,10 +653,10 @@ function render(){
       +'<div class="meta">'+esc(o.plan)+'｜老闆：'+esc(o.name)+'｜'+o.mins+' 分鐘'+(o.renewMins?'(含續單 +'+o.renewMins+' 分)':'')+'</div>'
       +(o.game?'<div class="note">想玩：'+esc(o.game)+'</div>':'')
       +(o.book?'<div style="font-size:12.5px;color:#8E68C8;font-weight:700;margin:2px 0 4px">🕐 預約 '+fmtRes(o.reserveAt)+'</div>':'')
-      +(sv?'<div class="timer"><div class="clock '+(o.running?'':'paused')+'" data-clock="'+o.id+'">'+hms(elapsed(o))+'</div><div class="lb">'+(o.running?'● 計時中':'⏸ 已暫停')+'</div></div>'
-        +'<div class="row">'+(o.running?'<button class="b-pause" data-act="pause" data-id="'+o.id+'">暫停 ⏸</button>':'<button class="b-start" data-act="resume" data-id="'+o.id+'">繼續 ▶</button>')
-        +'<button class="b-end" data-act="end" data-id="'+o.id+'">結束陪玩 ✔</button></div>'
-       :'<div class="row"><button class="b-start" data-act="start" data-id="'+o.id+'">開始計時 ▶</button></div>')
+      +(sv?'<div class="timer"><div class="clock '+(o.running?'':'paused')+'" data-clock="'+esc(o.id)+'">'+hms(elapsed(o))+'</div><div class="lb">'+(o.running?'● 計時中':'⏸ 已暫停')+'</div></div>'
+        +'<div class="row">'+(o.running?'<button class="b-pause" data-act="pause" data-id="'+esc(o.id)+'">暫停 ⏸</button>':'<button class="b-start" data-act="resume" data-id="'+esc(o.id)+'">繼續 ▶</button>')
+        +'<button class="b-end" data-act="end" data-id="'+esc(o.id)+'">結束陪玩 ✔</button></div>'
+       :'<div class="row"><button class="b-start" data-act="start" data-id="'+esc(o.id)+'">開始計時 ▶</button></div>')
       +'</div>';}).join('')+'</div>'
     :'<div class="card"><div class="empty">沒有進行中的單。接下的單會出現在這裡等你開始 ☕</div></div>';
 
@@ -657,8 +676,11 @@ function render(){
 }
 setInterval(()=>{document.querySelectorAll('[data-clock]').forEach(el=>{const o=S.orders[el.dataset.clock];if(o)el.textContent=hms(elapsed(o));});},1000);
 
+let lastAct=0;   // 連點兩下時,第二下會打在重畫後同位置的另一顆鈕(暫停→繼續):0.6 秒內只算第一下
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
+  if(!(b.dataset.acc||b.dataset.dec||b.dataset.act))return;
+  const t=Date.now();if(t-lastAct<600)return;lastAct=t;
   if(b.dataset.acc){pub({t:'act',act:'accept',id:b.dataset.acc});ptNotify('已接單!','進到「進行中」,開始陪玩就按開始計時 ▶');showTab(1);}
   else if(b.dataset.dec){openDecline(b.dataset.dec);}
   else if(b.dataset.act){const a=b.dataset.act;pub({t:'act',act:a,id:b.dataset.id});
@@ -680,6 +702,12 @@ function openDecline(id){
     pub({t:'act',act:'decline',id,reason:rs.concat(n?[n]:[]).join('、')});closeBox();ptNotify('已回報無法接單','店長會處理退款或改期 ✦');};
 }
 
+/* ---------- 冒險者卡(心情、常玩、暫停預約、不接單時段)也讓店長那邊看得到 ---------- */
+function pubCard(){
+  pub({t:'card',nb:!!local.nb,mood:String(local.mood||'').slice(0,40),games:String(local.games||'').slice(0,30),
+    cal:(local.cal||[]).filter(x=>x.e>Date.now()).slice(0,8).map(x=>({s:int(x.s),e:int(x.e),why:String(x.why||'').slice(0,24)}))});
+}
+
 /* ---------- 心情便利貼 ---------- */
 const MOODS=['今天手感超好,來場勝利吧!','剛泡好一杯茶,想慢慢聊天 ☕','新賽季衝分中,一起上分?','今晚只想輕鬆玩 ✦'];
 function paintMood(){$('scMoodPv').textContent=local.mood||'還沒寫,點我寫一句現在的心情吧 ✦';}
@@ -690,14 +718,14 @@ $('moodOpen').onclick=()=>{
     +'<div class="ivBtnRow"><button class="ivGhost" id="mX">取消</button><button class="ivMain" id="mOk">貼上去</button></div>');
   $('box').querySelectorAll('[data-m]').forEach(c=>c.onclick=()=>{$('moodIn').value=c.dataset.m;});
   $('mX').onclick=closeBox;
-  $('mOk').onclick=()=>{local.mood=$('moodIn').value.trim();saveLocal();paintMood();closeBox();ptNotify('便利貼換好了','老闆在票卡上看得到 ✦');};
+  $('mOk').onclick=()=>{local.mood=$('moodIn').value.trim();saveLocal();paintMood();closeBox();pubCard();ptNotify('便利貼換好了','老闆在票卡上看得到 ✦');};
 };
 
-/* ---------- 行事曆 ---------- */
+/* ---------- 行事曆(台灣時間) ---------- */
 function calSummary(){const c=(local.cal||[]).filter(x=>x.e>Date.now());$('calSummary').textContent=c.length?('接下來有 '+c.length+' 段不接單・最近:'+fmtRes(c[0].s)):'還沒設定,點開來標記你不能接單的時間';}
 function openCal(){
-  const d=new Date();const day=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  const rows=(local.cal||[]).map((x,i)=>'<div class="ivCalRow"><b style="color:#8E68C8">'+fmtRes(x.s)+'~'+new Date(x.e).toTimeString().slice(0,5)+'</b><span style="flex:1;color:#8A6A7A">'+esc(x.why)+'</span><button class="ivGhost" data-cd="'+i+'" style="border:none;border-radius:7px;padding:4px 9px;cursor:pointer;font-family:inherit">移除</button></div>').join('');
+  const day=tw(Date.now()).toISOString().slice(0,10);
+  const rows=(local.cal||[]).map((x,i)=>'<div class="ivCalRow"><b style="color:#8E68C8">'+fmtRes(x.s)+'~'+hmTw(x.e)+'</b><span style="flex:1;color:#8A6A7A">'+esc(x.why)+'</span><button class="ivGhost" data-cd="'+i+'" style="border:none;border-radius:7px;padding:4px 9px;cursor:pointer;font-family:inherit">移除</button></div>').join('');
   openBox('<h2>📅 設定不接單時段</h2><p class="hint" style="margin:0 0 10px">老闆預約時會看到這些時段是暗的,還會看到你寫的理由,所以寫可愛一點 ✦</p>'
     +'<input type="date" id="cDay" value="'+day+'" style="width:100%;box-sizing:border-box">'
     +'<div style="display:flex;gap:8px;margin-top:8px"><input type="time" id="cS" value="19:00" style="flex:1"><input type="time" id="cE" value="22:00" style="flex:1"></div>'
@@ -707,35 +735,41 @@ function openCal(){
     +(rows?'<div style="margin-top:10px">'+rows+'</div>':'')
     +'<div class="ivBtnRow"><button class="ivGhost" id="cX">關閉</button></div>');
   $('box').querySelectorAll('[data-w]').forEach(c=>c.onclick=()=>{$('cWhy').value=c.dataset.w;});
-  $('box').querySelectorAll('[data-cd]').forEach(c=>c.onclick=()=>{local.cal.splice(+c.dataset.cd,1);saveLocal();calSummary();openCal();});
+  $('box').querySelectorAll('[data-cd]').forEach(c=>c.onclick=()=>{local.cal.splice(+c.dataset.cd,1);saveLocal();calSummary();pubCard();openCal();});
   $('cX').onclick=closeBox;
-  $('cAdd').onclick=()=>{const dv=$('cDay').value;if(!dv)return;const s=new Date(dv+'T'+$('cS').value).getTime(),en=new Date(dv+'T'+$('cE').value).getTime();
+  $('cAdd').onclick=()=>{const dv=$('cDay').value;if(!dv)return;
+    const s=new Date(dv+'T'+$('cS').value+':00+08:00').getTime(),en=new Date(dv+'T'+$('cE').value+':00+08:00').getTime();
     if(!(en>s)){ptNotify('時間怪怪的','結束要比開始晚喔');return;}
-    local.cal=(local.cal||[]).concat({s,e:en,why:$('cWhy').value.trim()||'不方便接單'}).sort((a,b)=>a.s-b.s);saveLocal();calSummary();openCal();ptNotify('已加入','這段時間老闆就預約不到你囉');};
+    local.cal=(local.cal||[]).concat({s,e:en,why:$('cWhy').value.trim()||'不方便接單'}).sort((a,b)=>a.s-b.s);saveLocal();calSummary();pubCard();openCal();ptNotify('已加入','這段時間老闆就預約不到你囉');};
 }
 $('calOpen').onclick=openCal;
 
 /* ---------- 冒險者卡 ---------- */
-$('nbChk').onchange=()=>{local.nb=$('nbChk').checked;saveLocal();$('nbTxt').textContent=local.nb?'(已暫停預約)':'(開放預約中)';};
-$('scSave').onclick=()=>{local.games=$('scGames').value.trim();saveLocal();ptNotify('冒險者卡已儲存','老闆在點單票卡上看得到 ✦');};
+$('nbChk').onchange=()=>{local.nb=$('nbChk').checked;saveLocal();$('nbTxt').textContent=local.nb?'(已暫停預約)':'(開放預約中)';pubCard();};
+$('scSave').onclick=()=>{local.games=$('scGames').value.trim();saveLocal();pubCard();ptNotify('冒險者卡已儲存','老闆在點單票卡上看得到 ✦');};
 
 /* ---------- 打卡 ---------- */
 $('punchChk').onchange=()=>{const on=$('punchChk').checked;pub({t:'duty',on});ptNotify(on?'上班囉!':'下班囉',on?'你的小人出現在酒館大廳了 ✦':'辛苦了,好好休息 ✦');};
 
-/* ---------- Discord 體驗綁定 ---------- */
+/* ---------- Discord 體驗綁定(只在體驗手札用,不碰正式帳號) ---------- */
 $('dcBtn').onclick=()=>{
   if(S.dc){pub({t:'bind',dc:null});ptNotify('已解除體驗綁定','');return;}
-  try{sessionStorage.setItem('tt_interview_dc_v1',JSON.stringify({room:ROOM,at:Date.now()}));}catch(e){}
-  location.assign(TTDiscordAuth.begin('1527394621368303636',location.origin+'/dc.html'));
+  const url=TTDiscordAuth.begin('1527394621368303636',location.origin+'/dc.html');
+  let state='';try{state=JSON.parse(sessionStorage.getItem('tt_discord_oauth_state_v1')||'{}').state||'';}catch(e){}
+  try{sessionStorage.setItem('tt_interview_dc_v1',JSON.stringify({room:ROOM,at:Date.now(),state}));}catch(e){}
+  location.assign(url);
 };
 
 /* ---------- 開始 ---------- */
+(function(){const d=document.createElement('div');d.id='ivConn';d.textContent='連線中斷,重新連線中…';
+  d.style.cssText='display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:250;background:#B03A5B;color:#fff;font-size:13px;font-weight:700;padding:8px 16px;border-radius:999px;box-shadow:0 6px 18px rgba(90,30,60,.3)';
+  document.body.appendChild(d);})();
 function enter(){
   $('pgLogin').style.display='none';$('pgMain').style.display='block';$('meName').textContent=local.name;
   $('scGames').value=local.games||'';$('nbChk').checked=!!local.nb;$('nbTxt').textContent=local.nb?'(已暫停預約)':'(開放預約中)';
   paintMood();calSummary();render();
   let back=null;try{back=JSON.parse(sessionStorage.getItem('tt_interview_dc_result')||'null');sessionStorage.removeItem('tt_interview_dc_result');}catch(e){}
-  if(back&&back.room===ROOM&&back.dc&&back.dc.id){setTimeout(()=>{pub({t:'bind',dc:back.dc});ptNotify('Discord 綁定完成!','有新單時 Discord 會通知你 ✦');},400);}
+  if(back&&back.room===ROOM&&cleanDc(back.dc)){setTimeout(()=>{pub({t:'bind',dc:cleanDc(back.dc)});ptNotify('Discord 綁定完成!','有新單時 TT 會私訊你 ✦');},400);}
 }
 if(!ROOM){$('pgNoRoom').style.display='';}
 else{

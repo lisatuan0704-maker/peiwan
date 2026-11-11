@@ -1,5 +1,18 @@
 # 小小酒館修改紀錄
 
+## 2026/11/11 面試體驗版手札＋面試控制台＋TT 私訊面試者（Claude；TT 私訊需發布第二十三批規則＋主機 deploy-interviewdm-1111）
+- D：面試冒險者時要讓對方實際操作手札、店長能即時發單、Discord 要跳通知。第一位（花熙）面試時只做了小房間 Webhook @，TT 沒有私訊——D：「他的 dc 私訊 tt 怎麼沒有發通知!! 下一個不要再錯了」「不要補發」。
+- 頁面（不碰正式訂單／金流／資料庫）：partner-trial.html（體驗版手札，CSS 照抄 partner.html：暱稱登入、打卡、行事曆、冒險者卡、新單／進行中／本月，本月顯示店抽 20%／冒險者 80%、手續費稅金各半）、
+  interview-control.html（店長控制台：開房間給連結、發即時／預約單、續單、取消／退款、看對方每一步、冒險者卡狀態、送單前提醒「下班中／暫停預約／這段不接單」）。
+  兩頁靠 ntfy.sh 公開頻道 tt-iv-<房間代碼> 同步（事件記錄，since=all 重播；自己送出未回聲的排最後；送不出去重送兩次再退回畫面）。房間一位面試者一間，控制台打開就開新房；「清空」連打卡與 Discord 綁定一起清。時間一律用台灣時間（這台電腦是東京時區）。
+- Discord 體驗綁定：體驗手札 → Discord 授權（identify）→ dc.html 新分支（只在 OAuth state 跟體驗手札記下的相同才走；取消授權時 30 分鐘內且沒有其他正式流程才帶回）→ 只把 Discord ID 交回體驗手札，不寫 tt_dc、不碰正式綁定。
+- TT 私訊：控制台（要在同一個瀏覽器登入過掌櫃頁）每次發單／續單／測試寫 peiwan/interviewDm/<id>{to,kind,room,who,plan,amount,mins,name,book,reserveAt,game,at:伺服器時間}；
+  主機 order-voice-bot/interview-dm.cjs 收到就由 TT 私訊面試者（同正式委託新單私訊的樣子、標「面試體驗」、附體驗手札連結），結果寫回 <id>/result（sent／blocked／failed／expired／limited），控制台顯示；
+  只處理 5 分鐘內的新請求（不補發）、每筆一次（orderVoiceV1/interviewDm/<id> transaction）、一小時最多 60 則。TT 私訊不成功時，有填備用小房間 Webhook 才改在小房間 @ 她。
+- 規則第二十三批（tests/security-rules-v428/build/harden-phase23.cjs、test-phase23 14 項，GitHub Actions sec-ci/interview1111 全過；快照 rules-before-interview1111.json）：interviewDm 只有店長讀寫、to 是 Discord ID、room 格式、at 必須是伺服器現在。
+  同一次 CI：第 6、7、9 批各有 2～3 項失敗，是開幕禮／11/07 前每日任務的日期測試，改動前一樣失敗。
+- 主機：ops/deploy-interviewdm-1111.sh（security-v428）只新增 interview-dm.cjs＋測試，service-server.cjs 在 staffDm 那行後接一行；本機假主機（以 20261111-voicepool 為底）跑過：檔案核對、只多 3 行、語法、測試 18 項；已部署過會停止。
+
 ## 2026/11/11 隨機單（不指定）的「確認語音」按了沒反應（Claude；網站 partner v423 已上線＋主機 ops/deploy-voicepool-1111.sh）
 - D：「陪玩說她按了確認語音沒反應..這個問題怎麼又來了 可以好好排修嗎」「他是隨機單的確認語音」。
 - 根本原因（主機 booking-voice.cjs）：registerOrder 要求每張單都有 staffCid → 不指定的單點單時被拒 ORDER_NOT_ELIGIBLE（客人端 order-voice.mjs 當永久錯誤丟掉、不提示）；
