@@ -1,5 +1,17 @@
 # 小小酒館修改紀錄
 
+## 2026/11/11 隨機單（不指定）的「確認語音」按了沒反應（Claude；網站 partner v423 已上線＋主機 ops/deploy-voicepool-1111.sh）
+- D：「陪玩說她按了確認語音沒反應..這個問題怎麼又來了 可以好好排修嗎」「他是隨機單的確認語音」。
+- 根本原因（主機 booking-voice.cjs）：registerOrder 要求每張單都有 staffCid → 不指定的單點單時被拒 ORDER_NOT_ELIGIBLE（客人端 order-voice.mjs 當永久錯誤丟掉、不提示）；
+  冒險者 grabPoolOrder 接走後沒有人重新登記 → approveOrder 找不到 sourceIndex 一直回 CUSTOMER_BINDING_PENDING；手札 retryApprovals 遇到這個代碼默默每 5 秒重試、畫面完全沒反應。
+- 主機修法：approveOrder 找不到登記時，先核對按的人＝接這張單的冒險者（staffAccounts／staffBindings authUid），用 secureV1/owners/<闆卡> 找老闆，替老闆跑 registerOrder；
+  同一組（groupSize>1）用 walletTx/<闆卡>/<groupId>/orderIds，沒有就用 groupId 找；同組還有人沒接回 GROUP_NOT_READY（409）。測試 booking-voice-pool.test.cjs 7 項（舊版 4 項失敗）。
+- 網站（lobby-ui/order-voice.mjs，partner 才用到的路徑）：按下先說「正在確認語音…」；等待類（CUSTOMER_BINDING_PENDING／GROUP_NOT_READY／ORDER_NOT_READY／TEMPORARILY_UNAVAILABLE／連不上）說一次原因＋每 5 秒自動再試；
+  其他錯誤直接說；沒登入請先登入。partner.html import ?v=523、verTag v423、PT_VER 24；大廳 ?v=514 沒動。
+- 部署：主機 root 終端機貼 curl -fsSL https://raw.githubusercontent.com/lisatuan0704-maker/peiwan/672a95db131c551e0af9e8d10d1ba5692ad06121/ops/deploy-voicepool-1111.sh -o /tmp/v.sh && bash /tmp/v.sh
+  （插入點核對、docker 建置＋測試、重啟後 READY 與語音端點跟重啟前一樣，失敗自動還原；假主機演練 46 項通過）。
+- 同一天：冒險者打卡後公開單沒出現「我接這張」（新單分頁打卡不重畫）→ partner v422 syncDutyUI 上下班一變就 render()。
+
 ## 2026/11/11 主機：Discord 通知分頻道（Claude；ops/deploy-notify-1111.sh，11/11 D 已在主機執行：20261111-notify 健康）
 - D：「訂單通知／服務鈴／儲值通知要分開，甚至訂單要分時裝還是陪玩的」。原本 order-notify（訂單＋儲值）、counter-desk（服務鈴「想了解服務」、意見回饋）、recruit-desk（冒險者應徵）全用同一個 ORDER_NOTIFY_WEBHOOK_URL。
 - 分流：委託（type play／table／沒有 type）→ 原本 ORDER_NOTIFY_WEBHOOK_URL；商城（shop、member…）→ SHOP_NOTIFY_WEBHOOK_URL；儲值（topup 待核帳＋線上儲值入帳）→ TOPUP_NOTIFY_WEBHOOK_URL；
