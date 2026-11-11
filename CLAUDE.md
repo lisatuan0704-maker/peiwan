@@ -1,6 +1,6 @@
 # 小小酒館修改紀錄
 
-## 2026/11/11 主機：Discord 通知分頻道（Claude；ops 分支 security-v428 的 ops/deploy-notify-1111.sh，待 D 在主機執行）
+## 2026/11/11 主機：Discord 通知分頻道（Claude；ops/deploy-notify-1111.sh，11/11 D 已在主機執行：20261111-notify 健康）
 - D：「訂單通知／服務鈴／儲值通知要分開，甚至訂單要分時裝還是陪玩的」。原本 order-notify（訂單＋儲值）、counter-desk（服務鈴「想了解服務」、意見回饋）、recruit-desk（冒險者應徵）全用同一個 ORDER_NOTIFY_WEBHOOK_URL。
 - 分流：委託（type play／table／沒有 type）→ 原本 ORDER_NOTIFY_WEBHOOK_URL；商城（shop、member…）→ SHOP_NOTIFY_WEBHOOK_URL；儲值（topup 待核帳＋線上儲值入帳）→ TOPUP_NOTIFY_WEBHOOK_URL；
   服務鈴＋應徵 → DESK_NOTIFY_WEBHOOK_URL。沒設定照舊發原本的；分出去的 Webhook 發不出去（被刪）改發原本的，不漏單。
@@ -11,6 +11,9 @@
   會請 D 依序貼三個頻道的 Webhook 網址（read -rs 不顯示；Enter＝不分開），寫進服務的 --env-file（備份 *.before-notify），核對 order-notify.cjs 雜湊 40644ad8…、
   docker 建置＋30 項測試、重啟後檢查原本的 READY 都在、ORDER_NOTIFY_ROUTES 符合、語音端點跟重啟前一樣，失敗自動還原；成功後在每個新頻道發一則說明。
 - 原始碼：order-notify.cjs 以 session d39d9fc6 的主機重建檔（dry514，v498b 版）為底。本機假主機演練（scratchpad/notify/fake）通過。
+- 部署結果（11/11）：tests 30 pass；NOTIFY_SPLIT_DEPLOYED_AND_HEALTHY（shop=1 topup=1 desk=1）；三個新頻道（商城訂單／儲值通知／服務鈴）說明訊息都回 204。
+  服務設定檔 /etc/tinytavern/service.env（舊的 service.env.before-notify）；主機版本 tinytavern-service:20261111-notify（舊版 unit 備份 *.before-notify）。
+  主機是 DigitalOcean droplet tinytavern-service-sgp1（id 611427117），D 在自己的 Chrome 登入；auto mode 不讓 Claude 往正式主機主控台打指令，指令要給 D 自己貼。
 
 ## 2026/11/11 v522 小屋裡的朋友也照路線推算（Claude；需發布第二十二批規則，沒發布也照常運作）
 - D：「好，小屋也做」（接 v521 大廳即時同步）。v521 小屋只調數字，朋友畫面仍固定晚 0.15 秒。
