@@ -13,7 +13,7 @@
   同一次 CI：第 6、7、9 批各有 2～3 項失敗，是開幕禮／11/07 前每日任務的日期測試，改動前一樣失敗。
 - 主機：ops/deploy-interviewdm-1111.sh（security-v428）只新增 interview-dm.cjs＋測試，service-server.cjs 在 staffDm 那行後接一行；本機假主機（以 20261111-voicepool 為底）跑過：檔案核對、只多 3 行、語法、測試 18 項；已部署過會停止。
 
-## 2026/11/11 隨機單（不指定）的「確認語音」按了沒反應（Claude；網站 partner v423 已上線＋主機 ops/deploy-voicepool-1111.sh）
+## 2026/11/11 隨機單（不指定）的「確認語音」按了沒反應（Claude；網站 partner v423＋主機 20261111-voicepool，11/11 都已上線）
 - D：「陪玩說她按了確認語音沒反應..這個問題怎麼又來了 可以好好排修嗎」「他是隨機單的確認語音」。
 - 根本原因（主機 booking-voice.cjs）：registerOrder 要求每張單都有 staffCid → 不指定的單點單時被拒 ORDER_NOT_ELIGIBLE（客人端 order-voice.mjs 當永久錯誤丟掉、不提示）；
   冒險者 grabPoolOrder 接走後沒有人重新登記 → approveOrder 找不到 sourceIndex 一直回 CUSTOMER_BINDING_PENDING；手札 retryApprovals 遇到這個代碼默默每 5 秒重試、畫面完全沒反應。
@@ -23,6 +23,7 @@
   其他錯誤直接說；沒登入請先登入。partner.html import ?v=523、verTag v423、PT_VER 24；大廳 ?v=514 沒動。
 - 部署：主機 root 終端機貼 curl -fsSL https://raw.githubusercontent.com/lisatuan0704-maker/peiwan/672a95db131c551e0af9e8d10d1ba5692ad06121/ops/deploy-voicepool-1111.sh -o /tmp/v.sh && bash /tmp/v.sh
   （插入點核對、docker 建置＋測試、重啟後 READY 與語音端點跟重啟前一樣，失敗自動還原；假主機演練 46 項通過）。
+  11/11 D 已執行：從 20261111-notify 換成 20261111-voicepool，tests 56 pass，VOICEPOOL_DEPLOYED_AND_HEALTHY（voice=401 rooms=401 accept=401 跟重啟前一樣）。
 - 同一天：冒險者打卡後公開單沒出現「我接這張」（新單分頁打卡不重畫）→ partner v422 syncDutyUI 上下班一變就 render()。
 
 ## 2026/11/11 主機：Discord 通知分頻道（Claude；ops/deploy-notify-1111.sh，11/11 D 已在主機執行：20261111-notify 健康）
