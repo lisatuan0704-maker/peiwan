@@ -28,4 +28,6 @@ node test-phase19.cjs rules-before-v510.json $NEW || rc=1
 node test-phase20.cjs rules-before-v510.json $NEW || rc=1
 node test-phase21.cjs rules-before-v513.json $NEW || rc=1
 node test-phase22.cjs rules-before-v522.json $NEW || rc=1
+
+node test-phase23.cjs rules-before-interview1111.json $NEW || rc=1
 exit $rc

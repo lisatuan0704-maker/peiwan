@@ -834,6 +834,16 @@
             ".validate": "newData.isString() && newData.val().beginsWith('data:image/gif;base64,') && newData.val().length < 2400000 && ($lv == '1' || $lv == '2' || $lv == '3' || $lv == '4' || $lv == '5')"
           }
         }
+      },
+      "interviewDm": {
+        ".read": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+        ".indexOn": [
+          "at"
+        ],
+        "$id": {
+          ".write": "(auth != null && auth.uid == root.child('peiwan/config/adminUid').val())",
+          ".validate": "$id.matches(/^[A-Za-z0-9_-]{1,40}$/) && (!newData.exists() || (newData.hasChildren(['to','kind','room','at']) && newData.child('to').isString() && newData.child('to').val().matches(/^[0-9]{16,22}$/) && newData.child('room').isString() && newData.child('room').val().matches(/^[A-Za-z0-9]{4,32}$/) && newData.child('kind').isString() && newData.child('at').val() == now))"
+        }
       }
     },
     "friendV1": {
