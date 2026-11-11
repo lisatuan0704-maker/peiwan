@@ -35,9 +35,6 @@ R.append(('voice.cjs',
  "const closed=!['pending','confirmed'].includes(order.status)||now()>=order.endAt+graceMs;",
  "const closed=!['pending','confirmed'].includes(order.status)||(!job.channelId&&now()>=order.endAt+graceMs); // 11/11 D「老闆有續單，不要再加限時功能」：續單不會改這裡的 endAt，語音房開了以後就不再照時間收；只有語音房沒開過、時間也過了才照舊收",False))
 R.append(('voice.cjs',
- re.escape("await discord.patchChannel(job.channelId,{permission_overwrites:overwrites(guildId,botId)}).catch(e=>{if(e.code!=='NOT_FOUND')throw e});")+r"\r?\n[ \t]*"+re.escape("job=await rooms.hideText(discord,job,guildId,botId);"),
- "if(order.status==='cancelled'){await discord.patchChannel(job.channelId,{permission_overwrites:overwrites(guildId,botId)}).catch(e=>{if(e.code!=='NOT_FOUND')throw e});job=await rooms.hideText(discord,job,guildId,botId);} // 11/11 D：只有取消（退款）才把人請出去；冒險者按完成的單，等大家離開語音房再收",True))
-R.append(('voice.cjs',
  "if(!channel)job={...job,channelId:null,voiceAnnounced:false}; // 語音房被手動刪掉：重開一間",
  "if(!channel){if(now()>=order.endAt+graceMs){job=await rooms.dropText(discord,job);await store.save(id,owner,{...job,phase:'deleted',deletedAt:now(),reason:'CHANNEL_ALREADY_REMOVED'});await store.removeActions(id,order);return {state:'deleted'}}job={...job,channelId:null,voiceAnnounced:false}} // 語音房被手動刪掉：預約時間內重開一間；過了結束時間就當作收完了（11/11 不照時間收房後，不會替舊單重開）",False))
 R.append(('booking-room.cjs',
@@ -62,11 +59,17 @@ R.append(('partner-access.cjs',
  "const job=(await voiceRef.child('jobs/'+orderId+'/data').once('value')).val();",
  "const job=(await voiceRef.child('jobs/'+orderId+'/data').once('value')).val();if(['deleted','closed'].includes(job?.phase))denied();",False))
 R.append(('booking-room.test.cjs',
- "test('時間結束、房間沒人：語音房和聊天室一起收',async()=>{",
- "test('時間過了、房間沒人：30 秒後語音房和聊天室一起收（不先把人請出去）',async()=>{",False))
+ "test('時間結束、房間沒人：不收權限，沒人 30 秒後語音房和聊天室一起刪',async()=>{",
+ "test('時間過了、房間沒人：語音房開著就不照時間收，沒人 30 秒後語音房和聊天室一起刪',async()=>{",False))
 R.append(('booking-room.test.cjs',
- "await s.svc.process(ID);assert(BigInt(ow(s.channels[textId].permission_overwrites,G).deny)&VIEW);assert(!ow(s.channels[textId].permission_overwrites,CUST),'聊天室先收起來');",
- "await s.svc.process(ID);assert(can(s.channels[textId].permission_overwrites,CUST,VIEW),'聊天室不先收起來');assert(can(s.channels[channelId].permission_overwrites,CUST,VIEW|CONNECT),'語音房權限不拿掉');",False))
+ re.escape("assert.equal((await s.svc.process(ID)).state,'closed');")+r"(\r?\n )"+re.escape("assert(can(s.channels[channelId].permission_overwrites,CUST,VIEW|CONNECT));assert(can(s.channels[textId].permission_overwrites,CUST,VIEW),'時間到不收權限');"),
+ "assert.equal((await s.svc.process(ID)).state,'ready');"+r"\1"+"assert(can(s.channels[channelId].permission_overwrites,CUST,VIEW|CONNECT));assert(can(s.channels[textId].permission_overwrites,CUST,VIEW),'時間到不收權限');",True))
+R.append(('booking-room.test.cjs',
+ "for(let k=0;k<5;k++){s.tick(60000);assert.equal((await s.svc.process(ID)).state,'closed',how)}",
+ "for(let k=0;k<5;k++){s.tick(60000);assert.equal((await s.svc.process(ID)).state,how==='timeUp'?'ready':'closed',how)}",False))
+R.append(('booking-room.test.cjs',
+ "assert.equal((await s.svc.process(ID)).state,'closed',how+' 剛走光先等 30 秒');",
+ "assert.equal((await s.svc.process(ID)).state,how==='timeUp'?'ready':'closed',how+' 剛走光先等 30 秒');",False))
 
 files={}
 for f,_,_,_ in R:
@@ -85,7 +88,7 @@ if bad:
 if mode=='check':
  print('收房規則可以改（%d 處）'%len(R));sys.exit(0)
 for f,old,new,rx in R:
- files[f]=re.sub(old,lambda m:new,files[f]) if rx else files[f].replace(old,new)
+ files[f]=re.sub(old,lambda m:m.expand(new),files[f]) if rx else files[f].replace(old,new)
 for f,s in files.items():
  open(os.path.join(root,f),'w',encoding='utf-8',newline='').write(s)
 print('收房規則：大家都離開語音房才收（%d 處）'%len(R))
@@ -103,78 +106,78 @@ fi
 say "建立新版本 $TAG"
 cp -a "$SRC" "$DST"
 base64 -d > "$DST/roomstay.tgz" <<'B64'
-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
+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
 B64
 tar xzf "$DST/roomstay.tgz" -C "$DST" && rm "$DST/roomstay.tgz"
 sha256sum -c - <<SUMS
