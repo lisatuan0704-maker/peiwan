@@ -525,18 +525,24 @@ const saveLocal=()=>{try{localStorage.setItem(LS,JSON.stringify(local))}catch(e)
 const S={orders:{},on:false,dc:null};
 const seen=new Set();let openTime=Infinity;
 
+/* 事件從公開的通道來:欄位一律整理成固定格式再用 */
+const okId=x=>typeof x==='string'&&/^[A-Za-z0-9]{1,40}$/.test(x);
+const int=x=>Math.max(0,Math.round(+x||0));
+function cleanO(o){o=o||{};return {plan:String(o.plan||'委託').slice(0,40),mins:int(o.mins),amount:int(o.amount),name:String(o.name||'老闆').slice(0,20),game:String(o.game||'').slice(0,30),note:String(o.note||'').slice(0,80),book:!!o.book,reserveAt:int(o.reserveAt)};}
 function apply(e){
+  if(e.id!==undefined&&!okId(e.id))return;
+  const at=int(e.at);
   const o=e.id&&S.orders[e.id];
-  if(e.t==='order'&&!S.orders[e.id]) S.orders[e.id]=Object.assign({},e.o,{id:e.id,status:'new',createdAt:e.at,accum:0,running:false,renewMins:0});
-  else if(e.t==='renew'&&o){o.mins+=e.mins;o.amount+=e.amount;o.renewMins+=e.mins;}
+  if(e.t==='order'&&!S.orders[e.id]) S.orders[e.id]=Object.assign(cleanO(e.o),{id:e.id,status:'new',createdAt:at,accum:0,running:false,renewMins:0});
+  else if(e.t==='renew'&&o){const mi=int(e.mins);o.mins+=mi;o.amount+=int(e.amount);o.renewMins+=mi;}
   else if(e.t==='cancel'&&o&&o.status==='new'){o.status='cancelled';}
   else if(e.t==='act'&&o){
     if(e.act==='accept'&&o.status==='new') o.status='accepted';
-    else if(e.act==='decline'&&o.status==='new'){o.status='declined';o.reason=e.reason;}
-    else if(e.act==='start'&&o.status==='accepted'){o.status='serving';o.running=true;o.segStart=e.at;}
-    else if(e.act==='pause'&&o.running){o.accum+=e.at-o.segStart;o.running=false;}
-    else if(e.act==='resume'&&o.status==='serving'&&!o.running){o.running=true;o.segStart=e.at;}
-    else if(e.act==='end'&&o.status==='serving'){if(o.running)o.accum+=e.at-o.segStart;o.running=false;o.status='done';o.doneAt=e.at;}
+    else if(e.act==='decline'&&o.status==='new'){o.status='declined';o.reason=String(e.reason||'').slice(0,100);}
+    else if(e.act==='start'&&o.status==='accepted'){o.status='serving';o.running=true;o.segStart=at;}
+    else if(e.act==='pause'&&o.running){o.accum+=Math.max(0,at-o.segStart);o.running=false;}
+    else if(e.act==='resume'&&o.status==='serving'&&!o.running){o.running=true;o.segStart=at;}
+    else if(e.act==='end'&&o.status==='serving'){if(o.running)o.accum+=Math.max(0,at-o.segStart);o.running=false;o.status='done';o.doneAt=at;}
   }
   else if(e.t==='reset'){S.orders={};}
   else if(e.t==='duty'){S.on=!!e.on;}
@@ -550,7 +556,7 @@ function pub(e){
   fetch(NTFY,{method:'POST',body:JSON.stringify(e)}).catch(()=>ptNotify('網路好像不穩','剛剛的動作沒送出,請再按一次'));
 }
 function onLive(e){
-  if(e.t==='order'){const o=S.orders[e.id];beep();
+  if(e.t==='order'){const o=S.orders[e.id];if(!o)return;beep();
     ptNotify('新單來囉!','「'+(o.name||'老闆')+'」已付款'+(o.book?'・預約 '+fmtRes(o.reserveAt):'')+',到「新單」分頁接單 ✦');showTab(0);}
   else if(e.t==='renew'){beep();ptNotify('老闆續單了! +'+e.mins+' 分鐘','這單延長了,金幣已入袋 ✦');}
   else if(e.t==='cancel'){ptNotify('老闆取消了這筆單','金幣已自動退回給老闆,不用處理 ✦');}

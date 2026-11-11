@@ -105,7 +105,7 @@ const ROOT='peiwan';
       const cb=window.__ttDiscordCallback||{};delete window.__ttDiscordCallback;
       const backUrl='partner-trial.html?room='+room;
       const back=msg=>{card.innerHTML='<h1>綁定沒有完成</h1><p>'+TTDiscordAuth.escapeText(msg)+'</p><a class="btn" href="'+backUrl+'">回體驗手札</a>';};
-      if(!cb.token){back(cb.error||'請回體驗手札重新按「綁定 Discord」。');return;}
+      if(!cb.token){back('Discord 授權沒有完成，請回體驗手札再按一次「綁定 Discord」。');return;}
       fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+cb.token},redirect:'error',signal:AbortSignal.timeout(10000)})
         .then(r=>{if(!r.ok)throw Error('http '+r.status);return r.json();})
         .then(u=>{

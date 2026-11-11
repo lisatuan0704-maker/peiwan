@@ -131,24 +131,30 @@ $('openTrial').onclick=()=>window.open($('trialLink').textContent,'_blank');
 /* ---------- 事件 ---------- */
 let log=[],pending=[],seen=new Set();
 const S={orders:{},on:false,dc:null,name:'',last:0};
+/* 事件從公開的通道來:欄位一律整理成固定格式再用 */
+const okId=x=>typeof x==='string'&&/^[A-Za-z0-9]{1,40}$/.test(x);
+const int=x=>Math.max(0,Math.round(+x||0));
+function cleanO(o){o=o||{};return {plan:String(o.plan||'委託').slice(0,40),mins:int(o.mins),amount:int(o.amount),name:String(o.name||'老闆').slice(0,20),game:String(o.game||'').slice(0,30),note:String(o.note||'').slice(0,80),book:!!o.book,reserveAt:int(o.reserveAt)};}
 function apply(e){
+  if(e.id!==undefined&&!okId(e.id))return;
+  const at=int(e.at);
   const o=e.id&&S.orders[e.id];
-  if(e.from==='trial')S.last=Math.max(S.last,e.at||0);
-  if(e.t==='order'&&!S.orders[e.id]) S.orders[e.id]=Object.assign({},e.o,{id:e.id,status:'new',createdAt:e.at,accum:0,running:false,renewMins:0});
-  else if(e.t==='renew'&&o){o.mins+=e.mins;o.amount+=e.amount;o.renewMins+=e.mins;}
+  if(e.from==='trial')S.last=Math.max(S.last,at);
+  if(e.t==='order'&&!S.orders[e.id]) S.orders[e.id]=Object.assign(cleanO(e.o),{id:e.id,status:'new',createdAt:at,accum:0,running:false,renewMins:0});
+  else if(e.t==='renew'&&o){const mi=int(e.mins);o.mins+=mi;o.amount+=int(e.amount);o.renewMins+=mi;}
   else if(e.t==='cancel'&&o&&o.status==='new'){o.status='cancelled';}
   else if(e.t==='act'&&o){
     if(e.act==='accept'&&o.status==='new') o.status='accepted';
-    else if(e.act==='decline'&&o.status==='new'){o.status='declined';o.reason=e.reason;}
-    else if(e.act==='start'&&o.status==='accepted'){o.status='serving';o.running=true;o.segStart=e.at;}
-    else if(e.act==='pause'&&o.running){o.accum+=e.at-o.segStart;o.running=false;}
-    else if(e.act==='resume'&&o.status==='serving'&&!o.running){o.running=true;o.segStart=e.at;}
-    else if(e.act==='end'&&o.status==='serving'){if(o.running)o.accum+=e.at-o.segStart;o.running=false;o.status='done';o.doneAt=e.at;}
+    else if(e.act==='decline'&&o.status==='new'){o.status='declined';o.reason=String(e.reason||'').slice(0,100);}
+    else if(e.act==='start'&&o.status==='accepted'){o.status='serving';o.running=true;o.segStart=at;}
+    else if(e.act==='pause'&&o.running){o.accum+=Math.max(0,at-o.segStart);o.running=false;}
+    else if(e.act==='resume'&&o.status==='serving'&&!o.running){o.running=true;o.segStart=at;}
+    else if(e.act==='end'&&o.status==='serving'){if(o.running)o.accum+=Math.max(0,at-o.segStart);o.running=false;o.status='done';o.doneAt=at;}
   }
   else if(e.t==='reset'){S.orders={};}
   else if(e.t==='duty'){S.on=!!e.on;}
-  else if(e.t==='bind'){S.dc=e.dc||null;}
-  else if(e.t==='hello'){S.name=e.name||'';}
+  else if(e.t==='bind'){const d=e.dc;S.dc=(d&&/^\d{5,25}$/.test(String(d.id))&&d.username)?{id:String(d.id),username:String(d.username).slice(0,40)}:null;}
+  else if(e.t==='hello'){S.name=String(e.name||'').slice(0,20);}
 }
 function rebuild(){S.orders={};S.on=false;S.dc=null;S.name='';S.last=0;log.forEach(apply);pending.forEach(apply);}
 function pub(e){
