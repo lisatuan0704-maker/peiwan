@@ -1899,7 +1899,7 @@ function setPeers(list){const seen=new Set();
     if(!P){const key=peerSprite(p.id,p.doll),el=document.createElement('div');el.className='hs-name';PL.append(el);
       P={it:{t:key,i:p.i-.5,j:p.j-.5,dir:0,peer:true,f:p.f||1,bob:0},ti:p.i,tj:p.j,el,doll:p.doll,t:0,q:[]};P.it._P=P;P.seed=[...String(p.id)].reduce((h,ch)=>(h*31+ch.charCodeAt(0))%997,7)/997*6;PEERS.set(p.id,P);}
     else if(p.doll&&p.doll!==P.doll){peerSprite(p.id,p.doll);P.doll=p.doll;}
-    P.ti=p.i;P.tj=p.j;P.el.textContent=p.name||'';peerSample(P,p);}
+    P.ti=p.i;P.tj=p.j;P.el.textContent=p.name||'';if(p.r||P.pred)peerPlan(P,p);else peerSample(P,p);}
   for(const [id,P] of PEERS)if(!seen.has(id)){P.el.remove();P.bub?.remove();delete DEF[P.it.t];PEERS.delete(id);}}
 /* v511 D：「我在小屋看朋友走路超怪」「朋友很像在抖動」——原本用固定每秒 2.6 格追最新位置（真人走 3.5 格），追到就停、彈跳歸零，
    位置又被取整到整數像素 → 走一下停一下、上下抖、越走越落後（超過 5 格直接瞬移）。
@@ -1913,8 +1913,27 @@ function peerSample(P,p){const now=performance.now(),q=P.q||(P.q=[]),L=q[q.lengt
     if(now-L.t>400+walk)q.push({t:Math.max(head,now-walk),i:L.i,j:L.j,f:L.f});   // 停了一陣子才又開始走：從現在往回推起步時間，不會一出發就跳一段
     else t=Math.max(L.t+walk,head);}   // 連續走：照走路速度接在上一筆後面；不排到已經播過的時間（不會瞬移）
   q.push({t,i:p.i,j:p.j,f});if(q.length>40)q.splice(0,q.length-40);}
+/* v522 D：「好，小屋也做」——跟大廳 v521 一樣：朋友走路時座位多帶「剩下要轉的彎」r（house.js 換成格子中心 [i+.5,j+.5]）＋封包在路上的時間 age0，
+   這邊照路線往前推算「他現在走到哪」，不再固定晚 0.15 秒，轉彎、停下的位置跟本人一樣。往前推最多 0.6 秒（對方網路斷了不會自己走完全程）。
+   沒帶過路線的人（舊版網頁、規則還沒發布）照上面的時間線；帶過路線的人停下時（r 沒了）照原本的速度走到最後位置。 */
+const PEER_AHEAD=600;
+function peerPredict(pr,age){let i=pr.b[0],j=pr.b[1],d=PEER_SPD*Math.min(age,PEER_AHEAD),sx=0;
+  for(const [pi,pj] of pr.r){const di=pi-i,dj=pj-j,L=Math.hypot(di,dj);if(L<1e-6)continue;sx=di-dj;
+    if(d<L)return {i:i+di/L*d,j:j+dj/L*d,moving:true,sx};d-=L;i=pi;j=pj;}
+  return {i,j,moving:false,sx};}
+function peerPlan(P,p){const f=p.f<0?-1:1,r=Array.isArray(p.r)?p.r:[],sig=p.i+','+p.j+','+f+'|'+r.join(';');
+  if(P.psig===sig)return;P.psig=sig;   // 只有心跳（at）變了：不重算
+  P.pred={b:[p.i,p.j],r,f,age0:Number.isFinite(p.age0)?p.age0:60,at:performance.now()};}
+function peerFollow(P,dt){const pr=P.pred,t=peerPredict(pr,pr.age0+Math.max(0,performance.now()-pr.at));
+  let i=P.it.i+.5,j=P.it.j+.5;const di=t.i-i,dj=t.j-j,rem=Math.hypot(di,dj);
+  if(rem<.002||rem>5){i=t.i;j=t.j;}   // 跟上了；剛進門、斷線重連這種一次跳很遠的，直接到
+  else{const sp=Math.min(PEER_SPD*2.2,PEER_SPD+rem/120),st=Math.min(rem,sp*dt);i+=di/rem*st;j+=dj/rem*st;}   // 照走路速度走，有落差時多走一點補回來
+  P.it.i=i-.5;P.it.j=j-.5;
+  const moving=t.moving||rem>.01,sx=t.moving?t.sx:di-dj;P.it.f=moving&&Math.abs(sx)>.01?(sx>0?1:-1):pr.f;   // 轉彎時跟著轉身（跟自己的小人同一個算法）
+  P.walk=moving?180:Math.max(0,(P.walk||0)-dt);
+  if(P.walk>0&&!reduceMotion.matches){P.t+=dt;P.it.bob=Math.abs(Math.sin(P.t/1000*5.5*Math.PI))*1.6;}else{P.it.bob=0;P.t=0;}}
 function peerStep(dt){dt=dt||16;const rt=performance.now()-PEER_DELAY;
-  for(const P of PEERS.values()){const q=P.q||[];if(!q.length)continue;
+  for(const P of PEERS.values()){if(P.pred){peerFollow(P,dt);continue;}const q=P.q||[];if(!q.length)continue;
     while(q.length>1&&q[1].t<=rt)q.shift();
     const a=q[0],b=q[1];let i=a.i,j=a.j,f=a.f,moving=false;
     if(b&&rt>a.t){const far=Math.hypot(b.i-a.i,b.j-a.j);
@@ -2008,7 +2027,8 @@ window.TTRoom={ready,
     if(k==='delete'||k==='backspace'){held.isNew?cancel():removeHeld();return true;}
     if(k==='escape'){cancel();return true;}return false;},
   layout:()=>houseSerial(),visiting:()=>!!VISIT,
-  me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0}),setPeers,say:peerSay,spawn:spawnAt,size:()=>N,setSize:houseSetSize,previewSize:housePreviewSize,
+  // v522 me().path：剩下的路（格子），house.js 轉成「要轉的彎」送給朋友
+  me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0,path:me.path.slice(0,60).map(([a,b])=>[Math.floor(a),Math.floor(b)])}),setPeers,say:peerSay,spawn:spawnAt,size:()=>N,setSize:houseSetSize,previewSize:housePreviewSize,
   thumb:(k,S=88)=>thumbOf(k,S),
   async thumbAsync(k,S=88){const d=DEF[k];if(!d)return '';await loadKey(K(d.spr[0]));return thumbOf(k,S);},
   setDoll,

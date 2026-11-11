@@ -765,6 +765,9 @@
             "at": {
               ".validate": "newData.isNumber() && newData.val() <= now + 60000"
             },
+            "r": {
+              ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 80 && newData.val().matches(/^[0-9,;]+$/)"
+            },
             "$other": {
               ".validate": false
             }

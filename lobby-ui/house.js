@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='521';
+const VER='522';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -141,8 +141,8 @@ async function sit(hk){const mk=KEY(),ref=DB().ref(R()+'/houseRoom/'+hk);let cur
  if(!own){try{const k=(await DB().ref(R()+'/houseKick/'+hk+'/'+mk).once('value')).val();if(k&&k>SNOW()-600000)return {r:'kicked'};}catch(_){}}
  return {r:'denied'};}
 // v508 伺服器時間（客人電腦時鐘快一兩分鐘，別人的小人就全部被當成斷線、看不到）
-let OFF=0,offOn=false;const SNOW=()=>Date.now()+OFF;
-function watchOffset(){if(offOn||!DB())return;offOn=true;try{DB().ref('.info/serverTimeOffset').on('value',s=>{OFF=Number(s.val())||0;});}catch(_){offOn=false;}}
+let OFF=0,offOn=false,offOK=false;const SNOW=()=>Date.now()+OFF;
+function watchOffset(){if(offOn||!DB())return;offOn=true;try{DB().ref('.info/serverTimeOffset').on('value',s=>{OFF=Number(s.val())||0;offOK=true;});}catch(_){offOn=false;}}
 function useSeat(st){S.seat=st.s;S.seatRef=st.ref;S.joinedAt=SNOW();}
 // 同步：看座位（其他人畫進房間）、聽聊天、回報自己的位置
 function startRoom(hk){watchOffset();
@@ -163,20 +163,32 @@ function startRoom(hk){watchOffset();
  // v505：網路重連後重新設好「斷線自動起身」（舊連線的設定會跟著舊連線消失，關分頁後座位會卡著）
  const cref=DB().ref('.info/connected'),onConn=s=>{if(s.val()&&S.seatRef&&S.hk===hk){try{S.seatRef.onDisconnect().remove();}catch(_){}S.seatRef.update({at:TS()}).catch(()=>{});}};
  cref.on('value',onConn);S.subs.push(()=>cref.off('value',onConn));
- clearInterval(S.pubT);clearInterval(S.beatT);S.last=null;
+ clearInterval(S.pubT);clearInterval(S.beatT);S.last=null;S.noDest=false;
  S.pubT=setInterval(pubPos,100);   // v521：0.2 → 0.1 秒（小屋最多 4 人，流量很小），朋友看到的你更即時
  S.beatT=setInterval(()=>{renderExpand();if(!S.seatRef)return;S.seatRef.update({at:TS()}).catch(()=>{});
    if(!S.visit&&S.vis==='public'&&S.listed)DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});},15000);   // v505：有在隨機名單上才報「在家」（不在名單上寫不進去）
  if(!S.visit&&S.vis==='public'&&S.listed)DB().ref(R()+'/houseDir/'+S.key).update({on:TS()}).catch(()=>{});}
 // 自己的位置：走動時最多每 0.1 秒回報一次，停下來再補最後一次
-function pubPos(){if(!S.seatRef)return;const p=room('me');if(!p)return;const L=S.last;
- if(L&&Math.abs(L.i-p.i)<.05&&Math.abs(L.j-p.j)<.05&&L.f===p.f&&(p.moving||(L.i===p.i&&L.j===p.j)))return;   // v521：停下時最後那一小段也要送（原本差不到 0.05 格就不送，朋友那邊停的位置會差一點）
- S.last={i:p.i,j:p.j,f:p.f};S.seatRef.update({i:r2(Math.max(-2,Math.min(30,p.i))),j:r2(Math.max(-2,Math.min(30,p.j))),f:p.f<0?-1:1,at:TS()}).catch(()=>{});}
+// v522：走路中多帶 r＝剩下要轉的彎（"9,4;12,4"），朋友照著推算現在走到哪；換目的地下一次（0.1 秒內）就送。停下時刪掉 r（舊規則也允許刪）。
+//   規則還沒發布時帶 r 會整筆被拒 → 這次進房間改送不帶 r 的（S.noDest），朋友那邊照舊用時間線。
+function routeOf(p){const P=Array.isArray(p.path)?p.path:[];if(!p.moving||!P.length)return '';
+ const out=[],sg=v=>Math.abs(v)<.01?0:v>0?1:-1;let x=p.i,y=p.j;
+ for(let k=0;k<P.length&&out.length<12;k++){const a=P[k][0]+.5,b=P[k][1]+.5,n=P[k+1];   // 只留轉彎的格子（直走的中間格朋友自己會走過）
+  if(!n||sg(a-x)!==sg(n[0]+.5-a)||sg(b-y)!==sg(n[1]+.5-b))out.push(P[k][0]+','+P[k][1]);x=a;y=b;}
+ let s=out.join(';');while(s.length>80)s=s.replace(/;[^;]*$/,'');return /^[0-9,;]{3,80}$/.test(s)?s:'';}
+function pubPos(){if(!S.seatRef)return;const p=room('me');if(!p)return;const L=S.last,r=S.noDest?'':routeOf(p);
+ if(L&&Math.abs(L.i-p.i)<.05&&Math.abs(L.j-p.j)<.05&&L.f===p.f&&L.r===r&&(p.moving||(L.i===p.i&&L.j===p.j)))return;   // v521：停下時最後那一小段也要送（原本差不到 0.05 格就不送，朋友那邊停的位置會差一點）
+ S.last={i:p.i,j:p.j,f:p.f,r};const ref=S.seatRef,u={i:r2(Math.max(-2,Math.min(30,p.i))),j:r2(Math.max(-2,Math.min(30,p.j))),f:p.f<0?-1:1,at:TS(),r:r||null};
+ ref.update(u).catch(e=>{if(u.r&&!S.noDest&&S.seatRef===ref&&/permission/i.test(String(e&&(e.code||e.message)))){S.noDest=true;S.last=null;}});}
+// v522 朋友的路線：字串 → 格子中心；格式不對就當沒帶
+function routeIn(s){if(typeof s!=='string'||!s)return null;const out=[];
+ for(const t of s.split(';').slice(0,12)){const [a,b]=t.split(',').map(Number);if(!(a>=0&&a<=30&&b>=0&&b<=30))return null;out.push([a+.5,b+.5]);}
+ return out.length?out:null;}
 // 其他人：座位上的人（不含自己、不含斷線的），小人圖從大廳資料讀一次存起來
 function pushPeers(){if(!S.frame)return;const mk=KEY(),now=SNOW(),list=[];
  for(const s of SEATS){const v=S.room[s];if(!v||v.k===mk||!(v.at>now-STALE*2))continue;
   const d=S.dolls[v.k];if(d===undefined)loadDoll(v.k);
-  list.push({id:v.k,name:v.name||'旅人',i:+v.i||0,j:+v.j||0,f:v.f<0?-1:1,doll:d||null});}
+  list.push({id:v.k,name:v.name||'旅人',i:+v.i||0,j:+v.j||0,f:v.f<0?-1:1,doll:d||null,r:routeIn(v.r),age0:offOK&&Number.isFinite(v.at)?Math.max(0,Math.min(250,now-v.at)):60});}   // v522 age0：這筆位置在路上走了多久（伺服器時間）
  room('setPeers',list);}
 function loadDoll(k){if(S.dollWait[k])return;S.dollWait[k]=1;
  DB().ref(R()+'/lobby/'+k+'/doll').once('value').then(s=>{const d=s.val()||{};S.dolls[k]=dollCanvasOf(d);redrawDoll(k,d);}).catch(()=>{S.dolls[k]=dollCanvasOf({});}).finally(()=>{S.dollWait[k]=0;pushPeers();});}
