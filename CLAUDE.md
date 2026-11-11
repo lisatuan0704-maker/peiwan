@@ -1,5 +1,17 @@
 # 小小酒館修改紀錄
 
+## 2026/11/11 主機：Discord 通知分頻道（Claude；ops 分支 security-v428 的 ops/deploy-notify-1111.sh，待 D 在主機執行）
+- D：「訂單通知／服務鈴／儲值通知要分開，甚至訂單要分時裝還是陪玩的」。原本 order-notify（訂單＋儲值）、counter-desk（服務鈴「想了解服務」、意見回饋）、recruit-desk（冒險者應徵）全用同一個 ORDER_NOTIFY_WEBHOOK_URL。
+- 分流：委託（type play／table／沒有 type）→ 原本 ORDER_NOTIFY_WEBHOOK_URL；商城（shop、member…）→ SHOP_NOTIFY_WEBHOOK_URL；儲值（topup 待核帳＋線上儲值入帳）→ TOPUP_NOTIFY_WEBHOOK_URL；
+  服務鈴＋應徵 → DESK_NOTIFY_WEBHOOK_URL。沒設定照舊發原本的；分出去的 Webhook 發不出去（被刪）改發原本的，不漏單。
+- 標題：委託「小小酒館・委託通知／有新委託」（有填想玩會多一行）、商城「小小酒館・商城訂單／商城有新訂單」（沒方案名稱時用商品名稱，原本會只剩「（NT$99）」）；
+  儲值字不變；服務鈴、應徵加發送名稱（原本 Discord 顯示預設的 Spidey Bot）。
+- 部署：在主機 root 終端機貼
+  curl -fsSL https://raw.githubusercontent.com/lisatuan0704-maker/peiwan/ef275cbf5b0348cecbbb0949418ea22921575b9d/ops/deploy-notify-1111.sh -o /tmp/d.sh && bash /tmp/d.sh
+  會請 D 依序貼三個頻道的 Webhook 網址（read -rs 不顯示；Enter＝不分開），寫進服務的 --env-file（備份 *.before-notify），核對 order-notify.cjs 雜湊 40644ad8…、
+  docker 建置＋30 項測試、重啟後檢查原本的 READY 都在、ORDER_NOTIFY_ROUTES 符合、語音端點跟重啟前一樣，失敗自動還原；成功後在每個新頻道發一則說明。
+- 原始碼：order-notify.cjs 以 session d39d9fc6 的主機重建檔（dry514，v498b 版）為底。本機假主機演練（scratchpad/notify/fake）通過。
+
 ## 2026/11/11 v522 小屋裡的朋友也照路線推算（Claude；需發布第二十二批規則，沒發布也照常運作）
 - D：「好，小屋也做」（接 v521 大廳即時同步）。v521 小屋只調數字，朋友畫面仍固定晚 0.15 秒。
 - 做法：走路的人座位多帶 r＝「剩下要轉的彎」（字串 "9,4;12,4;12,8"，只留轉彎格，最多 12 個、80 字；lobby-ui/house.js routeOf），停下時刪掉 r。
