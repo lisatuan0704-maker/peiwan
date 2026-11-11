@@ -35,18 +35,19 @@ const short=e=>String(e&&(e.code||e.message)||e).replace(/[^\w .:-]/g,'').slice(
   const db=getDatabase(app),read=async p=>(await db.ref(p).once('value')).val();
   const safe=k=>typeof k==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(k);
   const lobby=(await db.ref('peiwan/lobby').orderByKey().limitToLast(20).once('value')).val()||{};
-  const tally={};
+  const tally={},t0=Date.now();let streak=0;
   for(const [key,raw] of Object.entries(lobby)){
+   if(streak>=3||Date.now()-t0>90000){console.log('（連續失敗 3 位或超過 90 秒，後面不試了）');break;}
    if(!raw||!raw.name||!raw.doll){tally['沒有小人資料']=(tally['沒有小人資料']||0)+1;continue;}
    const doll=structuredClone(publicAppearance(raw).doll);if(doll.ps)delete doll.ps.pet;doll.uiBaseSlots=[...new Set([...(doll.uiBaseSlots||[]),'pet'])];
    const ids=[...new Set([doll.set,...Object.values(doll.ps||{}),...(doll.uiAccessories||[]).map(x=>x.source)].filter(safe))],products={};
    await Promise.all(ids.map(async id=>{const v=await read('peiwan/shopConfig/'+id);if(v&&v.parts)products[id]={parts:v.parts};}));
    const t=Date.now();let res;
    try{const c=await renderCharacter({doll,products});res='OK';}catch(e){res='失敗 '+short(e);}
-   tally[res]=(tally[res]||0)+1;
+   tally[res]=(tally[res]||0)+1;streak=res==='OK'?0:streak+1;
    if(res!=='OK')console.log('…'+key.slice(-5),res,(Date.now()-t)+'ms','部件:',Object.keys(doll).join(','),'商品數:',ids.length,'JSON大小:',JSON.stringify({doll,products}).length);
   }
-  console.log('最近 20 位客人小人試畫結果：',JSON.stringify(tally));
+  console.log('最近客人小人試畫結果：',JSON.stringify(tally));
   process.exit(0);
  }catch(e){console.log('讀客人資料失敗：',short(e));process.exit(0);}
 })();
