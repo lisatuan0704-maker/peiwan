@@ -16,6 +16,8 @@
   同一次 CI：第 6、7、9 批各有 2～3 項失敗，是開幕禮／11/07 前每日任務的日期測試，改動前一樣失敗。
 - 主機：ops/deploy-interviewdm-1111.sh（security-v428）只新增 interview-dm.cjs＋測試，service-server.cjs 在 staffDm 那行後接一行；本機假主機（以 20261111-voicepool 為底）跑過：檔案核對、只多 3 行、語法、測試 21 項（interview-dm 11＋staff-order-dm 10）；
   已部署過會停止；換版本後任何一步失敗 trap ERR 還原。結尾提醒還要發布規則。兩輪多代理審查（頁面 13 項、TT 私訊 9 項，全部修掉）。
+  主機 root 終端機貼：curl -fsSL https://raw.githubusercontent.com/lisatuan0704-maker/peiwan/ea9812ac3cb744ce8a1a0b44958c11c90ab5144c/ops/deploy-interviewdm-1111.sh -o /tmp/d.sh && bash /tmp/d.sh
+  （成功印 INTERVIEWDM_DEPLOYED_AND_HEALTHY）。上線順序：①Firebase 發布規則 ②部署主機 ③控制台開新房間、用自己的 Discord 綁定後按「請 TT 私訊她一則測試」，再按「換下一位」把新連結給面試者。
 
 ## 2026/11/11 隨機單（不指定）的「確認語音」按了沒反應（Claude；網站 partner v423＋主機 20261111-voicepool，11/11 都已上線）
 - D：「陪玩說她按了確認語音沒反應..這個問題怎麼又來了 可以好好排修嗎」「他是隨機單的確認語音」。
