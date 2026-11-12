@@ -1,5 +1,12 @@
 # 小小酒館修改紀錄
 
+## 2026/11/13 v525 扭蛋家具圖鑑的關閉鈕固定在右上角（Claude）
+- 客人反應：圖鑑往下滑，關閉鈕（×）跟著內容捲走，要滑回最上面才關得掉。
+- gacha/3d/index.html：卡片外面包一層 .cw（大小、置中搬到這層），× 改成掛在卡片右上角外緣的圓鈕（白底深藍框，滑過變粉色轉 90°），只有 .card 自己捲；
+  不放在卡片裡面，免得蓋到黏在頂端的進度條。tt-room-kit/gacha/3d/index.html 同步改（之後 sync_to_site.py 不會蓋回舊版）。
+- 版本：lobby-ui/gacha.js VER 525（扭蛋頁 index.html?v=525）、lobby 載入 gacha.js?v=525、verTag v525、ver.json 525、lobby-view 525。
+- ⚠ 主資料夾 C:\tinytavern\peiwan 有闆卡分享那個 session 沒 commit 的 v523（lobby.html／ver.json／lobby-view），要上之前先 Pull、版本號接在 525 之後。
+
 ## 2026/11/12 v524 私訊看過還顯示「1 則未讀」＋通訊錄卡片粉色條凸出（Claude）
 - D 回報：好友「無名」的私訊看過了，我的酒館 → 通訊錄還寫「1 則未讀」；好友卡片左邊的粉色條凸出卡片圓角。
 - 未讀原因（11/12 在 D 的 Chrome 正式站唯讀查到）：D 的大廳登入身分其實是**掌櫃帳號**，不是客人的 Discord 登入。

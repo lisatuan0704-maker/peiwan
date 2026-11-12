@@ -71,7 +71,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelate
 .skip{left:50%;transform:translateX(-50%);bottom:calc(5px*var(--s));font-size:calc(6px*var(--s));color:#e8dcff;opacity:.85;pointer-events:none!important}
 #odds{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(30,18,50,.55);backdrop-filter:blur(3px);pointer-events:auto}
 #odds.on{display:flex}
-#odds .card{width:calc(330px*var(--s));max-width:94%;max-height:88%;overflow:auto;background:linear-gradient(160deg,#fff7fb,#f1e8ff);border:calc(1.5px*var(--s)) solid var(--ink);border-radius:calc(12px*var(--s));padding:calc(10px*var(--s)) calc(12px*var(--s));font-size:calc(7px*var(--s));box-shadow:0 calc(4px*var(--s)) 0 var(--ink)}
+#odds .cw{position:relative;display:flex;flex-direction:column;width:calc(330px*var(--s));max-width:94%;max-height:88%}
+#odds .card{flex:1 1 auto;min-height:0;overflow:auto;background:linear-gradient(160deg,#fff7fb,#f1e8ff);border:calc(1.5px*var(--s)) solid var(--ink);border-radius:calc(12px*var(--s));padding:calc(10px*var(--s)) calc(12px*var(--s));font-size:calc(7px*var(--s));box-shadow:0 calc(4px*var(--s)) 0 var(--ink)}
 #odds h3{margin:0 0 calc(4px*var(--s));font-size:calc(10px*var(--s))}
 #odds small{font-family:Coiny,sans-serif;letter-spacing:.15em;color:#b07ac8;font-size:calc(6px*var(--s))}
 #odds table{width:100%;border-collapse:collapse;margin:calc(4px*var(--s)) 0}
@@ -113,7 +114,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelate
 .dex-card.no b{color:#9a8499}
 .dex-card s{position:absolute;top:calc(2px*var(--s));left:calc(2px*var(--s));text-decoration:none;font-size:calc(4.5px*var(--s));background:#9a8499;color:#fff;border-radius:999px;padding:0 calc(3px*var(--s))}
 .dex-card.own::after{content:'✦';position:absolute;top:calc(1px*var(--s));right:calc(3px*var(--s));color:#ff6f9c;font-size:calc(6.5px*var(--s))}
-#odds .x{float:right;font:inherit;font-size:calc(9px*var(--s));background:none;border:0;cursor:pointer}
+/* 關閉鈕掛在卡片右上角外緣（D 11/13：圖鑑往下滑後關閉鈕會跟著捲走）→ 不跟內容一起捲，也不壓到黏在頂端的進度條 */
+#odds .x{position:absolute;z-index:4;top:calc(-7px*var(--s));right:calc(-7px*var(--s));display:flex;align-items:center;justify-content:center;width:calc(20px*var(--s));height:calc(20px*var(--s));padding:0 0 calc(1px*var(--s));font:700 calc(12px*var(--s))/1 Coiny,sans-serif;color:var(--ink);background:linear-gradient(160deg,#ffffff,#ffe3ef);border:calc(1.5px*var(--s)) solid var(--ink);border-radius:50%;box-shadow:0 calc(1.5px*var(--s)) 0 var(--ink);cursor:pointer;transition:transform .12s,background .12s}
+#odds .x:hover{background:linear-gradient(160deg,#ffb3cf,#ff8fb8);color:#fff;transform:rotate(90deg)}
+#odds .x:active{transform:rotate(90deg) translateY(calc(1px*var(--s)))}
 /* 稀有度字卡（D 11/07：像素大字跟星星 AI 感重 → 改成店內介面的風格）：深藍紫斜切橫帶的英文小標＋斜切色塊大字（深色描邊、錯位陰影）＋四芒星＋鏤空英文大字浮水印 */
 #rk{position:absolute;left:0;top:0;display:none;flex-direction:column;align-items:center;pointer-events:none;white-space:nowrap;--a:#ff9cbc;--b:#ffbf94}
 #rk.on{display:flex}
@@ -144,7 +148,7 @@ html.live .wallet{right:calc(36px*var(--s))}
   <canvas id="cv"></canvas>
   <div id="rk"><i class="wm"></i><small class="en"></small><b class="box"><span></span></b><div class="stars"></div></div>
   <div id="ui"></div>
-  <div id="odds"><div class="card"><button class="x" aria-label="關閉">×</button><small>COLLECTION・RATES</small><h3>家具圖鑑</h3><div id="oddsBody"></div></div></div>
+  <div id="odds"><div class="cw"><button class="x" aria-label="關閉">×</button><div class="card"><small>COLLECTION・RATES</small><h3>家具圖鑑</h3><div id="oddsBody"></div></div></div></div>
 </div>
 <div id="err"></div>
 <script type="module" src="g3d.js?v=79"></script>
