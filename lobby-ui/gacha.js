@@ -11,7 +11,7 @@ const R=()=>typeof ROOT!=='undefined'?ROOT:'peiwan';
 const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const BASE=()=>typeof PAY_API!=='undefined'?PAY_API:'https://pay.tinytavern.tw',API=()=>BASE()+'/api/gacha';
-const VER='525';
+const VER='526';
 const G={ov:null,fr:null,inv:{},off:null,subs:new Set(),busy:false,sched:null};
 
 // ---------- 給扭蛋頁的介面（gacha/3d/g3d.js 讀 parent.TTGachaHost） ----------

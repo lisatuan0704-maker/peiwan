@@ -206,3 +206,56 @@ body:not(.tt-house-on) #ttHouseChat{display:none!important}
 .tt-hb-pacts button{flex:1;font:inherit;font-size:13px;font-weight:700;padding:8px;border-radius:10px;border:2px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156)}
 .tt-hb-pacts button:hover:not(:disabled){background:#FFF0F6}
 .tt-hb-pacts button:disabled{opacity:.45;cursor:default;box-shadow:none}
+
+/* v526 光效面板（右側整欄，跟拜訪面板同一套外框）：每個系列兩張光效卡，解鎖後可開關（可同時開好幾個混搭），開著的展開調整列 */
+body:not(.tt-house-fxp) #ttFxPanel,body:not(.tt-house-on) #ttFxPanel,body.tt-house-edit #ttFxPanel,body.tt-house-visit #ttFxPanel{display:none!important}
+#ttFxPanel{position:fixed;top:92px;right:16px;bottom:16px;width:336px;z-index:72;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;
+  padding:14px 12px 10px;background:var(--sk-paper,#FDFDFF);border:3px solid var(--sk-ink,#1C2156);border-radius:18px;
+  box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3.5px #CFEFFF,6px 6px 0 #FFB6CF,6px 6px 0 3px var(--sk-ink,#1C2156);color:var(--sk-ink,#1C2156);font-family:var(--sk-head,'LINE Seed TW'),sans-serif}
+#ttFxPanel header{display:flex;align-items:center;gap:10px}
+.tt-fx-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:2px 2px 6px;scrollbar-width:thin}
+.tt-fx-set{display:flex;flex-direction:column;gap:8px}
+.tt-fx-set h4{display:flex;align-items:baseline;gap:8px;margin:0;font-size:14px}
+.tt-fx-set h4 span{padding:0 6px;background:linear-gradient(transparent 60%,#CFEFFF 60%)}
+.tt-fx-set h4 small{margin-left:auto;font-size:12px;color:var(--sk-mute,#5C6196)}
+.tt-fx-card{padding:8px;border:2px solid var(--sk-ink,#1C2156);border-radius:14px;background:linear-gradient(180deg,#fff,#F3F9FF);transition:box-shadow .15s,background .15s}
+.tt-fx-card.on{background:linear-gradient(160deg,#FFF5FA,#F2EBFF);box-shadow:0 0 0 3px #FFC6DD}
+.tt-fx-card.lock{background:#F6F5FB;border-color:#B9BCD9}
+.tt-fx-row{display:flex;gap:10px}
+.tt-fx-img{position:relative;flex:0 0 100px;height:66px;border:2px solid var(--sk-ink,#1C2156);border-radius:10px;overflow:hidden;background:#2b1741}
+.tt-fx-img img{display:block;width:100%;height:100%;object-fit:cover}
+.tt-fx-card.lock .tt-fx-img{border-color:#B9BCD9}
+.tt-fx-card.lock .tt-fx-img img{filter:grayscale(1) brightness(1.08);opacity:.55}
+.tt-fx-img s{position:absolute;left:4px;bottom:4px;text-decoration:none;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:rgba(28,33,86,.82);color:#fff}
+.tt-fx-img s.tt-fx-onbadge{background:linear-gradient(180deg,#FF7AA8,#FF3F80)}
+.tt-fx-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tt-fx-info em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:1px;color:#B07AC8}
+.tt-fx-info b{font-size:15px;line-height:1.2}
+.tt-fx-info p{margin:0;font-size:11px;line-height:1.5;color:var(--sk-mute,#5C6196)}
+.tt-fx-card.lock .tt-fx-info b{color:var(--sk-mute,#5C6196)}
+.tt-fx-tog{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;margin-top:4px;font:inherit;font-size:12px;font-weight:700;padding:3px 12px 3px 4px;border-radius:99px;
+  border:2px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;box-shadow:0 2px 0 var(--sk-ink,#1C2156)}
+.tt-fx-tog i{position:relative;width:30px;height:16px;border-radius:99px;background:#D9DCEE;transition:background .15s}
+.tt-fx-tog i::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 0 rgba(28,33,86,.35);transition:transform .15s}
+.tt-fx-tog[aria-checked="true"]{background:linear-gradient(180deg,#FF7AA8,#FF3F80);color:#fff}
+.tt-fx-tog[aria-checked="true"] i{background:rgba(255,255,255,.45)}
+.tt-fx-tog[aria-checked="true"] i::after{transform:translateX(14px)}
+.tt-fx-tog:active,.tt-fx-try:active,.tt-fx-reset:active{transform:translateY(1px)}
+.tt-fx-need{display:flex;flex-direction:column;gap:3px;margin-top:3px}
+.tt-fx-need u{display:block;height:8px;border:2px solid #B9BCD9;border-radius:99px;background:#EEEAF6;overflow:hidden;text-decoration:none}
+.tt-fx-need u span{display:block;height:100%;background:linear-gradient(90deg,#FF8FB8,#B78CFF)}
+.tt-fx-need small{font-size:11px;color:var(--sk-mute,#5C6196)}
+.tt-fx-try{align-self:flex-start;margin-top:4px;font:inherit;font-size:12px;font-weight:700;padding:3px 10px;border-radius:9px;border:2px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer}
+.tt-fx-try.on{background:#FFF0F6;border-color:#FF3F80;color:#E0457E}
+.tt-fx-params{display:grid;gap:6px;margin-top:8px;padding-top:8px;border-top:2px dashed #D9C3E8}
+.tt-fx-params label{display:grid;grid-template-columns:34px 1fr 40px;align-items:center;gap:8px;font-size:12px;font-weight:700}
+.tt-fx-params input[type=range]{width:100%;margin:0;accent-color:#FF4F8B;cursor:pointer}
+.tt-fx-params output{text-align:right;font-size:11px;font-weight:700;color:var(--sk-mute,#5C6196)}
+.tt-fx-params label.tt-fx-chk{grid-template-columns:auto 1fr;font-weight:400;cursor:pointer}
+.tt-fx-chk input{width:16px;height:16px;margin:0;accent-color:#FF4F8B}
+.tt-fx-reset{justify-self:end;font:inherit;font-size:11px;font-weight:700;padding:3px 10px;border-radius:9px;border:2px solid var(--sk-ink,#1C2156);background:#FFF0F6;color:var(--sk-ink,#1C2156);cursor:pointer}
+.tt-fx-off{width:100%;font:inherit;font-size:14px;font-weight:700;padding:9px;border-radius:14px;border:3px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156)}
+.tt-fx-off:disabled{opacity:.45;cursor:default;box-shadow:none}
+#ttFxPanel button:focus-visible,#ttFxPanel input:focus-visible{outline:3px solid #8FD3FF;outline-offset:2px}
+#ttMainDock #ttHouseFx{position:relative}
+#ttMainDock #ttHouseFx.dot::after{content:"";position:absolute;right:-4px;top:-4px;width:12px;height:12px;border-radius:50%;background:#FF3F80;border:2.5px solid var(--sk-ink,#1C2156)}

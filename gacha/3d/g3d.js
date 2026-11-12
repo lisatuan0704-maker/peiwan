@@ -1740,7 +1740,7 @@ function oddsHTML(){const L=poolItems(),P=POOLS[THEME],own=L.filter(i=>OWN.has(i
     <p class="dex-rule">抽十次保證至少一件「這個卡池裡還沒有的」稀有以上家具；稀有以上全部收集齊了，就保證至少一件稀有以上。同一個稀有度裡，每件抽到的機會一樣。</p></div>${fxHTML(L,own)}${['limited','rare','common'].map(sec).join('')}`;}
 // 集滿獎勵：這個系列專屬的房間光效（扭蛋抽不到；集到一半先給第一階段、集滿給招牌光效，解鎖後任何房間都能開）
 function fxHTML(L,own){const F=POOLS[THEME].fx;if(!F)return'';const n=L.length;
-  return `<section class="dex-sec dex-fx"><h4><small class="fxk">集滿獎勵</small><b>BONUS</b><span>系列專屬光效・扭蛋抽不到</span></h4><div class="fx-list">${F.map(([nm,lv,img,ds])=>{const need=lv===1?Math.ceil(n/2):n,ok=own>=need;
+  return `<section class="dex-sec dex-fx"><h4><small class="fxk">集滿獎勵</small><b>BONUS</b><span>系列專屬光效・扭蛋抽不到・解鎖後到小屋右下「光效」打開</span></h4><div class="fx-list">${F.map(([nm,lv,img,ds])=>{const need=lv===1?Math.ceil(n/2):n,ok=own>=need;
     return `<div class="fx-card ${ok?'own':'no'}"><i><img src="${img}${DV}" alt="">${ok?'':'<s>未解鎖</s>'}</i><div><em>${lv===1?'集到一半':'全部集滿'}</em><b>${nm}</b><p>${ds}</p><u><span style="width:${(Math.min(own,need)/need*100).toFixed(1)}%"></span><q>${ok?'已解鎖':Math.min(own,need)+'／'+need}</q></u></div></div>`;}).join('')}</div></section>`;}
 function resultUI(){const P=plan;mkHead();
   if(P.n===1){const L=P.L,k=P.it.r;setUI(HEAD+walletHTML()+`<div class="p plate" style="left:calc(${L.plateX}px*var(--s));top:calc(${L.plateY}px*var(--s))">${P.it.nw?'<b class="nw">NEW</b>':''}${P.it.name}</div>
