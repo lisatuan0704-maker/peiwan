@@ -1699,7 +1699,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v526</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v527</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -5536,7 +5536,8 @@ function readMail(id){
   const ls=(n,v)=>{try{if(v===undefined)return localStorage.getItem(n);if(v===null)localStorage.removeItem(n);else localStorage.setItem(n,String(v));}catch(e){return null}};
   const stayKey=(k,d)=>'tt_daily_stay_'+k+'_'+d, chatKey=(k,d)=>'tt_daily_chat_'+k+'_'+d, failKey=(k,d)=>'tt_daily_fail_'+k+'_'+d;
   const stay=(k,d)=>+ls(stayKey(k,d))||0;
-  const inLobby=()=>!document.documentElement.classList.contains('ttm-on'); // 手機功能首頁沒有大廳，不計時
+  const inLobby=()=>!document.documentElement.classList.contains('ttm-on'); // 手機功能首頁沒有大廳（聊天框上的小標籤不顯示）
+  const counting=()=>inLobby()||document.visibilityState==='visible';   // v527 手機：畫面在前景才計時
   function watch(){
     const u=firebase.auth&&firebase.auth().currentUser;
     const k=(u&&typeof myKey!=='undefined')?myKey:null;
@@ -5551,8 +5552,59 @@ function readMail(id){
   }
   /* v508 聊天框上緣的每日任務小標籤（只顯示，不影響領取條件與寫入）：說一句話 ✓／○、待滿 10 分（N/10）；
      領完變「今天的每日任務已完成 ✓」，幾秒後縮成小小的 ✓（滑過再展開）。讀不到 dailyTask（沒登入、規則還沒發布）不顯示；手機功能首頁不顯示（CSS）。 */
+  /* v527 手機版每日任務（朋友：手機也想領貓貓幣）：手機沒有大廳畫面 → 在手機上方掛機收益下面放一張每日任務卡：
+     ①「在大廳說一句話」：卡片上直接說（照樣送進大廳聊天室，電腦版的大家看得到；走原本的 sendChat，禁言、說太快照舊擋）
+     ②「酒館開著 10 分鐘」：手機畫面在前景才算（計時存同一格，換電腦接著算）。領取寫入跟電腦版完全一樣（規則照舊檢查今天在大廳發過言）。 */
+  const isPhone=()=>document.documentElement.classList.contains('ttm-on');
+  let mEl=null,sayEl=null,sayWait=null;
+  function mcard(){
+    const top=document.getElementById('ttmTop'),k=key,d=today();
+    if(!isPhone()||!top||!k||!ok){ if(mEl) mEl.hidden=true; return; }
+    if(!mEl){ mEl=document.createElement('div'); mEl.id='ttmDaily'; mEl.setAttribute('role','status'); mEl.addEventListener('click',e=>{ if(e.target.closest('[data-say]')) saySheet(); }); }
+    const anchor=document.getElementById('ttmIdle')||top.querySelector('.ttm-card');
+    if(anchor&&anchor.nextElementSibling!==mEl) anchor.after(mEl); else if(!anchor&&mEl.parentNode!==top) top.prepend(mEl);
+    mEl.hidden=false;
+    const done=day!=null&&day>=d, s=stay(k,d), said=done||!!ls(chatKey(k,d)), full=done||s>=NEED, min=Math.min(10,Math.floor(s/60));
+    const sig=done?'done':(said?1:0)+'_'+min+'_'+(full?1:0); if(mEl.dataset.sig===sig) return; mEl.dataset.sig=sig;
+    mEl.classList.toggle('done',done);
+    mEl.innerHTML='<span class="md-ic" aria-hidden="true">'+(window.TTCat?TTCat.coin(30,'c'):'')+'</span>'
+      +'<span class="md-main"><span class="md-top"><b>每日任務</b><em>DAILY</em><small>'+(done?'今天領過了':'送 '+reward()+' '+unit())+'</small></span>'
+      +(done?'<span class="md-done">今天的每日任務已完成 ✓ 明天再來</span>'
+        :'<span class="md-steps"><span class="md-i'+(said?' ok':'')+'">'+(said?'說過話了 <i>✓</i>':'<button type="button" data-say>在大廳說一句話</button>')+'</span>'
+         +'<span class="md-i'+(full?' ok':'')+'">開著 10 分鐘 <i>'+(full?'✓':min+'/10')+'</i></span></span>'
+         +'<span class="md-bar" aria-hidden="true"><span style="width:'+Math.round(((said?.5:0)+Math.min(1,s/NEED)*.5)*100)+'%"></span></span>')+'</span>';
+  }
+  function saySheet(){
+    if(!sayEl){
+      sayEl=document.createElement('div');sayEl.id='ttmSay';sayEl.setAttribute('role','dialog');sayEl.setAttribute('aria-modal','true');sayEl.setAttribute('aria-label','在大廳說一句話');
+      sayEl.innerHTML='<form class="ms-card"><header><b>在大廳說一句話</b><small>會送進大廳聊天室，電腦版的大家都看得到</small></header>'
+        +'<div class="ms-chips">'+['大家好～','今天也來報到了！','晚安，祝好夢 ✦','有人要一起玩嗎？'].map(t=>'<button type="button" data-t="'+t+'">'+t+'</button>').join('')+'</div>'
+        +'<input maxlength="60" autocomplete="off" placeholder="想說的話…" aria-label="想說的話">'
+        +'<div class="ms-acts"><button type="button" class="ms-no">取消</button><button type="submit" class="ms-go">送出</button></div></form>';
+      document.body.appendChild(sayEl);
+      const inp=sayEl.querySelector('input');
+      sayEl.addEventListener('click',e=>{ const c=e.target.closest('[data-t]'); if(c){ inp.value=c.dataset.t; inp.focus(); return; } if(e.target===sayEl||e.target.closest('.ms-no')) sayEl.classList.remove('on'); });
+      sayEl.querySelector('form').addEventListener('submit',e=>{ e.preventDefault(); saySend(inp.value.trim()); });
+    }
+    sayEl.classList.add('on'); setTimeout(()=>sayEl.querySelector('input').focus(),50);
+  }
+  async function saySend(t){
+    if(!t){ toast('先選一句或打幾個字唷'); return; }
+    const el=document.getElementById('chatin'), mu=window.__mute;
+    if(mu&&(mu.until===-1||mu.until>Date.now())){ toast('你目前被店長禁言，暫時不能在大廳說話'); return; }
+    if(!el||typeof sendChat!=='function'||typeof me!=='function'||!me()){ toast('闆卡還在載入，等一下再試'); return; }
+    const go=sayEl&&sayEl.querySelector('.ms-go'); if(go) go.disabled=true;
+    const prev=el.value; el.value=t;
+    const wait=new Promise(r=>{ sayWait=r; setTimeout(()=>r(false),9000); });
+    let res; try{ res=sendChat(); }catch(e){ res=false; }
+    if(res===false){ sayWait=null; el.value=prev; if(go) go.disabled=false; return; }   // 說太快等原本就會提示
+    const okSend=await wait; sayWait=null; if(go) go.disabled=false;
+    if(okSend){ if(sayEl){ sayEl.classList.remove('on'); sayEl.querySelector('input').value=''; } toast('說好了！大廳的大家都看得到你的招呼 ✦'); }
+    else { el.value=''; toast('沒送出去，檢查一下網路再試一次'); }
+  }
   let chipEl=null,chipMini=0;
   function chip(){
+    try{ mcard(); }catch(e){ console.warn('daily mcard',e); }
     const box=document.getElementById('chatbox'); if(!box) return;
     const k=key,d=today();
     if(!k||!ok||!inLobby()){ if(chipEl) chipEl.hidden=true; return; }
@@ -5610,14 +5662,15 @@ function readMail(id){
     if(!k||!chatId) return;
     if(day!=null&&day>=d) return;
     ls(chatKey(k,d),chatId);
+    if(sayWait){ const r=sayWait; sayWait=null; r(true); }
     const left=NEED-stay(k,d);
-    if(left>0&&hinted!==k+'_'+d&&ok){ hinted=k+'_'+d; if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'每日任務',sub:'再在大廳待 '+Math.ceil(left/60)+' 分鐘，就送你 '+reward()+' '+unit(),hold:5000}); }
+    if(left>0&&hinted!==k+'_'+d&&ok){ hinted=k+'_'+d; if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'每日任務',sub:(isPhone()?'酒館再開著 ':'再在大廳待 ')+Math.ceil(left/60)+' 分鐘，就送你 '+reward()+' '+unit(),hold:5000}); }
     tryClaim(); chip();
   }
   function stayTick(){
     const now=Date.now(),dt=Math.min(70,Math.max(0,(now-lastTick)/1000));lastTick=now; // 電腦睡眠回來不一次補很多
     const k=key,d=today();
-    if(!k||!inLobby()||(day!=null&&day>=d)) return;
+    if(!k||!counting()||(day!=null&&day>=d)) return;
     const v=stay(k,d);
     if(v<NEED) ls(stayKey(k,d),Math.round(v+dt));
     if(v+dt>=NEED) tryClaim();
@@ -8655,8 +8708,8 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
-<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=492"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=500">
-<script src="lobby-ui/mobile-app.js?v=516"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=527"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=527">
+<script src="lobby-ui/mobile-app.js?v=527"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
 <script src="lobby-ui/vip-card.js?v=513"></script>
 <link rel="stylesheet" href="lobby-ui/order-guide.css?v=514"><script src="lobby-ui/order-guide.js?v=514"></script>
