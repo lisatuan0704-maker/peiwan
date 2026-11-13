@@ -1458,7 +1458,7 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/walk-parts.js?v=270"></script>
 <script src="js/tt-seats.js?v=2"></script>
 <script src="lobby-ui/seats.js?v=373"></script>
-<script src="lobby-ui/presence.js?v=521"></script>
+<script src="lobby-ui/presence.js?v=531"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/payment-safety.js?v=492"></script>
 <script src="lobby-ui/cat-coin.js?v=530"></script>
@@ -1699,7 +1699,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v530</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v531</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3172,6 +3172,10 @@ function fsOverlayOpen(){
   }
   return _fsOpen;
 }
+/* v531：一個 CSS 像素在螢幕上是幾個實體像素（電腦版的大廳裝在 lobby-view 的縮放框裡，要把外框縮放算進去） */
+let ttPxUnit=1;
+function ttPxUnitCalc(){let s=1;try{const fe=window.frameElement;if(fe&&fe.offsetWidth)s=fe.getBoundingClientRect().width/fe.offsetWidth||1;}catch(e){}ttPxUnit=s*(window.devicePixelRatio||1);}
+ttPxUnitCalc();addEventListener('resize',()=>{ttPxUnitCalc();setTimeout(ttPxUnitCalc,60);});
 function ttIdlePose(now,seed=0,slime=false){
   const pulse=Math.max(0,Math.sin(now/1000*(slime?4.5:2.3)*Math.PI+seed));
   return {sqx:1+pulse*(slime?0.08:0.031),sqy:1-pulse*(slime?0.10:0.044)};
@@ -3336,7 +3340,7 @@ function tick(now){
       const dxp=(aim[0]-a.x)*WORLD.w, dyp=(aim[1]-a.y)*WORLD.h;
       const dist=Math.hypot(dxp,dyp);
       const sp=(a.isMe?165:120)*depthNow;
-      if(a.isMe)a._spd=sp;   // v521：位置封包帶走路速度
+      if(a.isMe){a._spd=sp;a._spb=165;}   // v521：位置封包帶走路速度；v531 加基本速度（觀看者自己乘遠近）
       if(dist<6&&!a._sceneTransit){
         a.state='idle';a.timer=2+Math.random()*6;a.idleFor=0;
         if(a.goSit){ a.sitting=true; a.goSit=false; spawnHeart(a); }
@@ -3362,7 +3366,9 @@ function tick(now){
       const changed=TTPresence.changed(packet,a._sentPosition);
       const stopped=a._sentPosition?.w===1&&packet.w===0;
       if(!a._positionSending&&now>=(a._positionRetryAt||0)&&
-          ((!a._sentPosition)||(changed&&(stopped||TTPresence.turned(packet,a._sentPosition)||now-(a._positionSentAt||0)>=150))||now-(a._positionSentAt||0)>=5000)){   // v521：換目的地馬上送
+          ((!a._sentPosition)||(changed&&(stopped||TTPresence.turned(packet,a._sentPosition)||now-(a._positionSentAt||0)>=(packet.r?1000:300)))||now-(a._positionSentAt||0)>=45000)){
+        /* v521：換目的地馬上送。v531（Firebase 流量）：點地板走路別人照路線推算，路上每 1 秒校正一次（原 0.15 秒）；方向鍵 0.3 秒；
+           站著不動的心跳 5 秒→45 秒（判斷離開是 10 分鐘＋斷線自動清除，不受影響）。停下、坐下、轉向照舊馬上送。 */
         const ownerKey=myKey;a._positionSending=true;
         if(!a._odc){ a._odc=1; try{ TTWorldScope.disconnect(db.ref(ROOT+'/pos/'+ownerKey)).catch(()=>{a._odc=0;}); }catch(e){} }
         TTWorldScope.write(()=>db.ref(ROOT+'/pos/'+ownerKey).set(packet)).then(()=>{
@@ -3402,17 +3408,15 @@ function tick(now){
       const stepIdx=Math.floor(tt*5.5+a.seed)%2;          // 這一步是哪隻腳
       const heavy=stepIdx?1:0.86;                          // 兩腳落地輕重不同 → 律動
       bob=-jump*5*heavy;
-      const landing=jump<0.25;
-      sqy=landing?(1-0.042*heavy):1+jump*0.021;
-      sqx=landing?(1+0.035*heavy):1;
-      /* 落地那一瞬往支撐腳那側微傾,離地時回正 */
-      const lean=(stepIdx?1:-1)*(landing?1.9:0.7);
-      hopRot=Math.sin(tt*11+a.seed)*0.75+lean;
+      /* v531：像素圖每幀縮放、旋轉會糊、邊緣閃 → 拿掉落地擠壓與左右傾，只留整數像素的上下彈跳（彈跳照舊浮誇） */
+      const px=size/64;bob=Math.round(bob/px)*px;
       // Hop as one standing sprite; do not alternate the feet or swing the arms.
       setFrame(a,'idle');
     }else{
       // B.整體呼吸壓扁(D 實測定案:速度2.3、幅度2.2%)
-      ({sqx,sqy}=ttIdlePose(now,a.seed,a.slime));
+      // v531：人改成「吐氣時往下沉 1 個像素」（同節奏，不縮放就不糊）；史萊姆照舊壓扁
+      if(a.slime)({sqx,sqy}=ttIdlePose(now,a.seed,a.slime));
+      else{const pulse=Math.max(0,Math.sin(now/1000*2.3*Math.PI+a.seed));bob=pulse>.5?size/64:0;}
       setFrame(a,'idle');
     }
     if(_hairMotionPreference.matches){bob=0;hopRot=0;sqx=1;sqy=1;}
@@ -3424,12 +3428,14 @@ function tick(now){
     const vis = agentVisible(a) && online;
     a.el.style.display = vis ? '' : 'none';
     if(!vis){ return; }
-    a.el.style.left=(a.x*WORLD.w-size/2+(a.lungeX||0))+'px';
+    // v531：位置對齊到螢幕整數像素（小數位置每幀落在不同半像素上 → 糊、閃）
+    const snapQ=1/((cam.zoom||1)*ttPxUnit),snap=v=>Math.round(v/snapQ)*snapQ;
+    a.el.style.left=snap(a.x*WORLD.w-size/2+(a.lungeX||0))+'px';
     const foot=vm==='hall'?TTScene.metrics(a):1;
     a.el.classList.toggle('tt-scene-actor',vm==='hall');
     a.el.style.setProperty('--tt-foot',(size*foot)+'px');
     a.cv.style.transformOrigin='50% '+(foot*100)+'%';
-    a.el.style.top=(a.y*WORLD.h-size*foot+bob-(vm==='hall'?TTScene.lift(a.x,a.y):0))+'px';
+    a.el.style.top=snap(a.y*WORLD.h-size*foot+bob-(vm==='hall'?TTScene.lift(a.x,a.y):0))+'px';
     a.el.classList.remove('tt-await-position');
     a.el.style.zIndex=Math.round(a.y*1000);
     a.cv.style.width=size+'px';a.cv.style.height=size+'px';
@@ -3447,7 +3453,7 @@ function tick(now){
       hopRot += (a.atkDir||1)*8*k;
       a.lungeX = (a.atkDir||1)*10*k;
     }
-    let tf='rotate('+hopRot+'deg) scaleX('+(a.flipT*sqx)+') scaleY('+sqy+')';
+    let tf=(hopRot?'rotate('+hopRot+'deg) ':'')+'scaleX('+(a.flipT*sqx)+') scaleY('+sqy+')';
     if(a.sitting&&!TTSeats.current(a)) tf+=' scaleY(.86) translateY(6%)';
     a.cv.style.transform=tf;
     TTSeats.sync(a,size,sqy,sqx);
@@ -3503,6 +3509,8 @@ function updateCamera(dt, now){
   if(sceneRight-sceneLeft < halfW*2) vx=WORLD.w/2;
   if(WORLD.h < halfH*2) vy=WORLD.h/2;
   camView.x=vx-halfW; camView.y=vy-halfH;
+  { // v531：鏡頭位移也對齊螢幕整數像素
+    const q=1/(cam.zoom*ttPxUnit);camView.x=Math.round(camView.x/q)*q;camView.y=Math.round(camView.y/q)*q; }
   world.style.transform='scale('+cam.zoom+') translate('+(-camView.x)+'px,'+(-camView.y)+'px)';
   // 只在左右有留白時柔化接縫；換算成世界單位，螢幕上維持 14px。
   const softSides=vw-WORLD.w*cam.zoom>1;
@@ -5874,7 +5882,7 @@ if(db){
      暫停時畫面上的人、名單與 lobbyWant 的個別監聽都先凍住（個別監聽留著：沒變動就不花流量，拿掉反而回來要整份重下載）。
      切回來再聽；重新聽到的第一包當基準（像剛開頁）：新來的人馬上出現、這段時間走掉的人直接拿掉、還在的人直接站到新位置，不從舊位置滑過去。
      posGate 讓 TTWorldScope 照舊管這條監聽（進房間 isolate 時一樣永久停掉）。window.__posPauseMs 是測試用（縮短 3 分鐘）。 */
-  const posRef=db.ref(ROOT+'/pos'),POS_PAUSE=180000;
+  const posRef=db.ref(ROOT+'/pos'),POS_PAUSE=30000;   // v531：分頁在背景 30 秒就先不收別人的位置（原 3 分鐘），省流量
   let posFn=null,posFail=null,posOn=false,posDead=false,posPaused=false,posBase=false,posHidAt=document.hidden?Date.now():0;
   const posGate={on(ev,fn,err){posFn=fn;posFail=err;posAttach();},off(){posDead=true;posPaused=posBase=false;posDetach();}};
   function posAttach(){if(posOn||posDead||!posFn)return;posOn=true;posRef.on('value',posFn,posFail);}
@@ -8692,7 +8700,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=526"><script src="lobby-ui/house.js?v=526"></script><script src="lobby-ui/house-trip.js?v=512"></script><script src="lobby-ui/gacha.js?v=526"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=526"><script src="lobby-ui/house.js?v=531"></script><script src="lobby-ui/house-trip.js?v=512"></script><script src="lobby-ui/gacha.js?v=526"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>

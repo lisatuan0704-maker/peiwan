@@ -3,10 +3,15 @@
    封包晚到時放慢而不是停住，落後太多才加快（上限 320px/s），停下時直接走到最後位置。
    v521（D：別人的網頁遊戲即時性都做很好）：本人走路時封包多帶「剩下的路線 r＋走路速度 sp」（點地板）或「目前速度 k」（方向鍵），
    再加伺服器時間 ts；觀看者照路線往前推算「對方現在走到哪」，不再故意落後一拍，轉彎、停下的位置也跟本人一樣。
-   往前推算最多 0.6 秒（對方分頁切到背景、網路斷掉時不會自己走完全程）；沒帶路線的舊版封包照 v483 的方式。 */
+   往前推算最多 0.6 秒（對方分頁切到背景、網路斷掉時不會自己走完全程）；沒帶路線的舊版封包照 v483 的方式。
+   v531（流量）：點地板走路改成換目的地／停下才馬上送，其餘每 1 秒一包 → 往前推算放寬到 1.6 秒；方向鍵每 0.3 秒一包 → 推 0.35 秒。
+   封包多帶 sb（基本速度，沒乘遠近），觀看者照「越下面走越快」一路算（本人 sp＝165×遠近），推算才會跟本人對上。
+   追趕最多 1.25 倍速（原 2.2 倍＝看起來暴衝）；差太遠（>320px）改成淡出淡入，不直接閃過去。 */
 (function(root){
   'use strict';
-  const MAX=.32,MIN=.03,AHEAD=600;
+  const MAX=.32,MIN=.03,AHEAD=1600,KEY_AHEAD=350;
+  // 大廳地板上緣 343/900、下緣 .97（lobby.html MAPS.hall.floor）；遠近係數同 lobby.html depthNow
+  const depth=y=>.82+(y/900-343/900)/(.97-343/900)*.33;
   let OFF=0,offOK=false;
   function setClockOffset(v){OFF=Number(v)||0;offOK=true;}
   function advance(a,state,now){
@@ -28,7 +33,16 @@
   // v521：封包送出後過了 age 毫秒，對方應該走到哪（照路線一段一段走，走到終點就停）
   function predict(pr,age){
     let x=pr.b[0]*1600,y=pr.b[1]*900;
-    if(pr.k){const s=Math.min(age,120)/1000;return {x:(x+pr.k[0]*s)/1600,y:(y+pr.k[1]*s)/900,moving:true};}   // 方向鍵：只往前推一點點，放開時不會衝過頭
+    if(pr.k){const s=Math.min(age,KEY_AHEAD)/1000;return {x:(x+pr.k[0]*s)/1600,y:(y+pr.k[1]*s)/900,moving:true};}   // 方向鍵：只往前推一點點，放開時不會衝過頭
+    if(pr.sb){   // v531：照遠近一小段一小段算（每段最多 6px）
+      let t=Math.min(age,AHEAD)/1000;
+      for(let i=0;i<pr.r.length;i+=2){const px=pr.r[i],py=pr.r[i+1];let L=Math.hypot(px-x,py-y);
+        while(L>1e-6){const c=Math.min(6,L),v=pr.sb*depth(y),need=c/v,ux=(px-x)/L,uy=(py-y)/L;
+          if(t<need){x+=ux*v*t;y+=uy*v*t;return {x:x/1600,y:y/900,moving:true};}
+          t-=need;x+=ux*c;y+=uy*c;L-=c;}
+        x=px;y=py;}
+      return {x:x/1600,y:y/900,moving:false};
+    }
     let d=pr.sp*Math.min(age,AHEAD)/1000;
     for(let i=0;i<pr.r.length;i+=2){const px=pr.r[i],py=pr.r[i+1],L=Math.hypot(px-x,py-y);
       if(d<L){x+=(px-x)/L*d;y+=(py-y)/L*d;return {x:x/1600,y:y/900,moving:true};}
@@ -41,7 +55,7 @@
     if(p.w===1&&Array.isArray(p.k)&&p.k.length===2&&p.k.every(Number.isFinite))
       return {b:point,k:p.k,sp:Math.hypot(p.k[0],p.k[1])||150,age0};
     if(p.w===1&&Array.isArray(p.r)&&p.r.length>=2&&p.r.length%2===0&&p.r.every(Number.isFinite)&&Number.isFinite(p.sp)&&p.sp>0)
-      return {b:point,r:p.r,sp:Math.min(400,p.sp),age0};
+      return {b:point,r:p.r,sp:Math.min(400,p.sp),sb:p.m==='hall'&&Number.isFinite(p.sb)&&p.sb>0?Math.min(300,p.sb):0,age0};
     if(p.w!==1&&prev?.pred)return {b:point,r:[],sp:prev.pred.sp,age0};   // 停下：照原本的速度走到最後位置
     return null;
   }
@@ -49,12 +63,16 @@
     const dt=Math.max(0,Math.min(50,now-state.renderedAt));state.renderedAt=now;
     const pr=state.pred,p=predict(pr,pr.age0+Math.max(0,now-state.at));
     const dx=(p.x-a.x)*1600,dy=(p.y-a.y)*900,rem=Math.hypot(dx,dy);
-    if(rem<.3||rem>320){a.x=p.x;a.y=p.y;return {left:0,moving:p.moving};}   // 差太遠（剛重連）直接到
-    const speed=Math.min(Math.max(pr.sp*2.2,300),pr.sp+rem/.12)/1000;   // 照對方速度走，有落差時多走一點補回來
+    if(rem<.3){a.x=p.x;a.y=p.y;return {left:0,moving:p.moving};}
+    if(rem>320){blink(a);a.x=p.x;a.y=p.y;return {left:0,moving:p.moving};}   // 差太遠（剛重連）：淡出淡入換過去
+    const sp=pr.sb?pr.sb*depth(p.y*900):pr.sp;
+    const speed=Math.min(sp*1.25,sp+rem/.25)/1000;   // v531：照對方速度走，落差最多多走 25% 慢慢補回（原 2.2 倍看起來暴衝）
     const step=Math.min(rem,speed*dt);
     a.x+=dx/rem*step/1600;a.y+=dy/rem*step/900;
     return {left:rem-step,moving:p.moving};
   }
+  // v531：位置要大跳時，小人淡出淡入（不是一閃就換位置）
+  function blink(a){const el=a.el;if(!el||!el.animate)return;try{el.animate([{opacity:.15},{opacity:1}],{duration:320,easing:'ease-out'});}catch(e){}}
   function move(a,state,now){
     if(state.pred)return follow(a,state,now);
     return {left:advance(a,state,now),moving:false};
@@ -98,7 +116,7 @@
     // v521：走路中帶上「剩下的路線＋速度」或「方向鍵速度」，讓別人照著推算
     if(out.w===1&&a.state==='walk'&&a._spd>0){
       const path=map==='hall'?a._scenePath:(Number.isFinite(a.tx)&&Number.isFinite(a.ty)?[[a.tx*1600,a.ty*900]]:null);
-      if(Array.isArray(path)&&path.length){out.r=[];for(const q of path.slice(0,8))out.r.push(Math.round(q[0]),Math.round(q[1]));out.sp=Math.round(a._spd);}
+      if(Array.isArray(path)&&path.length){out.r=[];for(const q of path.slice(0,8))out.r.push(Math.round(q[0]),Math.round(q[1]));out.sp=Math.round(a._spd);if(map==='hall'&&a._spb>0)out.sb=a._spb;}
     }else if(out.w===1&&a.state==='walkKey'&&Array.isArray(a._kv))out.k=[Math.round(a._kv[0]),Math.round(a._kv[1])];
     if(offOK)out.ts=Math.round(now+OFF);
     return out;

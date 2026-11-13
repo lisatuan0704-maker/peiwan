@@ -1420,12 +1420,12 @@ const GRADE={day:{lift:'rgba(110,52,60,.16)',haze:'rgba(255,196,188,.30)',bloom:
   studio:{lift:'rgba(36,44,90,.12)',haze:'rgba(170,190,255,.09)',bloom:.20},rockv:{lift:'rgba(60,26,80,.12)',haze:'rgba(200,150,255,.09)',bloom:.22},mint:{lift:'rgba(30,70,84,.12)',haze:'rgba(190,250,240,.09)',bloom:.22},breeze:{lift:'rgba(60,60,110,.10)',haze:'rgba(255,214,190,.12)',bloom:.20},drizzle:{lift:'rgba(84,72,92,.10)',haze:'rgba(232,214,196,.12)',bloom:.18},arcadeq:{lift:'rgba(60,30,90,.12)',haze:'rgba(240,160,230,.09)',bloom:.22}};   // 11/03 b6 主題房還原（蕪／狼／喵／疾風／熊／電玩）：全室調色壓淡，氣氛交給各盞燈   // 11/03 學院／天文台／人魚屋／森林：同 tea，全室調色壓淡，氣氛交給各盞燈   // tea：桃・櫻夜茶屋（11/03）——全室調色壓到很淡，氣氛交給各盞燈的局部光   // arcane：魔法學院的暮紫，光暈泛得比較開
 function grade(){const G=GRADE[fxNightSet()?'night':(fxGrade()||THEMES[theme].grade||(THEMES[theme].night?'night':'day'))],sc=viewT()[0];
   if(!cv.width||!cv.height)return;
-  const bq=HTHOOK.bq||1,gw=Math.max(1,Math.round(cv.width*bq)),gh=Math.max(1,Math.round(cv.height*bq));if(GC.width!==gw||GC.height!==gh){GC.width=gw;GC.height=gh;}
-  gc.setTransform(1,0,0,1,0,0);gc.clearRect(0,0,GC.width,GC.height);gc.filter=`blur(${Math.max(1,Math.round(5*sc*bq))}px) contrast(1.7) brightness(.8)`;gc.imageSmoothingEnabled=true;gc.drawImage(cv,0,0,gw,gh);gc.filter='none';
+  /* v531：拿掉「整個畫面模糊後 screen 疊回去」的全室柔光——朋友、家具、光效都被它霧掉、洗白。
+     只留兩層平塗的色調（lift／haze，不會糊）；發光交給燈具與光效自己（光池、litItem）。 */
   g.save();g.setTransform(1,0,0,1,0,0);
   g.globalCompositeOperation='screen';g.fillStyle=G.lift;g.fillRect(0,0,cv.width,cv.height);
   g.globalCompositeOperation='soft-light';g.fillStyle=G.haze;g.fillRect(0,0,cv.width,cv.height);
-  g.globalCompositeOperation='screen';g.globalAlpha=G.bloom;g.imageSmoothingEnabled=true;g.drawImage(GC,0,0,cv.width,cv.height);g.restore();}
+  g.restore();}
 // 犬尤招牌：四角小星星，隨機在房間裡閃
 function spawnTwinkle(){if(reduceMotion.matches||Math.random()>.06)return;const p=iso(Math.random()*N,Math.random()*N);
   FX.push({x:Math.round(p.x+(Math.random()-.5)*20),y:Math.round(p.y-Math.random()*95),vx:0,vy:0,life:0,max:900+Math.random()*900,type:'twinkle',big:Math.random()<.35});}
@@ -1898,12 +1898,10 @@ function thumbOf(k,S){const d=DEF[k];if(!d)return '';const key=K(d.spr[0]),im=IM
 // 這裡照同一組數值做一次（光暈 5 格＝房間裡的 5*縮放），最後用家具本身的形狀剪回去，透明底不會被染色
 function thumbGrade(c){const G=GRADE[THEMES[theme].grade||(THEMES[theme].night?'night':'day')];if(!G)return c;
   const W=c.width,H=c.height,o=document.createElement('canvas'),b=document.createElement('canvas');o.width=b.width=W;o.height=b.height=H;
-  const bc=b.getContext('2d');bc.filter='blur(5px) contrast(1.7) brightness(.8)';bc.drawImage(c,0,0);bc.filter='none';
   const g=o.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(c,0,0);
   g.globalCompositeOperation='screen';g.fillStyle=G.lift;g.fillRect(0,0,W,H);
   g.globalCompositeOperation='soft-light';g.fillStyle=G.haze;g.fillRect(0,0,W,H);
-  g.globalCompositeOperation='screen';g.globalAlpha=G.bloom;g.drawImage(b,0,0);g.globalAlpha=1;
-  g.globalCompositeOperation='destination-in';g.drawImage(c,0,0);return o;}
+  g.globalCompositeOperation='destination-in';g.drawImage(c,0,0);return o;}   // v531：縮圖也不加模糊光暈（跟房間一致）
 
 let readyFn;const ready=new Promise(r=>readyFn=r);
 // v504 小屋串門子：同一間小屋裡的其他人（最多 3 位）照資料庫回報的位置走過去；頭上有名字，說話冒泡泡（自己說的也會冒）。

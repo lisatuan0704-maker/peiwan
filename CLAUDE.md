@@ -1,5 +1,20 @@
 # 小小酒館修改紀錄
 
+## 2026/11/14 v531 Firebase 流量、別人走路暴衝／瞬移、小人與小屋模糊（Claude）
+- D 貼了另一個 Claude 的待辦（RTDB 本月下載 20GB 超額；小人糊；別人突然走很快）並說「你自己來」。
+- 流量（lobby.html 位置回報）：站著不動的心跳 5 秒→45 秒；點地板走路路上每 1 秒校正一次（原 0.15 秒；換目的地、停下、坐下、轉向照舊馬上送）、
+  方向鍵 0.3 秒；分頁在背景 30 秒就先不收全場位置（POS_PAUSE，原 3 分鐘）。判斷離開仍是 10 分鐘（PV_STALE）＋斷線自動清除。
+- 同步（lobby-ui/presence.js）：封包多帶 sb＝基本速度 165（a._spb），觀看者照「165×遠近」沿路線一小段一小段推算（之前用送出當下的 sp 一路走，上下走會越差越多）；
+  往前推算 0.6→1.6 秒（配合 1 秒一包）、方向鍵 0.12→0.35 秒；追趕最多 1.25 倍速（原 2.2 倍＝暴衝）；差 320px 以上改淡入（blink），不再一閃換位置。
+  模擬（scratchpad/sync/sim531.cjs，三條上下轉彎路線、35～105ms 抖動）：封包 4.7→0.9 包/秒，平均差距 0.12px 不變，單幀最大位移 5.2→3.9px；
+  只降頻不修遠近會變成平均 24px。真瀏覽器兩個分身（scratchpad/sync531/t1.cjs）：走路中平均 0.9px、停下後兩邊一樣、沒有錯誤。
+- 大廳小人：拿掉走路落地擠壓與左右傾（rotate）、待機呼吸改成「吐氣時往下沉 1 個像素」（同 2.3 節奏，不縮放）；彈跳取整到像素格；
+  小人 left/top 與鏡頭 translate 對齊螢幕整數像素（ttPxUnit 含 lobby-view 外框縮放×devicePixelRatio）。史萊姆照舊壓扁。試穿區的 ttIdlePose 沒動。
+- 小屋（house/room.html grade()、thumbGrade()）：拿掉「整個畫面模糊後 screen 疊回去」的全室柔光（朋友、家具、光效被霧掉洗白的主因），只留 lift／haze 兩層平塗色調。
+  ⚠ tt-room-kit/house-lobby 的 house-embed.js／build.py 還是舊的 bloom，重建 room.html 前要一起拿掉。
+- 還沒做（待辦清單其餘）：admin 監聽範圍、小屋光效改色階／dither、縮放倍率整數、手機買衣服、PWA／拍照模式、載入瘦身、扭蛋說明一致（主機）、repo 改私人。
+- 版本：verTag v531、ver.json 531、lobby-view 531、presence.js?v=531、house.js?v=531（VER 531）。
+
 ## 2026/11/13 v530 iPhone 底部白邊、背包按鈕蓋住膚色、一體化補漏（Claude）
 - D：「下面的白邊我用 iphone 看還在欸」。D 的 iPhone 是**加到主畫面的捷徑**（standalone、黑色半透明狀態列）：iOS 給的版面高度少了狀態列那一截（量到約 55px，螢幕 852、版面 797），
   分頁列底下露出一條頁面底色。v528 的 visualViewport 算法在這裡量不到（兩邊都是 797），而且 v528 那行 `#ttM{bottom:…}` 寫在 `inset:0` 前面被蓋掉、根本沒生效。
