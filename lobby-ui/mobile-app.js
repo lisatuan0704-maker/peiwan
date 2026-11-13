@@ -56,6 +56,9 @@ function layout(){
  root.style.setProperty('--ttm-bot',Math.ceil(window.innerHeight-tabBar.getBoundingClientRect().top)+'px');
 }
 new ResizeObserver(layout).observe(top);new ResizeObserver(layout).observe(tabBar);addEventListener('resize',layout);
+// v528 iPhone Safari：網址列收起來時可見畫面變高，固定在底部的分頁列沒跟著往下（下面空一條）→ 量多出來的高度，整個手機版往下延伸
+{const vv=window.visualViewport;const ext=()=>{const d=vv?Math.round(vv.height+vv.offsetTop-innerHeight):0;root.style.setProperty('--ttm-ext',(d>8&&d<160?d:0)+'px');layout();};
+ if(vv){vv.addEventListener('resize',ext);vv.addEventListener('scroll',ext);}addEventListener('resize',ext);addEventListener('orientationchange',()=>setTimeout(ext,300));ext();}
 // 分頁視窗的背景點擊不會關掉自己（點空白處關窗是電腦版的行為）。
 function guard(n){if(n.dataset.ttmGuard)return;n.dataset.ttmGuard='1';n.addEventListener('click',e=>{if(e.target===n&&n.classList.contains('ttm-tabview')){e.stopPropagation();e.preventDefault();}},true);}
 function show(key,{remember=true}={}){
@@ -71,7 +74,10 @@ function show(key,{remember=true}={}){
   layout();
  }finally{busy=false;}
 }
-tabBar.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)show(b.dataset.tab);});
+// v528 客人：手機很多東西疊在一起 → 按下方分頁時，把從分頁裡打開、蓋在上面的視窗（冒險者通訊錄、私訊對話、闆卡、說一句話、客服）先收掉
+function closeStray(){try{window.TTStaffBook?.close();}catch{}try{if($('cardOverlay')?.classList.contains('on')&&typeof closeCard==='function')closeCard();}catch{}
+ try{if($('dmM')?.classList.contains('on'))window.dmClose?.();}catch{}$('ttmSay')?.classList.remove('on');try{document.querySelectorAll('dialog[open]').forEach(d=>d.close());}catch{}}
+tabBar.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;if(!tab(b.dataset.tab)?.launch)closeStray();show(b.dataset.tab);});
 $('ttmCoins').onclick=()=>show('wallet');
 $('ttmTopup').onclick=()=>show('wallet');
 $('ttmCardImg').onclick=()=>{try{window.ttSaveCardImage?.();}catch(e){}};

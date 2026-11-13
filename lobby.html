@@ -1699,7 +1699,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v527</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v528</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -5567,9 +5567,9 @@ function readMail(id){
     const done=day!=null&&day>=d, s=stay(k,d), said=done||!!ls(chatKey(k,d)), full=done||s>=NEED, min=Math.min(10,Math.floor(s/60));
     const sig=done?'done':(said?1:0)+'_'+min+'_'+(full?1:0); if(mEl.dataset.sig===sig) return; mEl.dataset.sig=sig;
     mEl.classList.toggle('done',done);
-    mEl.innerHTML='<span class="md-ic" aria-hidden="true">'+(window.TTCat?TTCat.coin(30,'c'):'')+'</span>'
-      +'<span class="md-main"><span class="md-top"><b>每日任務</b><em>DAILY</em><small>'+(done?'今天領過了':'送 '+reward()+' '+unit())+'</small></span>'
-      +(done?'<span class="md-done">今天的每日任務已完成 ✓ 明天再來</span>'
+    mEl.innerHTML='<span class="md-ic" aria-hidden="true">'+(window.TTCat?TTCat.coin(done?20:30,'c'):'')+'</span>'
+      +'<span class="md-main"><span class="md-top"><b>每日任務</b><em>DAILY</em><small>'+(done?'今天已完成 ✓ 明天再來':'送 '+reward()+' '+unit())+'</small></span>'
+      +(done?''
         :'<span class="md-steps"><span class="md-i'+(said?' ok':'')+'">'+(said?'說過話了 <i>✓</i>':'<button type="button" data-say>在大廳說一句話</button>')+'</span>'
          +'<span class="md-i'+(full?' ok':'')+'">開著 10 分鐘 <i>'+(full?'✓':min+'/10')+'</i></span></span>'
          +'<span class="md-bar" aria-hidden="true"><span style="width:'+Math.round(((said?.5:0)+Math.min(1,s/NEED)*.5)*100)+'%"></span></span>')+'</span>';
@@ -8679,7 +8679,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=515"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=528"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=500"></script>
@@ -8708,8 +8708,8 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
-<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=527"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=527">
-<script src="lobby-ui/mobile-app.js?v=527"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=528"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=528">
+<script src="lobby-ui/mobile-app.js?v=528"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
 <script src="lobby-ui/vip-card.js?v=513"></script>
 <link rel="stylesheet" href="lobby-ui/order-guide.css?v=514"><script src="lobby-ui/order-guide.js?v=514"></script>

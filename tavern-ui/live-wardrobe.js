@@ -15,7 +15,17 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
  const catFirst=l=>area==='bag'?l:[...l.filter(p=>isCat(p.product)),...l.filter(p=>!isCat(p.product))];
  const api=parent.parent.TinyTavernUI;if(!api)return;
  const mobile=!!parent.parent.TTMobile;
- if(mobile){const style=document.createElement('style');style.textContent='.area-tabs,#dyeTicket{display:none!important}';document.head.append(style);}
+ if(mobile){const style=document.createElement('style');style.textContent='.area-tabs,#dyeTicket{display:none!important}'
+  // v528 手機背包：膚色那排被「穿上搭配／還原」蓋住（色票區比固定的列高還高）→ 試衣區的列依內容長高，按鈕排在色票下面
+  +'@media(max-width:600px){html body[data-area] .preview:not(:has(.has-following-pet)){grid-template-rows:auto auto auto!important;min-height:0!important;align-items:start;flex:0 0 auto!important;height:auto!important}'
+  +'html body[data-area] .preview:not(:has(.has-following-pet))>.stage{grid-row:2/4!important;align-self:stretch}'
+  +'html body[data-area] .preview:not(:has(.has-following-pet))>.dye{grid-column:2!important;grid-row:2!important;height:auto!important}'
+  +'html body[data-area] .preview:not(:has(.has-following-pet))>.previewbar{grid-column:2!important;grid-row:3!important;align-self:end}'
+  // v528 小螢幕（iPhone SE 大小）衣服清單只剩 17px 高、幾乎滑不到 → 手機改成整頁一起往下捲，不再只捲清單那一小格
+  +'html body[data-area][data-area] .workspace.workspace.workspace{overflow-y:auto!important;overscroll-behavior:contain}'
+  +'html body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog#catalog,html body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles.singles.singles.singles.singles.singles{flex:0 0 auto!important;overflow:visible!important;min-height:0!important;height:auto!important}'
+  +'html body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles>.grid.grid.grid.grid.grid.grid{flex:0 0 auto!important;overflow:visible!important;height:auto!important;max-height:none!important}'
+  +'.swatches button{width:26px!important;height:26px!important}}';document.head.append(style);}
  const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const categories=[['hair','頭髮'],['cloth','衣服'],['acc','配件'],['eye','臉'],['pet','寵物'],['seat','座椅'],['other','飲品'],['bubbles','聊天氣泡']];
