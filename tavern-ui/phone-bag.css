@@ -1,0 +1,59 @@
+/* v529 手機版背包（D：「背包這邊看起來還是超怪」）：電腦版的疊紙大視窗硬塞進手機 → 外框、疊紙、斜紋、迴紋針、凸出的菱形被切一半，框中有框。
+   手機改成整頁：上面一條白色標題列（星星＋我的背包＋關閉），下面內容直接鋪滿；拿掉只有電腦版才放得下的裝飾。
+   只在 html.tt-phone（手機版，由 tavern-ui-bridge.js／live-wardrobe.js 加上）時生效，電腦版完全不變。外層 index.html 與內層 時裝間比較.html 共用這一份。 */
+
+/* ---------- 外層（index.html）：整頁、簡單標題列 ---------- */
+html.tt-phone,html.tt-phone body{background:#FCFCFF!important}
+html.tt-phone main.stage{position:fixed!important;inset:0!important;padding:0!important;margin:0!important;background:#FCFCFF!important}
+html.tt-phone #shopWindow{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;max-width:none!important;max-height:none!important;margin:0!important;translate:none!important;transform:none!important;zoom:1!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;background:#FCFCFF!important;display:flex!important;flex-direction:column!important;padding:env(safe-area-inset-top) 0 0!important;overflow:hidden!important}
+html.tt-phone #shopWindow::before,html.tt-phone #shopWindow::after,html.tt-phone #shopWindow .window-head::before,html.tt-phone #shopWindow .window-head::after,
+html.tt-phone #shopWindow .heading::before,html.tt-phone #shopWindow .heading::after{display:none!important;content:none!important}
+html.tt-phone #shopWindow .window-head{flex:0 0 auto!important;position:relative!important;min-height:0!important;height:auto!important;margin:0!important;padding:8px max(12px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left))!important;
+  background:#fff!important;border:0!important;border-radius:0!important;box-shadow:inset 0 -2.5px 0 var(--sk-ink,#1C2156)!important;display:flex!important;align-items:center!important;gap:10px}
+html.tt-phone #shopWindow .window-head small{display:none!important}
+html.tt-phone #shopWindow .heading{display:flex!important;align-items:center!important;gap:10px!important;min-width:0;padding:0!important;margin:0!important}
+html.tt-phone #shopWindow .heading>svg,html.tt-phone #shopWindow .brand-mark{width:30px!important;height:30px!important;flex:0 0 auto}
+html.tt-phone #shopWindow .title{font-size:21px!important;line-height:1.15!important;margin:0!important;letter-spacing:1px!important;white-space:nowrap}
+html.tt-phone #shopWindow .close{position:static!important;margin-left:auto!important;width:40px!important;height:40px!important;min-width:40px;font-size:20px!important;border-radius:12px!important;box-shadow:0 0 0 2.5px var(--sk-ink,#1C2156),0 3px 0 var(--sk-ink,#1C2156)!important;transform:none!important}
+html.tt-phone #shopWindow .shop-content{flex:1 1 auto!important;position:relative!important;min-height:0!important;height:auto!important;margin:0!important;padding:0!important;border-radius:0!important;overflow:hidden!important}
+html.tt-phone #shopWindow #shopFrame{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;border:0!important;border-radius:0!important}
+
+/* ---------- 內層（時裝間比較.html）：拿掉擠不下的裝飾，排整齊 ---------- */
+html.tt-phone main.shop{background:#FCFCFF!important}
+/* 我的穿搭／紀念收藏：兩格切換，不要點點底和迴紋針 */
+html.tt-phone .archive-nav{padding:10px 12px 4px!important;gap:8px!important}
+html.tt-phone .archive-nav button{min-height:38px!important;padding:6px 10px!important;border-radius:12px!important;background:#fff!important;box-shadow:0 0 0 2px #CFC7E4!important;justify-content:center!important;text-align:center}
+html.tt-phone .archive-nav button[aria-pressed=true]{background:linear-gradient(180deg,#FF7AA8,#FF3F80)!important;box-shadow:0 0 0 2.5px var(--sk-ink,#1C2156),0 3px 0 var(--sk-ink,#1C2156)!important}
+html.tt-phone .archive-nav button[aria-pressed=true] b{color:#fff!important}
+html.tt-phone .archive-nav button::before,html.tt-phone .archive-nav button::after{display:none!important}
+/* 試衣區：一張乾淨的白卡；「今天的我」變成普通小標，拿掉凸出去的菱形、FITTING ROOM 小字、角落的迴紋針與斜紋 */
+html.tt-phone aside.preview{background:#fff!important;border-radius:16px!important;box-shadow:0 0 0 2.5px var(--sk-ink,#1C2156),0 4px 0 #FFC6DD!important;padding:10px!important;margin:4px 0 0!important}
+html.tt-phone aside.preview::before,html.tt-phone aside.preview::after{display:none!important}
+html.tt-phone .paneltitle span{display:none!important}
+html.tt-phone .paneltitle{min-height:0!important;height:auto!important;padding:0!important}
+html.tt-phone .paneltitle strong{background:none!important;box-shadow:none!important;border:0!important;padding:0 0 0 2px!important;margin:0!important;font-size:16px!important;line-height:1.3!important;transform:none!important;clip-path:none!important;color:var(--sk-ink,#1C2156)!important}
+html.tt-phone .paneltitle strong::before,html.tt-phone .paneltitle strong::after{display:none!important}
+/* 「我的衣櫥」旁邊漂浮的星星拿掉；分類列一排橫滑，右邊淡出讓人知道還可以滑 */
+html.tt-phone .catalog-head::after{display:none!important}
+html.tt-phone #categories{flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none;padding:2px 24px 4px 2px!important;
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+html.tt-phone #categories::-webkit-scrollbar{display:none}
+html.tt-phone #categories button{flex:0 0 auto!important}
+/* 試衣區的列依內容長高（膚色那排原本被「穿上搭配／還原」蓋住），按鈕排在色票下面；有跟隨寵物的版型照原本 */
+html.tt-phone body[data-area] .preview:not(:has(.has-following-pet)){grid-template-rows:auto auto auto!important;min-height:0!important;align-items:start;flex:0 0 auto!important;height:auto!important}
+html.tt-phone body[data-area] .preview:not(:has(.has-following-pet))>.stage{grid-row:2/4!important;align-self:stretch}
+html.tt-phone body[data-area] .preview:not(:has(.has-following-pet))>.dye{grid-column:2!important;grid-row:2!important;height:auto!important}
+html.tt-phone body[data-area] .preview:not(:has(.has-following-pet))>.previewbar{grid-column:2!important;grid-row:3!important;align-self:end}
+/* 整頁一起捲（小螢幕衣服清單原本只剩 17px 高）；原本的排版規則選擇器很重，這裡用 #catalog#catalog、重複 class 壓過去 */
+html.tt-phone body[data-area][data-area] .workspace.workspace.workspace{overflow-y:auto!important;overscroll-behavior:contain}
+html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog#catalog,
+html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles.singles.singles.singles.singles.singles{flex:0 0 auto!important;overflow:visible!important;min-height:0!important;height:auto!important}
+html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles>.grid.grid.grid.grid.grid.grid{flex:0 0 auto!important;overflow:visible!important;height:auto!important;max-height:none!important}
+/* 色票：原本左右撐開（第二排三顆散在左中右），改成靠左排好；稍微放大一點好按 */
+html.tt-phone body .preview .dye .swatches{justify-content:flex-start!important;gap:6px!important;flex-wrap:wrap!important}
+html.tt-phone body .preview .dye .swatches>button{width:24px!important;height:24px!important;flex:0 0 auto!important}
+/* 清單卡片：縮圖框跟著縮圖長高（原本框比縮圖矮，衣服壓到名字上），縮圖固定 84px、像素不糊 */
+html.tt-phone body:not([data-shop-category=other]) #grid .item{height:auto!important;min-height:0!important;grid-template-rows:auto auto auto!important}
+html.tt-phone body:not([data-shop-category=other]) #grid .item .thumb{height:auto!important;min-height:0!important;display:flex!important;align-items:center;justify-content:center;padding:2px 0!important;overflow:hidden}
+html.tt-phone body:not([data-shop-category=other]) #grid .item .thumb canvas{width:84px!important;height:84px!important;image-rendering:pixelated;position:static!important;transform:none!important}
