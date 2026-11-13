@@ -57,8 +57,12 @@ function layout(){
 }
 new ResizeObserver(layout).observe(top);new ResizeObserver(layout).observe(tabBar);addEventListener('resize',layout);
 // v528 iPhone Safari：網址列收起來時可見畫面變高，固定在底部的分頁列沒跟著往下（下面空一條）→ 量多出來的高度，整個手機版往下延伸
-{const vv=window.visualViewport;const ext=()=>{const d=vv?Math.round(vv.height+vv.offsetTop-innerHeight):0;root.style.setProperty('--ttm-ext',(d>8&&d<160?d:0)+'px');layout();};
- if(vv){vv.addEventListener('resize',ext);vv.addEventListener('scroll',ext);}addEventListener('resize',ext);addEventListener('orientationchange',()=>setTimeout(ext,300));ext();}
+// v530 iPhone 主畫面捷徑（standalone＋黑色半透明狀態列）：版面高度少了狀態列那一截（約 55px），底下空一條 → 用螢幕高度補。只看 iOS（navigator.standalone），Android 的螢幕高度含系統列不能這樣算。
+{const vv=window.visualViewport;const ext=()=>{const d=vv?Math.round(vv.height+vv.offsetTop-innerHeight):0;
+  let g=0;if(navigator.standalone===true){const sh=innerHeight>=innerWidth?Math.max(screen.width,screen.height):Math.min(screen.width,screen.height);g=Math.round(sh-innerHeight);}
+  root.style.setProperty('--ttm-ext',Math.max(d>8&&d<160?d:0,g>8&&g<120?g:0)+'px');layout();};
+ if(vv){vv.addEventListener('resize',ext);vv.addEventListener('scroll',ext);}addEventListener('resize',ext);addEventListener('orientationchange',()=>setTimeout(ext,300));
+ addEventListener('pageshow',()=>{ext();setTimeout(ext,400);});ext();setTimeout(ext,400);setTimeout(ext,1500);}
 // 分頁視窗的背景點擊不會關掉自己（點空白處關窗是電腦版的行為）。
 function guard(n){if(n.dataset.ttmGuard)return;n.dataset.ttmGuard='1';n.addEventListener('click',e=>{if(e.target===n&&n.classList.contains('ttm-tabview')){e.stopPropagation();e.preventDefault();}},true);}
 function show(key,{remember=true}={}){

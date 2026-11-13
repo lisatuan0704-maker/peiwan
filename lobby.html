@@ -1461,13 +1461,13 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/presence.js?v=521"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/payment-safety.js?v=492"></script>
-<script src="lobby-ui/cat-coin.js?v=516"></script>
+<script src="lobby-ui/cat-coin.js?v=530"></script>
 <script src="lobby-ui/cancel-reason.js?v=432"></script>
 <link rel="stylesheet" href="lobby-ui/numerals.css?v=252">
 <link rel="stylesheet" href="lobby-ui/order-flow.css?v=501">
 <link rel="stylesheet" href="card-ui/tavern-scene.css?v=256">
 <script src="card-ui/tavern-scene.js?v=265" defer></script>
-<link rel="stylesheet" href="lobby-ui/membership.css?v=516">
+<link rel="stylesheet" href="lobby-ui/membership.css?v=530">
 <link rel="stylesheet" href="lobby-ui/chat-skins.css?v=373">
 <script src="lobby-ui/chat-skins.js?v=373"></script>
 <link rel="stylesheet" href="lobby-ui/stickers.css?v=376">
@@ -1699,7 +1699,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v529</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v530</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -5706,18 +5706,20 @@ function readMail(id){
   function offer(){
     if(card||Date.now()<later)return;
     if(!document.getElementById('ttUpdCss')){const st=document.createElement('style');st.id='ttUpdCss';st.textContent=
-      '#ttUpd{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;z-index:9600;'
-     +'display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);box-sizing:border-box;padding:12px 14px 12px 16px;border-radius:18px;'
-     +'background:linear-gradient(135deg,#FFF9FD,#F1E8FF 60%,#E6DBFF);border:2px solid #CDB6FF;box-shadow:0 10px 30px rgba(74,44,110,.25),0 0 0 4px rgba(255,255,255,.7);'
-     +'color:#4A2C6E;font-family:inherit;transition:opacity .25s,transform .25s}'
-     +'#ttUpd.on{opacity:1;transform:translate(-50%,0)}'
-     +'#ttUpd .t{display:flex;flex-direction:column;gap:2px;min-width:0}#ttUpd b{font-size:14px}#ttUpd small{font-size:12px;color:#7A5E8C}'
-     +'#ttUpd button{font:inherit;border:0;cursor:pointer;white-space:nowrap}'
-     +'#ttUpd .go{padding:8px 14px;border-radius:12px;background:linear-gradient(135deg,#F26D9A,#B78CFF);color:#fff;font-weight:700;box-shadow:0 3px 0 #8E5BC9}'
-     +'#ttUpd .no{background:none;color:#7A5E8C;font-size:12px;padding:6px 4px}';
+      '#ttUpd{position:fixed;left:0;right:0;margin:0 auto;width:max-content;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateY(16px);opacity:0;z-index:9600;flex-wrap:wrap;'
+     +'display:flex;align-items:center;gap:12px;max-width:calc(100vw - 40px);box-sizing:border-box;padding:12px 14px 12px 18px;border-radius:16px;'   /* v530 改整站主題：白紙、深藍粗框、淡藍內框、粉色錯位紙頁、粉色主按鈕 */
+     +'background:linear-gradient(165deg,#fff 0%,#F6FAFF 60%,#F8F3FF 100%);border:3px solid #1C2156;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px #CFEFFF,7px 7px 0 -1px #FFD6E6,7px 7px 0 2px #1C2156,0 14px 30px rgba(28,33,86,.25);'
+     +'color:#1C2156;font-family:inherit;transition:opacity .25s,transform .25s}'
+     +'#ttUpd.on{opacity:1;transform:none}'
+     +'#ttUpd .t{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 190px}#ttUpd b{font-size:15px;font-weight:900;letter-spacing:.04em}#ttUpd b i{font-style:normal;color:#FF4F8B}#ttUpd small{font-size:12px;font-weight:700;color:#5C6196}'
+     +'#ttUpd button{font:inherit;cursor:pointer;white-space:nowrap;border:3px solid #1C2156;border-radius:12px;font-weight:900;transition:transform .15s}#ttUpd button:hover{transform:translateY(-2px)}'
+     +'#ttUpd .go{padding:7px 14px;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C);color:#fff;box-shadow:0 4px 0 #1C2156,inset 0 2px 0 #ffffff80}'
+     +'#ttUpd .no{padding:5px 10px;background:#fff;color:#1C2156;font-size:12px;box-shadow:0 3px 0 #1C2156}'
+     +'@media (max-width:520px){#ttUpd .t{flex-basis:100%}#ttUpd .go{margin-left:auto}}'   /* 手機：字一整行、兩顆按鈕在下一行靠右 */
+     +'@media (prefers-reduced-motion:reduce){#ttUpd,#ttUpd button{transition:none}}';
       document.head.append(st);}
     card=document.createElement('div');card.id='ttUpd';card.setAttribute('role','status');
-    card.innerHTML='<span class="t"><b>酒館有新東西囉 ✦</b><small>重新整理一下，就能看到最新的酒館</small></span><button type="button" class="go">重新整理</button><button type="button" class="no">等等再說</button>';
+    card.innerHTML='<span class="t"><b>酒館有新東西囉 <i>✦</i></b><small>重新整理一下，就能看到最新的酒館</small></span><button type="button" class="go">重新整理</button><button type="button" class="no">等等再說</button>';
     card.querySelector('.go').onclick=()=>reloadAll();
     card.querySelector('.no').onclick=()=>{later=Date.now()+30*60000;const c=card;card=null;c.classList.remove('on');setTimeout(()=>c.remove(),260);};
     document.body.append(card);requestAnimationFrame(()=>card&&card.classList.add('on'));
@@ -8679,7 +8681,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=529"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=530"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=500"></script>
@@ -8702,14 +8704,14 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=524"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=508"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=530"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=508"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=427"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
-<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=528"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=528">
-<script src="lobby-ui/mobile-app.js?v=528"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=530"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=528">
+<script src="lobby-ui/mobile-app.js?v=530"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
 <script src="lobby-ui/vip-card.js?v=513"></script>
 <link rel="stylesheet" href="lobby-ui/order-guide.css?v=514"><script src="lobby-ui/order-guide.js?v=514"></script>

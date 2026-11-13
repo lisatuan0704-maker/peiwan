@@ -112,3 +112,58 @@
 #vipM .vip-progress-summary .vlv2{padding:7px 5px}#vipM .vip-progress-summary{padding:14px 17px!important;margin-bottom:18px!important}
 #vipM .vip-progress-summary .b{font-size:25px}#vipM .vip-summary-label{margin-bottom:9px}#vipM .jbar{margin-top:12px!important}
 @media(max-width:600px){#topupPayM .tu-receipt b{font-size:26px}#topupPayM .tu-method-body{padding:14px}#topupPayM[data-method=online] .btns{margin-top:0}}
+
+/* ===== v530 整站主題（D：「我不要看到酒館內有任何跟我要的一體化不相符之設計」） =====
+   VIP 等級與獎勵、儲值付款的內容原本是灰藍／灰紫（外框已經是主題），這段改成：白紙＋深藍框＋淡藍內框、粉色主按鈕、粉色進度條。
+   只改外觀，付款流程與按鈕行為不動。 */
+html body #vipM,html body #topupPayM{--mk:var(--sk-ink,#1C2156);--mm:var(--sk-mute,#5C6196);--mp:var(--sk-pink,#FF4F8B);color:var(--mk)}
+html body #vipM .ghint,html body #topupPayM #tuPayInfo,html body #topupPayM .warn,html body #topupPayM .tu-next-hint,html body #topupPayM .tu-bank-view>div:not(.tu-bank-account){color:var(--mm)!important;font-weight:700}
+html body #topupPayM .tu-next-hint{border-left-color:var(--mp)}
+/* 卡片：白紙、深藍框、淡藍內框 */
+html body #vipM .vip-progress-summary,html body #topupPayM .tu-receipt,html body #topupPayM .tu-method-body,html body #topupPayM .tu-bank-view{background:linear-gradient(170deg,#fff,#F4FAFF)!important;border:2px solid var(--mk)!important;border-radius:14px!important;box-shadow:inset 0 0 0 2px #CFEFFF,0 3px 0 rgba(28,33,86,.18)!important}
+html body #vipM .vip-summary-label,html body #vipM .vip-browse-label span,html body #topupPayM .tu-receipt span,html body #topupPayM .tu-section-heading>span{color:var(--mp)!important;font-weight:900;letter-spacing:1.5px}
+html body #vipM .vip-progress-summary>div>div:last-child>div:first-child,html body #vipM .vip-browse-label b,html body #topupPayM .tu-choice-label b,html body #topupPayM .tu-section-heading h4{color:var(--mk)!important;font-weight:900}
+html body #vipM .vip-progress-summary>div>div:last-child>div+div,html body #topupPayM .tu-choice-label>span,html body #topupPayM .tu-section-heading p{color:var(--mm)!important;font-weight:700}
+html body #topupPayM .tu-receipt:before{background:linear-gradient(180deg,#FF8DB5,#FF4F8B)}
+html body #topupPayM .tu-receipt>div+div{border-left:2px dashed #B9C2EE}
+html body #topupPayM .tu-receipt b{color:var(--mk)}html body #topupPayM .tu-receipt>div+div b{color:var(--mp)}
+html body #topupPayM .tu-bonus,html body #topupPayM .tu-method-bonus{color:#1F7F55;background:#E3F6EC;border:2px solid #1F9A63;border-radius:999px;font-weight:800}
+/* 等級徽章：寶石色，深藍框；每一級各有顏色 */
+html body #vipM .vipCard{--tier:#2FA8DD;--tier-soft:#EAF7FD}
+html body #vipM .vipCard.vx2{--tier:#1F9A63;--tier-soft:#E6F6EE}html body #vipM .vipCard.vx3{--tier:#FF4F8B;--tier-soft:#FFEDF4}
+html body #vipM .vipCard.vx4{--tier:#9A55E0;--tier-soft:#F3ECFD}html body #vipM .vipCard.vx5{--tier:#E08A12;--tier-soft:#FFF4E2}
+html body #vipM .vlv2{background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C)!important;border:2px solid var(--mk)!important;border-radius:8px;box-shadow:0 3px 0 var(--mk)!important}
+html body #vipM .vipHalo .vlv2{background:var(--tier)!important;border-color:var(--mk)!important}
+html body #vipM .vipCard{background:linear-gradient(170deg,#fff,var(--tier-soft))!important;border:2px solid var(--mk)!important;border-top:2px solid var(--mk)!important;border-radius:14px!important;box-shadow:inset 0 0 0 2px #fff,inset 0 5px 0 var(--tier),0 3px 0 rgba(28,33,86,.18)!important}
+html body #vipM .vipCard>.vipHalo+div b{color:var(--mk)!important;font-weight:900}
+html body #vipM .st2{background:#fff!important;border:2px solid var(--mk)!important;color:var(--mk)!important;border-radius:999px;font-weight:800;padding:2px 10px}
+html body #vipM .st2.ok{background:#E3F6EC!important;border-color:#1F9A63!important;color:#1F7F55!important}
+html body #vipM .vipRw{background:#fff;border:2px solid #D3D8F2;border-radius:10px;color:var(--mk);font-weight:700}
+html body #vipM .vipCard>.vipRws+div{color:var(--mm)!important;font-weight:700}
+/* 進度條：粉色 */
+html body #vipM .jbar{background:#E9ECFA!important;border:2px solid var(--mk)!important;height:12px!important;border-radius:999px!important}
+html body #vipM .jbar i{background:linear-gradient(90deg,#FF8DB5,#FF4F8B)!important;border-radius:999px!important}
+/* 翻頁列與按鈕 */
+html body #vipM .vipNav{background:rgba(253,253,255,.95);border-top:2px solid #D3D8F2}
+html body #vipM .vipPgB,html body #topupPayM .sc-back,html body #topupPayM .tu-bank-account button{background:#fff!important;color:var(--mk)!important;border:3px solid var(--mk)!important;border-radius:12px!important;box-shadow:0 3px 0 var(--mk)!important;font-weight:900}
+html body #vipM .vipPgB:last-child,html body #topupPayM .sc-go,html body #topupPayM #tuOnlineBtn{background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C)!important;color:#fff!important;border:3px solid var(--mk)!important;border-radius:12px!important;box-shadow:0 4px 0 var(--mk),inset 0 2px 0 #ffffff80!important;font-weight:900}
+html body #vipM .vipPgB:disabled{opacity:.45;filter:grayscale(.4)}
+html body #vipM .vipDots button{background:#fff;border:2px solid var(--mk);color:var(--mk);font-weight:900}
+html body #vipM .vipDots button.on{background:linear-gradient(180deg,#FF8DB5,#FF4F8B);color:#fff;box-shadow:0 2px 0 var(--mk)}
+html body #vipM .panel-footer{background:rgba(253,253,255,.92);border-top:2px solid #D3D8F2;color:var(--mm)}
+/* 付款方式 */
+html body #topupPayM .tu-method-grid button{border:2px solid var(--mk);border-radius:14px;background:linear-gradient(170deg,#fff,#F4FAFF);color:var(--mk);box-shadow:inset 0 0 0 2px #CFEFFF,0 3px 0 rgba(28,33,86,.18)}
+html body #topupPayM .tu-method-grid button small{color:var(--mm);font-weight:700}html body #topupPayM .tu-method-icon{color:var(--mp)}
+html body #topupPayM .tu-method-grid button[aria-pressed=true],html body #topupPayM .tu-method-grid button[data-method=bank][aria-pressed=true]{border-color:var(--mk);background:linear-gradient(170deg,#fff,#FFE9F2);color:var(--mk);box-shadow:inset 0 0 0 3px var(--mp),0 4px 0 var(--mk)}
+html body #topupPayM .tu-method-grid i{color:var(--mp)}
+html body #topupPayM .tu-bank-account{background:#F4FAFF;border:2px dashed #B9C2EE;border-radius:12px;color:var(--mm)}
+html body #topupPayM .tu-bank-account b{color:var(--mk)!important}
+/* 欄位 */
+html body #topupPayM label{color:var(--mk)!important;font-weight:800}
+html body #topupPayM input{border:2px solid #B9C2EE;border-radius:10px;background:#fff;color:var(--mk);box-shadow:inset 0 2px 0 rgba(28,33,86,.06)}
+html body #topupPayM input:focus{border-color:var(--mk);box-shadow:0 0 0 3px #FFC2D9;background:#fff}
+html body #topupPayM input::placeholder{color:#9AA0C8}html body #topupPayM input[type=file]{background:#F4FAFF;border:2px dashed #B9C2EE}
+html body #topupPayM input::file-selector-button{background:#fff;border:2px solid var(--mk);border-radius:8px;color:var(--mk);font-weight:800}
+html body #topupPayM #tuProofPrev{border:2px solid var(--mk)!important;border-radius:10px}
+html body #topupPayM .btns{border-top:2px solid #D3D8F2;background:rgba(253,253,255,.95)}
+html body #vipM button:focus-visible,html body #topupPayM button:focus-visible{outline:3px solid #FFC2D9;outline-offset:2px}

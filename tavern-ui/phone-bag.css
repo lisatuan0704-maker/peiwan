@@ -40,11 +40,13 @@ html.tt-phone #categories{flex-wrap:nowrap!important;overflow-x:auto!important;s
   -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
 html.tt-phone #categories::-webkit-scrollbar{display:none}
 html.tt-phone #categories button{flex:0 0 auto!important}
-/* 試衣區的列依內容長高（膚色那排原本被「穿上搭配／還原」蓋住），按鈕排在色票下面；有跟隨寵物的版型照原本 */
-html.tt-phone body[data-area] .preview:not(:has(.has-following-pet)){grid-template-rows:auto auto auto!important;min-height:0!important;align-items:start;flex:0 0 auto!important;height:auto!important}
-html.tt-phone body[data-area] .preview:not(:has(.has-following-pet))>.stage{grid-row:2/4!important;align-self:stretch}
-html.tt-phone body[data-area] .preview:not(:has(.has-following-pet))>.dye{grid-column:2!important;grid-row:2!important;height:auto!important}
-html.tt-phone body[data-area] .preview:not(:has(.has-following-pet))>.previewbar{grid-column:2!important;grid-row:3!important;align-self:end}
+/* 試衣區的列依內容長高（膚色那排原本被「穿上搭配／還原」蓋住），按鈕排在色票下面。
+   v530 帶著跟隨寵物也一樣（v529 把寵物版型排除在外，寵物版的列高是固定的 → 按鈕又壓到膚色，D 截圖） */
+html.tt-phone body[data-area] .preview.preview{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;min-height:0!important;align-items:start;flex:0 0 auto!important;height:auto!important}
+html.tt-phone body[data-area] .preview.preview>.paneltitle{grid-column:1/-1!important;grid-row:1!important}
+html.tt-phone body[data-area] .preview.preview>.stage{grid-column:1!important;grid-row:2/4!important;align-self:stretch;min-height:150px!important}
+html.tt-phone body[data-area] .preview.preview>.dye{grid-column:2!important;grid-row:2!important;height:auto!important}
+html.tt-phone body[data-area] .preview.preview>.previewbar{grid-column:2!important;grid-row:3!important;align-self:end}
 /* 整頁一起捲（小螢幕衣服清單原本只剩 17px 高）；原本的排版規則選擇器很重，這裡用 #catalog#catalog、重複 class 壓過去 */
 html.tt-phone body[data-area][data-area] .workspace.workspace.workspace{overflow-y:auto!important;overscroll-behavior:contain}
 html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog#catalog,

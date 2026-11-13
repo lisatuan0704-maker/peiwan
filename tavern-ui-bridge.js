@@ -14,10 +14,10 @@
       overlay=document.createElement('div');overlay.id='ttApprovedUI';overlay.hidden=true;
       overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Tiny Tavern');
       frame=document.createElement('iframe');frame.title='Tiny Tavern 名簿與商城';
-      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=529';overlay.append(frame);document.body.append(overlay);
+      frame.style.visibility='hidden';frame.src='tavern-ui/index.html?v=530';overlay.append(frame);document.body.append(overlay);
       frame.onload=()=>{frame.contentWindow.ttLiveOpen?.(pending);const show=()=>{frame.style.visibility='visible';};
         // v529 手機：背包改整頁（tavern-ui/phone-bag.css），樣式載好才顯示，免得先閃一下電腦版的外框
-        if(window.TTMobile){try{const d=frame.contentDocument;d.documentElement.classList.add('tt-phone');const l=d.createElement('link');l.rel='stylesheet';l.href='phone-bag.css?v=529';l.onload=show;l.onerror=show;d.head.append(l);setTimeout(show,1500);return;}catch(_){}}
+        if(window.TTMobile){try{const d=frame.contentDocument;d.documentElement.classList.add('tt-phone');const l=d.createElement('link');l.rel='stylesheet';l.href='phone-bag.css?v=530';l.onload=show;l.onerror=show;d.head.append(l);setTimeout(show,1500);return;}catch(_){}}
         show();};
       overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
     }

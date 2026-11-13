@@ -17,7 +17,7 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
  const mobile=!!parent.parent.TTMobile;
  if(mobile){const style=document.createElement('style');style.textContent='.area-tabs,#dyeTicket{display:none!important}';document.head.append(style);
   // v529 手機版背包的排版全部在 phone-bag.css（整頁、拿掉擠不下的裝飾、試衣區不互蓋、整頁一起捲）
-  document.documentElement.classList.add('tt-phone');const pl=document.createElement('link');pl.rel='stylesheet';pl.href='phone-bag.css?v=529';document.head.append(pl);}
+  document.documentElement.classList.add('tt-phone');const pl=document.createElement('link');pl.rel='stylesheet';pl.href='phone-bag.css?v=530';document.head.append(pl);}
  const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const categories=[['hair','頭髮'],['cloth','衣服'],['acc','配件'],['eye','臉'],['pet','寵物'],['seat','座椅'],['other','飲品'],['bubbles','聊天氣泡']];

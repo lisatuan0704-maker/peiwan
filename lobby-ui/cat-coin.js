@@ -258,7 +258,43 @@ const css=`.tt-cat-box{display:grid;gap:12px;margin-top:6px}
 @keyframes nyanHop{0%,100%{translate:0 0}35%{translate:0 calc(var(--s)*-.3)}70%{translate:0 0}85%{translate:0 calc(var(--s)*-.06)}}
 .nyan-c.pop::after{content:"";position:absolute;inset:-35%;pointer-events:none;background:radial-gradient(circle at 18% 22%,#fff 0 4%,transparent 5%),radial-gradient(circle at 84% 18%,#FFE38A 0 4%,transparent 5%),radial-gradient(circle at 88% 78%,#fff 0 3.5%,transparent 4.5%),radial-gradient(circle at 12% 80%,#FF8DB5 0 3.5%,transparent 4.5%);animation:nyanSpark .7s ease-out 1 forwards}
 @keyframes nyanSpark{0%{opacity:0;scale:.6}35%{opacity:1;scale:1}100%{opacity:0;scale:1.25}}
-@media (prefers-reduced-motion:reduce){.nyan-s,.nyan-c.pop,.nyan-c.pop::after{animation:none}}`;
+@media (prefers-reduced-motion:reduce){.nyan-s,.nyan-c.pop,.nyan-c.pop::after{animation:none}}
+/* v530 整站主題（D：「我不要看到酒館內有任何跟我要的一體化不相符之設計」）：白紙＋深藍粗框＋淡藍內框、粉色錯位紙頁、粉色主按鈕。原本的淡紫／橘色樣式保留在上面，這段蓋過去 */
+.tt-cat-box{--ck:var(--sk-ink,#1C2156);--cm:var(--sk-mute,#5C6196);--cp:var(--sk-pink,#FF4F8B);gap:14px;color:var(--ck)}
+.tt-cat-head{border:3px solid var(--ck);border-radius:16px;background:linear-gradient(165deg,#fff 0%,#F6FAFF 60%,#F8F3FF 100%);box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px #CFEFFF,7px 7px 0 -1px #FFD6E6,7px 7px 0 2px var(--ck);margin:0 9px 9px 0}
+.tt-cat-head small{color:var(--cp);font-weight:900;letter-spacing:.18em}
+.tt-cat-head strong{color:var(--ck);font-family:'Tavern Numerals','TT Latin',inherit;font-weight:700}
+.tt-cat-head p{color:var(--cm);font-weight:700}
+.tt-cat-cap{border-bottom:2px solid #D3D8F2;padding-bottom:6px}
+.tt-cat-cap b{color:var(--ck);font-weight:900;font-size:16px;background:linear-gradient(transparent 62%,#FFC2D9 62% 92%,transparent 92%);padding:0 2px}
+.tt-cat-cap span{color:var(--cm);font-weight:700}
+.tt-cat-packs button{border:2px solid var(--ck);border-radius:12px;background:linear-gradient(170deg,#fff,#F4FAFF);box-shadow:inset 0 0 0 2px #CFEFFF,0 3px 0 rgba(28,33,86,.18);color:var(--ck);transition:transform .15s,box-shadow .15s}
+.tt-cat-packs button:hover{transform:translateY(-2px);background:linear-gradient(170deg,#fff,#FFF2F7)}
+.tt-cat-packs button>span{color:var(--cm);font-weight:700}.tt-cat-packs button strong{color:var(--ck)}.tt-cat-packs button small{color:#1F9A63;font-weight:800}
+.tt-cat-packs button[aria-pressed="true"]{background:linear-gradient(170deg,#fff,#FFE9F2);box-shadow:inset 0 0 0 3px var(--cp),0 4px 0 var(--ck);transform:translateY(-2px)}
+.tt-cat-want,.tt-cat-own,.tt-cat-own em{color:var(--ck);font-weight:800}
+.tt-cat-own input{border:2px solid #B9C2EE;border-radius:10px;background:#fff;color:var(--ck);box-shadow:inset 0 2px 0 rgba(28,33,86,.06);font-weight:700}
+.tt-cat-own input:focus{outline:3px solid #FFC2D9;border-color:var(--ck)}
+.tt-cat-own input::placeholder{color:#9AA0C8}
+.tt-cat-sum{background:#F4FAFF;box-shadow:inset 0 0 0 2px #D3D8F2;color:var(--ck);font-weight:700}
+.tt-cat-sum small,.tt-cat-hint{color:var(--cm)}
+.tt-cat-need b{color:var(--cp);font-family:'Tavern Numerals','TT Latin',inherit}
+.tt-cat-sum small.tt-cat-warn{color:#D9480F}
+.tt-cat-bonus{color:#1F9A63}.tt-cat-after b{color:var(--ck)}
+.tt-cat-short{color:#E03070}.tt-cat-short button{color:var(--cp);font-weight:900}
+.tt-cat-note{color:var(--cm);font-weight:700}
+.tt-cat-box .tt-cat-go{border:3px solid var(--ck);background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C);color:#fff;box-shadow:0 4px 0 var(--ck),inset 0 2px 0 #ffffff80;font-weight:900;transition:transform .15s}
+.tt-cat-box .tt-cat-go:hover:not(:disabled){transform:translateY(-2px)}
+.tt-cat-box .tt-cat-go:disabled{opacity:.5;filter:grayscale(.5)}
+.tt-cat-box .tt-cat-ghost{border:3px solid var(--ck);background:#fff;color:var(--ck);font-weight:900;box-shadow:0 3px 0 var(--ck)}
+.tt-cat-confirm{background:#FFF6FA;box-shadow:inset 0 0 0 2px #FFC2D9}
+.tt-cat-confirm p{color:var(--ck);font-weight:700}.tt-cat-confirm small{color:var(--cm)}
+.tt-cat-msg{color:#E03070;font-weight:700}.tt-cat-msg.ok{color:#1F9A63}
+.tt-cat-box .tt-cat-link{color:var(--cp);font-weight:800}
+.tt-cat-tx{border-top:2px dashed #B9C2EE}
+.tt-cat-txr{color:var(--ck);font-weight:700}.tt-cat-txr small{color:var(--cm)}.tt-cat-txr b.in{color:#1F9A63}.tt-cat-txr b.out{color:#E03070}
+.tt-cat-empty{color:var(--cm)}
+@media (prefers-reduced-motion:reduce){.tt-cat-packs button,.tt-cat-box .tt-cat-go{transition:none}}`;
 function injectCss(doc=root.document){if(!doc||doc.getElementById('ttCatCss'))return;const s=doc.createElement('style');s.id='ttCatCss';s.textContent=css;(doc.head||doc.documentElement).append(s);}
 if(root.document.readyState==='loading')root.document.addEventListener('DOMContentLoaded',()=>injectCss());else injectCss();
 

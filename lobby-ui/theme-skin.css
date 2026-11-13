@@ -213,6 +213,16 @@ html body #setM:not(.hub-embedded) [data-view=settings] .setRow{padding:9px 6px!
 html body #setM:not(.hub-embedded) [data-view=settings] .setD{margin-top:1px!important}
 html body #setM:not(.hub-embedded) [data-view=settings] .setT{font-size:20px!important}
 html body #setM:not(.hub-embedded) [data-view=settings] .setD{font-size:14px!important}
+/* v530 大廳教學那列（v506 加的）讓內容變高，下面「新手指南／聯絡客服」蓋到「返回大廳」→ 列距收一點、還是放不下就在視窗裡捲；「看一次」鈕改主題按鈕 */
+html body #setM:not(.hub-embedded) .panel[data-view=settings] .panel-content{overflow-y:auto!important;overflow-x:hidden!important;min-height:0!important;scrollbar-width:thin}
+html body #setM:not(.hub-embedded) [data-view=settings] .setRow{padding:6px 6px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] #roomEntry{margin:10px 0 8px!important;padding:12px 22px!important}
+html body #setM:not(.hub-embedded) [data-view=settings] .actions{margin-top:10px!important;padding-top:12px!important;padding-bottom:6px}
+html body #setM:not(.hub-embedded) [data-view=settings] .actions a{padding:12px 10px!important}
+html body .tt-live-ui [data-view=settings] #setTour{min-width:82px;min-height:40px;padding:6px 16px!important;border:3px solid var(--sk-ink)!important;border-radius:12px!important;background:#fff!important;color:var(--sk-ink)!important;
+  font-family:inherit!important;font-weight:900!important;font-size:15px!important;letter-spacing:1px;box-shadow:0 3px 0 var(--sk-ink)!important;cursor:pointer;transition:transform .15s}
+html body .tt-live-ui [data-view=settings] #setTour:hover{transform:translateY(-2px);background:#FFF2F7!important}
+html body .tt-live-ui [data-view=settings] #setTourRow .fxSeg{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
 html body #setM:not(.hub-embedded) [data-view=settings] #roomEntry{padding:13px 24px!important;font-size:19px!important;margin:14px 0 12px!important}
 html body #setM:not(.hub-embedded) [data-view=settings] .actions{margin-top:10px!important;padding-top:14px!important}
 html body #setM:not(.hub-embedded) [data-view=settings] .actions a{padding:14px 10px!important;font-size:22px!important}
@@ -1018,6 +1028,7 @@ html body #dmM #dmLog .dm-message.is-mine .dm-bubble{background:#FFE4EF!importan
 html body #dmM #dmLog .dm-time,html body #dmM #dmLog time{color:var(--sk-mute)!important}
 html body #dmM .dm-composer{background:#fff!important;border-top:2px solid #D3D8F2!important}
 html body #dmM #dmIn{border:2px solid #B9C2EE!important;background:#fff!important;color:var(--sk-ink)!important}
+html body #dmM #dmIn{box-shadow:inset 0 2px 0 rgba(28,33,86,.06)!important;outline:0}html body #dmM #dmIn:focus{border-color:var(--sk-ink)!important;box-shadow:0 0 0 3px #FFC2D9!important}   /* v530 原本對焦時是淡紫雙框 */
 html body #dmM .dm-composer button{border:3px solid var(--sk-ink)!important;background:linear-gradient(180deg,#FF8DB5,#FF4F8B)!important;color:#fff!important;font-weight:900;box-shadow:0 3px 0 var(--sk-ink)!important}
 html body #dmM .dm-composer .dm-sticker-toggle{display:grid!important;place-items:center!important;flex:0 0 auto;width:40px!important;height:40px!important;padding:0!important;border:2.5px solid var(--sk-ink)!important;border-radius:9px!important;outline:0;background:linear-gradient(180deg,#fff,#FFEAF3)!important;color:var(--sk-pink)!important;box-shadow:0 2px 0 rgba(28,33,86,.2)!important}html body #dmM .dm-composer .dm-sticker-toggle svg{display:block;width:24px;height:24px}html body #dmM .dm-composer .dm-sticker-toggle[aria-expanded=true]{background:var(--sk-pink)!important;color:#fff!important}html body #dmM .dm-composer .dm-sticker-toggle:focus-visible{outline:3px solid #C4ADEC;outline-offset:2px}
 html body #dmM .dm-count{color:var(--sk-mute)!important}

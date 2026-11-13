@@ -1,10 +1,10 @@
 /* v432 手機版功能介面。只在 html.tt-mobile.ttm-on（手機、平板觸控）生效，電腦版不受影響。 */
 html.ttm-on{--ttm-ink:#5e4a68;--ttm-soft:#8f7c98;--ttm-line:#e3d8e6;--ttm-card:#fffdfe;--ttm-bg:#f7f2f7;--ttm-accent:#846c90;--ttm-pink:#d9799b;--ttm-top:150px;--ttm-bot:64px}
 html.ttm-on,html.ttm-on body.tt214{background:#fff!important}   /* v528 iPhone Safari 收起網址列後，下方分頁列底下會露出一條頁面底色 → 底色跟分頁列一樣白，看起來就是同一條 */
-html.ttm-on #ttM{bottom:calc(0px - var(--ttm-ext,0px))}   /* v528 可見畫面比版面高時（網址列收起來）整個往下延伸到螢幕底 */
 html.ttm-on body.tt214 #mHome,html.ttm-on #ttHub,html.ttm-on #gearBtn{display:none!important}
 #ttM{display:none}
-html.ttm-on #ttM{display:block;position:fixed;inset:0;z-index:59;background:linear-gradient(180deg,#f3ebf3,#efe9f3);color:var(--ttm-ink);font-family:inherit;-webkit-tap-highlight-color:transparent}
+/* v530 --ttm-ext＝畫面比版面多出來的高度，整個手機版往下延伸到螢幕底（v528 寫在 inset:0 前面被蓋掉了，根本沒生效） */
+html.ttm-on #ttM{display:block;position:fixed;inset:0 0 calc(0px - var(--ttm-ext,0px)) 0;z-index:59;background:linear-gradient(180deg,#f3ebf3,#efe9f3);color:var(--ttm-ink);font-family:inherit;-webkit-tap-highlight-color:transparent}
 html.ttm-on #ttM button,html.ttm-on #ttM a{font-family:inherit;-webkit-tap-highlight-color:transparent}
 /* 上方：我的闆卡 */
 #ttM .ttm-top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 12px) max(14px,env(safe-area-inset-right)) 10px max(14px,env(safe-area-inset-left));box-sizing:border-box}
