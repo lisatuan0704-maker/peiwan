@@ -449,7 +449,7 @@ const PGEN={
     return t=>{const S=S0.map(s=>({i:s.i+s.r*Math.cos(t*s.m+s.ph),j:s.j+s.r*Math.sin(t*s.n+s.ph)}));
       return {pix(i,j){const wi=i+.09*sc*Math.sin(TAU*2*j/K+t),wj=j+.09*sc*Math.sin(TAU*2*i/K-t);let f1=9,f2=9;
         for(const s of S){const di=wrapD(wi-s.i,K),dj=wrapD(wj-s.j,K),q=di*di+dj*dj;if(q<f1){f2=f1;f1=q;}else if(q<f2)f2=q;}
-        const e=(Math.sqrt(f2)-Math.sqrt(f1))/(1+(sc-1)*.4);return e<.018?1:e<.036?.5:e<.06?.14:0;}};};},   // v532：波光線條變細（原本 .03／.06／.1 太粗、像網子）
+        const e=(Math.sqrt(f2)-Math.sqrt(f1))/(1+(sc-1)*.4);return e<.03?1:e<.06?.55:e<.1?.16:0;}};};},
   dapple(K,R,P){const T=[[1,2],[2,-1],[3,1],[-1,3],[2,3],[3,-2]].map(([p,q])=>({p,q,f:R()*TAU,g:R()*TAU,s:.35+R()*.35}));const hi=P.hi??.42,lo=P.lo??.3;
     return t=>({pix(i,j,px,py){let v=0;for(const w of T)v+=Math.cos(TAU*(w.p*i+w.q*j)/K+w.f+w.s*Math.sin(t+w.g));v/=T.length*.62;
       return v>hi?1:v>lo?(((px+py)&1)?.55:0):0;}});},
@@ -498,8 +498,8 @@ function fxNorm(sel){if(Array.isArray(sel)){const seen={},out=[];
   return sel&&FXDEF[sel.set]?{set:sel.set,lv:sel.lv===1?1:2}:false;}
 function fxItemLayers(e){const T=FXDEF[e.set];if(!T)return [];const day=!isNight(),A=e.a/100,Sp=e.s/100,Nn=e.n/100,Rr=e.r/100;
   return T.proj.filter(p=>(p.tier||2)===e.lv&&(!p.eqOnly||day)).map(p0=>{const p={...p0};
-    if(p.kind==='tint'&&day&&!p.op){p.op='multiply';p.a=Math.min(.32,(p.a||.1)*2*A);}   // v532：原本 ×2.8、上限 .5，整間被染得太暗太濁   // 白天房間：soft-light 太淡看不出來 → 改成乘色（「整間染上海底的藍」要看得出來）
-    else if(p.a!=null)p.a=Math.min(p.kind==='tint'?.4:1,p.a*A);if(p.la!=null)p.la=Math.min(1,p.la*A);if(p.lit!=null)p.lit=Math.min(.45,p.lit*A);
+    if(p.kind==='tint'&&day&&!p.op){p.op='multiply';p.a=Math.min(.5,(p.a||.1)*2.8*A);}   // 白天房間：soft-light 太淡看不出來 → 改成乘色（「整間染上海底的藍」要看得出來）
+    else if(p.a!=null)p.a=Math.min(p.kind==='tint'?.4:1,p.a*A);if(p.la!=null)p.la=Math.min(1,p.la*A);if(p.lit!=null)p.lit=Math.min(.7,p.lit*A);
     if(p.kind==='vig')p.c=p.c.split(',').map(v=>Math.max(0,Math.round(255-(255-v)*A))).join(',');   // 周圍壓暗：亮度越高壓得越深（光池越跳出來）
     if(p.ms)p.ms/=Sp;if(p.drift!=null)p.drift*=Sp;if(p.kind==='motes')p.sp=(p.sp||1)*Sp;if(p.tw)p.tw*=Sp;p.ts=Sp;
     if(p.kind==='motes'){p.n=Math.round((p.n||20)*Nn);p.dayInk=1;}if(p.kind==='rays')p.n=Math.max(1,Math.round((p.n||18)*Nn));if(p.fall!=null)p.fall*=Nn;if(p.snow!=null)p.snow*=Nn;
@@ -565,7 +565,7 @@ function projMask(now,P){if(!P.pool&&!P.lights)return false;
   for(const C of [PC,MK])if(C.width!==cv.width||C.height!==cv.height){C.width=cv.width;C.height=cv.height;}
   mkx.setTransform(1,0,0,1,0,0);mkx.globalCompositeOperation='source-over';mkx.globalAlpha=1;mkx.clearRect(0,0,MK.width,MK.height);mkx.setTransform(...viewT());mkx.globalCompositeOperation='lighter';
   const pl=poolOf(P);if(pl){const c=iso(pl.i,pl.j),R=pl.r*Math.SQRT2*TW*(1+(reduceMotion.matches?0:.04*Math.sin(now/1700)));
-    ovalGlow(mkx,c.x,c.y,R,BAND(255,255,255,1));}   // v532：光池改成一圈一圈的色階（像素風，不是霧霧的漸層）
+    ovalGlow(mkx,c.x,c.y,R,[[0,'rgba(255,255,255,1)'],[.45,'rgba(255,255,255,.9)'],[.75,'rgba(255,255,255,.4)'],[1,'rgba(255,255,255,0)']]);}
   if(P.lights)for(const l of lightList(now)){if(l.t==='window')continue;const f=l.wall?{x:l.base.x+l.o.x*2.4,y:l.base.y+l.o.y*2.4}:l.base,r=(l.L.r||60)*(P.rk||1.1),a=Math.min(1,(l.L.a||.6)*1.6)*l.fl;
     ovalGlow(mkx,f.x,f.y,r,[[0,`rgba(255,255,255,${a})`],[.55,`rgba(255,255,255,${a*.6})`],[1,'rgba(255,255,255,0)']]);}
   return true;}
@@ -621,10 +621,8 @@ function maskedPaint(ctx,now,P,alpha,op,paint){if(!projMask(now,P)){ctx.save();f
   pcx.setTransform(1,0,0,1,0,0);pcx.globalCompositeOperation='source-over';pcx.globalAlpha=1;pcx.clearRect(0,0,PC.width,PC.height);pcx.setTransform(...viewT());
   pcx.save();floorClip(pcx);paint(pcx);pcx.restore();pcx.setTransform(1,0,0,1,0,0);pcx.globalCompositeOperation='destination-in';pcx.drawImage(MK,0,0);
   ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation=op;ctx.globalAlpha=alpha;ctx.drawImage(PC,0,0);ctx.restore();}
-/* v532 色階光：4 圈，每圈亮度一段一段往外降（邊界用重複的漸層停點做出硬邊） */
-function BAND(r,g2,b,a){const S=[[0,1],[.38,1],[.38,.72],[.62,.72],[.62,.44],[.82,.44],[.82,.18],[.97,.18]];return S.map(([t,k])=>[t,`rgba(${r},${g2},${b},${a*k})`]).concat([[1,`rgba(${r},${g2},${b},0)`]]);}
 function plainPool(ctx,P,alpha){const pl=poolOf(P);if(!pl||!alpha)return;const c=iso(pl.i,pl.j),cc=P.lc||P.c;ctx.save();ctx.globalCompositeOperation='lighter';
-  ovalGlow(ctx,c.x,c.y,pl.r*Math.SQRT2*TW,BAND(...cc.split(',').map(Number),alpha*.85));ctx.restore();}
+  ovalGlow(ctx,c.x,c.y,pl.r*Math.SQRT2*TW,[[0,`rgba(${cc},${alpha})`],[.55,`rgba(${cc},${alpha*.7})`],[1,`rgba(${cc},0)`]]);ctx.restore();}
 
 // 【星空天文台】旋轉星圖：光池裡一整片會慢慢轉的星空，星座連線一條條亮起再淡去；偶爾流星
 const CONST=(()=>{const R=(s=>()=>(s=(s*16807)%2147483647)/2147483647)(23),out=[];
@@ -1408,7 +1406,7 @@ function drawOutside(now){for(const P of projLayers()){if(P.kind!=='beach')conti
   g.save();g.imageSmoothingEnabled=false;g.drawImage(B.fr[k],B.x0,B.y0+(P.dz||6));g.restore();}}
 window.__fx={ev:s=>eval(s),shk:()=>({...SHK}),circ:()=>CIRC,spot:()=>openSpot(),layers:()=>projLayers(),frames:P=>{const fr=projFrames(P);const c=fr[0],d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let k=3;k<d.length;k+=4)if(d[k]>0)n++;return [fr.length,c.width,c.height,n];}};   // 除錯用：看光效狀態
 function litItem(o){const d=DEF[o.t];if(!d||d.kind==='wall'||!projLayers().length)return;let c;if(d.kind==='deco')c=decoC(o);else{const [di,dj]=dims(o);c={i:o.i+di/2,j:o.j+dj/2};}
-  const k=poolLight(c.i,c.j);if(k<.02)return;g.save();g.globalCompositeOperation='lighter';blit(rectOf(o),Math.min(.28,k*.6));g.restore();}   // v532：照到的家具只亮一點，不洗白
+  const k=poolLight(c.i,c.j);if(k<.02)return;g.save();g.globalCompositeOperation='lighter';blit(rectOf(o),Math.min(.6,k));g.restore();}
 function drawVignette(){const gr=g.createRadialGradient(W/2,H/2+20,90,W/2,H/2+20,260);gr.addColorStop(0,'rgba(80,30,24,0)');gr.addColorStop(1,'rgba(80,30,24,.16)');g.fillStyle=gr;g.fillRect(0,0,W,H);}
 // 犬尤式整體氛圍：陰影不壓黑（往暖紫紅抬）、整片淡粉霧、亮處柔光暈
 const GC=document.createElement('canvas'),gc=GC.getContext('2d');
@@ -1610,7 +1608,7 @@ function drawMe(dt){const s=SPR[DOLL()],p=iso(me.i,me.j),{bob,rot,sqx,sqy}=pose(
   if(me.path.length&&!reduceMotion.matches){const st=Math.floor(me.t/1000*5.5+me.seed);if(st!==lastStep){lastStep=st;for(const d of [-1,1])FX.push({x:p.x+d*4,y:p.y,vx:d*.012,vy:-.004,life:0,max:420,type:'puff'});}}
   const lift=Math.min(1,-bob/1.9);g.fillStyle='rgba(90,36,30,.28)';g.beginPath();g.ellipse(p.x,p.y,11*(1-0.15*lift),5*(1-0.15*lift),0,0,Math.PI*2);g.fill();
   g.save();g.translate(p.x,p.y+bob);g.rotate(rot*Math.PI/180);g.scale(me.flipT*sqx,sqy);g.drawImage(IMG[DOLL()],-s.ax,-s.ay);
-  const lk=projLayers().length?poolLight(me.i,me.j):0;if(lk>.02){g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(.28,lk*.6);g.drawImage(IMG[DOLL()],-s.ax,-s.ay);}   // 小人走進光池也跟著亮起來
+  const lk=projLayers().length?poolLight(me.i,me.j):0;if(lk>.02){g.globalCompositeOperation='lighter';g.globalAlpha=lk;g.drawImage(IMG[DOLL()],-s.ax,-s.ay);}   // 小人走進光池也跟著亮起來
   g.restore();}
 
 // ---- 找路（A*，四方向＝畫面上的四個斜方向）----
@@ -1999,7 +1997,7 @@ function peerPose(P,now){let bob=0,rot=0,sqx=1,sqy=1;
 function drawPeer(o,now){const P=o._P,s=SPR[o.t];if(!s||IMG[o.t]===BLANK)return;const a=anchorOf(o),{bob,rot,sqx,sqy}=peerPose(P,now);o.bob=-bob;   // 名牌跟著跳
   const lift=Math.min(1,-bob/1.9);g.fillStyle='rgba(90,36,30,.28)';g.beginPath();g.ellipse(a.x,a.y,11*(1-.15*lift),5*(1-.15*lift),0,0,Math.PI*2);g.fill();
   g.save();g.translate(a.x,a.y+bob);g.rotate(rot*Math.PI/180);g.scale((o.f<0?-1:1)*sqx,sqy);g.drawImage(IMG[o.t],-s.ax,-s.ay);
-  const lk=projLayers().length?poolLight(o.i+.5,o.j+.5):0;if(lk>.02){g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(.28,lk*.6);g.drawImage(IMG[o.t],-s.ax,-s.ay);}
+  const lk=projLayers().length?poolLight(o.i+.5,o.j+.5):0;if(lk>.02){g.globalCompositeOperation='lighter';g.globalAlpha=lk;g.drawImage(IMG[o.t],-s.ax,-s.ay);}
   g.restore();}
 {const _di=drawItem;drawItem=function(o,now){if(o&&o.peer&&o._P)return drawPeer(o,now);return _di(o,now);};
  const _li=litItem;litItem=function(o){if(o&&o.peer)return;return _li(o);};}

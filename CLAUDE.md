@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## 2026/11/15 v533 小屋海洋氛圍光還原（Claude）
+- D：「我說的明明是家具的燈，你怎麼把海洋氛圍燈改醜了」。v532 把主題氛圍光（海底光池色階、波光線條變細、白天染色變淡、照到家具與小人只亮一點）改掉是誤解，house/room.html 整段還原成 v531。
+- D 指的是「家具自己的燈」（例：珊瑚燈照在沉船寶箱上的一團白光，drawLampGlow／paintGlow／drawNight 的燈光）。色階版 stepGlow 試做在 scratchpad（room_lamp533.html），等 D 看過對照圖再上。
+- 版本：verTag v533、ver.json 533、lobby-view 533、fixed-view 533、house.js VER 533。
+
 ## 2026/11/15 v532 手機買時裝、手機版面不重疊、第一次打開瘦身、小屋光改色階、拍照模式、扭蛋說明（Claude）
 - D：清單「這些都要做」＋客人反應手機介面很多按鈕重疊；扭蛋機率法律規定一定要公布。
 - 手機買時裝：手機頁下方分頁多「商城」（TinyTavernUI.open('shop')，6 欄）；live-wardrobe.js 手機不再藏商城、setArea 不再強制背包；

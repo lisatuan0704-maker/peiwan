@@ -14,7 +14,7 @@
   try{if(window.parent!==window&&window.parent.location.pathname.endsWith('/lobby-view.html'))a.target='_top';}catch{}
  },true);
  if(window.self!==window.top||new URLSearchParams(location.search).has('preview'))return;
- if(matchMedia('(hover: hover) and (pointer: fine)').matches){query.set('v','532');location.replace('lobby-view.html?'+query.toString()+location.hash);
+ if(matchMedia('(hover: hover) and (pointer: fine)').matches){query.set('v','533');location.replace('lobby-view.html?'+query.toString()+location.hash);
   // v532：跳轉要等一下才生效，這段時間瀏覽器會把整份 1.5MB 大廳的圖片、程式、資料庫連線全部跑一遍，外框再載一次＝兩倍下載 → 後面的內容當純文字吞掉不處理
   try{document.write('<plaintext style="display:none">');}catch(e){}}
 })();
