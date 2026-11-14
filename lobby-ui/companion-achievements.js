@@ -14,7 +14,7 @@
    const card=document.createElement('article');card.className='companion-ach-card'+(c.unlocked?' is-unlocked':'');card.dataset.reward=c.id;
    const art=document.createElement('div');art.className='companion-ach-art';
    const doll=document.createElement('img');doll.src='img/companions-v352/'+c.asset+'-staff.gif';doll.alt=c.name+'的小娃娃';doll.className='companion-ach-doll';
-   const frame=document.createElement('img');frame.src='img/frames/companions/'+c.id+'.png';frame.alt=c.name+'角色頭像框獎勵';frame.className='companion-ach-frame';art.append(doll,frame);
+   const frame=document.createElement('img');frame.src='img/frames/companions/'+c.id+'.webp';frame.alt=c.name+'角色頭像框獎勵';frame.className='companion-ach-frame';art.append(doll,frame);
    const title=document.createElement('h3');title.textContent='與'+c.name+'的十小時';
    const description=document.createElement('p');description.textContent='專屬獎勵 · '+c.name+'角色頭像框';
    const status=document.createElement('span');status.className='companion-ach-status';status.textContent=c.status;

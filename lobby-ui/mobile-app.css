@@ -24,7 +24,7 @@ html.ttm-on[data-ttm-tab=orders] #ttM .ttm-actions{display:flex}
 #ttM .ttm-help{flex:none;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 14px;border:1px solid var(--ttm-line);border-radius:14px;background:var(--ttm-card);color:var(--ttm-ink);font-size:14px;text-decoration:none}
 #ttM .ttm-empty{position:absolute;left:0;right:0;top:var(--ttm-top);bottom:var(--ttm-bot);display:grid;place-items:center;color:var(--ttm-soft);font-size:14px}
 /* 下方分頁 */
-#ttM .ttm-tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));background:#fffdfef2;border-top:1px solid var(--ttm-line);box-shadow:0 -4px 16px #6a4f740d}
+#ttM .ttm-tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(6,1fr);padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));background:#fffdfef2;border-top:1px solid var(--ttm-line);box-shadow:0 -4px 16px #6a4f740d}
 #ttM .ttm-tabs button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;border:0;border-radius:12px;background:none;color:var(--ttm-soft);font-size:12px;cursor:pointer}
 #ttM .ttm-tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 #ttM .ttm-tabs button[aria-selected=true]{color:var(--ttm-accent);background:#f1e9f4;font-weight:700}

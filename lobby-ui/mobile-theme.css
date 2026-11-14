@@ -139,3 +139,27 @@ html.ttm-on #ttmIdle .tt-idle-sub{display:none}
 /* 訂單任務卡「接下來？」只有 11px 高 → 手機上至少 32px 好按；私訊視窗「檢舉或封鎖」也放大 */
 html.ttm-on .qc-btn{min-height:32px;padding:4px 12px}
 html.ttm-on #dmWarnBtn{min-width:36px;min-height:36px}
+/* v532 手機橫放（客人：按鈕擠成一團、互相重疊）：上面四塊原本排成一列硬擠 → 改三欄（闆卡｜掛機｜每日任務），按鈕列另起一行；說明文字橫放時不顯示 */
+@media(orientation:landscape) and (max-height:520px){
+ html.ttm-on #ttM .ttm-top{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:stretch}
+ html.ttm-on #ttM .ttm-top>*{margin:0!important;min-width:0;max-width:none!important}
+ html.ttm-on #ttM .ttm-top>.ttm-actions{grid-column:1/-1}
+ html.ttm-on #ttM .ttm-actions>*{flex:1;min-height:38px!important}
+ html.ttm-on #ttM #ttmNote{display:none!important}
+ html.ttm-on #ttM .ttm-card{gap:8px}
+ html.ttm-on #ttM .ttm-coins{flex-wrap:wrap;justify-content:center;row-gap:0}
+ html.ttm-on #ttmIdle .tt-idle-h i,html.ttm-on #ttmIdle .tt-idle-em2{display:none}
+}
+/* v532 直立時上面三張卡固定占掉半個畫面 → 掛機收益、每日任務只在第一頁（訂單）顯示；私訊、儲值、信箱上面只留闆卡，內容區大一倍 */
+html.ttm-on:not([data-ttm-tab=orders]) #ttM #ttmIdle,html.ttm-on:not([data-ttm-tab=orders]) #ttM #ttmDaily{display:none!important}
+@media(orientation:landscape) and (max-height:520px){html.ttm-on:not([data-ttm-tab=orders]) #ttM .ttm-top{grid-template-columns:minmax(0,1fr)}}
+/* v532 手機橫放的結帳視窗：大標題占掉大半畫面、要填的內容只露一行 → 標題縮成一條、拿掉大字浮水印，視窗貼滿 */
+@media(orientation:landscape) and (max-height:520px){
+ html.ttm-on .tt-order-flow{padding:6px!important}
+ html.ttm-on .tt-order-flow .shopCard{max-height:calc(100dvh - 12px)!important}
+ html.ttm-on .tt-order-flow .of-heading{padding:8px 60px 8px 16px!important;min-height:0!important}
+ html.ttm-on .tt-order-flow .of-heading h2{font-size:18px!important;margin:2px 0 0!important;padding:3px 12px!important}
+ html.ttm-on .tt-order-flow .of-heading small{font-size:10px!important}
+ html.ttm-on .tt-order-flow .of-ghost{display:none!important}
+ html.ttm-on .tt-order-flow .of-track{padding-top:4px!important;padding-bottom:4px!important;min-height:0!important}
+}

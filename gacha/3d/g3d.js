@@ -1715,7 +1715,7 @@ const balTxt=c=>wallet>=c?`抽完剩 ${(wallet-c).toLocaleString()} 貓貓幣`:`
 const balHTML=c=>`<small class="bal${wallet<c?' short':''}" data-cost="${c}">${balTxt(c)}</small>`;
 function balSync(){ui.querySelectorAll('.bal[data-cost]').forEach(e=>{const c=+e.dataset.cost;e.textContent=balTxt(c);e.classList.toggle('short',wallet<c);});}
 const pullBtn1=t=>`<button class="btn hot" id="b1">${t}<em><i></i>${PRICE1}</em>${balHTML(PRICE1)}</button>`;
-const pullBtn10=t=>`<button class="btn hot" id="b10"><span class="g10">十連必得一件稀有以上</span>${t}<em><i></i>${PRICE10}</em>${balHTML(PRICE10)}</button>`;
+const pullBtn10=t=>`<button class="btn hot" id="b10"><span class="g10">必得一件還沒有的稀有以上</span>${t}<em><i></i>${PRICE10}</em>${balHTML(PRICE10)}</button>`;
 // v508 去擺放（正式版、大廳有 HOST.place 才出現）：剛抽到的家具去重複、限定→稀有→普通排好交給大廳 → 關扭蛋、小屋進佈置拿起第一件
 const CAN_PLACE=LIVE&&typeof HOST.place==='function',RORD={limited:0,rare:1,common:2};
 const placeKeys=P=>{const seen=new Set();return (P.res||[]).filter(it=>it&&it.k&&!seen.has(it.k)&&seen.add(it.k)).sort((a,b)=>(RORD[a.r]??3)-(RORD[b.r]??3)).map(it=>it.k);};

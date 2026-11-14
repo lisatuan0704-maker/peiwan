@@ -1,5 +1,22 @@
 # 小小酒館修改紀錄
 
+## 2026/11/15 v532 手機買時裝、手機版面不重疊、第一次打開瘦身、小屋光改色階、拍照模式、扭蛋說明（Claude）
+- D：清單「這些都要做」＋客人反應手機介面很多按鈕重疊；扭蛋機率法律規定一定要公布。
+- 手機買時裝：手機頁下方分頁多「商城」（TinyTavernUI.open('shop')，6 欄）；live-wardrobe.js 手機不再藏商城、setArea 不再強制背包；
+  mobile-app.js 擋點單那段放行 shopOpen(3) 且 curKind==='shop'（時裝、染髮券結帳；點冒險者照舊擋）。付款程式沒動。說明改「手機版可儲值、逛商城買時裝、換穿、查看訂單與私訊；邀冒險者一起玩請用電腦版」。
+  實測（scratchpad/sync531/mshop3.cjs，390×844／844×390）：商城 → 染髮券 → 買一張 → 結帳視窗 shopM3（curKind shop）。測試資料庫沒有上架衣服，衣服那條沒實際按到結帳。
+- 手機版面（mobile-theme.css 末段）：橫放（高 ≤520）上方改三欄（闆卡｜掛機｜每日任務）＋按鈕列，原本四塊擠一列互疊；掛機、每日任務只在訂單分頁顯示，其他分頁上方只留闆卡（直立時內容區大一倍）；
+  橫放結帳視窗標題縮成一條（原本標題占大半、內容只露一行）。scratchpad/sync531/mob.cjs 逐分頁量重疊：剩下的都是內容捲到分頁列底下或被整頁視窗蓋住（正常）。
+- 第一次打開：電腦版 lobby.html 跳轉 lobby-view 前會先把整份 1.5MB 大廳跑一遍（圖片、程式、資料庫連線），外框再載一次 → fixed-view.js 跳轉後 document.write('<plaintext>') 吞掉後面內容（fixed-view?v=532）；
+  貼圖 9 號 1254² 1.3MB → 500² sticker-09-black-v532.png 298KB（sticker-catalog?v=532；partner.html 還是舊版號，舊圖檔保留）；夥伴頭像框三張 PNG ~1MB → WebP 284KB（lobby TTF_ART、companion-achievements?v=532）。
+- 小屋光（house/room.html）：光池遮罩與 plainPool 改 BAND() 四圈色階；照到家具／自己／朋友再疊亮最多 .28（原 .6，白的地方爆掉）；v526 白天乘色 ×2.8 上限 .5 → ×2 上限 .32、lit 上限 .7 → .45；
+  海底波光門檻 .03/.06/.1 → .018/.036/.06（線變細）。前後對照 scratchpad/sync531/fx_cmp.png（人魚、森林）。
+  同步到 tt-room-kit：room/room.src.html、room/tt-room.html（光池、照亮、波光；朋友與 v526 那幾處 kit 裡沒有）、house-lobby/house-embed.js 縮圖柔光、build.py grade() 柔光（v531 的待辦已補）。
+- 拍照模式（lobby-ui/photo-mode.js）：設定「拍照模式・開始」→ 收起介面只留大廳與小人，Esc／右上鈕離開，滑鼠不動 2.5 秒鈕會淡掉；手機不顯示。
+- 扭蛋：主機（server/lib/gacha.js）、圖鑑說明、機率（限定 3／稀有 18／普通 79，圖鑑有每件機率）本來就一致；只有十連小貼紙改「必得一件還沒有的稀有以上」（g3d.js?v=81）。
+- 沒做（說明給 D）：後台監聽（第一次開才大量下載，之後只收變動；動到訂單計算先不碰）、手機搖桿與小屋手機版（手機沒有大廳場景、不開小屋）、整數縮放、社交送貓貓幣（要新規則＋D 定數量）。
+- 版本：verTag v532、ver.json 532、lobby-view 532、house.js VER 532、gacha.js VER 532、bridge 532→tavern-ui index 532→時裝間比較 532→live-wardrobe 532、mobile-app／mobile-theme 532。
+
 ## 2026/11/14 v531 Firebase 流量、別人走路暴衝／瞬移、小人與小屋模糊（Claude）
 - D 貼了另一個 Claude 的待辦（RTDB 本月下載 20GB 超額；小人糊；別人突然走很快）並說「你自己來」。
 - 流量（lobby.html 位置回報）：站著不動的心跳 5 秒→45 秒；點地板走路路上每 1 秒校正一次（原 0.15 秒；換目的地、停下、坐下、轉向照舊馬上送）、

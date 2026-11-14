@@ -14,11 +14,13 @@ const ICON={
  chat:'<path d="M4 5h16v11H9l-4 4v-4H4z"/><path d="M8 10h8M8 13h5"/>',
  wallet:'<circle cx="12" cy="12" r="8"/><path d="M12 7v10M9.5 9.5c0-1 1-1.5 2.5-1.5s2.5.6 2.5 1.6c0 2.4-5 1.2-5 3.8 0 1 1 1.6 2.5 1.6s2.5-.6 2.5-1.5"/>',
  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>',
+ shop:'<path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
  ward:'<path d="M10 6.5a2 2 0 1 1 2.6 1.9c-.4.1-.6.5-.6.9V10"/><path d="M12 10 3.6 16.2a1 1 0 0 0 .6 1.8h15.6a1 1 0 0 0 .6-1.8z"/>'
 };
 const TABS=[
  {key:'orders',label:'訂單',node:'shopM4',badge:'ordBadge',open:()=>shopOpen(4),hide:()=>{const n=$('shopM4');if(n)n.style.display='none';}},
  {key:'chat',label:'私訊',node:'frM',badge:'frDockBadge',open:()=>{frOpen();staffEntry();},hide:()=>gClose('frM')},
+ {key:'shop',label:'商城',launch:()=>{window.TinyTavernUI?.open?.('shop');}},   // v532 手機也能買時裝
  {key:'ward',label:'時裝',launch:()=>{if(window.openWardrobe)openWardrobe();}},   // v527 朋友：手機也想看、玩時裝 → 打開背包（整頁，時裝間在手機只顯示背包、染髮與商城入口藏起來；關掉回到原本的分頁）
  {key:'wallet',label:'儲值',node:'ttmWallet',open:()=>{$('ttmWallet').classList.add('on');wallet.render();},hide:()=>$('ttmWallet').classList.remove('on')},
  {key:'mail',label:'信箱',node:'mailBoxM',badge:'mailBadge',open:()=>{renderMailBox();gOpen('mailBoxM');},hide:()=>gClose('mailBoxM')}
@@ -40,7 +42,7 @@ app.innerHTML='<header class="ttm-top" id="ttmTop">'
  +'<div class="ttm-actions" id="ttmActions"><button type="button" class="ttm-order" id="ttmTopup"><span aria-hidden="true">＋</span>儲值金幣</button>'
  +'<button type="button" class="ttm-help" id="ttmCardImg" style="font-family:inherit;cursor:pointer">存闆卡圖</button>'
  +'<a class="ttm-help" href="lobby.html?contact=1" data-contact-support>聯絡客服</a></div>'
- +'<p class="ttm-note" id="ttmNote">手機版可儲值、查看訂單、私訊、換穿時裝；點單與買衣服請用電腦版。</p>'
+ +'<p class="ttm-note" id="ttmNote">手機版可儲值、逛商城買時裝、換穿、查看訂單與私訊；邀冒險者一起玩請用電腦版。</p>'
  +'</header><div class="ttm-empty" id="ttmEmpty">載入中…</div>'
  +'<section class="ttm-page" id="ttmWallet" aria-label="儲值金幣"></section>'
  +'<nav class="ttm-tabs" role="tablist" aria-label="手機版功能">'
@@ -86,9 +88,9 @@ $('ttmCoins').onclick=()=>show('wallet');
 $('ttmTopup').onclick=()=>show('wallet');
 $('ttmCardImg').onclick=()=>{try{window.ttSaveCardImage?.();}catch(e){}};
 // 手機版不開放點單：點單入口一律改成提示（訂單查詢 shopOpen(4)、取消、續單、回報問題照常）。
-const NO_ORDER='手機版目前只開放儲值金幣，點單請使用電腦版 ✦';
+const NO_ORDER='邀冒險者一起玩請用電腦版，手機可以儲值、逛商城 ✦';
 function block(name,allow){const f=window[name];if(typeof f!=='function')return;window[name]=function(...a){if(allow&&allow(...a))return f.apply(this,a);say(NO_ORDER);};}
-block('shopStep');block('shopOpen',n=>n===4);block('backFromPlans');block('openReserve');block('reorderPlay');block('pickPlan');
+block('shopStep');block('shopOpen',n=>n===4||(n===3&&typeof curKind!=='undefined'&&curKind==='shop'));   // v532：商城結帳（時裝、染髮券）放行，點冒險者照舊擋block('backFromPlans');block('openReserve');block('reorderPlay');block('pickPlan');
 // 其他視窗（付款、取消確認、私訊對話、客服）關閉後，把目前分頁補回來。
 function center(){const r=top.getBoundingClientRect(),b=tabBar.getBoundingClientRect();return [innerWidth/2,(r.bottom+b.top)/2];}
 setInterval(()=>{
