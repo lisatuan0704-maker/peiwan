@@ -753,13 +753,14 @@ function drawProj(ctx,now,P,alpha,plain){if(!alpha)return;
   if(P.kind==='spot'){ctx.save();floorClip(ctx);ctx.globalCompositeOperation='lighter';paintSpots(ctx,now,P,alpha*(plain?1:.7));ctx.restore();return;}
   const masked=projMask(now,P),op=P.mode==='shade'?'multiply':'lighter';
   const fr=plain?null:projFrames(P),k=reduceMotion.matches||!fr?0:Math.floor(now/(P.ms||150))%fr.length,dr=reduceMotion.matches?0:now*(P.drift??.0012);
-  const fill=(c,a,o)=>{c.save();if(plain)roomClip(c);else floorClip(c);c.globalCompositeOperation=o;c.globalAlpha=a;c.imageSmoothingEnabled=false;   // 夜晚光照圖（plain）改切成整個房間（地板＋牆）：光池靠牆時，牆面和靠牆家具上下半截一樣亮，不會有一條硬邊（D 11/17「光拉到地板最邊緣出現的」）
+  const fill=(c,a,o)=>{c.save();floorClip(c);c.globalCompositeOperation=o;c.globalAlpha=a;c.imageSmoothingEnabled=false;
     if(fr){const pat=c.createPattern(fr[k],'repeat');pat.setTransform(new DOMMatrix([1,0,0,1,O.x+dr*2*TW,O.y+dr*TH]));c.fillStyle=pat;}else c.fillStyle=`rgb(${P.lc||P.c})`;
-    const t0=iso(0,0),b=iso(N,N),l=iso(0,N),r=iso(N,0),up=plain?WALL_H*Z2PX:0;c.fillRect(l.x,t0.y-up,r.x-l.x,b.y-t0.y+up);c.restore();};
+    const t0=iso(0,0),b=iso(N,N),l=iso(0,N),r=iso(N,0);c.fillRect(l.x,t0.y,r.x-l.x,b.y-t0.y);c.restore();};
   if(!masked){if(!plain)fill(ctx,alpha,op);return;}   // 整片地板的花紋：打光層不加（不然全房間都亮）
   pcx.setTransform(1,0,0,1,0,0);pcx.globalCompositeOperation='source-over';pcx.globalAlpha=1;pcx.clearRect(0,0,PC.width,PC.height);pcx.setTransform(...viewT());
   fill(pcx,1,'source-over');pcx.setTransform(1,0,0,1,0,0);pcx.globalCompositeOperation='destination-in';pcx.drawImage(MK,0,0);
-  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation=op;ctx.globalAlpha=alpha;ctx.drawImage(PC,0,0);ctx.restore();}
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation=op;ctx.globalAlpha=alpha;ctx.drawImage(PC,0,0);ctx.restore();
+  if(plain&&P.pool){const pl=poolOf(P);if(pl)lightFold(ctx,pl,P.lc||P.c,alpha,1+(reduceMotion.matches?0:.04*Math.sin(now/1700)));}}
 // D：「被這個光照到的家具應該也要亮亮的」→ 光池（pool＋lit）裡的家具，照它離光池中心多近，把自己的圖再疊一層亮光（只變亮、不加花紋）
 // 斜直光束（海底：天上灑下來的一束光）：很多條粗細、明暗不一的光條，從天花板上方一路照到地上的光池，各自忽明忽暗、慢慢擺動；光束裡飄著細小的浮游光點
 // D 11/16：「不要讓地板有這種光方邊，而是連同牆壁一起變亮（沒有海浪特效，單純打光在牆壁上）」「那個光邊害家具都像透的」
@@ -776,18 +777,20 @@ function drawRays(now,P,ctx){now*=P.ts||1;const pl=poolOf(P)||{i:N/2,j:N/2,r:N*.
   ctx.restore();
   if(!rm&&Math.random()<(P.snow??.25)){const u=Math.random()*2-1,q=Math.random(),x=top.x+(c.x-top.x)*q+u*(Rt+(R-Rt)*q),y=top.y+(c.y-top.y)*q;
     FX.push({x,y,vx:(Math.random()-.5)*.003,vy:.002+Math.random()*.003,life:0,max:2500+Math.random()*2500,type:'mote'});}}
-// 牆面打光：光池碰到牆的那一段，沿著牆面往上淡出（畫在牆的斜面座標裡，跟著透視斜，不是一顆圓）；純色無花紋
-//   D 11/17「透視很怪，牆壁那邊的光不能這樣」→ 光的寬度＝光池在牆腳切到的那一段，從牆腳往上漸淡
-function drawWallWash(now,P,ctx){const pl=poolOf(P);if(!pl)return;const H=WALL_H*Z2PX,br=(reduceMotion.matches?1:.92+.08*Math.sin(now/2300)),nt=isNight()?1.5:1,o0=iso(0,0);
-  for(const side of ['L','R']){const d=side==='L'?pl.i:pl.j,q=d/pl.r;if(q>=1)continue;const k=Math.pow(1-q*q,1.3);if(k<.03)continue;
-    const u0=side==='L'?pl.j:pl.i,w=pl.r*Math.sqrt(1-q*q)*1.05,e=side==='L'?iso(0,1):iso(1,0),dx=e.x-o0.x,dy=e.y-o0.y;
-    const a=Math.min(.5,P.a*1.5*nt)*k*br;
+// 牆面打光（D 11/17 畫圖說明）：地板上的光圈碰到牆，超出牆的那一截「摺起來」貼到牆上——牆面上是一個跟著牆透視的半圓，
+//   亮度照地板光圈同一套漸層算（牆腳那條線上下一樣亮，接得起來）；純色無花紋。lightFold 也給夜晚光照圖用（家具靠牆不會上下半截亮暗不同）
+const POOL_STOPS=[[0,1],[.45,.9],[.75,.4],[1,0]],VT=Z2PX/2;   // VT：牆上往上一格是幾像素
+function lightFold(ctx,pl,col,alpha,breath){const H=WALL_H*Z2PX,o0=iso(0,0),R=pl.r*(breath||1);
+  for(const side of ['L','R']){const d=side==='L'?pl.i:pl.j;if(d>=R)continue;
+    const u0=side==='L'?pl.j:pl.i,e=side==='L'?iso(0,1):iso(1,0),dx=e.x-o0.x,dy=e.y-o0.y;
     ctx.save();ctx.beginPath();const P2=(x,y)=>side==='L'?iso(x,y):iso(y,x),quad=[P2(0,0),P2(0,N),{x:P2(0,N).x,y:P2(0,N).y-H},{x:P2(0,0).x,y:P2(0,0).y-H}];
     quad.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.clip();ctx.globalCompositeOperation='lighter';
-    ctx.transform(dx,dy,0,-1,o0.x,o0.y);   // 換成牆面座標：x＝沿著牆第幾格、y＝離地幾像素（往上）
-    ctx.translate(u0,0);ctx.scale(w,H*.95);
-    const gr=ctx.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,`rgba(${P.c},${a})`);gr.addColorStop(.4,`rgba(${P.c},${a*.65})`);gr.addColorStop(.75,`rgba(${P.c},${a*.22})`);gr.addColorStop(1,`rgba(${P.c},0)`);
-    ctx.fillStyle=gr;ctx.fillRect(-1,0,2,1);ctx.restore();}}
+    ctx.transform(dx,dy,0,-1,o0.x,o0.y);   // 牆面座標：x＝沿著牆第幾格、y＝離地幾像素（往上）
+    ctx.translate(u0,-d*VT);ctx.scale(1,VT);   // 光圈中心在牆外 d 格：摺上來＝從牆腳往上算
+    const gr=ctx.createRadialGradient(0,0,0,0,0,R);for(const [t,v] of POOL_STOPS)gr.addColorStop(t,`rgba(${col},${alpha*v})`);
+    ctx.fillStyle=gr;ctx.fillRect(-R,d,R*2,R);ctx.restore();}}
+function drawWallWash(now,P,ctx){const pl=poolOf(P);if(!pl)return;const br=reduceMotion.matches?1:.92+.08*Math.sin(now/2300);
+  lightFold(ctx,pl,P.c,Math.min(.45,P.a*1.3*(isNight()?1.4:1))*br);}
 function drawRaysLayer(now,list){if(RC.width!==cv.width||RC.height!==cv.height){RC.width=cv.width;RC.height=cv.height;}
   rcx.setTransform(1,0,0,1,0,0);rcx.globalCompositeOperation='source-over';rcx.globalAlpha=1;rcx.clearRect(0,0,RC.width,RC.height);rcx.setTransform(...viewT());
   for(const P of list){drawWallWash(now,P,rcx);drawRays(now,P,rcx);}
