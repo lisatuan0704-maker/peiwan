@@ -609,7 +609,7 @@ const sfx={coin:()=>{tone(1320,.12,'square',.04);tone(1980,.22,'square',.04,.06)
 // ---------- 鏡頭 ----------
 // 鍵：[時間, 目標x,y,z, 方位角°, 仰角°, 距離, 視角°, 側傾°, 緩動]
 function camAt(K,s){if(s<=K[0][0])return K[0];for(let i=1;i<K.length;i++)if(s<K[i][0]){const a=K[i-1],b=K[i],u=(EZ[b[9]||'inout'])(sat((s-a[0])/(b[0]-a[0])));const r=[s];for(let j=1;j<9;j++)r.push(lerp(a[j],b[j],u));return r;}return K[K.length-1];}
-function applyCam(k,shk,punch,e){const[,tx,ty,tz,az,el,d0,fov,roll]=k;const asp=W/H,d=d0*(asp<1?Math.pow(1.55/asp,.6):Math.max(1,1.55/asp));/* v546 手機直立：鏡頭不用退那麼遠，扭蛋機放大當主角 */const A=az*Math.PI/180,E=el*Math.PI/180;
+function applyCam(k,shk,punch,e){const[,tx,ty,tz,az,el,d0,fov,roll]=k;const asp=W/H,F=Math.max(1,1.55/asp),d=d0*(asp<1?lerp(F,Math.pow(F,.38),sat((d0/REST.D-.5)/.4)):F);/* v549 手機直立：看整台扭蛋機的遠景鏡頭靠近（扭蛋機放大當主角）；抽卡時的特寫照原本距離，不然整個畫面只剩機器的臉 */const A=az*Math.PI/180,E=el*Math.PI/180;
   cam.position.set(tx+d*Math.sin(A)*Math.cos(E),ty+d*Math.sin(E),tz+d*Math.cos(A)*Math.cos(E));cam.up.set(0,1,0);cam.lookAt(tx,ty,tz);cam.rotateZ(roll*Math.PI/180);
   if(shk>0&&!RM){const f=Math.floor(e/34);cam.translateX((hash(f)-.5)*2*shk*d*.22);cam.translateY((hash(f+.37)-.5)*2*shk*d*.22);}
   cam.fov=fov*(1-punch);cam.aspect=asp;cam.updateProjectionMatrix();}
@@ -1722,7 +1722,9 @@ const CAN_PLACE=LIVE&&typeof HOST.place==='function',RORD={limited:0,rare:1,comm
 const placeKeys=P=>{const seen=new Set();return (P.res||[]).filter(it=>it&&it.k&&!seen.has(it.k)&&seen.add(it.k)).sort((a,b)=>(RORD[a.r]??3)-(RORD[b.r]??3)).map(it=>it.k);};
 const placeBtn=()=>CAN_PLACE?'<button class="btn go" id="bp">去擺放</button>':'';
 function setUI(h){ui.innerHTML=h;bind();}
-function idleUI(){mkHead();UISIG=sig();setUI(HEAD+walletHTML()+`<div class="p pools">${Object.entries(POOLS).map(([k,P])=>{const st=poolState(k);return `<button data-pool="${k}" class="${k===THEME?'on':''}${st.open?'':' closed'}${st.open&&!st.perm&&st.left<DAY?' last':''}">${P.name}<small>${tabTxt(st)}</small></button>`;}).join('')}</div>${poolState(THEME).open?`<div class="p btns">${pullBtn1('抽一次')}${pullBtn10('抽十次')}</div>`
+// v549 手機直立（D：「右邊做一個點一下可以拉出來的半圓形選單」）：卡池收進右邊的半圓拉片，點一下拉出清單、選了就收回（電腦版照舊用左邊的卡池鈕，.pdraw 不顯示）
+ui.addEventListener('click',e=>{const t=e.target.closest('.ptab');if(!t)return;const d=t.parentElement,on=!d.classList.contains('open');d.classList.toggle('open',on);t.setAttribute('aria-expanded',on);t.querySelector('i').textContent=on?'›':'‹';try{sfx.click();}catch(_){}});
+function idleUI(){mkHead();UISIG=sig();const PB=Object.entries(POOLS).map(([k,P])=>{const st=poolState(k);return `<button data-pool="${k}" class="${k===THEME?'on':''}${st.open?'':' closed'}${st.open&&!st.perm&&st.left<DAY?' last':''}">${P.name}<small>${tabTxt(st)}</small></button>`;}).join('');setUI(HEAD+walletHTML()+`<div class="p pools">${PB}</div><div class="p pdraw"><button class="ptab" aria-label="換卡池" aria-expanded="false"><i>‹</i><b>卡池</b></button><div class="plist"><small>POOLS</small>${PB}</div></div>${poolState(THEME).open?`<div class="p btns">${pullBtn1('抽一次')}${pullBtn10('抽十次')}</div>`
    :`<div class="p btns"><button class="btn" disabled>${poolState(THEME).soon?twDate(poolState(THEME).start)+' 開始':'這一期已經結束了'}</button></div>`}
   <div class="p links"><button id="bo">家具圖鑑・機率</button><button id="bs">音效：${SND?'開':'關'}</button>${LIVE?'':'<button id="br">試做重設（金額＋收藏）</button>'}</div>`);}
 function bind(){const q=$,shut=!poolState(THEME).open;if(q('b1')){q('b1').onclick=()=>start(1);q('b1').disabled=shut||wallet<PRICE1;}if(q('b10')){q('b10').onclick=()=>start(10);q('b10').disabled=shut||wallet<PRICE10;}

@@ -589,10 +589,11 @@ ${[1,2,3,4,5,6,7,8,9].map(n=>'#ttTrip.sh .shut i:nth-child('+n+'){--n:'+(n%2?n:1
 ${[1,2,3,4,5,6,7,8,9].map(n=>'#ttCurtain .shut i:nth-child('+n+'){--n:'+(n%2?n:10-n)+'}').join('')}
 #ttCurtain.on .shut i{transform:none}
 #ttCurtain.off .shut i{transform:translateY(calc(var(--s)*-118%));transition-duration:.52s}
-#ttCurtain .lab{position:absolute;left:50%;top:50%;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 46px 18px;color:#fff;background:linear-gradient(90deg,#2E2462,#5B44A8);
+#ttCurtain .lab{position:absolute;left:50%;top:50%;width:max-content;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 46px 18px;color:#fff;background:linear-gradient(90deg,#2E2462,#5B44A8);
  clip-path:polygon(18px 0,100% 0,calc(100% - 18px) 100%,0 100%);transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .32s cubic-bezier(.2,.9,.3,1.3) .34s,opacity .2s .34s}
 #ttCurtain .lab small{font:400 13px/1 'TT Title','Rammetto One',sans-serif;letter-spacing:4px;color:#FFC6DD}
 #ttCurtain .lab b{font-size:30px;font-weight:900;letter-spacing:4px}
+@media (max-width:600px){#ttCurtain .lab{padding:12px 34px 14px}#ttCurtain .lab b{font-size:24px;letter-spacing:3px}#ttCurtain .lab small{font-size:11px}#ttCurtain .lab .dot{right:12px;top:8px;width:8px;height:8px}}   /* v549 手機：牌子不換行、小一號 */
 #ttCurtain .lab .dot{position:absolute;right:26px;top:12px;width:10px;height:10px;background:#FFE7A3;transform:rotate(45deg);animation:tpSpinR 2.4s linear infinite}
 #ttCurtain.on .lab{transform:translate(-50%,-50%) scale(1);opacity:1}
 #ttCurtain.off .lab{transform:translate(-50%,-50%) scale(1.1);opacity:0;transition:transform .25s,opacity .2s}

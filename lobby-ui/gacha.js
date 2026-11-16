@@ -11,7 +11,7 @@ const R=()=>typeof ROOT!=='undefined'?ROOT:'peiwan';
 const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const BASE=()=>typeof PAY_API!=='undefined'?PAY_API:'https://pay.tinytavern.tw',API=()=>BASE()+'/api/gacha';
-const VER='546';
+const VER='549';
 const G={ov:null,fr:null,inv:{},off:null,subs:new Set(),busy:false,sched:null};
 
 // ---------- 給扭蛋頁的介面（gacha/3d/g3d.js 讀 parent.TTGachaHost） ----------
@@ -80,6 +80,7 @@ const css=document.createElement('style');css.textContent=
 +'box-shadow:0 0 0 3px #fff,0 0 0 6px #CDB6FF,0 18px 60px rgba(43,23,65,.55),0 0 80px rgba(255,156,188,.35);transform:translateY(10px) scale(.985);transition:transform .25s}'
 +'#ttGachaOv.on iframe{transform:none}'
 +'html body:is(.tt214,:not(.tt214)) #ttMainDock #ttHouseGacha span{white-space:nowrap}'
-+'body.tt-house-visit #ttHouseGacha{display:none!important}';   // 去別人家參觀時不顯示
++'body.tt-house-visit #ttHouseGacha{display:none!important}'
++'html.ttm-on #ttGachaOv{padding:0}html.ttm-on #ttGachaOv iframe{width:100%;height:100%;border:0;border-radius:0;box-shadow:none}';   // v549 手機：扭蛋頁整個螢幕，不要外框（扭蛋機才夠大）   // 去別人家參觀時不顯示
 document.head.append(css);
 })();
