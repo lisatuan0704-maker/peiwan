@@ -753,9 +753,9 @@ function drawProj(ctx,now,P,alpha,plain){if(!alpha)return;
   if(P.kind==='spot'){ctx.save();floorClip(ctx);ctx.globalCompositeOperation='lighter';paintSpots(ctx,now,P,alpha*(plain?1:.7));ctx.restore();return;}
   const masked=projMask(now,P),op=P.mode==='shade'?'multiply':'lighter';
   const fr=plain?null:projFrames(P),k=reduceMotion.matches||!fr?0:Math.floor(now/(P.ms||150))%fr.length,dr=reduceMotion.matches?0:now*(P.drift??.0012);
-  const fill=(c,a,o)=>{c.save();floorClip(c);c.globalCompositeOperation=o;c.globalAlpha=a;c.imageSmoothingEnabled=false;
+  const fill=(c,a,o)=>{c.save();if(plain)roomClip(c);else floorClip(c);c.globalCompositeOperation=o;c.globalAlpha=a;c.imageSmoothingEnabled=false;   // 夜晚光照圖（plain）改切成整個房間（地板＋牆）：光池靠牆時，牆面和靠牆家具上下半截一樣亮，不會有一條硬邊（D 11/17「光拉到地板最邊緣出現的」）
     if(fr){const pat=c.createPattern(fr[k],'repeat');pat.setTransform(new DOMMatrix([1,0,0,1,O.x+dr*2*TW,O.y+dr*TH]));c.fillStyle=pat;}else c.fillStyle=`rgb(${P.lc||P.c})`;
-    const t0=iso(0,0),b=iso(N,N),l=iso(0,N),r=iso(N,0);c.fillRect(l.x,t0.y,r.x-l.x,b.y-t0.y);c.restore();};
+    const t0=iso(0,0),b=iso(N,N),l=iso(0,N),r=iso(N,0),up=plain?WALL_H*Z2PX:0;c.fillRect(l.x,t0.y-up,r.x-l.x,b.y-t0.y+up);c.restore();};
   if(!masked){if(!plain)fill(ctx,alpha,op);return;}   // 整片地板的花紋：打光層不加（不然全房間都亮）
   pcx.setTransform(1,0,0,1,0,0);pcx.globalCompositeOperation='source-over';pcx.globalAlpha=1;pcx.clearRect(0,0,PC.width,PC.height);pcx.setTransform(...viewT());
   fill(pcx,1,'source-over');pcx.setTransform(1,0,0,1,0,0);pcx.globalCompositeOperation='destination-in';pcx.drawImage(MK,0,0);
