@@ -1,5 +1,9 @@
 # 小小酒館修改紀錄
 
+## 2026/11/17 v551 蘑菇燈傘下的光有一條橫的硬邊（Claude）
+- D：「蘑菇燈下方有一樣的光邊問題」。LFXT.mush 傘底往下灑的三層光是平塗梯形，底邊停在地面那條線（floorY）→ 一條橫的硬邊。改成每層從傘底往下漸淡、到地面剛好 0。
+- 驗證：scratchpad/ray mush.cjs 放大截圖。版本：verTag v551、ver.json 551、lobby-view／fixed-view 551、house.js VER 551。
+
 ## 2026/11/17 v550 拜訪中主人改擺設，來玩的朋友看不到（Claude）
 - D：「朋友布置完後朋友看不到」。原因：拜訪別人小屋時 house.js 只在進門讀一次 houseView/<主人>，之後主人存擺設（publish 會更新 houseView）客人畫面不會變，要重進才看得到。
 - 修法：拜訪中 watch('houseView/'+主人)，at 變了就把新擺設／壁紙地板／房間大小交給房間：room.html 新增 TTRoom.setLayout(L)（只在拜訪中有效，會先載家具圖）＋原本的 setPaint／setSize。

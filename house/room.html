@@ -539,7 +539,7 @@ const LFXT={
     n(ctx,it,X,now,ph){const F=lfxP(it,X.flame[0],X.flame[1]),fl=lfxFlick(now,ph);lfxDot(ctx,F.x,F.y,(X.hang?46:40)*(.95+.05*fl),X.c,.6*fl);
       if(X.hang){ctx.save();ctx.translate(F.x,F.y+16);ctx.scale(.45,1.1);lfxDot(ctx,0,0,20,X.c,.3*fl);ctx.restore();}}},
   mush:{o(ctx,it,X,now,ph,night){const A=lfxP(it,X.rim[0][0],X.rim[0][1]),Bp=lfxP(it,X.rim[1][0],X.rim[1][1]),cx=(A.x+Bp.x)/2,y=Math.round(A.y),hw=Math.abs(Bp.x-A.x)/2,fy=lfxP(it,0,X.floorY).y,b=.8+.2*Math.sin(now/1600+ph);
-      for(const [k,al] of [[1,.16],[.7,.16],[.42,.18]]){ctx.fillStyle=`rgba(${X.c},${al*b})`;ctx.beginPath();   // 傘底往下灑的光：三層一層比一層窄、越裡面越亮（像燈罩）
+      for(const [k,al] of [[1,.16],[.7,.16],[.42,.18]]){const lg=ctx.createLinearGradient(0,y,0,fy);lg.addColorStop(0,`rgba(${X.c},${al*b})`);lg.addColorStop(.55,`rgba(${X.c},${al*b*.6})`);lg.addColorStop(1,`rgba(${X.c},0)`);ctx.fillStyle=lg;ctx.beginPath();   // v551 D：「蘑菇燈下方有一樣的光邊」→ 往下淡到地面就沒了，不留一條橫的硬邊   // 傘底往下灑的光：三層一層比一層窄、越裡面越亮（像燈罩）
         ctx.moveTo(cx-hw*.8*k,y+1);ctx.lineTo(cx+hw*.8*k,y+1);ctx.lineTo(cx+hw*1.3*k,fy);ctx.lineTo(cx-hw*1.3*k,fy);ctx.closePath();ctx.fill();}
       for(let x=Math.round(cx-hw*.82);x<=Math.round(cx+hw*.82);x++){const e=1-Math.abs(x-cx)/(hw*.9);ctx.fillStyle=`rgba(255,244,205,${(.35+.55*e)*b})`;ctx.fillRect(x,y,1,1);ctx.fillStyle=`rgba(${X.c},${.4*e*b})`;ctx.fillRect(x,y+1,1,1);}   // 傘底一排亮格
       lfxClip(ctx,it);
