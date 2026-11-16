@@ -876,6 +876,12 @@
               },
               "$other": {
                 ".validate": false
+              },
+              "x": {
+                ".validate": "newData.isNumber() && newData.val() % 1 == 0 && newData.val() >= 0 && newData.val() <= 100 && newData.parent().child('y').exists()"
+              },
+              "y": {
+                ".validate": "newData.isNumber() && newData.val() % 1 == 0 && newData.val() >= 0 && newData.val() <= 100 && newData.parent().child('x').exists()"
               }
             }
           },

@@ -661,7 +661,8 @@ function fxLayersOf(set,lv){const T=FXDEF[set];if(!T)return [];return T.proj.fil
 const FXCL=(v,lo,hi,df)=>{v=Math.round(Number(v));return Number.isFinite(v)?Math.max(lo,Math.min(hi,v)):df;};
 function fxNorm(sel){if(Array.isArray(sel)){const seen={},out=[];
     for(const e of sel){if(!e||!FXDEF[e.set]||(e.lv!==1&&e.lv!==2)||seen[e.set+e.lv])continue;seen[e.set+e.lv]=1;
-      out.push({set:e.set,lv:e.lv,a:FXCL(e.a,30,150,100),s:FXCL(e.s,30,200,100),n:FXCL(e.n,0,200,100),r:FXCL(e.r,60,160,100),d:e.d!==false});}
+      const q={set:e.set,lv:e.lv,a:FXCL(e.a,30,150,100),s:FXCL(e.s,30,200,100),n:FXCL(e.n,0,200,100),r:FXCL(e.r,60,160,100),d:e.d!==false};
+      if(Number.isFinite(+e.x)&&Number.isFinite(+e.y)&&e.x!==null&&e.y!==null){q.x=FXCL(e.x,0,100,50);q.y=FXCL(e.y,0,100,50);}out.push(q);}
     return out.length?out:false;}
   return sel&&FXDEF[sel.set]?{set:sel.set,lv:sel.lv===1?1:2}:false;}
 function fxItemLayers(e){const T=FXDEF[e.set];if(!T)return [];const day=!isNight(),A=e.a/100,Sp=e.s/100,Nn=e.n/100,Rr=e.r/100;
@@ -672,7 +673,8 @@ function fxItemLayers(e){const T=FXDEF[e.set];if(!T)return [];const day=!isNight
     if(p.ms)p.ms/=Sp;if(p.drift!=null)p.drift*=Sp;if(p.kind==='motes')p.sp=(p.sp||1)*Sp;if(p.tw)p.tw*=Sp;p.ts=Sp;
     if(p.kind==='motes'){p.n=Math.round((p.n||20)*Nn);p.dayInk=1;}if(p.kind==='rays')p.n=Math.max(1,Math.round((p.n||18)*Nn));if(p.fall!=null)p.fall*=Nn;if(p.snow!=null)p.snow*=Nn;
     if(p.pool)p.pool={...p.pool,r:Math.round((p.pool.r??N*.25)*Rr*10)/10};
-    return p;});}
+    if(p.pool&&e.x!=null)p.pool={...p.pool,auto:false,i:e.x/100*N,j:e.y/100*N};   // D 11/16：光的位置玩家自己擺（沒擺過才自動找空地）
+    p._fx=e.set+e.lv;return p;});}
 function fxNightSet(){const s=FXSEL;if(THEMES[theme].night)return null;   // 借夜：白天房間開了夜晚系的招牌光效
   if(Array.isArray(s)){const e=s.find(e=>e.lv===2&&FXDEF[e.set]?.night&&e.d);return e?e.set:null;}
   return s&&s.lv===2&&FXDEF[s.set]?.night?s.set:null;}
@@ -682,6 +684,10 @@ function fxStage(){try{$('stage').classList.toggle('night',isNight());}catch(e){
 function fxReset(){FXK='';fxStage();try{FUB.next=0;GEN.next=0;BASS_IDX=-1;PYRO_K='';}catch(e){}}
 const projLayers=()=>{const s=FXSEL,k=s===false?'off':Array.isArray(s)?'mix':s?s.set+'|'+s.lv:theme+'|2';if(k!==FXK){FXK=k;FXL=s===false?[]:Array.isArray(s)?[].concat(...s.map(fxItemLayers)):fxLayersOf(s?s.set:theme,s?s.lv:2);}return FXL;};
 window.TTFX={
+  hasPool(id){const T=FXDEF[String(id).slice(0,-1)],lv=+String(id).slice(-1);return !!T&&T.proj.some(p=>(p.tier||2)===lv&&p.pool);},
+  pick(id,cb){FXPICK={id,cb,down:false};$('stage').style.cursor='crosshair';},
+  pickEnd(){FXPICK=null;$('stage').style.cursor='';},
+  setPos:(id,x,y)=>fxSetPos(id,x,y),
   sets(){return Object.keys(FXNAMES).filter(s=>FXDEF[s]).map(s=>{const P=FXDEF[s].proj;return {set:s,label:FXDEF[s].label,name1:FXNAMES[s][0],name2:FXNAMES[s][1],night:FXDEF[s].night,
     has1:P.some(p=>(p.tier||2)===1),has2:P.some(p=>(p.tier||2)===2)};});},
   get(){return Array.isArray(FXSEL)?FXSEL.map(e=>({...e})):FXSEL?{set:FXSEL.set,lv:FXSEL.lv}:null;},
@@ -756,19 +762,50 @@ function drawProj(ctx,now,P,alpha,plain){if(!alpha)return;
   ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation=op;ctx.globalAlpha=alpha;ctx.drawImage(PC,0,0);ctx.restore();}
 // D：「被這個光照到的家具應該也要亮亮的」→ 光池（pool＋lit）裡的家具，照它離光池中心多近，把自己的圖再疊一層亮光（只變亮、不加花紋）
 // 斜直光束（海底：天上灑下來的一束光）：很多條粗細、明暗不一的光條，從天花板上方一路照到地上的光池，各自忽明忽暗、慢慢擺動；光束裡飄著細小的浮游光點
-function drawRays(now,P){now*=P.ts||1;const pl=poolOf(P)||{i:N/2,j:N/2,r:N*.25},c=iso(pl.i,pl.j),R=pl.r*Math.SQRT2*TW*.85,h=WALL_H*Z2PX*(P.hk||2.3),sl=P.slant??.22,
+// D 11/16：「不要讓地板有這種光方邊，而是連同牆壁一起變亮（沒有海浪特效，單純打光在牆壁上）」「那個光邊害家具都像透的」
+//   → 拿掉硬邊的整片光錐；光柱、牆面打光先畫進 RC，再挖掉家具／小人／牆上物件的形狀才疊上去（光不會蓋在家具上）
+const RC=document.createElement('canvas'),rcx=RC.getContext('2d');
+function drawRays(now,P,ctx){now*=P.ts||1;const pl=poolOf(P)||{i:N/2,j:N/2,r:N*.25},c=iso(pl.i,pl.j),R=pl.r*Math.SQRT2*TW*.85,h=WALL_H*Z2PX*(P.hk||2.3),sl=P.slant??.22,
     top={x:c.x-sl*h,y:c.y-h},Rt=R*(P.tk??.5),n=P.n||18,rm=reduceMotion.matches,Rn=(s=>()=>(s=(s*16807)%2147483647)/2147483647)(P.seed||5);
-  g.save();g.globalCompositeOperation='lighter';
-  const cone=g.createLinearGradient(top.x,top.y,c.x,c.y);cone.addColorStop(0,`rgba(${P.c},0)`);cone.addColorStop(.2,`rgba(${P.c},${P.a*.4})`);cone.addColorStop(.75,`rgba(${P.c},${P.a*.2})`);cone.addColorStop(1,`rgba(${P.c},0)`);
-  g.fillStyle=cone;g.beginPath();g.moveTo(top.x-Rt,top.y);g.lineTo(top.x+Rt,top.y);g.lineTo(c.x+R,c.y);g.lineTo(c.x-R,c.y);g.closePath();g.fill();
+  ctx.save();ctx.globalCompositeOperation='lighter';
   for(let k=0;k<n;k++){const u0=Rn()*2-1,v=(Rn()-.5)*.9,w=(1+Rn()*4)*(P.wk||1),ph=Rn()*TAU,sp=700+Rn()*1800,bri=.35+Rn()*.65;
     const u=u0+(rm?0:.07*Math.sin(now/(3800+k*420)+ph)),fl=rm?.7:Math.pow(.5+.5*Math.sin(now/sp+ph),2),a=P.a*bri*(.25+.75*fl);if(a<.004)continue;
-    const tx=top.x+u*Rt,bx=c.x+u*R,by=c.y+v*R*TH/TW,gr=g.createLinearGradient(tx,top.y,bx,by);
-    gr.addColorStop(0,`rgba(${P.c},0)`);gr.addColorStop(.18,`rgba(${P.c},${a})`);gr.addColorStop(.65,`rgba(${P.c},${a*.55})`);gr.addColorStop(1,`rgba(${P.c},0)`);g.fillStyle=gr;
-    g.beginPath();g.moveTo(tx-w*.5,top.y);g.lineTo(tx+w*.5,top.y);g.lineTo(bx+w*1.6,by);g.lineTo(bx-w*1.6,by);g.closePath();g.fill();}
-  g.restore();
+    const tx=top.x+u*Rt,bx=c.x+u*R,by=c.y+v*R*TH/TW,gr=ctx.createLinearGradient(tx,top.y,bx,by);
+    gr.addColorStop(0,`rgba(${P.c},0)`);gr.addColorStop(.18,`rgba(${P.c},${a})`);gr.addColorStop(.6,`rgba(${P.c},${a*.5})`);gr.addColorStop(1,`rgba(${P.c},0)`);ctx.fillStyle=gr;
+    ctx.beginPath();ctx.moveTo(tx-w*.5,top.y);ctx.lineTo(tx+w*.5,top.y);ctx.lineTo(bx+w*1.6,by);ctx.lineTo(bx-w*1.6,by);ctx.closePath();ctx.fill();}
+  ctx.restore();
   if(!rm&&Math.random()<(P.snow??.25)){const u=Math.random()*2-1,q=Math.random(),x=top.x+(c.x-top.x)*q+u*(Rt+(R-Rt)*q),y=top.y+(c.y-top.y)*q;
     FX.push({x,y,vx:(Math.random()-.5)*.003,vy:.002+Math.random()*.003,life:0,max:2500+Math.random()*2500,type:'mote'});}}
+// 牆面打光：光落點離哪面牆越近，那面牆越亮；一整片柔和的光，沒有花紋、沒有邊
+function drawWallWash(now,P,ctx){const pl=poolOf(P);if(!pl)return;const H=WALL_H*Z2PX,br=(reduceMotion.matches?1:.92+.08*Math.sin(now/2300)),R=pl.r*TW*1.7;
+  const nt=isNight()?1.6:1;   // 夜晚房間先被壓暗，牆面打光要多一點才看得出來
+  for(const side of ['L','R']){const d=side==='L'?pl.i:pl.j,k=Math.max(0,1-d/(pl.r*1.25))**1.2;if(k<.03)continue;   // 光池碰到牆腳的地方最亮，往上淡出：地板的光接到牆上，不會在牆腳切一刀
+    const P2=(a,b)=>side==='L'?iso(a,b):iso(b,a),c0=side==='L'?pl.j:pl.i,b0=P2(0,c0),cx=b0.x,cy=b0.y-H*.18;
+    const quad=[P2(0,0),P2(0,N),{x:P2(0,N).x,y:P2(0,N).y-H},{x:P2(0,0).x,y:P2(0,0).y-H}];
+    ctx.save();ctx.beginPath();quad.forEach((p,q)=>q?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.clip();ctx.globalCompositeOperation='lighter';
+    const a=Math.min(.6,P.a*1.7*nt)*k*br,gr=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+    gr.addColorStop(0,`rgba(${P.c},${a})`);gr.addColorStop(.45,`rgba(${P.c},${a*.6})`);gr.addColorStop(.8,`rgba(${P.c},${a*.18})`);gr.addColorStop(1,`rgba(${P.c},0)`);
+    ctx.fillStyle=gr;ctx.save();ctx.translate(cx,cy);ctx.scale(1,1.25);ctx.translate(-cx,-cy);ctx.fillRect(cx-R,cy-R,R*2,R*2);ctx.restore();ctx.restore();}}
+function drawRaysLayer(now,list){if(RC.width!==cv.width||RC.height!==cv.height){RC.width=cv.width;RC.height=cv.height;}
+  rcx.setTransform(1,0,0,1,0,0);rcx.globalCompositeOperation='source-over';rcx.globalAlpha=1;rcx.clearRect(0,0,RC.width,RC.height);rcx.setTransform(...viewT());
+  for(const P of list){drawWallWash(now,P,rcx);drawRays(now,P,rcx);}
+  rcx.save();rcx.globalCompositeOperation='destination-out';rcx.globalAlpha=1;
+  for(const o of withDecos(order([...solidList(),'me'])))try{sil(rcx,o);}catch(e){}
+  for(const o of items)if(DEF[o.t]?.kind==='wall'&&o!==held?.it)try{sil(rcx,o);}catch(e){}
+  rcx.restore();
+  g.save();g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='lighter';g.drawImage(RC,0,0);g.restore();}
+// 玩家擺光的位置：按住房間地板拖曳，光圈跟著走（TTFX.pick）
+let FXPICK=null;
+function fxPickPos(e){const [i,j]=toTile(toCanvas(e)),cl=v=>Math.max(.5,Math.min(N-.5,v));return {x:Math.round(cl(i)/N*100),y:Math.round(cl(j)/N*100)};}
+for(const ev of ['pointerdown','pointermove','pointerup','pointercancel'])cv.addEventListener(ev,e=>{if(!FXPICK)return;e.stopImmediatePropagation();e.preventDefault();
+  if(ev==='pointerdown'){FXPICK.down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}}
+  if(!FXPICK.down&&ev!=='pointerdown')return;const q=fxPickPos(e);fxSetPos(FXPICK.id,q.x,q.y);
+  if(ev==='pointerup'||ev==='pointercancel')FXPICK.down=false;try{FXPICK.cb(q,ev==='pointerup'||ev==='pointercancel');}catch(_){}},true);
+function fxSetPos(id,x,y){const s=Array.isArray(FXPREV?FXPREV.sel:FXSEL)?(FXPREV?FXPREV.sel:FXSEL):null;if(!s)return;const e=s.find(e=>e.set+e.lv===id);if(!e)return;
+  if(x==null){delete e.x;delete e.y;}else{e.x=x;e.y=y;}if(!FXPREV){FXK='';}}
+function drawPickMark(now){if(!FXPICK)return;for(const P of projLayers()){if(P._fx!==FXPICK.id||!P.pool)continue;const pl=poolOf(P),c=iso(pl.i,pl.j),R=pl.r*Math.SQRT2*TW;
+  g.save();g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=1.5;g.setLineDash([6,5]);g.lineDashOffset=-now/60;g.beginPath();g.ellipse(c.x,c.y,R,R*TH/TW,0,0,TAU);g.stroke();
+  g.setLineDash([]);g.fillStyle='rgba(255,120,190,.95)';g.beginPath();g.moveTo(c.x,c.y-6);g.lineTo(c.x+9,c.y);g.lineTo(c.x,c.y+6);g.lineTo(c.x-9,c.y);g.closePath();g.fill();g.strokeStyle='#fff';g.stroke();g.restore();break;}}
 // ---- 第一批系列專屬光效（D 2026/11/05：先做第一梯）＋共用：光的落點自動找空地（D：解鎖後光效可以帶到其他房間）----
 let OPEN_K='',OPEN_V={i:11,j:11};
 function openSpot(){let key=N+'|';for(const o of items)if(o!==held?.it&&DEF[o.t]?.kind==='floor')key+=o.t+(o.i)+','+(o.j)+(o.dir||0)+';';if(key===OPEN_K)return OPEN_V;
@@ -849,7 +886,7 @@ function beat(now,P){if(!P.bpm||reduceMotion.matches)return 0;const b=(now/(6000
 function projGain(now){let g1=1;for(const P of projLayers()){if(P.kind==='circle')g1*=1+.4*Math.min(1,CIRC.I||0);if(P.bpm)g1*=1+.28*beat(now,P);}return g1;}
 
 // 畫在最上層的：光束、舞台煙
-function drawOver(now){for(const P of projLayers()){if(P.kind==='rays')drawRays(now,P);
+function drawOver(now){const RL=projLayers().filter(P=>P.kind==='rays');if(RL.length)drawRaysLayer(now,RL);drawPickMark(now);for(const P of projLayers()){
   if(P.kind==='spot'&&P.haze){g.save();g.globalCompositeOperation='lighter';const bt=beat(now,P);
     for(let k=0;k<(P.n||3);k++){const s=spotPos(now,P,k),p=iso(s.i,s.j),h=WALL_H*Z2PX*.5,r=(P.r||3.2)*TW*1.15;
       const gr=g.createLinearGradient(p.x,p.y-h*2.2,p.x,p.y);gr.addColorStop(0,`rgba(${s.c},0)`);gr.addColorStop(.75,`rgba(${s.c},${(P.haze||.08)*(.7+.6*bt)})`);gr.addColorStop(1,`rgba(${s.c},0)`);

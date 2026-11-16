@@ -254,6 +254,15 @@ body:not(.tt-house-fxp) #ttFxPanel,body:not(.tt-house-on) #ttFxPanel,body.tt-hou
 .tt-fx-params label.tt-fx-chk{grid-template-columns:auto 1fr;font-weight:400;cursor:pointer}
 .tt-fx-chk input{width:16px;height:16px;margin:0;accent-color:#FF4F8B}
 .tt-fx-reset{justify-self:end;font:inherit;font-size:11px;font-weight:700;padding:3px 10px;border-radius:9px;border:2px solid var(--sk-ink,#1C2156);background:#FFF0F6;color:var(--sk-ink,#1C2156);cursor:pointer}
+/* D 11/16：光的位置玩家自己擺——按「調整光的位置」後在房間地板點一下或拖曳 */
+.tt-fx-pos{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 8px;padding:7px 8px;border-radius:10px;background:#F6F0FF;border:2px dashed #D9C3E8}
+.tt-fx-pos small{font-size:11px;color:var(--sk-mute,#5C6196);line-height:1.4}
+.tt-fx-posbtn{font:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:9px;border:2px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;box-shadow:0 2px 0 var(--sk-ink,#1C2156)}
+.tt-fx-posbtn:active,.tt-fx-posauto:active{transform:translateY(1px)}
+.tt-fx-pos.on{background:#FFF0F6;border-color:#FF4F8B;border-style:solid}
+.tt-fx-pos.on .tt-fx-posbtn{background:#FF4F8B;color:#fff;border-color:#C42D68;box-shadow:0 2px 0 #C42D68}
+.tt-fx-pos.on small{color:#C42D68;font-weight:700}
+.tt-fx-posauto{grid-column:1/-1;justify-self:start;font:inherit;font-size:11px;font-weight:700;padding:2px 9px;border-radius:8px;border:2px solid #B9A8D6;background:#fff;color:var(--sk-mute,#5C6196);cursor:pointer}
 .tt-fx-off{width:100%;font:inherit;font-size:14px;font-weight:700;padding:9px;border-radius:14px;border:3px solid var(--sk-ink,#1C2156);background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156)}
 .tt-fx-off:disabled{opacity:.45;cursor:default;box-shadow:none}
 #ttFxPanel button:focus-visible,#ttFxPanel input:focus-visible{outline:3px solid #8FD3FF;outline-offset:2px}

@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='538';
+const VER='539';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={fx:null,fxHost:{},fxOpen:false,fxTry:null,fxT:0,fxRemote:false,on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -588,7 +588,8 @@ function fxProgress(set){const ser=FX_SETS.find(x=>x.set===set)?.series;let n=0,
 function fxUnlocked(id){const p=fxProgress(id.slice(0,-1));return p.n>0&&p.own>=(id.slice(-1)==='1'?p.need1:p.need2);}
 function fxClean(e){const out={};for(const [id,v] of Object.entries(e&&typeof e==='object'?e:{})){if(!/^[a-z]{2,12}[12]$/.test(id)||!v||typeof v!=='object')continue;
   const q={o:Math.max(0,Math.min(99,Math.round(+v.o)||0))};for(const [k,[,lo,hi]] of Object.entries(FX_P)){const x=Math.round(+v[k]);q[k]=Number.isFinite(x)?Math.max(lo,Math.min(hi,x)):100;}
-  if(v.d===false)q.d=false;out[id]=q;}return out;}
+  if(v.d===false)q.d=false;const x=Math.round(+v.x),y=Math.round(+v.y);if(v.x!=null&&v.y!=null&&Number.isFinite(x)&&Number.isFinite(y)){q.x=Math.max(0,Math.min(100,x));q.y=Math.max(0,Math.min(100,y));}   // D 11/16 光的位置（沒擺過＝自動找空地）
+  out[id]=q;}return out;}
 const fxLocal=k=>'tt_house_fx_'+k;
 async function fxLoad(key){let loc=null,rem;try{loc=JSON.parse(localStorage.getItem(fxLocal(key))||'null');}catch(_){}
  try{rem=(await DB().ref(R()+'/houseFx/'+key).once('value')).val();S.fxRemote=true;}catch(_){rem=undefined;S.fxRemote=false;}
@@ -599,9 +600,11 @@ async function fxLoad(key){let loc=null,rem;try{loc=JSON.parse(localStorage.getI
 function fxSave(){const key=S.key;if(!key||S.visit||!S.fx||!DB())return;S.fx.at=SNOW();
  try{localStorage.setItem(fxLocal(key),JSON.stringify({at:S.fx.at,e:S.fx.e}));}catch(_){}
  clearTimeout(S.fxT);S.fxT=setTimeout(()=>{const body={at:TS()};if(Object.keys(S.fx.e).length)body.e=S.fx.e;
-  DB().ref(R()+'/houseFx/'+key).set(body).then(()=>{S.fxRemote=true;},err=>{S.fxRemote=false;console.warn('[houseFx] 沒存進資料庫（規則還沒發布？）先存在這台電腦',err&&err.code);});},700);}
+  const ref=DB().ref(R()+'/houseFx/'+key),fail=err=>{S.fxRemote=false;console.warn('[houseFx] 沒存進資料庫（規則還沒發布？）先存在這台電腦',err&&err.code);};
+  ref.set(body).then(()=>{S.fxRemote=true;},err=>{const pos=body.e&&Object.values(body.e).some(v=>v.x!=null);if(!pos)return fail(err);   // 規則還沒收光的位置（第二十五批）：先存不帶位置的
+   const e2={};for(const [k,v] of Object.entries(body.e)){const q={...v};delete q.x;delete q.y;e2[k]=q;}ref.set({...body,e:e2}).then(()=>{S.fxRemote=true;},fail);});},700);}
 function fxList(e,check){return Object.entries(e||{}).filter(([id])=>!check||fxUnlocked(id)).sort((a,b)=>(a[1].o||0)-(b[1].o||0))
- .map(([id,v])=>({set:id.slice(0,-1),lv:+id.slice(-1),a:v.a,s:v.s,n:v.n,r:v.r,d:v.d!==false}));}
+ .map(([id,v])=>({set:id.slice(0,-1),lv:+id.slice(-1),a:v.a,s:v.s,n:v.n,r:v.r,d:v.d!==false,x:v.x,y:v.y}));}
 function fxApply(){const w=S.frame?.contentWindow;if(!w||!w.TTFX||!S.on)return;try{if(w.TTFX.previewing())return;}catch(_){}   // 試看中先不蓋掉，試看結束會再套一次
  const L=S.visit?fxList(S.fxHost,false):fxList(S.fx&&S.fx.e,true);try{w.TTFX.set(L.length?L:false);}catch(_){}}
 let FX_RAF=0;const fxApplySoon=()=>{if(!FX_RAF)FX_RAF=requestAnimationFrame(()=>{FX_RAF=0;fxApply();});};
@@ -618,11 +621,15 @@ function fxInvChanged(){const key=S.key;if(!key||S.visit||!S.cat)return;const ok
 function fxNextO(){let m=-1;for(const v of Object.values(S.fx.e))m=Math.max(m,v.o||0);if(m>=99){let i=0;for(const v of Object.values(S.fx.e).sort((a,b)=>a.o-b.o))v.o=i++;m=i-1;}return m+1;}
 function fxOpen(){if(!S.on||S.visit)return;if(S.mode==='edit')setMode('walk');closePanel();S.fxOpen=true;document.body.classList.add('tt-house-fxp');$('ttHouseFx')?.classList.remove('dot');
  fxRender();requestAnimationFrame(()=>room('frame'));}
-function fxClose(){fxStopTry();if(!S.fxOpen)return;S.fxOpen=false;document.body.classList.remove('tt-house-fxp');requestAnimationFrame(()=>room('frame'));}
+function fxClose(){fxPickEnd(true);fxStopTry();if(!S.fxOpen)return;S.fxOpen=false;document.body.classList.remove('tt-house-fxp');requestAnimationFrame(()=>room('frame'));}
 function fxTry(id){const w=S.frame?.contentWindow;if(!w||!w.TTFX)return;if(S.fxTry===id){fxStopTry();return;}
  try{w.TTFX.preview([{set:id.slice(0,-1),lv:+id.slice(-1)}],10000);S.fxTry=id;}catch(_){}fxRender();}
 function fxStopTry(){if(!S.fxTry)return;S.fxTry=null;try{S.frame?.contentWindow?.TTFX?.stopPreview();}catch(_){}fxApply();fxRender();}
-function fxToggle(id){if(!S.fx||!fxUnlocked(id))return;const e=S.fx.e;if(e[id])delete e[id];else e[id]={...fxDef(),o:fxNextO()};fxSave();fxApply();fxRender();}
+function fxHasPool(id){try{return !!S.frame?.contentWindow?.TTFX?.hasPool?.(id);}catch(_){return false;}}
+function fxPickStart(id){const w=S.frame?.contentWindow,cur=S.fx&&S.fx.e[id];if(!w||!w.TTFX||!w.TTFX.pick||!cur)return;fxPickEnd(true);fxStopTry();S.fxPick=id;
+ w.TTFX.pick(id,(q,fin)=>{const c=S.fx&&S.fx.e[id];if(!c)return;c.x=q.x;c.y=q.y;if(fin)fxSave();});fxRender();}
+function fxPickEnd(quiet){if(!S.fxPick)return;S.fxPick=null;try{S.frame?.contentWindow?.TTFX?.pickEnd();}catch(_){}fxSave();if(!quiet)fxRender();}
+function fxToggle(id){if(S.fxPick===id)fxPickEnd(true);if(!S.fx||!fxUnlocked(id))return;const e=S.fx.e;if(e[id])delete e[id];else e[id]={...fxDef(),o:fxNextO()};fxSave();fxApply();fxRender();}
 function fxRender(){const box=$('ttFxPanel');if(!box||!S.fxOpen)return;const body=box.querySelector('.tt-fx-body'),e=(S.fx&&S.fx.e)||{};
  const keep=box.contains(document.activeElement)?document.activeElement.dataset.f:null,top=body.scrollTop;
  body.innerHTML=FX_SETS.map(st=>{const p=fxProgress(st.set);
@@ -638,6 +645,9 @@ function fxRender(){const box=$('ttFxPanel');if(!box||!S.fxOpen)return;const bod
      +(on?'<div class="tt-fx-params">'+[...(FX_HAS[id]||'asnr')].map(k=>{const [lb,lo,hi,stp]=FX_P[k];
         return '<label><span>'+lb+'</span><input type="range" min="'+lo+'" max="'+hi+'" step="'+stp+'" value="'+v[k]+'" data-p="'+k+'" data-f="p'+id+k+'" aria-label="'+esc(nm)+lb+'"><output>'+v[k]+'%</output></label>';}).join('')
        +(FX_NIGHT[id]?'<label class="tt-fx-chk"><input type="checkbox" data-d="'+id+'" data-f="d'+id+'"'+(v.d===false?'':' checked')+'><span>房間跟著變暗（光比較亮眼）</span></label>':'')
+       +(fxHasPool(id)?'<div class="tt-fx-pos'+(S.fxPick===id?' on':'')+'"><button type="button" class="tt-fx-posbtn" data-pos="'+id+'" data-f="q'+id+'">'+(S.fxPick===id?'擺好了':'調整光的位置')+'</button>'
+        +'<small>'+(S.fxPick===id?'在房間地板上點一下或按住拖曳，光就會跟著移過去':v.x!=null?'光在你擺的位置':'光會自己找空地')+'</small>'
+        +(v.x!=null&&S.fxPick!==id?'<button type="button" class="tt-fx-posauto" data-posauto="'+id+'" data-f="u'+id+'">讓光自己找空地</button>':'')+'</div>':'')
        +'<button type="button" class="tt-fx-reset" data-reset="'+id+'" data-f="r'+id+'">恢復預設</button></div>':'')
      +'</article>';}).join('')+'</section>';}).join('')
   +'<button type="button" class="tt-fx-off" data-f="off"'+(Object.keys(e).length?'':' disabled')+'>全部關掉</button>';
@@ -648,8 +658,10 @@ function fxBind(box){
   if(t.classList.contains('tt-vp-close'))return fxClose();
   if(t.dataset.tog)return fxToggle(t.dataset.tog);
   if(t.dataset.try)return fxTry(t.dataset.try);
-  if(t.dataset.reset){const cur=S.fx&&S.fx.e[t.dataset.reset];if(cur){Object.assign(cur,fxDef());delete cur.d;fxSave();fxApply();fxRender();}return;}
-  if(t.dataset.f==='off'&&S.fx){S.fx.e={};fxSave();fxApply();fxRender();}});
+  if(t.dataset.pos)return S.fxPick===t.dataset.pos?fxPickEnd():fxPickStart(t.dataset.pos);
+  if(t.dataset.posauto){const cur=S.fx&&S.fx.e[t.dataset.posauto];if(cur){delete cur.x;delete cur.y;fxSave();fxApply();fxRender();}return;}
+  if(t.dataset.reset){if(S.fxPick===t.dataset.reset)fxPickEnd(true);const cur=S.fx&&S.fx.e[t.dataset.reset];if(cur){Object.assign(cur,fxDef());delete cur.d;delete cur.x;delete cur.y;fxSave();fxApply();fxRender();}return;}
+  if(t.dataset.f==='off'&&S.fx){fxPickEnd(true);S.fx.e={};fxSave();fxApply();fxRender();}});
  box.addEventListener('input',ev=>{const t=ev.target;if(!t.dataset.p)return;const id=t.closest('[data-id]')?.dataset.id,cur=S.fx&&S.fx.e[id];if(!cur)return;
   cur[t.dataset.p]=+t.value;const o=t.nextElementSibling;if(o)o.textContent=t.value+'%';if(t.dataset.p!=='r')fxApplySoon();});   // 範圍放開再套（葉影要重算）
  box.addEventListener('change',ev=>{const t=ev.target,id=t.closest('[data-id]')?.dataset.id,cur=S.fx&&S.fx.e[id];if(!cur)return;
