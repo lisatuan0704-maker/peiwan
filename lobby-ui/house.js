@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='534';
+const VER='535';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={fx:null,fxHost:{},fxOpen:false,fxTry:null,fxT:0,fxRemote:false,on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -474,7 +474,7 @@ function profileOf(k,dir){return Promise.all([DB().ref(R()+'/lobby/'+k).once('va
    size:sizeOk(view.size),n:+view.n||(Array.isArray(view.layout)?view.layout.length:0),home:!!(dir&&dir.on>SNOW()-120000)};});}
 async function roomReady(){for(let t=0;t<90;t++){const w=S.frame?.contentWindow;if(w&&w.TTRoom){try{await w.TTRoom.ready;}catch(_){}return;}await new Promise(r=>setTimeout(r,100));}}
 async function randomVisit(){const mk=KEY();if(!mk||!DB()){say('先做一張闆卡、用 Discord 登入，才能去別人的小屋玩');return;}
- if(S.tripping)return;S.tripping=true;const T=window.TTHouseTrip;
+ if(S.tripping)return;S.tripping=true;if(skipTrip())return quickVisit(mk);const T=window.TTHouseTrip;
  try{T?.open();
  let all={};try{all=(await DB().ref(R()+'/houseDir').orderByChild('at').limitToLast(200).once('value')).val()||{};}catch(_){}
  const cur=S.visit?.key,now=SNOW(),mix=a=>a.map(k=>[Math.random(),k]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
@@ -492,6 +492,25 @@ async function randomVisit(){const mk=KEY();if(!mk||!DB()){say('先做一張闆�
   if(T){await T.fail(S.lastFail);if(i<pool.length-1)await T.search(await Promise.all(profs.slice(i+1,i+6)));}}
  say('剛剛那幾間都客滿或沒開放，再按一次試試');await T?.close(false,'剛剛那幾間都客滿或沒開放，再按一次試試');
  }finally{S.tripping=false;T?.close(true);}}   // 正常走完 done()／close() 已經收掉；中途出錯也不會卡著
+// v535 設定「串門子不看翻卡」（存本機 tt_skip_trip）：不播選角／翻卡、也不跑色條轉場，直接找一間有開門的進去（D 11/16）
+const SKIP_KEY='tt_skip_trip';function skipTrip(){try{return localStorage.getItem(SKIP_KEY)==='1';}catch(_){return false;}}
+async function quickVisit(mk){
+ try{
+  let all={};try{all=(await DB().ref(R()+'/houseDir').orderByChild('at').limitToLast(200).once('value')).val()||{};}catch(_){}
+  const cur=S.visit?.key,now=SNOW(),mix=a=>a.map(k=>[Math.random(),k]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+  let keys=Object.keys(all).filter(k=>k!==mk&&k!==cur);if(keys.every(k=>S.seen.has(k)))S.seen.clear();keys=keys.filter(k=>!S.seen.has(k));
+  const home=keys.filter(k=>all[k]&&all[k].on>now-120000),away=keys.filter(k=>!home.includes(k));
+  const pool=[...mix(home),...mix(away)].slice(0,6);
+  if(!pool.length){say('現在還沒有其他開放的小屋，過幾天再來看看');return;}
+  for(const k of pool){if(await visit(k,'random'))return;
+   if(S.lastFail==='left')return;S.seen.add(k);}
+  say('剛剛那幾間都客滿或沒開放，再按一次試試');
+ }finally{S.tripping=false;}}
+function bindSkipTrip(){const b=$('tglSkipTrip'),row=$('setSkipTripRow');if(!b)return;
+ const phone=()=>isPhone()||!!window.TTMobile||document.body.classList.contains('mhome-on');   // 手機還不能進小屋，不顯示
+ const sync=()=>{if(row)row.hidden=phone();b.classList.toggle('on',skipTrip());b.setAttribute('aria-checked',String(skipTrip()));};
+ b.setAttribute('role','switch');b.setAttribute('aria-label','串門子不看翻卡');sync();$('gearBtn')?.addEventListener('click',sync);
+ b.addEventListener('click',()=>{try{localStorage.setItem(SKIP_KEY,skipTrip()?'0':'1');}catch(_){}sync();try{SFX.tap();}catch(_){}});}
 // 試看面板用（?tripdemo=1）：自己＋隨機名單裡幾位的資料
 async function tripSample(){const mk=KEY();if(!mk||!DB())return [];let all={};try{all=(await DB().ref(R()+'/houseDir').limitToLast(6).once('value')).val()||{};}catch(_){}
  const keys=[...new Set([...Object.keys(all).filter(k=>k!==mk),mk])].slice(0,5);return Promise.all(keys.map(k=>profileOf(k,all[k])));}
@@ -750,5 +769,5 @@ addEventListener('keydown',e=>{const t=e.target;if(!S.on||(t&&typeof t.closest==
  if(e.key==='Escape'&&S.mode==='edit'&&!room('holding'))setMode('walk');
  if(e.key==='Enter'&&S.mode!=='edit'&&!(t&&typeof t.closest==='function'&&t.closest('button,a,[role=button],select'))&&!document.querySelector('.ttc.on')){const i=$('ttHouseSay');if(i){e.preventDefault();i.focus();}}});
 addEventListener('pagehide',()=>{if(S.seatRef)try{S.seatRef.remove();}catch(_){}});
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{build();bindSkipTrip();});else{build();bindSkipTrip();}
 })();
