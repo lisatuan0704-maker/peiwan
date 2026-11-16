@@ -1771,6 +1771,12 @@ function pose(){const tt=me.t/1000;let bob=0,rot=0,sqx=1,sqy=1;
     rot=Math.sin(tt*11+me.seed)*0.75+(step?1:-1)*(landing?1.9:0.7);}
   else{const pulse=Math.max(0,Math.sin(tt*2.3*Math.PI+me.seed));sqx=1+pulse*0.031;sqy=1-pulse*0.044;}
   if(reduceMotion.matches){bob=0;rot=0;sqx=1;sqy=1;}return {bob,rot,sqx,sqy};}
+// v537 小人（自己、朋友）用 8 倍最近鄰放大的高解析版本來畫：走路彈跳、擠壓、微傾照舊，但不會被補間糊掉（原本 64 格圖直接拉大＋縮放）
+const HI_K=8,_hiC=new WeakMap();
+function hiOf(im){if(!im||!im.width)return im;let h=_hiC.get(im);const t=performance.now();
+  if(!h||t-h.t>500||h.w!==im.width){const c=h?.c||document.createElement('canvas');c.width=im.width*HI_K;c.height=im.height*HI_K;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);h={c,t,w:im.width};_hiC.set(im,h);}   // 每 0.5 秒重做一次：換衣服、眨眼都跟得上
+  return h.c;}
+function drawHi(im,x,y){const c=hiOf(im);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(c,x,y,im.width,im.height);}
 let lastStep=-1;
 function drawMe(dt){const s=SPR[DOLL()],p=iso(me.i,me.j),{bob,rot,sqx,sqy}=pose();
   if(me.path.length&&!reduceMotion.matches){const st=Math.floor(me.t/1000*5.5+me.seed);if(st!==lastStep){lastStep=st;for(const d of [-1,1])FX.push({x:p.x+d*4,y:p.y,vx:d*.012,vy:-.004,life:0,max:420,type:'puff'});}}
