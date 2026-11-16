@@ -1,5 +1,15 @@
 # 小小酒館修改紀錄
 
+## 2026/11/16 v534 小屋家具燈效各自設計、不外露（Claude）
+- D：燈效要照家具類型各自設計（寶箱是縫隙透光…）、不能有方形破圖感、光不能跑出家具外；泡泡管上下微亮中間暗、一顆顆氣泡慢慢往上；水族箱氣泡更小更多；壁爐不能有方形光。
+- house/room.html 新增 LFX（家具燈效表，14 件）：每件用自己的畫法（type：寶箱縫隙、水柱、爐火、燈罩…），光一律剪在家具圖形內——
+  lfxGlass(it,X,O) 從家具圖的像素 flood-fill 出遮罩（照 key|方向|tag 快取），lfxGlassClip 用 destination-in 剪；壁爐只認爐口（lfxMouthOk：不是淺色石頭才算），不再用拱形＋長方形框。
+  有 LFX 的家具不再畫舊的 glow／lightPass 光圈（drawLampGlow、litItem、夜間光池都跳過）。泡泡管用擦掉原本方塊氣泡的圖（LFXCI，blit 遇到就換）。
+- 順手修：右牆 wallPoly 反向繞（跟左牆同方向），牆角那格壁紙原本被兩面牆互相抵消貼不到。
+- tt-room-kit：room/room.src.html、room/tt-room.html 套同一段（_backup_1116_lfx/ 有舊檔），house-lobby/house-embed.js 只改 wallPoly（LFX 在 room 那兩份）。
+- 版本：verTag v534、ver.json 534、lobby-view 534、fixed-view 534、house.js VER 534（house.js?v=534）。
+- 驗證：14 件燈效 × 左右兩個方向 × 白天／海洋夜晚截圖，沒有光跑出家具、沒有頁面錯誤。夜晚的大圓圈與斜光束是海洋氛圍光效（不是家具燈）。
+
 ## 2026/11/15 v533 小屋海洋氛圍光還原（Claude）
 - D：「我說的明明是家具的燈，你怎麼把海洋氛圍燈改醜了」。v532 把主題氛圍光（海底光池色階、波光線條變細、白天染色變淡、照到家具與小人只亮一點）改掉是誤解，house/room.html 整段還原成 v531。
 - D 指的是「家具自己的燈」（例：珊瑚燈照在沉船寶箱上的一團白光，drawLampGlow／paintGlow／drawNight 的燈光）。色階版 stepGlow 試做在 scratchpad（room_lamp533.html），等 D 看過對照圖再上。

@@ -393,7 +393,7 @@ function drawBeamVolume(t,nightOnly){for(const b of beamShapes()){if(nightOnly&&
   g.save();g.globalCompositeOperation='lighter';g.fillStyle=gr;poly([Gq[0],Gq[1],Fq[1],Fq[2],Fq[3],Gq[3]]);g.fill();g.restore();}
   if(Math.random()<.06&&!reduceMotion.matches){const u=Math.random(),v=Math.random(),top={x:G[0].x+(G[1].x-G[0].x)*u,y:G[0].y+(G[1].y-G[0].y)*u},bot={x:F[3].x+(F[2].x-F[3].x)*u,y:F[3].y+(F[2].y-F[3].y)*u};
     FX.push({x:top.x+(bot.x-top.x)*v,y:top.y+(bot.y-top.y)*v,vx:(Math.random()-.5)*.004,vy:-.003-Math.random()*.004,life:0,max:2600+Math.random()*2000,type:'mote'});}}}
-function drawLampGlow(t){for(const l of lightList(t)){if(l.t==='window'||/win/.test(l.t))continue;const x=l.x,y=l.y,fl=.85+.15*l.fl,c=l.t==='lamp'?'255,214,140':l.L.c;   // 白天：每盞燈一圈柔光（窗不加：D 說窗上光塗層很突兀）
+function drawLampGlow(t){for(const l of lightList(t)){if(l.t==='window'||/win/.test(l.t)||LFX[l.t])continue;const x=l.x,y=l.y,fl=.85+.15*l.fl,c=l.t==='lamp'?'255,214,140':l.L.c;   // 白天：每盞燈一圈柔光（窗不加：D 說窗上光塗層很突兀）
   g.save();g.globalCompositeOperation='lighter';let gr=g.createRadialGradient(x,y,0,x,y,26);gr.addColorStop(0,`rgba(${c},${.42*fl})`);gr.addColorStop(1,`rgba(${c},0)`);
   g.fillStyle=gr;g.fillRect(x-26,y-26,52,52);g.restore();}}
 // ---- 家具自帶的魔法光暈與粒子（manifest items 可加，任何主題通用）----
@@ -408,7 +408,7 @@ function glowK(G,it,now){if(reduceMotion.matches)return 1;const ph=fxPh(it);
   if(G.flicker)return .78+.12*Math.sin(now/97+ph)*Math.sin(now/233+ph*2)+.1*Math.sin(now/61+ph*3);
   return G.pulse?.6+.4*(.5+.5*Math.sin(now/(G.pulse*1000)*Math.PI*2+ph)):1;}
 function glowAmt(it,now){const G=DEF[it.t]?.glow;if(!G)return 1;return glowK([].concat(G)[0],it,now);}
-function glowList(now){const out=[];for(const it of items){if(it===held?.it)continue;const G=DEF[it.t].glow;if(!G)continue;
+function glowList(now){const out=[];for(const it of items){if(it===held?.it)continue;const G=DEF[it.t].glow;if(!G||LFX[it.t])continue;
   for(const q of [].concat(G)){const p=fxPt(it,q.z||0,q.dx,q.dy);out.push({...p,G:q,k:glowK(q,it,now),it,t:it.t,flat:!!q.flat,wall:DEF[it.t].kind==='wall'});}}return out;}
 function paintGlow(ctx,l,now){const G=l.G,a=(G.a??.6)*l.k,r=G.r||24,c=G.c||'255,220,160',fx=x=>ctx.fillRect(l.x-r,l.y-r,r*2,r*2);
   ctx.save();if(l.flat){ctx.translate(l.x,l.y);ctx.scale(1,.5);ctx.translate(-l.x,-l.y);}
@@ -422,6 +422,154 @@ function drawGlows(now){const ls=glowList(now);if(!ls.length)return;const flats=
   const by=new Map();for(const l of ls)if(!l.flat){if((l.G.r||24)<20){g.save();g.globalCompositeOperation='lighter';paintGlow(g,l,now);g.restore();}   // 小光暈（桌上小物）直接疊，不算遮擋（省效能）
     else{if(!by.has(l.it))by.set(l.it,[]);by.get(l.it).push(l);}}
   for(const [it,L] of by)lightPass(g,L[0],.2,ctx=>{for(const l of L)paintGlow(ctx,l,now);});}   // 同一件家具的幾圈光一起算一次遮擋
+/* v534 家具燈效：照家具「光從哪裡來」各自設計（寶箱＝蓋縫透光、壁爐＝爐口火光、蘑菇＝傘底往下照…），不再每件一團圓光。
+   座標是家具圖上的像素（圖左上 0,0；_r 圖與左右翻轉自動鏡像）。有 LFX 的家具不畫舊的白天光圈、glow 光暈與夜晚燈心亮點。 */
+const LFX={
+  vl_treasure:{type:'seam',c:'255,214,120',seam:[[2,36],[27,49],[69,28]]},
+  vl_corallamp:{type:'bio',c:'255,170,170',core:[17.5,28.5,6],tips:[[31,1],[25,3],[12,9],[4,14],[34,14]]},
+  vl_jellylamp:{type:'jelly',c:'205,175,255',bell:[19,16,16,9],tent:[[10,32,50],[17,36,51],[23,37,50],[28,33,49]]},
+  vl_bubbletube:{type:'tube',c:'150,225,255',rect:[7,26,16,39],lav:1},
+  vl_aquarium:{type:'water',c:'150,230,255',rect:[4,38,37,46],spread:.85},
+  vl_pearlstand:{type:'pearl',pearl:[18,11.5,9.5]},
+  vl_lantern:{type:'candle',c:'255,206,130',flame:[19,29],r:7,hang:1},
+  vp_lanternw:{type:'candle',c:'255,214,140',flame:[6,18],r:5,hang:1},
+  vf_nightstand:{type:'candle',c:'255,206,140',flame:[16,5],r:5,rOff:[-4,2]},
+  vp_mushlamp:{type:'mush',c:'255,222,160',rim:[[6,27],[42,27]],floorY:60,rOff:[-1,0]},
+  vf_fireplace:{type:'fire',c:'255,150,70',mouth:[35,57,25,26],candles:[[54,23],[61,23]],candlesR:[[47.5,36],[54,43]],rOff:[1,0]},
+  vr_s_b_fireplace:{type:'fire',c:'255,150,70',mouth:[32,47,23,30],candles:[[20,23],[59,1]]},
+  vr_s_g_desk:{type:'screen',c:'130,190,255',screens:[[[16,20],[32,12],[32,26],[16,34]],[[37,10],[53,2],[53,17],[37,25]]],spill:[38,36],rOff:[-4,0]}};
+const lfxOf=it=>LFX[it.t]||null;
+function lfxP(it,px,py,raw){const r=rectOf(it),s=sprOf(it),isR=/_r(@6)?$/.test(r.key),X=LFX[it.t];let x=px,y=py;
+  if(isR&&!raw){const b=SPR[r.key.replace(/_r(@6)?$/,'$1')]||s,o=X?.rOff||[0,0];x=b.w-px+o[0];y=py+o[1];}   // _r 圖＝原圖左右鏡像（少數幾件差 1～2 格，用 rOff 補）
+  return {x:r.x+(r.flip?s.w-x:x),y:r.y+y};}
+const lfxCandles=(it,X)=>{const R=X.candlesR&&/_r(@6)?$/.test(rectOf(it).key);return (R?X.candlesR:X.candles||[]).map(q=>lfxP(it,q[0],q[1],R));};   // 左右兩張圖蠟燭擺法不同時，右向另外給座標
+function lfxClip(ctx,it){const r=rectOf(it);ctx.save();ctx.globalCompositeOperation='destination-in';   // 前面畫的光只留在家具圖案上（不會跑出寶箱、管子外）
+  if(r.flip){ctx.translate(r.x+r.w,r.y);ctx.scale(-1,1);ctx.drawImage(IMG[r.key],0,0,r.w,r.h);}else ctx.drawImage(IMG[r.key],r.x,r.y,r.w,r.h);ctx.restore();}
+const lfxH=(n)=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};   // 固定亂數（每件、每顆一樣）
+function lfxStar(ctx,x,y,s,c,a){x=Math.round(x);y=Math.round(y);ctx.fillStyle=`rgba(${c},${a})`;ctx.fillRect(x,y,1,1);
+  if(s>=1){ctx.fillStyle=`rgba(${c},${a*.6})`;ctx.fillRect(x-s,y,s,1);ctx.fillRect(x+1,y,s,1);ctx.fillRect(x,y-s,1,s);ctx.fillRect(x,y+1,1,s);}}
+function lfxDot(ctx,x,y,r,c,a){const gr=ctx.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${c},${a})`);gr.addColorStop(.45,`rgba(${c},${a*.45})`);gr.addColorStop(1,`rgba(${c},0)`);ctx.fillStyle=gr;ctx.fillRect(x-r,y-r,r*2,r*2);}
+function lfxFlat(ctx,x,y,rx,ry,c,a){ctx.save();ctx.translate(x,y);ctx.scale(1,ry/rx);lfxDot(ctx,0,0,rx,c,a);ctx.restore();}
+function lfxPoly(ctx,P){ctx.beginPath();P.forEach((p,k)=>k?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));}
+function lfxFlick(now,ph){return .8+.1*Math.sin(now/90+ph)*Math.sin(now/217+ph*2)+.1*Math.sin(now/53+ph*3);}
+function lfxBub(ctx,x,y,r,a){lfxDot(ctx,x,y,r*2.6,'180,240,255',.3*a);   // 圓圓的發光氣泡：柔光＋細圈＋左上小亮點（不畫方格）
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.strokeStyle=`rgba(225,250,255,${.7*a})`;ctx.lineWidth=.55;ctx.stroke();
+  ctx.beginPath();ctx.arc(x-r*.38,y-r*.38,r*.3,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${.85*a})`;ctx.fill();}
+// 泡泡管原圖畫死的方塊氣泡擦掉的版本（房間裡畫這張，氣泡改由燈效動態冒；商店縮圖照原圖）
+const LFXCI={};{const i=new Image();i.src='data:image/png;base64,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';LFXCI['vl_bubbletube']=i;}{const i=new Image();i.src='data:image/png;base64,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';LFXCI['vl_bubbletube_r']=i;}
+const LFXG={};
+function lfxGlass(it,X,O){O=O||{};const r=rectOf(it),key=r.key,id=key+'|'+it.t+'|'+(O.tag||'g');if(LFXG[id])return LFXG[id];const im=IMG[key],W=im.width,H=im.height;let D=MASK[key];
+  if(!W||!D||D.length<W*H*4)return null;const ci=LFXCI[key];if(ci){if(!ci.complete||!ci.naturalWidth)return null;const c0=document.createElement('canvas');c0.width=W;c0.height=H;const x0=c0.getContext('2d');x0.drawImage(ci,0,0);D=x0.getImageData(0,0,W,H).data;}
+  // 玻璃範圍照家具圖算：從水柱中間往外長，只吃「水的顏色」（描邊、蓋子、白色蓋緣都不算），每一直行各自有自己的上緣、下緣
+  const isR=/_r(@6)?$/.test(key),b=SPR[key.replace(/_r(@6)?$/,'$1')]||sprOf(it),o=X.rOff||[0,0],[x0,y0,w,h]=O.rect||X.rect,py=O.py??10;
+  const cx0=Math.round(isR?b.w-(x0+w/2)+o[0]:x0+w/2),cy0=Math.round(y0+h/2+(isR?o[1]:0)),ya=Math.max(0,y0+(isR?o[1]:0)-py),yb=Math.min(H-1,y0+h+(isR?o[1]:0)+py);
+  const xa=O.px==null?0:Math.max(0,Math.round(isR?b.w-(x0+w)+o[0]:x0)-O.px),xb=O.px==null?W-1:Math.min(W-1,Math.round(isR?b.w-x0+o[0]:x0+w)+O.px);
+  const ok=O.ok?(x,y)=>{const i=(y*W+x)*4;return D[i+3]>=128&&O.ok(D[i],D[i+1],D[i+2]);}:(x,y)=>{const i=(y*W+x)*4,R=D[i],G=D[i+1],B=D[i+2];if(D[i+3]<128)return false;const L=R*.3+G*.59+B*.11,mx=Math.max(R,G,B),mn=Math.min(R,G,B);
+    if(L<78)return false;return B>R+15||(X.lav&&G<R-15&&G<B-12);};   // 藍綠的水；泡泡管下半的淡紫水另外認（白色蓋緣不算）
+  const seen=new Uint8Array(W*H),st=[];let sx=cx0,sy=cy0;for(let d=0;d<8&&!ok(sx,sy);d++)sy=cy0+(d%2?-1:1)*Math.ceil(d/2);if(!ok(sx,sy))return null;
+  st.push(sx,sy);seen[sy*W+sx]=1;const top=new Array(W).fill(-1),bot=new Array(W).fill(-1);
+  while(st.length){const y=st.pop(),x=st.pop();if(top[x]<0||y<top[x])top[x]=y;if(y>bot[x])bot[x]=y;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<xa||nx>xb||ny<ya||ny>yb||seen[ny*W+nx])continue;seen[ny*W+nx]=1;if(ok(nx,ny))st.push(nx,ny);}}
+  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.fillStyle='#fff';const cols=[];let T=1e9,Bt=-1;
+  for(let x=0;x<W;x++)if(top[x]>=0){g.fillRect(x,top[x],1,bot[x]-top[x]+1);cols.push([x,top[x],bot[x]]);T=Math.min(T,top[x]);Bt=Math.max(Bt,bot[x]);}   // 每一直行從上緣填到下緣（水裡的裝飾也包進來）
+  const sp={};for(const [x,t,bb] of cols)for(let y=t;y<=bb;y++){const q=sp[y]||(sp[y]=[x,x]);q[0]=Math.min(q[0],x);q[1]=Math.max(q[1],x);}
+  const P0=lfxP(it,0,T,true),P1=lfxP(it,0,Bt+1,true);
+  return LFXG[id]={cv:c,y:P0.y,H:P1.y-P0.y,sp,
+    cols:cols.map(([x,t,bb])=>{const a=lfxP(it,x,t,true),e=lfxP(it,x+1,bb+1,true);return {x:Math.min(a.x,e.x),t:a.y,b:e.y};}),
+    span:yy=>{const ry=Math.round(yy-r.y),q=sp[ry];if(!q)return null;const a=lfxP(it,q[0],ry,true).x,e=lfxP(it,q[1]+1,ry,true).x;return [Math.min(a,e),Math.max(a,e)];}};}
+const lfxMouthOk=(R,G,B)=>{const mx=Math.max(R,G,B),mn=Math.min(R,G,B);return !(mx>150&&(mx-mn)/mx<.32);};   // 爐口：不是淺色石頭就算
+function lfxGlassClip(ctx,it,G){const r=rectOf(it);ctx.save();ctx.globalCompositeOperation='destination-in';   // 光只留在玻璃裡面（形狀跟著描邊）
+  if(r.flip){ctx.translate(r.x+r.w,r.y);ctx.scale(-1,1);ctx.drawImage(G.cv,0,0,r.w,r.h);}else ctx.drawImage(G.cv,r.x,r.y,r.w,r.h);ctx.restore();}
+function lfxColumn(ctx,it,X,now,ph,n,per,gT,gB,R){const G=lfxGlass(it,X);if(!G)return;const y=G.y,H=G.H,b=.85+.15*Math.sin(now/1700+ph),LT=H*.3,LB=H*.35;
+  for(const q of G.cols){   // 每一直行從自己的上緣往下、下緣往上淡淡發光（光的邊跟著玻璃的弧線，不是一條直線）
+    let gr=ctx.createLinearGradient(0,q.t,0,q.t+LT);gr.addColorStop(0,`rgba(${X.c},${gT*b})`);gr.addColorStop(1,`rgba(${X.c},0)`);ctx.fillStyle=gr;ctx.fillRect(q.x,q.t,1,Math.min(LT,q.b-q.t));
+    gr=ctx.createLinearGradient(0,q.b,0,q.b-LB);gr.addColorStop(0,`rgba(${X.c},${gB*b})`);gr.addColorStop(1,`rgba(${X.c},0)`);ctx.fillStyle=gr;ctx.fillRect(q.x,Math.max(q.t,q.b-LB),1,Math.min(LB,q.b-q.t));}
+  for(let k=0;k<n;k++){const u=((now+ph*900)/per+k/n)%1,cy=y+H-R-2-u*(H-2*R-4),s=G.span(cy);if(!s)continue;const mid=(s[0]+s[1])/2,half=(s[1]-s[0])/2-R-1;   // 氣泡一顆接一顆慢慢往上，到水面淡掉；左右只在玻璃寬度裡
+    const cx=mid+(lfxH(k+ph)-.5)*2*half*(X.spread||.5)+Math.sin(u*9+k*2)*Math.min(1.2,half*.3),rr=k%2?R*.7:R,q=G.cols.find(c=>cx>=c.x&&cx<c.x+1)||{t:y,b:y+H};
+    const a=Math.min(1,u*6)*Math.max(0,Math.min(1,(cy-rr-q.t-1)/4,(q.b-cy-rr-1)/3));if(a>0)lfxBub(ctx,cx,cy,rr,a);}   // 碰到蓋子／底座前就淡掉，不會被切成半顆
+  lfxGlassClip(ctx,it,G);}
+// 每一種燈各畫兩樣：o＝疊在畫面上的光（白天、夜晚都畫）；n＝夜晚照亮四周的光（畫進壓暗用的光圖）
+const LFXT={
+  seam:{o(ctx,it,X,now,ph,night){const P=X.seam.map(q=>lfxP(it,q[0],q[1])),b=.72+.28*Math.sin(now/900+ph),c=X.c;
+      for(let k=1;k<P.length;k++){const A=P[k-1],B=P[k],n=Math.max(1,Math.round(Math.abs(B.x-A.x)));for(let q=0;q<=n;q++){   // 一格一格畫出蓋縫：中間 1 格最亮、上下各兩格漸暗（像素光，不糊）
+        const x=Math.round(A.x+(B.x-A.x)*q/n),y=Math.round(A.y+(B.y-A.y)*q/n),sh=.85+.15*Math.sin(now/260+x*.7+ph);
+        ctx.fillStyle=`rgba(255,248,210,${.95*b*sh})`;ctx.fillRect(x,y,1,1);ctx.fillStyle=`rgba(${c},${.5*b*sh})`;ctx.fillRect(x,y-1,1,1);ctx.fillRect(x,y+1,1,1);
+        ctx.fillStyle=`rgba(${c},${.2*b})`;ctx.fillRect(x,y-2,1,1);ctx.fillRect(x,y+2,1,1);}}
+      const segs=[];for(let k=1;k<P.length;k++)segs.push([P[k-1],P[k]]);
+      for(let k=0;k<6;k++){const per=2600+lfxH(ph+k)*1600,u=((now+lfxH(k*3+ph)*per)%per)/per,a=Math.sin(u*Math.PI),
+        sg=segs[k%segs.length],t=.12+.76*lfxH(k*7+ph),x=Math.round(sg[0].x+(sg[1].x-sg[0].x)*t),y=Math.round(sg[0].y+(sg[1].y-sg[0].y)*t),L=4+Math.round(5*lfxH(k*5+ph));
+        const gr=ctx.createLinearGradient(x,y,x,y-L);gr.addColorStop(0,`rgba(255,240,190,${.55*a*b})`);gr.addColorStop(1,'rgba(255,240,190,0)');ctx.fillStyle=gr;ctx.fillRect(x,y-L,1,L);}   // 從縫裡往上漏出的細光
+      const per=1700,n=Math.floor((now+ph*999)/per),u=((now+ph*999)%per)/per,sg=segs[n%segs.length],t=lfxH(n+ph);
+      if(u<.45){const x=sg[0].x+(sg[1].x-sg[0].x)*t,y=sg[0].y+(sg[1].y-sg[0].y)*t-2-3*u;lfxStar(ctx,x,y,u<.22?2:1,'255,250,215',Math.sin(u/.45*Math.PI));}   // 偶爾閃一顆金光
+      lfxClip(ctx,it);if(night){const m=P[1];lfxFlat(ctx,m.x,m.y+12,22,7,c,.16*b);}},
+    n(ctx,it,X,now,ph){const P=X.seam.map(q=>lfxP(it,q[0],q[1])),b=.75+.25*Math.sin(now/900+ph);
+      const m=P[1];lfxFlat(ctx,m.x,m.y+10,38,13,X.c,.4*b);}},
+  bio:{o(ctx,it,X,now,ph){const C=lfxP(it,X.core[0],X.core[1]),b=.7+.3*Math.sin(now/1400+ph);
+      lfxDot(ctx,C.x,C.y,X.core[2]*2.2,'255,226,170',.5*b);lfxDot(ctx,C.x,C.y,X.core[2]*.9,'255,246,215',.55*b);
+      X.tips.forEach((q,k)=>{const p=lfxP(it,q[0],q[1]),per=1500+lfxH(k+ph)*1800,u=((now+lfxH(k*9+ph)*per)%per)/per,a=Math.pow(Math.sin(u*Math.PI),2);
+        lfxDot(ctx,p.x+.5,p.y+.5,4,'255,170,200',.45*a);lfxStar(ctx,p.x,p.y,a>.75?1:0,'255,235,245',.4+.6*a);});lfxClip(ctx,it);},   // 珊瑚尖端一顆顆輪流亮（生物螢光）
+    n(ctx,it,X,now,ph){const C=lfxP(it,X.core[0],X.core[1]);lfxDot(ctx,C.x,C.y,40,X.c,.5*(.8+.2*Math.sin(now/1400+ph)));}},
+  jelly:{o(ctx,it,X,now,ph){const B=lfxP(it,X.bell[0],X.bell[1]),per=4000,u=((now+ph*700)%per)/per,beat=Math.pow(Math.max(0,Math.sin(u*Math.PI*2)),3),b=.45+.55*beat;
+      ctx.save();ctx.translate(B.x,B.y);ctx.scale(1,X.bell[3]/X.bell[2]);lfxDot(ctx,0,0,X.bell[2]+3,X.c,.45*b);ctx.restore();
+      X.tent.forEach((q,k)=>{const top=lfxP(it,q[0],q[1]),bot=lfxP(it,q[0],q[2]);for(const off of [0,.5]){const v=((now+ph*700)/per*1.6+off+k*.13)%1;   // 光點沿觸手一節一節往下流
+          const y=top.y+(bot.y-top.y)*v,a=Math.sin(v*Math.PI)*.85;lfxDot(ctx,top.x+.5,y,3,'235,215,255',.4*a);lfxStar(ctx,top.x,y,0,'250,240,255',a);}});lfxClip(ctx,it);},
+    n(ctx,it,X,now,ph){const B=lfxP(it,X.bell[0],X.bell[1]),u=((now+ph*700)%4000)/4000,b=.6+.4*Math.pow(Math.max(0,Math.sin(u*Math.PI*2)),3);lfxDot(ctx,B.x,B.y+8,44,X.c,.55*b);}},
+  tube:{d(ctx,it,X){const G=lfxGlass(it,X);if(!G)return;   // 水柱中段稍微壓暗（上下兩端才亮），每一直行照自己的上下緣
+      for(const q of G.cols){const gr=ctx.createLinearGradient(0,q.t,0,q.b);gr.addColorStop(0,'rgba(20,24,70,0)');gr.addColorStop(.35,'rgba(20,24,70,.3)');gr.addColorStop(.65,'rgba(20,24,70,.3)');gr.addColorStop(1,'rgba(20,24,70,0)');ctx.fillStyle=gr;ctx.fillRect(q.x,q.t,1,q.b-q.t);}
+      lfxGlassClip(ctx,it,G);},
+    o(ctx,it,X,now,ph){lfxColumn(ctx,it,X,now,ph,4,7200,.26,.28,1.5);},
+    n(ctx,it,X,now,ph){const [x0,y0,w,h]=X.rect,T=lfxP(it,x0+w/2,y0+3),B=lfxP(it,x0+w/2,y0+h-3);lfxDot(ctx,T.x,T.y,26,X.c,.3);lfxDot(ctx,B.x,B.y,34,X.c,.42);}},
+  water:{o(ctx,it,X,now,ph){lfxColumn(ctx,it,X,now,ph,10,9000,.2,.24,1.05);},   // 氣泡小顆、多一點
+    n(ctx,it,X,now,ph){const [x0,y0,w,h]=X.rect,C=lfxP(it,x0+w/2,y0+h*.45);lfxDot(ctx,C.x,C.y,42,X.c,.45*(.9+.1*Math.sin(now/700+ph)));}},
+  pearl:{o(ctx,it,X,now,ph){const C=lfxP(it,X.pearl[0],X.pearl[1]),R=X.pearl[2],cols=['255,205,230','190,225,255','225,205,255'],t=(now/2200+ph)%3,k=Math.floor(t),f=t-k;
+      const mix=(a,b)=>a.split(',').map((v,i)=>Math.round(+v*(1-f)+(+b.split(',')[i])*f)).join(',');lfxDot(ctx,C.x,C.y,R*2,mix(cols[k],cols[(k+1)%3]),.3);   // 珍珠的虹彩光：粉→藍→紫慢慢換
+      ctx.save();ctx.beginPath();ctx.arc(C.x,C.y,R,0,Math.PI*2);ctx.clip();const v=((now+ph*900)%3800)/3800,sx=C.x-R*1.6+R*3.2*v;   // 一道光澤從左掃到右
+      const gr=ctx.createLinearGradient(sx-4,0,sx+4,0);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,`rgba(255,255,255,${.5*Math.sin(v*Math.PI)})`);gr.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=gr;ctx.fillRect(sx-4,C.y-R,8,R*2);ctx.restore();
+      const u=((now+ph*600)%2900)/2900;if(u<.3)lfxStar(ctx,C.x-R*.45,C.y-R*.5,u<.15?2:1,'255,255,255',Math.sin(u/.3*Math.PI));lfxClip(ctx,it);},
+    n(ctx,it,X,now,ph){const C=lfxP(it,X.pearl[0],X.pearl[1]);lfxDot(ctx,C.x,C.y,30,'235,225,255',.4);}},
+  candle:{o(ctx,it,X,now,ph,night){const F=lfxP(it,X.flame[0],X.flame[1]),fl=lfxFlick(now,ph),r=X.r*(night?1.5:1);
+      lfxDot(ctx,F.x,F.y,r*fl,X.c,.55*fl);lfxDot(ctx,F.x,F.y-1,2.4,'255,240,200',.85*fl);   // 小小的燭火＋一圈會跳的暖光
+      ctx.fillStyle=`rgba(255,250,225,${.9*fl})`;ctx.fillRect(Math.round(F.x),Math.round(F.y-1-(fl>.88?1:0)),1,fl>.88?2:1);if(X.hang)lfxClip(ctx,it);},
+    n(ctx,it,X,now,ph){const F=lfxP(it,X.flame[0],X.flame[1]),fl=lfxFlick(now,ph);lfxDot(ctx,F.x,F.y,(X.hang?46:40)*(.95+.05*fl),X.c,.6*fl);
+      if(X.hang){ctx.save();ctx.translate(F.x,F.y+16);ctx.scale(.45,1.1);lfxDot(ctx,0,0,20,X.c,.3*fl);ctx.restore();}}},
+  mush:{o(ctx,it,X,now,ph,night){const A=lfxP(it,X.rim[0][0],X.rim[0][1]),Bp=lfxP(it,X.rim[1][0],X.rim[1][1]),cx=(A.x+Bp.x)/2,y=Math.round(A.y),hw=Math.abs(Bp.x-A.x)/2,fy=lfxP(it,0,X.floorY).y,b=.8+.2*Math.sin(now/1600+ph);
+      for(const [k,al] of [[1,.16],[.7,.16],[.42,.18]]){ctx.fillStyle=`rgba(${X.c},${al*b})`;ctx.beginPath();   // 傘底往下灑的光：三層一層比一層窄、越裡面越亮（像燈罩）
+        ctx.moveTo(cx-hw*.8*k,y+1);ctx.lineTo(cx+hw*.8*k,y+1);ctx.lineTo(cx+hw*1.3*k,fy);ctx.lineTo(cx-hw*1.3*k,fy);ctx.closePath();ctx.fill();}
+      for(let x=Math.round(cx-hw*.82);x<=Math.round(cx+hw*.82);x++){const e=1-Math.abs(x-cx)/(hw*.9);ctx.fillStyle=`rgba(255,244,205,${(.35+.55*e)*b})`;ctx.fillRect(x,y,1,1);ctx.fillStyle=`rgba(${X.c},${.4*e*b})`;ctx.fillRect(x,y+1,1,1);}   // 傘底一排亮格
+      lfxClip(ctx,it);
+      lfxFlat(ctx,cx,fy,hw*(night?1.6:1.2),hw*(night?.5:.36),X.c,(night?.35:.22)*b);
+      for(let k=0;k<6;k++){const per=4200+lfxH(k+ph)*2500,u=((now+lfxH(k*4+ph)*per)%per)/per,side=k%2?1:-1,x=cx+side*hw*(.75+.5*lfxH(k*11+ph))+Math.sin(u*6+k)*2,yy=y-4-u*30,a=Math.sin(u*Math.PI);   // 孢子慢慢往上飄
+        lfxDot(ctx,x+.5,yy+.5,3.5,'255,232,160',.35*a);lfxStar(ctx,x,yy,a>.8?1:0,'255,250,215',a);}},
+    n(ctx,it,X,now,ph){const A=lfxP(it,X.rim[0][0],X.rim[0][1]),Bp=lfxP(it,X.rim[1][0],X.rim[1][1]),cx=(A.x+Bp.x)/2,fy=lfxP(it,0,X.floorY).y;
+      lfxFlat(ctx,cx,fy,62,26,X.c,.6);lfxDot(ctx,cx,A.y+6,26,X.c,.35);}},
+  fire:{o(ctx,it,X,now,ph,night){const [mx,my,mw,mh]=X.mouth,A=lfxP(it,mx,my),Bp=lfxP(it,mx+mw,my+mh),x=Math.min(A.x,Bp.x),y=A.y,W=Math.abs(Bp.x-A.x),H=Bp.y-A.y,fl=lfxFlick(now,ph);
+      const M=lfxGlass(it,X,{rect:X.mouth,tag:'mouth',px:2,py:2,ok:lfxMouthOk});if(!M)return;ctx.save();   // 爐口裡的火光：範圍照家具圖找（爐膛的暗色＋火焰），淺色石頭與爐前石台都不算
+      const gr=ctx.createLinearGradient(0,y+H,0,y);gr.addColorStop(0,`rgba(255,200,90,${.55*fl})`);gr.addColorStop(.6,`rgba(${X.c},${.25*fl})`);gr.addColorStop(1,`rgba(${X.c},0)`);ctx.fillStyle=gr;ctx.fillRect(x,y,W,H);
+      for(let k=0;k<4;k++){const fx=x+W*(.2+.2*k),h=H*(.25+.18*Math.abs(Math.sin(now/(140+k*37)+k+ph)));lfxDot(ctx,fx,y+H-h*.4,h*.55,'255,220,120',.35*fl);}
+      for(let k=0;k<6;k++){const per=1600+lfxH(k+ph)*1300,u=((now+lfxH(k*6+ph)*per)%per)/per,ex=x+W*(.25+.5*lfxH(k*13+ph))+Math.sin(u*9+k)*2,ey=y+H*.85-u*H*.75;   // 火星在爐口裡往上飄
+        lfxStar(ctx,ex,ey,0,u<.4?'255,230,150':'255,150,80',Math.sin(u*Math.PI));}
+      ctx.restore();lfxGlassClip(ctx,it,M);
+      const fp=lfxP(it,mx+mw/2,my+mh+3);lfxFlat(ctx,fp.x,fp.y,W*(night?1.4:1),W*(night?.42:.3),X.c,(night?.32:.2)*fl);   // 照到爐前地板
+      for(const p of lfxCandles(it,X)){const f2=lfxFlick(now,ph+p.x);lfxDot(ctx,p.x,p.y,4*f2,'255,206,140',.5*f2);ctx.fillStyle=`rgba(255,248,215,${.9*f2})`;ctx.fillRect(Math.round(p.x),Math.round(p.y-1),1,f2>.88?2:1);}},
+    n(ctx,it,X,now,ph){const [mx,my,mw,mh]=X.mouth,fl=lfxFlick(now,ph),C=lfxP(it,mx+mw/2,my+mh*.6),fp=lfxP(it,mx+mw/2,my+mh+6);
+      lfxDot(ctx,C.x,C.y,56*(.93+.07*fl),X.c,.6*fl);lfxFlat(ctx,fp.x,fp.y,80,30,X.c,.5*fl);
+      for(const p of lfxCandles(it,X)){lfxDot(ctx,p.x,p.y,20,'255,206,140',.4);}}},
+  screen:{o(ctx,it,X,now,ph,night){const fl=.92+.08*Math.sin(now/70+ph)*Math.sin(now/310);
+      X.screens.forEach((S,k)=>{const P=S.map(q=>lfxP(it,q[0],q[1]));
+        ctx.strokeStyle=`rgba(${X.c},${.28*fl})`;ctx.lineWidth=3;lfxPoly(ctx,P);ctx.closePath();ctx.stroke();   // 螢幕邊緣透出的藍光
+        ctx.save();lfxPoly(ctx,P);ctx.closePath();ctx.clip();ctx.fillStyle=`rgba(${X.c},${.2*fl})`;ctx.fillRect(P[0].x-20,P[1].y-20,60,60);
+        const W=P[1].x-P[0].x,sl=(P[1].y-P[0].y)/W,H=P[3].y-P[0].y;   // 畫面上一行行字往上捲（像在聊天、看攻略）
+        for(let r=0;r<5;r++){const step=Math.floor((now+ph*800)/700)+k*3,yy=P[0].y+3+r*2.6,len=Math.round(3+lfxH(r+step)*(W-7));if(yy>P[0].y+H-3)break;
+          for(let x=0;x<len;x++){const X0=Math.round(P[0].x+2+x);ctx.fillStyle=`rgba(235,246,255,${(r===4?.75:.4)*fl})`;ctx.fillRect(X0,Math.round(yy+(x+2)*sl),1,1);}}
+        const v=((now+k*900+ph*400)%2600)/2600,yy=P[0].y+H*v;ctx.fillStyle=`rgba(225,240,255,${.3*fl})`;for(let x=0;x<W;x++)ctx.fillRect(Math.round(P[0].x+x),Math.round(yy+x*sl),1,1);   // 掃描線
+        ctx.restore();});
+      const sp=lfxP(it,X.spill[0],X.spill[1]);lfxFlat(ctx,sp.x,sp.y,night?32:24,night?12:9,X.c,(night?.38:.24)*fl);lfxClip(ctx,it);},   // 螢幕照到桌面和鍵盤
+    n(ctx,it,X,now,ph){const sp=lfxP(it,X.spill[0],X.spill[1]-10);lfxDot(ctx,sp.x,sp.y,58,X.c,.55);}}};
+function lfxDark(l,paint){if(TC.width!==cv.width||TC.height!==cv.height){TC.width=cv.width;TC.height=cv.height;}   // 跟 lightPass 一樣會被前面的家具擋住，但用一般疊法（壓暗用）
+  tg.setTransform(1,0,0,1,0,0);tg.clearRect(0,0,TC.width,TC.height);tg.setTransform(...viewT());tg.globalCompositeOperation='source-over';
+  paint(tg);cutOut(tg,l,0);g.save();g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-over';g.drawImage(TC,0,0);g.restore();}
+function drawLfx(now){const night=isNight();for(const it of items){if(it===held?.it)continue;const X=lfxOf(it);if(!X)continue;const T=LFXT[X.type];if(!T)continue;
+  const ph=fxPh(it)%7;if(T.d)lfxDark({it,wall:DEF[it.t].kind==='wall'},ctx=>{ctx.save();T.d(ctx,it,X);ctx.restore();});lightPass(g,{it,wall:DEF[it.t].kind==='wall'},.25,ctx=>{ctx.save();T.o(ctx,it,X,reduceMotion.matches?0:now,ph,night);ctx.restore();});}}
 // 粒子噴發：坩堝冒泡、水晶球閃光、燭火火星……
 const EMIT_RATE={bubble:2.2,spark:1.2,mote:1.5,smoke:1.2,ember:1.6};
 function spawnEmit(dt){if(reduceMotion.matches||FX.length>500)return;const r=Math.random;
@@ -1477,7 +1625,7 @@ function wallAnchor(it){const cc=it.c+DEF[it.t].w/2,p=it.wall==='L'?iso(0,cc):is
 function rectOf(it){const s=sprOf(it),flip=it.t==='doll'?me.face<0:(DEF[it.t].kind==='wall'?it.wall==='R':FLIP[it.dir||0]);
   const a=anchorOf(it), ax=flip?s.w-s.ax:s.ax, q=s.k||1;   // q：高解析度圖（2 倍）每個世界像素放 q 格
   return {x:Math.round((a.x-ax)*q)/q,y:Math.round((a.y-s.ay)*q)/q,w:s.w,h:s.h,flip,key:sprKey(it)};}
-function blit(r,alpha=1){g.save();g.globalAlpha=alpha;if(r.flip){g.translate(r.x+r.w,r.y);g.scale(-1,1);g.drawImage(IMG[r.key],0,0,r.w,r.h);}else g.drawImage(IMG[r.key],r.x,r.y,r.w,r.h);g.restore();}
+function blit(r,alpha=1){const im=LFXCI[r.key]?.complete&&LFXCI[r.key].naturalWidth?LFXCI[r.key]:IMG[r.key];g.save();g.globalAlpha=alpha;if(r.flip){g.translate(r.x+r.w,r.y);g.scale(-1,1);g.drawImage(im,0,0,r.w,r.h);}else g.drawImage(im,r.x,r.y,r.w,r.h);g.restore();}   // 有擦掉方塊氣泡的版本就畫那張（泡泡管）
 // 放下家具時彈一下（以底部為中心壓扁再回彈）
 function drawItem(o,now){const r=rectOf(o);const k=o._pt?(now-o._pt)/420:1;
   const an=DEF[o.t].anim&&ANIM[DEF[o.t].anim];   // 會動的家具：本體畫完緊接著畫動畫（前後遮擋跟著家具排序）
@@ -1520,7 +1668,7 @@ function draw(now,dt){
   if(isNight()){drawNight(now);drawBeamVolume(now,true);}else{drawBeamVolume(now);drawLampGlow(now);}
   for(const P of projLayers())if(P.post)floorPost(now,P);   // 地板花紋在壓暗後再補亮（只亮在地板，不上家具）
   drawOver(now);drawOver2(now);projTick(now);projTick2(now);projTick3(now);
-  drawGlows(now);spawnEmit(dt);
+  drawGlows(now);drawLfx(now);spawnEmit(dt);
   spawnFX(THEMES[theme].fx||(THEMES[theme].night?'petals':''));
   grade();if(HTHOOK.end)HTHOOK.end();spawnTwinkle();
   drawFX(dt);
@@ -1558,7 +1706,7 @@ function lightList(now){const out=[];for(const it of items){if(it===held?.it)con
 function drawNight(now){if(LC.width!==cv.width||LC.height!==cv.height){LC.width=cv.width;LC.height=cv.height;}
   const amb=(fxNightSet()?FXDEF[fxNightSet()].ambient:THEMES[theme].ambient)||THEMES[theme].ambient||'80,70,90',ls=lightList(now);
   lg.setTransform(1,0,0,1,0,0);lg.globalCompositeOperation='source-over';lg.fillStyle=`rgb(${amb})`;lg.fillRect(0,0,LC.width,LC.height);lg.setTransform(...viewT());
-  for(const l of ls)lightPass(lg,l,.45,lg=>{const r=l.L.r*(l.t==='moonwin'?1:.96+.04*l.fl),gr=lg.createRadialGradient(l.x,l.y,0,l.x,l.y,r);
+  for(const l of ls)lightPass(lg,l,.45,lg=>{if(LFX[l.t]&&LFXT[LFX[l.t].type]){LFXT[LFX[l.t].type].n(lg,l.it,LFX[l.t],reduceMotion.matches?0:now,fxPh(l.it)%7);return;}const r=l.L.r*(l.t==='moonwin'?1:.96+.04*l.fl),gr=lg.createRadialGradient(l.x,l.y,0,l.x,l.y,r);
     gr.addColorStop(0,`rgba(${l.L.c},${l.L.a*l.fl})`);gr.addColorStop(.45,`rgba(${l.L.c},${l.L.a*l.fl*.45})`);gr.addColorStop(1,`rgba(${l.L.c},0)`);lg.fillStyle=gr;lg.fillRect(l.x-r,l.y-r,r*2,r*2);
     // 地面光圈（燈下方地板）
     const f=l.wall?{x:l.base.x+l.o.x*2.2,y:l.base.y+l.o.y*2.2}:l.base,fr=r*.75,g2=lg.createRadialGradient(f.x,f.y,0,f.x,f.y,fr);
@@ -1568,7 +1716,7 @@ function drawNight(now){if(LC.width!==cv.width||LC.height!==cv.height){LC.width=
     gr.addColorStop(0,`rgba(${B.c},${a})`);gr.addColorStop(1,`rgba(${B.c},0)`);lg.save();lg.globalCompositeOperation='lighter';lg.fillStyle=gr;lg.beginPath();f.forEach((p,k)=>k?lg.lineTo(p.x,p.y):lg.moveTo(p.x,p.y));lg.closePath();lg.fill();lg.restore();}
   for(const P of projLayers())if(P.kind!=='rays')drawProj(lg,now,P,P.la??0,true);   // 投影光紋也照亮夜晚的房間
   g.save();g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='multiply';g.drawImage(LC,0,0);g.restore();
-  for(const l of ls){if(l.t==='moonwin')continue;lightPass(g,l,0,g=>{const hr=l.wall?16:11,h=g.createRadialGradient(l.x,l.y,0,l.x,l.y,hr);h.addColorStop(0,`rgba(${l.L.c},${.55*l.fl})`);h.addColorStop(1,`rgba(${l.L.c},0)`);g.fillStyle=h;g.fillRect(l.x-hr,l.y-hr,hr*2,hr*2);
+  for(const l of ls){if(l.t==='moonwin'||LFX[l.t])continue;lightPass(g,l,0,g=>{const hr=l.wall?16:11,h=g.createRadialGradient(l.x,l.y,0,l.x,l.y,hr);h.addColorStop(0,`rgba(${l.L.c},${.55*l.fl})`);h.addColorStop(1,`rgba(${l.L.c},0)`);g.fillStyle=h;g.fillRect(l.x-hr,l.y-hr,hr*2,hr*2);
     if(l.wall){const f={x:l.base.x+l.o.x*2.6,y:l.base.y+l.o.y*2.6},rg=g.createRadialGradient(f.x,f.y,0,f.x,f.y,22);rg.addColorStop(0,`rgba(${l.L.c},${.32*l.fl})`);rg.addColorStop(1,`rgba(${l.L.c},0)`);
       g.save();g.translate(f.x,f.y);g.scale(.32,1.1);g.translate(-f.x,-f.y);g.fillStyle=rg;g.fillRect(f.x-22,f.y-22,44,44);g.restore();}});}}
 // 各主題的環境小特效：hearts 愛心往上飄／rain 窗上雨滴／neon 音符與火花／holo 全息小方塊／wind 風線
@@ -2074,7 +2222,8 @@ function paintImg(t){const k=t+'_'+N;if(k in PIMG)return PIMG[k];PIMG[k]=null;if
 const P_WT=.32,P_CAP=10;   // 牆厚（格）、牆頂收邊（像素）
 function wallPoly(side,c){const H=WALL_H*Z2PX,P=(a,b)=>side==='L'?iso(a,b):iso(b,a),U=(p,h)=>({x:p.x,y:p.y-h});
   const c0=c===0?-P_WT:c,c1=c===N-1?c+1+P_WT:c+1;   // 牆角和牆尾多包一點，連牆頂、牆的厚度一起換
-  return [P(0,c0),P(0,c1),U(P(0,c1),H),U(P(-P_WT,c1),H+P_CAP),U(P(-P_WT,c0),H+P_CAP),U(P(0,c0),H)];}
+  const pts=[P(0,c0),P(0,c1),U(P(0,c1),H),U(P(-P_WT,c1),H+P_CAP),U(P(-P_WT,c0),H+P_CAP),U(P(0,c0),H)];
+  return side==='R'?pts.reverse():pts;}   // 右牆反過來繞，跟左牆同方向：兩面牆在牆角重疊的地方才不會互相抵消（v534 修牆角貼不到壁紙）
 function pPoly(pts){g.moveTo(pts[0].x,pts[0].y);for(let k=1;k<pts.length;k++)g.lineTo(pts[k].x,pts[k].y);g.closePath();}
 function pTile(i,j){const p=iso(i,j);pPoly([p,{x:p.x+TW,y:p.y+TH},{x:p.x,y:p.y+2*TH},{x:p.x-TW,y:p.y+TH}]);}
 function pCell(c){if(c.includes('_')){const [i,j]=c.split('_').map(Number);if(i<N&&j<N){pTile(i,j);return true;}return false;}
