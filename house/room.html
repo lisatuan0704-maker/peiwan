@@ -753,7 +753,7 @@ function drawRays(now,P){now*=P.ts||1;const pl=poolOf(P)||{i:N/2,j:N/2,r:N*.25},
 let OPEN_K='',OPEN_V={i:11,j:11};
 function openSpot(){let key=N+'|';for(const o of items)if(o!==held?.it&&DEF[o.t]?.kind==='floor')key+=o.t+(o.i)+','+(o.j)+(o.dir||0)+';';if(key===OPEN_K)return OPEN_V;
   const occ=new Uint8Array(N*N);for(const o of items){const d=DEF[o.t];if(!d||d.kind!=='floor'||d.flat||o===held?.it)continue;const [di,dj]=dims(o);
-    for(let a=o.i;a<o.i+di;a++)for(let b=o.j;b<o.j+dj;b++)if(a>=0&&b>=0&&a<N&&b<N)occ[a*N+b]=1;}
+    for(const [a,b] of cells(o))if(a>=0&&b>=0&&a<N&&b<N)occ[a*N+b]=1;}   // v536：半格家具碰到的格子都算
   const R=Math.min(3.5,N*.18);let best=null;
   for(let ci=R;ci<=N-R;ci+=.5)for(let cj=R;cj<=N-R;cj+=.5){let f=0,c=0;
     for(let a=Math.max(0,Math.floor(ci-R));a<Math.min(N,ci+R);a++)for(let b=Math.max(0,Math.floor(cj-R));b<Math.min(N,cj+R);b++){if((a+.5-ci)**2+(b+.5-cj)**2>R*R)continue;c++;if(!occ[a*N+b])f++;}
@@ -1018,7 +1018,7 @@ function projTick2(now){if(reduceMotion.matches)return;const r=Math.random;
 // ---- 特效版（D 2026/11/05：「與其說是燈光，我想要的更接近酷炫的特效效果」）----
 // 共用：目前房間的佔用格
 function occGrid(){const occ=new Uint8Array(N*N);for(const o of items){const d=DEF[o.t];if(!d||d.kind!=='floor'||d.flat||o===held?.it)continue;const [di,dj]=dims(o);
-  for(let a=o.i;a<o.i+di;a++)for(let b=o.j;b<o.j+dj;b++)if(a>=0&&b>=0&&a<N&&b<N)occ[a*N+b]=1;}return occ;}
+  for(const [a,b] of cells(o))if(a>=0&&b>=0&&a<N&&b<N)occ[a*N+b]=1;}return occ;}
 
 // 【森林・翠蔭晨曦】陽光穿過樹梢灑在地上：亮亮的一片陽光裡，是一枝枝樹枝與一片片葉子形狀的影子，隨風搖；葉子會飄落
 const LEAFSUN={};
@@ -2034,6 +2034,26 @@ const notify=()=>{try{HOST&&HOST.changed&&HOST.changed();}catch(e){}};
  const _r=removeHeld;removeHeld=function(){const had=!!held;_r();if(had){notify();setHint('收回背包了');}};}
 // 模式切換：大廳的「佈置」「完成」叫這裡；散步模式把拿在手上的放回去
 {const _m=setMode;setMode=function(m){if(VISIT&&m==='edit')m='walk';_m(m);HOLD.hidden=true;try{HOST&&HOST.modeChanged&&HOST.modeChanged(m);}catch(e){}};}
+// ---------- v536 半格擺設（客人回報「方格有點難喬位置」，D 11/16 選半格對齊）----------
+// 落地家具 i、j 與牆上家具 c 可以停在 .5；資料格式照舊（{t,i,j,dir}／{t,wall,c,dir}），舊的整數擺設不受影響。
+// 走路照格子算：家具碰到的格子整格都擋（不會穿過家具）；家具彼此只看實際範圍有沒有重疊（半格可以貼著放）。
+const HALF=v=>Math.round(v*2)/2,FP_E=1e-6;
+function fpBox(o){const d=DEF[o.t],[di,dj]=isDeco(o)?[d.di,d.dj]:dims(o);return [o.i,o.j,o.i+di,o.j+dj];}
+function fpHit(a,b){const A=fpBox(a),B=fpBox(b);return A[0]<B[2]-FP_E&&B[0]<A[2]-FP_E&&A[1]<B[3]-FP_E&&B[1]<A[3]-FP_E;}
+function fpFree(it){for(const o of items){if(o===it||o.host)continue;const k=DEF[o.t];if(k.flat||!(k.kind==='floor'||isDeco(o)))continue;if(fpHit(o,it))return false;}   // 跟擋路的家具、地上小物都不能重疊
+  const mi=Math.floor(me.i),mj=Math.floor(me.j);return !cells(it).some(([a,b])=>a===mi&&b===mj);}   // 也不能壓在小人站的那一格
+cells=function(it){const d=DEF[it.t],[di,dj]=isDeco(it)?[d.di,d.dj]:dims(it),out=[];
+  for(let a=Math.floor(it.i+FP_E);a<Math.ceil(it.i+di-FP_E);a++)for(let b=Math.floor(it.j+FP_E);b<Math.ceil(it.j+dj-FP_E);b++)out.push([a,b]);return out;};
+validFloor=function(it){const d=DEF[it.t],[di,dj]=dims(it);if(it.i<-FP_E||it.j<-FP_E||it.i+di>N+FP_E||it.j+dj>N+FP_E)return false;
+  if(d.flat)return !items.some(o=>o!==it&&o.t===it.t&&overlap(o,it));return fpFree(it);};
+{const _vd=validDeco;validDeco=function(it){if(it.host)return _vd(it);const d=DEF[it.t];if(it.i<0||it.j<0||it.i+d.di>N||it.j+d.dj>N)return false;return fpFree(it);};}
+{const _mv=moveHeld;moveHeld=function(p){_mv(p);const it=held&&held.it;if(!it||isDeco(it))return;const d=DEF[it.t];
+  if(d.kind==='floor'){const [ti,tj]=toTile(p),[di,dj]=dims(it);it.i=HALF(ti-di/2);it.j=HALF(tj-dj/2);held.ok=validFloor(it);return;}
+  const w=d.w;it.c=Math.max(0,Math.min(N-w,HALF(Math.abs(p.x-O.x)/TW-w/2)));   // 牆上：左右半格，上下照舊（本來就能細調）
+  const s=sprOf(it),a0=wallAnchor({...it,z:0}).y,zmin=Math.min(0,(s.h-s.ay+2)/Z2PX),zmax=Math.max(0,WALL_H-s.ay/Z2PX);
+  it.z=Math.max(zmin,Math.min(zmax,Math.round((a0-(p.y+s.ay-s.h/2))/2)*2/Z2PX));held.ok=validWall(it);};}
+{const _rt=rotate;rotate=function(){const it=held&&held.it;if(!it||isDeco(it)||DEF[it.t].kind!=='floor')return _rt();   // 轉向時繞中心轉，落點也吸半格
+  const [di,dj]=dims(it),ci=it.i+di/2,cj=it.j+dj/2;_rt();const [ei,ej]=dims(it);it.i=HALF(ci-ei/2);it.j=HALF(cj-ej/2);held.ok=validFloor(it);};}
 
 // ---------- 縮圖（大廳的家具店、佈置清單用）----------
 // 所有家具同一個比例（v495 D：「大小固定在一個畫面比例，時鐘不能那麼大、大型家具不能那麼小」）＝一律 1 倍、不平滑；
