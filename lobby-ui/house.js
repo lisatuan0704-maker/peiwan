@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='543';
+const VER='546';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={fx:null,fxHost:{},fxOpen:false,fxTry:null,fxT:0,fxRemote:false,on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -36,7 +36,7 @@ const SIZES=[14,18,22],sizeOk=n=>SIZES.includes(+n)?+n:14,nextSize=()=>SIZES[SIZ
 const STK_ICON='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 21H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8l-7 7Z"/><path d="M14 21v-4a3 3 0 0 1 3-3h4M8 9h.01M15 9h.01M8 13q3 4 6 0"/></svg>';
 const TS=()=>firebase.database.ServerValue.TIMESTAMP;
 const myName=()=>((typeof me==='function'&&me()?.b?.name)||'酒館客人').slice(0,40);
-const isPhone=()=>document.documentElement.classList.contains('ttm-on');
+const isPhone=()=>document.documentElement.classList.contains('ttm-on')&&!window.TTGame;   // v539 手機遊戲式畫面（TTGame）可以進小屋
 const r2=v=>Math.round(v*100)/100;
 
 // ---------- 資料 ----------
@@ -507,7 +507,7 @@ async function quickVisit(mk){
   say('剛剛那幾間都客滿或沒開放，再按一次試試');
  }finally{S.tripping=false;}}
 function bindSkipTrip(){const b=$('tglSkipTrip'),row=$('setSkipTripRow');if(!b)return;
- const phone=()=>isPhone()||!!window.TTMobile||document.body.classList.contains('mhome-on');   // 手機還不能進小屋，不顯示
+ const phone=()=>isPhone()||(!!window.TTMobile&&!window.TTGame)||document.body.classList.contains('mhome-on');   // 手機功能首頁不能進小屋，不顯示
  const sync=()=>{if(row)row.hidden=phone();b.classList.toggle('on',skipTrip());b.setAttribute('aria-checked',String(skipTrip()));};
  b.setAttribute('role','switch');b.setAttribute('aria-label','串門子不看翻卡');sync();$('gearBtn')?.addEventListener('click',sync);
  b.addEventListener('click',()=>{try{localStorage.setItem(SKIP_KEY,skipTrip()?'0':'1');}catch(_){}sync();try{SFX.tap();}catch(_){}});}
@@ -763,6 +763,8 @@ window.TTHouse={
  modeChanged:m=>{if(S.mode!==m){S.mode=m;document.body.classList.toggle('tt-house-edit',m==='edit');renderBag();}renderKeys();},
  dollCanvas:myDollCanvas,
  insets(){const vh=innerHeight,vw=innerWidth;let t=20,b=20,l=20,r=20;
+  if(window.TTGame){const tp=document.querySelector('#ttG .ttg-top')?.getBoundingClientRect(),bag=document.body.classList.contains('tt-house-edit')?$('ttHouseBag')?.getBoundingClientRect():null;   // v539 手機：上面名牌、下面佈置清單
+   return {t:(tp?tp.bottom:60)+8,b:bag&&bag.height?vh-bag.top+8:vh-(document.querySelector('#ttG .ttg-bar')?.getBoundingClientRect().top||vh-90)+56,l:8,r:8};}
   const sg=$('sign')?.getBoundingClientRect();if(sg&&sg.height)t=Math.max(t,sg.bottom+12);
   const hud=$('hud2')?.getBoundingClientRect();if(hud&&hud.height&&hud.right>vw*.3)t=Math.max(t,hud.bottom+8);
   const dk=$('ttMainDock')?.getBoundingClientRect();if(dk&&dk.height&&!document.body.classList.contains('tt-house-edit'))b=Math.max(b,vh-dk.top+10);

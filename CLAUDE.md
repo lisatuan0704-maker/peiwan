@@ -1,5 +1,20 @@
 # 小小酒館修改紀錄
 
+## 2026/11/17 v546 手機也能玩大廳、小屋、扭蛋（手機遊戲式直立畫面，手機預設開）（Claude）
+- D：「像手遊一樣的直立式介面（走動改用浮空搖桿）」「手機要能看大廳＋小屋＋抽卡」「抽卡的部分可以看到扭蛋機為主」「手遊選單都是下排」。
+- 開關：lobby-ui/fixed-view.js window.TTGame＝手機（TTMobile）且 localStorage tt_mgame 不是 '0'（預設開）；?game=0 換回 v432 的功能首頁（記在這台）、?game=1 再打開。html.ttm-game；遊戲模式不加 tt-mobile（mobile-home.css 用它藏大廳）。電腦版完全不變。
+- 新 lobby-ui/mobile-game.js／.css：浮空搖桿 TTJoy（按住滑 12px 以上才算，點一下照常點人／地板／家具，放開吞掉接著的 click）；上方名牌＋金幣；下排功能列（大廳：小屋／商城／背包／扭蛋＋選單；小屋：光效／佈置／商城／扭蛋＋選單；拜訪別人只剩選單）；
+  「說點什麼」在功能列上方，打開聊天或佈置時下排收起；背包／商城（body.tt-approved-open）開著時下排與聊天鈕收起（不然會從整頁視窗四邊的 5px 空隙露出來）；小屋 iframe 綁搖桿（TTRoom.joy／follow）；佈置拿著家具時「轉向／收回／取消」鈕。
+- lobby.html：TTGame 時 tick 照跑、方向鍵那段讀 TTJoy.vec()、鏡頭跟著自己、搖桿走路 450ms 一包；功能頁開著（ttg-panel）大廳慢下來；低階手機約 30 幀（TTGameLow）。
+- mobile-app.js：「選單」＝訂單／私訊／儲值／信箱等功能頁蓋上來、「‹ 回到酒館」收起（TTMobileApp.open／close）。點冒險者（點單）手機照舊擋著。
+- house.js：手機可以進小屋、拜訪（isPhone 排除 TTGame）、insets 依下排量；contacts.js：TTGame 也有「小屋」鈕。house/room.html：TTRoom.joy、TTRoom.follow（散步時鏡頭跟著）。⚠ tt-room-kit/house-lobby/house-embed.js 沒同步 joy／follow。
+- 扭蛋：大廳下排也有扭蛋（同一顆 #ttHouseGacha，手機遊戲模式在大廳也顯示）；在大廳抽完按「去擺放」先回小屋再拿出來（lobby-ui/gacha.js place）。
+  扭蛋頁手機直立（gacha/3d，tt-room-kit/gacha/3d 同步）：鏡頭距離改 (1.55/寬高比)^0.6（原本整個場景塞進窄畫面、扭蛋機很小），卡池鈕排一列、抽一次／抽十次並排、圖鑑／音效鈕橫排在抽卡鈕上方（原本壓在抽一次上）。g3d.js?v=84、gacha.js VER 546。
+- 版本：verTag v546、ver.json 546、lobby-view 546、fixed-view 546、house.js VER 546（room.html?v=546）、contacts.js／mobile-app.js／mobile-game.css／mobile-game.js／gacha.js ?v=546。
+- 驗證（本機預覽＋模擬資料庫，手機 390×844，CDP 觸控）：沒設定直接是遊戲畫面、?game=0 回功能首頁；搖桿走路、放開不會變點地板；選單→功能頁→回到酒館；大廳與小屋都打開扭蛋；小屋進出、佈置；背包／商城開著下排收起、當季套組六張照常；
+  tests mobile-v353（改成預設開）、viewport-v352、hub-actions-v299、social-v347、presence-v353、payment-safety-v273 通過。沒在真的 iPhone／Android 試過（Safari 網址列、鍵盤彈出時聊天列位置）。
+- 已知：每支手機也聽整個 pos 節點，手機上線人數變多下載量會跟著長（v531 估算）；小屋沒有雙指縮放。
+
 ## 2026/11/17 v545 手機商城「當季套組」一片空白（Claude）
 - D 的朋友用手機打開商城，選「當季套組」分類列下面全空。卡片其實都有載入：手機版（phone-bag.css）讓整頁一起捲，但 #bundles 還照電腦版 flex 撐滿＋自己捲，被壓成 0 高，六張卡全被裁掉（v529 起只處理了 .singles／.grid）。
 - tavern-ui/phone-bag.css 加一條：html.tt-phone 的 #catalog #bundles 照內容長高、不自己捲。只改外觀。

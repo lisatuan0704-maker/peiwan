@@ -138,6 +138,9 @@ html.live .wallet{right:calc(36px*var(--s))}
 .closeX:active{transform:translateY(calc(1px*var(--s)));box-shadow:none}
 .msg{left:50%;top:42%;transform:translateX(-50%);max-width:86%;padding:calc(4px*var(--s)) calc(12px*var(--s));font-size:calc(8px*var(--s));text-align:center;color:#fff;background:rgba(28,33,86,.88);border:calc(1px*var(--s)) solid #b78cff;border-radius:calc(8px*var(--s));pointer-events:none!important;animation:msgIn .25s ease-out}
 @media (max-aspect-ratio:5/4){.links{bottom:calc(62px*var(--s))}}   /* 窄畫面：右下的圖鑑／音效鈕移到抽卡鈕上面，不要疊在一起（v508 抽卡鈕多一行小字＋保底貼紙，50→62） */
+/* v546 手機直立（D：「抽卡的部分可以看到扭蛋機為主」）：卡池鈕排成一列、兩顆抽卡鈕並排、圖鑑／音效鈕橫排，扭蛋機放大（鏡頭在 g3d.js applyCam） */
+@media (max-aspect-ratio:3/4){.pools,#ui:has(.head .lim) .pools{flex-direction:row;flex-wrap:wrap;right:calc(12px*var(--s))}.pools button{padding:calc(2px*var(--s)) calc(6px*var(--s))}
+ .btns{gap:calc(6px*var(--s))}.btn{padding:calc(4px*var(--s)) calc(8px*var(--s))}.links{flex-direction:row;bottom:calc(64px*var(--s))}}
 @keyframes msgIn{from{opacity:0;transform:translate(-50%,calc(4px*var(--s)))}}
 #err{position:absolute;left:12px;bottom:12px;color:#ffd7e6;font-size:13px;white-space:pre-wrap}
 </style>
@@ -151,6 +154,6 @@ html.live .wallet{right:calc(36px*var(--s))}
   <div id="odds"><div class="cw"><button class="x" aria-label="關閉">×</button><div class="card"><small>COLLECTION・RATES</small><h3>家具圖鑑</h3><div id="oddsBody"></div></div></div></div>
 </div>
 <div id="err"></div>
-<script type="module" src="g3d.js?v=83"></script>
+<script type="module" src="g3d.js?v=84"></script>
 </body>
 </html>

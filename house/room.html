@@ -1871,7 +1871,7 @@ let lastP=null;
 let drag=null;
 cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,moved:false,id:e.pointerId};});
 cv.addEventListener('pointermove',e=>{
-  if(drag&&!held){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.moved&&Math.hypot(dx,dy)>6){drag.moved=true;cv.setPointerCapture(drag.id);$('stage').style.cursor='grabbing';}
+  if(drag&&!held&&!(FOLLOW&&mode==='walk')){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.moved&&Math.hypot(dx,dy)>6){   /* v539 手機散步時鏡頭跟著人走，按住滑動是搖桿，不拖視角 */drag.moved=true;cv.setPointerCapture(drag.id);$('stage').style.cursor='grabbing';}
     if(drag.moved){cam.x=drag.cx-dx/cam.z;cam.y=drag.cy-dy/cam.z;clampCam();hover=null;return;}}
   const p=toCanvas(e);lastP=p;hoverItem=(mode==='edit'&&!held)?pick(p):null;cv.style.cursor=hoverItem||held?'pointer':'';if(held)moveHeld(p);else if(mode==='walk'){const [i,j]=toTile(p).map(Math.floor);hover=(i>=0&&j>=0&&i<N&&j<N)?[i,j]:null;}});
 cv.addEventListener('pointerleave',()=>{hover=null;hoverItem=null;});
@@ -1939,10 +1939,23 @@ function updateSizeUI(){const k=SIZES.indexOf(N),nx=SIZES[k+1];$('sizeTag').text
 $('bExpand').onclick=()=>{const k=SIZES.indexOf(N),nx=SIZES[k+1];if(!nx)return;cancel();N=nx;try{localStorage.setItem(sizeKey(),N);}catch(e){}updateSizeUI();frameRoom();
   if(!reduceMotion.matches)for(let a=0;a<4;a++)burst(iso(N*(a%2),N*(a>>1)),8);setHint(`房間擴建到 ${N}×${N} 了！原本的家具都留在原位。`);};
 
+// ---- v539 手機浮空搖桿＋鏡頭跟著自己（大廳 mobile-game.js 每幀交 TTRoom.joy(x,y,m)；x,y＝畫面上的方向）----
+// 搖桿推著時：往那個方向前面一小段放一個路點（走路動畫、朋友那邊的路線推算都照舊），撞到家具或牆就沿著能走的那個方向滑過去
+var JOY=null,FOLLOW=false,_jb=null,_jbT=0;
+function joyBlocked(){const t=performance.now();if(!_jb||t-_jbT>300){_jb=blocked(null);_jbT=t;}return _jb;}
+function joyStep(){if(!JOY||mode!=='walk')return false;
+  let di=(JOY.y/TH+JOY.x/TW)/2,dj=(JOY.y/TH-JOY.x/TW)/2;const L=Math.hypot(di,dj)||1;di/=L;dj/=L;
+  const B=joyBlocked(),A=.6,ok=(i,j)=>i>=.3&&j>=.3&&i<=N-.3&&j<=N-.3&&!B.has(Math.floor(i)+','+Math.floor(j));
+  const tries=[[di,dj]];if(Math.abs(di)>=Math.abs(dj))tries.push([Math.sign(di),0],[0,Math.sign(dj)]);else tries.push([0,Math.sign(dj)],[Math.sign(di),0]);
+  for(const [a,b] of tries){if(!a&&!b)continue;const ti=me.i+a*A,tj=me.j+b*A;if(ok(ti,tj)&&ok(me.i+a*.3,me.j+b*.3)){me.path=[[ti,tj]];return true;}}
+  me.path=[];return true;}
+function followCam(dt){if(!FOLLOW||mode!=='walk')return;if(cam.z<2)cam.z=2;const p=iso(me.i,me.j),k=Math.min(1,dt/1000*6);
+  cam.x+=(p.x-cam.x)*k;cam.y+=(p.y-30-cam.y)*k;clampCam();}
 // ---- 迴圈 ----
 let prev=0;
 function tick(t){const dt=Math.min(50,t-(prev||t));prev=t;me.t+=dt;
-  if(me.path.length){const [ti,tj]=me.path[0],di=ti-me.i,dj=tj-me.j,d=Math.hypot(di,dj),step=dt*.0035;
+  joyStep();followCam(dt);
+  if(me.path.length){const [ti,tj]=me.path[0],di=ti-me.i,dj=tj-me.j,d=Math.hypot(di,dj),step=dt*.0035*(JOY&&mode==='walk'?Math.max(.45,JOY.m):1);
     const sx=(di-dj);if(Math.abs(sx)>.01)me.face=sx>0?1:-1;
     if(d<=step){me.i=ti;me.j=tj;me.path.shift();}else{me.i+=di/d*step;me.j+=dj/d*step;}}
   me.flipT+=(me.face-me.flipT)*Math.min(1,dt/1000*14);if(Math.abs(me.face-me.flipT)<0.02)me.flipT=me.face;
@@ -2293,6 +2306,8 @@ window.TTRoom={ready,
   // v522 me().path：剩下的路（格子），house.js 轉成「要轉的彎」送給朋友
   me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0,path:me.path.slice(0,60).map(([a,b])=>[Math.floor(a),Math.floor(b)])}),setPeers,say:peerSay,spawn:spawnAt,size:()=>N,setSize:houseSetSize,previewSize:housePreviewSize,
   thumb:(k,S=88)=>thumbOf(k,S),
+  joy(x,y,m){const on=!!(x||y);if(!on&&JOY){JOY=null;if(mode==='walk')me.path=[];return;}JOY=on?{x,y,m}:null;},   // v539 手機浮空搖桿
+  follow(on){FOLLOW=!!on;if(FOLLOW&&cam.z<2)cam.z=2;},
   async thumbAsync(k,S=88){const d=DEF[k];if(!d)return '';await loadKey(K(d.spr[0]));return thumbOf(k,S);},
   setDoll,
   hint:t=>setHint(t),

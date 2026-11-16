@@ -11,7 +11,7 @@ const R=()=>typeof ROOT!=='undefined'?ROOT:'peiwan';
 const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const BASE=()=>typeof PAY_API!=='undefined'?PAY_API:'https://pay.tinytavern.tw',API=()=>BASE()+'/api/gacha';
-const VER='544';
+const VER='546';
 const G={ov:null,fr:null,inv:{},off:null,subs:new Set(),busy:false,sched:null};
 
 // ---------- 給扭蛋頁的介面（gacha/3d/g3d.js 讀 parent.TTGachaHost） ----------
@@ -39,7 +39,8 @@ async function loadSched(){
 function place(keys){
  if(!G.ov)return;const ks=Array.isArray(keys)?Array.from(keys).filter(k=>typeof k==='string'&&k).slice(0,10):[];   // 換成大廳這邊的陣列（iframe 的陣列 instanceof Array 不成立）
  close();
- try{window.TTHouse&&window.TTHouse.placeNew&&window.TTHouse.placeNew(ks);}catch(_){}}
+ try{const H=window.TTHouse;if(H&&H.placeNew&&!H.placeNew(ks)&&H.enter&&!document.body.classList.contains('tt-house-on')){   // v546 手機大廳也能轉扭蛋：在大廳按「去擺放」先回小屋，房間好了再拿出來
+   H.enter();let n=0;const t=setInterval(()=>{let ok=false;try{ok=H.placeNew(ks);}catch(_){}if(ok||++n>40)clearInterval(t);},500);}}catch(_){}}
 window.TTGachaHost={state,pull,close,place,schedule:()=>G.sched,sub(fn){G.subs.add(fn);return ()=>G.subs.delete(fn);}};
 window.addEventListener('tt-cat',emit);
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=545"></script>
+<script src="lobby-ui/fixed-view.js?v=546"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=469"></script>
@@ -1448,7 +1448,7 @@ body.artBub.bub3s .npc .bub{
 }
 </style>
 <link rel="stylesheet" href="lobby-ui/contacts.css?v=341">
-<script src="lobby-ui/contacts.js?v=504"></script>
+<script src="lobby-ui/contacts.js?v=546"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
 <link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=535">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=357">
@@ -1478,7 +1478,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/mobile-home.css?v=353">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><link rel="stylesheet" href="lobby-ui/theme-loading.css?v=383"></head>
 <body>
-<script>if(window.TTMobile)document.body.classList.add("mhome-on");</script>
+<script>if(window.TTMobile&&!window.TTGame)document.body.classList.add("mhome-on");</script>
 <div id="loadscr"><div class="ldbrand"><canvas id="ldmug" width="64" height="64"></canvas></div><div class="ldname">小小酒館</div><div class="ldsub">Tiny Tavern</div><div class="ldbar"><i></i></div></div>
 <div id="hall"><div id="hallBackdrop" aria-hidden="true"><div class="tt-mirror-side tt-mirror-left"></div><div class="tt-mirror-side tt-mirror-right"></div></div><div id="world"><div id="worldbg"></div></div><div id="hallShade" aria-hidden="true"></div></div>
 <div id="vig"></div>
@@ -1701,7 +1701,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v545</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v546</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3173,7 +3173,7 @@ function fsOverlayOpen(){
   if(t-_fsCheck>300){
     _fsCheck=t;
     const bm=document.getElementById('bookM');
-    _fsOpen=!!window.TinyTavernUI?.isActive?.()||(bm&&bm.classList.contains('on'))||!!document.querySelector('.gwin.on');
+    _fsOpen=!!window.TinyTavernUI?.isActive?.()||(bm&&bm.classList.contains('on'))||!!document.querySelector('.gwin.on')||document.documentElement.classList.contains('ttg-panel');   // v539 手機遊戲畫面打開功能頁（訂單／私訊…）時大廳先慢下來
   }
   return _fsOpen;
 }
@@ -3186,7 +3186,8 @@ function ttIdlePose(now,seed=0,slime=false){
   return {sqx:1+pulse*(slime?0.08:0.031),sqy:1-pulse*(slime?0.10:0.044)};
 }
 function tick(now){
-  if(window.TTMobile){last=now;requestAnimationFrame(tick);return;}
+  if(window.TTMobile&&!window.TTGame){last=now;requestAnimationFrame(tick);return;}   // v539：手機遊戲式畫面（TTGame）有大廳場景，照常跑
+  if(window.TTGameLow&&now-last<30){requestAnimationFrame(tick);return;}   // v539 低階手機（記憶體 ≤3GB 或 ≤4 核）大廳改約 30 幀，省電不燙
   if(document.hidden){last=now;requestAnimationFrame(tick);return;}
   /* 全螢幕視窗開著時,暫停背景世界演算(每秒 2 幀維持狀態即可)——弱機開書/開視窗不再卡 */
   if(fsOverlayOpen()){
@@ -3206,9 +3207,11 @@ function tick(now){
       if(keys['ArrowRight']||keys['d']||keys['D'])vx+=1;
       if(keys['ArrowUp']||keys['w']||keys['W'])vy-=1;
       if(keys['ArrowDown']||keys['s']||keys['S'])vy+=1;
+      let jm=1;const jv=!vx&&!vy&&window.TTJoy?.vec();   // v539 手機浮空搖桿：方向＝搖桿方向，推得越遠走越快（最慢 45%）
+      if(jv){vx=jv.x;vy=jv.y;jm=Math.max(.45,jv.m);}
       if(vx||vy){
         keyMoved=true; TTSeats.clear(a);
-        const sp=0.09*depthNow, L=Math.hypot(vx,vy);   // 每秒移動比例(慢速,配合大角色)
+        const sp=0.09*depthNow*jm, L=Math.hypot(vx,vy);   // 每秒移動比例(慢速,配合大角色)
         const raw=[a.x+vx/L*sp*dt,a.y+vy/L*sp*dt];
         const c=curMap==='hall'?TTScene.slide([a.x*1600,a.y*900],[raw[0]*1600,raw[1]*900]).map((v,i)=>v/(i?900:1600)):clampFloor(...raw);
         a._sceneGoal=null;
@@ -3371,7 +3374,7 @@ function tick(now){
       const changed=TTPresence.changed(packet,a._sentPosition);
       const stopped=a._sentPosition?.w===1&&packet.w===0;
       if(!a._positionSending&&now>=(a._positionRetryAt||0)&&
-          ((!a._sentPosition)||(changed&&(stopped||TTPresence.turned(packet,a._sentPosition)||now-(a._positionSentAt||0)>=(packet.r?1000:300)))||now-(a._positionSentAt||0)>=45000)){
+          ((!a._sentPosition)||(changed&&(stopped||(TTPresence.turned(packet,a._sentPosition)&&(!window.TTGame||now-(a._positionSentAt||0)>=200))||now-(a._positionSentAt||0)>=(packet.r?1000:(window.TTGame?450:300))))||now-(a._positionSentAt||0)>=45000)){
         /* v521：換目的地馬上送。v531（Firebase 流量）：點地板走路別人照路線推算，路上每 1 秒校正一次（原 0.15 秒）；方向鍵 0.3 秒；
            站著不動的心跳 5 秒→45 秒（判斷離開是 10 分鐘＋斷線自動清除，不受影響）。停下、坐下、轉向照舊馬上送。 */
         const ownerKey=myKey;a._positionSending=true;
@@ -3491,7 +3494,12 @@ function updateCamera(dt, now){
   // B 版：背景等比例滿版置中，超出視窗的邊緣裁切。
   // Approved B layout: fill the viewport with the full-width artwork, cropping overflow.
   const fitZoom = curMap==='hall'?Math.max(vw/1920,vh/WORLD.h):Math.min(vw/WORLD.w,vh/WORLD.h);
-  if(isMobile()){
+  if(window.TTGame){
+    // v539 手機遊戲式直立畫面：鏡頭跟著自己的小人，小人放在畫面中間偏下（上方留給名牌，下方留給聊天與按鈕）
+    cam.tzoom = Math.max(vw/1920, vh/WORLD.h*(window.TTGameZoom||1));   // 上下剛好塞滿（場景高 900），不露出場景外的底色
+    tx = a ? a.x*WORLD.w : WORLD.w*0.5;
+    ty = a ? a.y*WORLD.h - 40/cam.tzoom : WORLD.h*0.5;
+  }else if(isMobile()){
     // 手機直屏:楓谷式跟隨鏡頭——拉近讓小人變大,上下左右都跟著小人,裁掉多餘空地板
     cam.tzoom = (vh/WORLD.h) * 1.42;
     tx = a ? a.x*WORLD.w : WORLD.w*0.5;
@@ -6572,7 +6580,7 @@ function tryServeNudge(staff){
 
 /* ================= 📱 手機直式專屬首頁 ================= */
 (function(){
-  function isPortraitHome(){ return !!window.TTMobile; }
+  function isPortraitHome(){ return !!window.TTMobile&&!window.TTGame; }
   function drawMhDoll(){
     const cv=document.getElementById('mhDoll'); if(!cv) return;
     const a=(typeof me==='function')?me():null;
@@ -8721,7 +8729,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/photo-mode.js?v=532"></script><link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=543"></script><script src="lobby-ui/house-trip.js?v=512"></script><script src="lobby-ui/gacha.js?v=544"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=546"></script><script src="lobby-ui/house-trip.js?v=512"></script><script src="lobby-ui/gacha.js?v=546"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>
@@ -8740,7 +8748,8 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=532"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=535">
-<script src="lobby-ui/mobile-app.js?v=535"></script>
+<script src="lobby-ui/mobile-app.js?v=546"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-game.css?v=546"><script src="lobby-ui/mobile-game.js?v=546"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
 <script src="lobby-ui/vip-card.js?v=513"></script>
 <link rel="stylesheet" href="lobby-ui/order-guide.css?v=514"><script src="lobby-ui/order-guide.js?v=514"></script>

@@ -36,13 +36,14 @@ function staffEntry(){
 const root=document.documentElement;root.classList.add('ttm-on');
 const app=document.createElement('div');app.id='ttM';
 app.innerHTML='<header class="ttm-top" id="ttmTop">'
+ +(window.TTGame?'<button type="button" class="ttm-back" id="ttmBack"><span aria-hidden="true">‹</span>回到酒館</button>':'')   // v539 手機遊戲畫面：功能頁是蓋在大廳上的一頁，最上面一條回大廳
  +'<div class="ttm-card"><canvas id="ttmDoll" width="64" height="64" aria-hidden="true"></canvas>'
  +'<div class="ttm-who"><small>我的闆卡</small><b id="ttmName">小小酒館</b></div>'
  +'<button type="button" class="ttm-coins" id="ttmCoins" aria-label="金幣與貓貓幣餘額，點一下打開錢包">'+TTCat.gold(18,'c')+'<b id="ttmCoinN">0</b><small>金幣</small>'+TTCat.coin(18,'c','data-cat-pop')+'<b id="ttmCatN">0</b><small>貓貓幣</small></button></div>'
  +'<div class="ttm-actions" id="ttmActions"><button type="button" class="ttm-order" id="ttmTopup"><span aria-hidden="true">＋</span>儲值金幣</button>'
  +'<button type="button" class="ttm-help" id="ttmCardImg" style="font-family:inherit;cursor:pointer">存闆卡圖</button>'
  +'<a class="ttm-help" href="lobby.html?contact=1" data-contact-support>聯絡客服</a></div>'
- +'<p class="ttm-note" id="ttmNote">手機版可儲值、逛商城買時裝、換穿、查看訂單與私訊；邀冒險者一起玩請用電腦版。</p>'
+ +'<p class="ttm-note" id="ttmNote">'+(window.TTGame?'邀冒險者一起玩請用電腦版；手機可以逛大廳、回小屋、換穿與儲值。':'手機版可儲值、逛商城買時裝、換穿、查看訂單與私訊；邀冒險者一起玩請用電腦版。')+'</p>'
  +'</header><div class="ttm-empty" id="ttmEmpty">載入中…</div>'
  +'<section class="ttm-page" id="ttmWallet" aria-label="儲值金幣"></section>'
  +'<nav class="ttm-tabs" role="tablist" aria-label="手機版功能">'
@@ -237,12 +238,22 @@ function paintBadges(){
 }
 [200,700,1500,3000].forEach(ms=>setTimeout(paintCard,ms));setInterval(()=>{paintCard();paintBadges();},1500);
 // 第一次進來：上次停留的分頁，預設「訂單」。
+// v539 手機遊戲畫面：平常看大廳，功能頁（訂單／私訊／儲值／信箱）按了才蓋上來，「回到酒館」收起來
+function openPanel(key){closeStray();root.classList.add('ttg-panel');show(key||current||'orders');layout();}
+function closePanel(){
+ if(current){const t=tab(current),n=$(t.node);n?.classList.remove('ttm-tabview');try{t.hide();}catch{}}
+ current=null;delete root.dataset.ttmTab;root.classList.remove('ttg-panel');
+ for(const b of tabBar.children)b.setAttribute('aria-selected','false');
+}
+if(window.TTGame){$('ttmBack').onclick=closePanel;$('ttmCoins').onclick=()=>openPanel('wallet');$('ttmTopup').onclick=()=>openPanel('wallet');
+ tabBar.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b&&!tab(b.dataset.tab)?.launch)root.classList.add('ttg-panel');},true);}
 function start(){
  $('ttmEmpty').textContent='';
+ if(window.TTGame){paintCard();paintBadges();const q=new URLSearchParams(location.search);if(q.has('mail'))openPanel('mail');else if(q.has('topup'))openPanel('wallet');return;}
  let first='orders';try{first=sessionStorage.getItem('ttm_tab')||first;}catch{}
  const q=new URLSearchParams(location.search);if(q.has('mail'))first='mail';if(q.has('topup'))first='wallet';
  show(tab(first)?first:'orders');paintCard();paintBadges();
 }
 if(document.readyState==='complete')setTimeout(start,0);else addEventListener('load',()=>setTimeout(start,0),{once:true});
-window.TTMobileApp={show,get current(){return current;}};
+window.TTMobileApp={show,open:openPanel,close:closePanel,badges:()=>TABS.filter(t=>t.badge).map(t=>({key:t.key,on:!tabBar.querySelector('[data-tab="'+t.key+'"] .ttm-dot')?.hidden})),get current(){return current;}};
 })();

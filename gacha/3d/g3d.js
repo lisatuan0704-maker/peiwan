@@ -609,7 +609,7 @@ const sfx={coin:()=>{tone(1320,.12,'square',.04);tone(1980,.22,'square',.04,.06)
 // ---------- 鏡頭 ----------
 // 鍵：[時間, 目標x,y,z, 方位角°, 仰角°, 距離, 視角°, 側傾°, 緩動]
 function camAt(K,s){if(s<=K[0][0])return K[0];for(let i=1;i<K.length;i++)if(s<K[i][0]){const a=K[i-1],b=K[i],u=(EZ[b[9]||'inout'])(sat((s-a[0])/(b[0]-a[0])));const r=[s];for(let j=1;j<9;j++)r.push(lerp(a[j],b[j],u));return r;}return K[K.length-1];}
-function applyCam(k,shk,punch,e){const[,tx,ty,tz,az,el,d0,fov,roll]=k;const asp=W/H,d=d0*Math.max(1,1.55/asp);const A=az*Math.PI/180,E=el*Math.PI/180;
+function applyCam(k,shk,punch,e){const[,tx,ty,tz,az,el,d0,fov,roll]=k;const asp=W/H,d=d0*(asp<1?Math.pow(1.55/asp,.6):Math.max(1,1.55/asp));/* v546 手機直立：鏡頭不用退那麼遠，扭蛋機放大當主角 */const A=az*Math.PI/180,E=el*Math.PI/180;
   cam.position.set(tx+d*Math.sin(A)*Math.cos(E),ty+d*Math.sin(E),tz+d*Math.cos(A)*Math.cos(E));cam.up.set(0,1,0);cam.lookAt(tx,ty,tz);cam.rotateZ(roll*Math.PI/180);
   if(shk>0&&!RM){const f=Math.floor(e/34);cam.translateX((hash(f)-.5)*2*shk*d*.22);cam.translateY((hash(f+.37)-.5)*2*shk*d*.22);}
   cam.fov=fov*(1-punch);cam.aspect=asp;cam.updateProjectionMatrix();}
