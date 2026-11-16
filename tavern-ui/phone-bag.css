@@ -65,6 +65,16 @@ html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-cat
 html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles>.grid.grid.grid.grid.grid.grid{flex:0 0 auto!important;overflow:visible!important;height:auto!important;max-height:none!important}
 /* v545 商城「當季套組」：#bundles 原本 flex 撐滿＋自己捲，整頁一起捲時被壓成 0 高 → 卡片整個被裁掉、看起來空白 */
 html.tt-phone body[data-area] #catalog #bundles.bundles{flex:0 0 auto!important;overflow:visible!important;height:auto!important;max-height:none!important;min-height:0!important}
+/* v548 D：當季套組卡太大 → 手機縮小：圖 160→118、名字／價格／按鈕變小（卡片 364→約 245 高） */
+html.tt-phone body[data-area] #bundles .season-card .season-visual{height:118px!important;min-height:0!important;padding:6px 4px 0!important}
+html.tt-phone body[data-area] #bundles .season-card .season-visual canvas{width:116px!important;height:116px!important;max-height:116px!important;margin:0 auto!important}
+html.tt-phone body[data-area] #bundles .season-card .season-number{font-size:18px!important}
+html.tt-phone body[data-area] #bundles .season-card .season-info{padding:7px 8px 8px!important}
+html.tt-phone body[data-area] #bundles .season-card .season-info h2{font-size:14px!important;line-height:1.25!important;margin:0 0 3px!important}
+html.tt-phone body[data-area] #bundles .season-card .season-price{padding:2px 0 0!important;margin:0 0 6px!important;min-height:0!important}
+html.tt-phone body[data-area] #bundles .season-card .season-price strong{font-size:17px!important}
+html.tt-phone body[data-area] #bundles .season-card .season-actions{gap:5px!important}
+html.tt-phone body[data-area] #bundles .season-card .season-actions button{min-height:0!important;height:28px!important;padding:0 6px!important;font-size:11.5px!important}
 /* 色票：原本左右撐開（第二排三顆散在左中右），改成靠左排好；稍微放大一點好按 */
 html.tt-phone body .preview .dye .swatches{justify-content:flex-start!important;gap:6px!important;flex-wrap:wrap!important}
 html.tt-phone body .preview .dye .swatches>button{width:24px!important;height:24px!important;flex:0 0 auto!important}
