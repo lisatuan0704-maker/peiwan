@@ -630,6 +630,7 @@ function roll(n,r){const o=[];for(let i=0;i<n;i++)o.push(pickItem(pickRarity(r),
     const cand=poolItems().filter(i=>i.r!=='common'&&!OWN.has(i.k)),lim=cand.filter(i=>i.r==='limited'),rar=cand.filter(i=>i.r==='rare'),slot=()=>{const c=o.map((it,i)=>it.r==='common'?i:-1).filter(i=>i>=0);return c.length?c[Math.floor(r()*c.length)]:Math.floor(r()*10);};
     if(cand.length){const L=lim.length&&(!rar.length||r()*(RATE.limited+RATE.rare)<RATE.limited)?lim:rar;o[slot()]=L[Math.floor(r()*L.length)];}
     else if(!o.some(i=>i.r!=='common'))o[slot()]=pickItem(r()*100<RATE.limited/(RATE.limited+RATE.rare)*100?'limited':'rare',r);}   // 稀有以上都收齊了：至少一件稀有以上
+  if(n===10&&!o.some(i=>!OWN.has(i.k))){const cand=poolItems().filter(i=>!OWN.has(i.k));if(cand.length){const d=o.map((it,i)=>it.r==='common'?i:-1).filter(i=>i>=0);o[d.length?d[Math.floor(r()*d.length)]:Math.floor(r()*10)]=cand[Math.floor(r()*cand.length)];}}   // v535 十連必得一件還沒有的家具（同主機 lib/gacha.js）
   if(!LIVE&&n===10&&Q.get('tenlim')!=null)o[+Q.get('tenlim')||0]=pickItem('limited',r);
   if(!LIVE&&window.__item){const it=ITEMS.find(i=>i.k===window.__item);if(it)o[0]=it;}   // 測試用：指定第一件
   return o;}
@@ -1715,7 +1716,7 @@ const balTxt=c=>wallet>=c?`抽完剩 ${(wallet-c).toLocaleString()} 貓貓幣`:`
 const balHTML=c=>`<small class="bal${wallet<c?' short':''}" data-cost="${c}">${balTxt(c)}</small>`;
 function balSync(){ui.querySelectorAll('.bal[data-cost]').forEach(e=>{const c=+e.dataset.cost;e.textContent=balTxt(c);e.classList.toggle('short',wallet<c);});}
 const pullBtn1=t=>`<button class="btn hot" id="b1">${t}<em><i></i>${PRICE1}</em>${balHTML(PRICE1)}</button>`;
-const pullBtn10=t=>`<button class="btn hot" id="b10"><span class="g10">必得一件還沒有的稀有以上</span>${t}<em><i></i>${PRICE10}</em>${balHTML(PRICE10)}</button>`;
+const pullBtn10=t=>`<button class="btn hot" id="b10"><span class="g10">必得一件還沒有的家具</span>${t}<em><i></i>${PRICE10}</em>${balHTML(PRICE10)}</button>`;
 // v508 去擺放（正式版、大廳有 HOST.place 才出現）：剛抽到的家具去重複、限定→稀有→普通排好交給大廳 → 關扭蛋、小屋進佈置拿起第一件
 const CAN_PLACE=LIVE&&typeof HOST.place==='function',RORD={limited:0,rare:1,common:2};
 const placeKeys=P=>{const seen=new Set();return (P.res||[]).filter(it=>it&&it.k&&!seen.has(it.k)&&seen.add(it.k)).sort((a,b)=>(RORD[a.r]??3)-(RORD[b.r]??3)).map(it=>it.k);};
@@ -1737,7 +1738,7 @@ function oddsHTML(){const L=poolItems(),P=POOLS[THEME],own=L.filter(i=>OWN.has(i
     return `<section class="dex-sec" data-r="${k}"><h4><small class="r-${k}">${RN[k][0]}</small><b>${EN[k]}</b><span>${RATE[k]}%　每件 ${per}%</span><em>${A.filter(i=>OWN.has(i.k)).length}／${A.length}</em></h4>
       <div class="dex-grid">${A.map(it=>{const o=OWN.has(it.k);return `<div class="dex-card ${o?'own':'no'}"><i>${dexImg(it)}</i><b>${it.name}</b>${o?'':'<s>未收集</s>'}</div>`;}).join('')}</div></section>`;};
   return `<div class="dex-top"><p class="pl">${P.name}・${P.sub}</p><div class="dex-bar"><i style="width:${(own/Math.max(1,L.length)*100).toFixed(1)}%"></i><span>已收集 ${own}／${L.length}</span></div>
-    <p class="dex-rule">抽十次保證至少一件「這個卡池裡還沒有的」稀有以上家具；稀有以上全部收集齊了，就保證至少一件稀有以上。同一個稀有度裡，每件抽到的機會一樣。</p></div>${fxHTML(L,own)}${['limited','rare','common'].map(sec).join('')}`;}
+    <p class="dex-rule">抽十次一定有一件「這個卡池裡還沒有的」家具：稀有以上還沒收齊時，保證是還沒有的稀有以上；稀有以上收齊後，保證至少一件稀有以上，再加一件還沒有的家具。同一個稀有度裡，每件抽到的機會一樣。</p></div>${fxHTML(L,own)}${['limited','rare','common'].map(sec).join('')}`;}
 // 集滿獎勵：這個系列專屬的房間光效（扭蛋抽不到；集到一半先給第一階段、集滿給招牌光效，解鎖後任何房間都能開）
 function fxHTML(L,own){const F=POOLS[THEME].fx;if(!F)return'';const n=L.length;
   return `<section class="dex-sec dex-fx"><h4><small class="fxk">集滿獎勵</small><b>BONUS</b><span>系列專屬光效・扭蛋抽不到・解鎖後到小屋右下「光效」打開</span></h4><div class="fx-list">${F.map(([nm,lv,img,ds])=>{const need=lv===1?Math.ceil(n/2):n,ok=own>=need;

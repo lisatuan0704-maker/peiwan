@@ -105,8 +105,9 @@ setInterval(()=>{
 /* ===== 儲值金幣（銀行轉帳＋上傳截圖） ===== */
 const wallet=(()=>{
  const page=$('ttmWallet');
- let tier=-1,proof=null,proofBusy=false,sending=false,done=null,txOpen=false,catHost=null,cfgAsked=false;
+ let tier=-1,customAmt='',proof=null,proofBusy=false,sending=false,done=null,txOpen=false,catHost=null,cfgAsked=false;
  const tiers=()=>(((window.__topupCfg||{}).tiers)||[]).filter(t=>t&&t.amt>0);
+ const cur=()=>tier===-2?(window.ttCustomTier?ttCustomTier(customAmt):null):tiers()[tier];   // v535 tier -2＝自訂金額
  function account(){
   const raw=String((typeof PAY_ACCOUNT!=='undefined'&&PAY_ACCOUNT)||'').trim();
   const m=/^[(（]\s*(\d{3})\s*[)）]\s*(.*?)\s*(\d[\d -]{6,}\d)\s*(.*)$/.exec(raw);
@@ -123,16 +124,16 @@ const wallet=(()=>{
   img.onload=()=>{try{const M=1000;let w=img.width,h=img.height;if(w>h){if(w>M){h=Math.round(h*M/w);w=M;}}else if(h>M){w=Math.round(w*M/h);h=M;}
    const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',0.72));}catch(e){rej(e);}};
   img.onerror=()=>{URL.revokeObjectURL(url);rej(Error('IMAGE'));};img.src=url;});}
- function ready(){const name=page.querySelector('#ttmTuName')?.value.trim(),last5=page.querySelector('#ttmTuLast5')?.value.trim();return tier>=0&&!!name&&/^\d{5}$/.test(last5||'')&&!!proof;}
+ function ready(){const name=page.querySelector('#ttmTuName')?.value.trim(),last5=page.querySelector('#ttmTuLast5')?.value.trim();return !!cur()&&!!name&&/^\d{5}$/.test(last5||'')&&!!proof;}
  function sync(){const b=page.querySelector('#ttmTuSend');if(b){b.disabled=sending||!ready();b.textContent=sending?'送出中…':'送出儲值';}
-  page.querySelectorAll('[data-step]').forEach(s=>{const n=+s.dataset.step;s.classList.toggle('done',n===1?tier>=0:n===3?!!page.querySelector('#ttmTuName')?.value.trim()&&/^\d{5}$/.test(page.querySelector('#ttmTuLast5')?.value.trim()||''):n===4?!!proof:false);});}
+  page.querySelectorAll('[data-step]').forEach(s=>{const n=+s.dataset.step;s.classList.toggle('done',n===1?!!cur():n===3?!!page.querySelector('#ttmTuName')?.value.trim()&&/^\d{5}$/.test(page.querySelector('#ttmTuLast5')?.value.trim()||''):n===4?!!proof:false);});}
  function render(){
   const list=tiers(),acc=account(),bal=window.__wallet||0,note=(typeof PAY_NOTE!=='undefined'&&PAY_NOTE)||'';
   if(tier>=list.length)tier=-1;
   if(done){page.innerHTML='<div class="ttm-done"><b>儲值已送出 ✦</b><p>NT$ '+fmt(done.amt)+' → '+fmt(done.get)+' 金幣</p><p class="ttm-sub">店長核對入帳後，金幣會加進你的錢包並寄信通知你；通常幾分鐘內完成，深夜可能稍久。</p>'
    +'<button type="button" class="ttm-primary" data-act="orders">查看儲值進度</button><button type="button" class="ttm-ghost" data-act="again">再儲值一筆</button></div>';bind();return;}
   const keep={name:page.querySelector('#ttmTuName')?.value,last5:page.querySelector('#ttmTuLast5')?.value,email:page.querySelector('#ttmTuEmail')?.value};
-  const t=list[tier];
+  const t=cur();
   // v499 線上付款（應援）：主機設定還沒讀到就讀一次，讀到後重畫
   if(!cfgAsked&&window.ttPayCfgLoad){cfgAsked=true;ttPayCfgLoad().then(()=>{if(!done)render();});}
   const online=typeof ONLINE_PAYMENT_READY!=='undefined'&&ONLINE_PAYMENT_READY,needEmail=!!(window.__payCfg||{}).needEmail;
@@ -140,23 +141,25 @@ const wallet=(()=>{
    +'<div id="ttmTx" class="ttm-tx"'+(txOpen?'':' hidden')+'></div>'
    +'<div id="ttmCatSlot"></div>'
    +(list.length?(
-   '<section class="ttm-step" data-step="1"><h3><i><u>1</u></i><span class="hl">選一個儲值方案</span></h3>'
-   +'<p class="ttm-guide">儲值金額由酒館固定提供，不用自己輸入，點一下想要的方案就好。</p><div class="ttm-tiers" role="radiogroup" aria-label="儲值方案">'
-   +list.map((x,i)=>'<button type="button" role="radio" data-tier="'+i+'" aria-pressed="'+(i===tier)+'" aria-checked="'+(i===tier)+'"><b>'+fmt(x.amt+(x.bonus||0))+' <small>金幣</small></b><span>付 NT$ '+fmt(x.amt)+'</span>'+(x.bonus>0?'<em>含贈送 '+fmt(x.bonus)+'</em>':'')+(x.catBonus>0?'<em>銀行轉帳送 '+fmt(x.catBonus)+' 貓貓幣</em>':'')+'<span class="pick">'+(i===tier?'✓ 已選擇':'點我選這個')+'</span></button>').join('')+'</div></section>'
-   +'<section class="ttm-step ttm-online'+(tier<0?' locked':'')+'"><h3><i><u>↗</u></i><span class="hl">線上付款・自動入帳</span></h3>'
+   '<section class="ttm-step" data-step="1"><h3><i><u>1</u></i><span class="hl">選方案或自訂金額</span></h3>'
+   +'<p class="ttm-guide">點一下想要的方案；想儲值別的金額，可以在下面自己填。</p><div class="ttm-tiers" role="radiogroup" aria-label="儲值方案">'
+   +list.map((x,i)=>'<button type="button" role="radio" data-tier="'+i+'" aria-pressed="'+(i===tier)+'" aria-checked="'+(i===tier)+'"><b>'+fmt(x.amt+(x.bonus||0))+' <small>金幣</small></b><span>付 NT$ '+fmt(x.amt)+'</span>'+(x.bonus>0?'<em>含贈送 '+fmt(x.bonus)+'</em>':'')+(x.catBonus>0?'<em>銀行轉帳送 '+fmt(x.catBonus)+' 貓貓幣</em>':'')+'<span class="pick">'+(i===tier?'✓ 已選擇':'點我選這個')+'</span></button>').join('')+'</div>'
+   +'<div class="ttm-custom'+(tier===-2?' on':'')+'"><label for="ttmCustomAmt">自訂金額</label><div class="ttm-custom-row"><span>NT$</span><input id="ttmCustomAmt" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="'+fmt(window.TOPUP_MIN||500)+'～'+fmt(window.TOPUP_MAX||50000)+'"><button type="button" id="ttmCustomGo">'+(tier===-2&&t?'✓ 已選擇':'用這個金額')+'</button></div>'
+   +'<p class="ttm-sub" id="ttmCustomHint">'+(tier===-2&&t?'會拿到 '+fmt(t.amt+(t.bonus||0))+' 金幣'+(t.catBonus>0?'，銀行轉帳再送 '+fmt(t.catBonus)+' 貓貓幣':''):'最少 NT$ '+fmt(window.TOPUP_MIN||500)+'、最多 NT$ '+fmt(window.TOPUP_MAX||50000)+'，1 元＝1 金幣，銀行轉帳照比例加送貓貓幣')+'</p></div></section>'
+   +'<section class="ttm-step ttm-online'+(!t?' locked':'')+'"><h3><i><u>↗</u></i><span class="hl">線上付款・自動入帳</span></h3>'
    +'<p class="ttm-sub">'+(online?esc(window.ttPayMethodsText?ttPayMethodsText():'信用卡')+'都可以，付款完成金幣自動入帳，不用上傳截圖'+(t&&t.catBonus>0?'（線上付款沒有加送貓貓幣）':'')+'。':'線上付款準備中，可以先用下面的銀行轉帳。')+'</p>'
    +'<div id="ttmTuEmailBox"'+(needEmail?'':' hidden')+'><label for="ttmTuEmail">Email（電子發票會寄到這裡）</label><input id="ttmTuEmail" type="email" maxlength="120" autocomplete="email" placeholder="例：boss@example.com"></div>'
-   +'<button type="button" class="ttm-primary" id="ttmTuOnline"'+(online&&t?'':' disabled')+'>'+(online?(t?'線上付款 NT$ '+fmt(t.amt):'先選上面的方案'):'線上付款準備中')+'</button></section>'
+   +'<button type="button" class="ttm-primary" id="ttmTuOnline"'+(online&&t?'':' disabled')+'>'+(online?(t?'線上付款 NT$ '+fmt(t.amt):'先選上面的方案或金額'):'線上付款準備中')+'</button></section>'
    +'<p class="ttm-paydivider">或用銀行轉帳（店長核對後入帳）'+(t&&t.catBonus>0?'・加送 '+fmt(t.catBonus)+' 貓貓幣 ✦':'')+'</p>'
-   +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="2"><h3><i><u>2</u></i><span class="hl">轉帳到酒館帳戶</span></h3>'
+   +'<section class="ttm-step'+(!t?' locked':'')+'" data-step="2"><h3><i><u>2</u></i><span class="hl">轉帳到酒館帳戶</span></h3>'
    +'<div class="ttm-bank">'+(acc.code?'<div class="ttm-row"><span>銀行</span><b>('+esc(acc.code)+') '+esc(acc.bank)+'</b><button type="button" class="ttm-copy" data-copy="'+esc(acc.code)+'" data-label="複製代碼">複製代碼</button></div>':'')
    +'<div class="ttm-row ttm-acct"><span>帳號</span><b>'+esc(acc.number)+'</b><button type="button" class="ttm-copy main" data-copy="'+esc(acc.digits)+'" data-label="複製帳號">複製帳號</button></div>'
-   +'<div class="ttm-row ttm-amt"><span>金額</span><b>'+(t?'NT$ '+fmt(t.amt):'請先在上面選一個方案')+'</b>'+(t?'<button type="button" class="ttm-copy" data-copy="'+t.amt+'" data-label="複製金額">複製金額</button>':'')+'</div></div>'
-   +(note?'<p class="ttm-sub">'+esc(note)+'</p>':'')+'<p class="ttm-sub">請依照上面選的方案金額<b>剛好轉帳</b>這個數字；複製帳號後到銀行 App 轉帳，完成後回到這裡填寫資料。</p></section>'
-   +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="3"><h3><i><u>3</u></i><span class="hl">填寫對帳資料</span></h3>'
+   +'<div class="ttm-row ttm-amt"><span>金額</span><b>'+(t?'NT$ '+fmt(t.amt):'請先在上面選方案或填金額')+'</b>'+(t?'<button type="button" class="ttm-copy" data-copy="'+t.amt+'" data-label="複製金額">複製金額</button>':'')+'</div></div>'
+   +(note?'<p class="ttm-sub">'+esc(note)+'</p>':'')+'<p class="ttm-sub">請依照上面的金額<b>剛好轉帳</b>這個數字；複製帳號後到銀行 App 轉帳，完成後回到這裡填寫資料。</p></section>'
+   +'<section class="ttm-step'+(!t?' locked':'')+'" data-step="3"><h3><i><u>3</u></i><span class="hl">填寫對帳資料</span></h3>'
    +'<label for="ttmTuName">稱呼 / Discord 名</label><input id="ttmTuName" maxlength="30" autocomplete="nickname" placeholder="例：阿明 / @boss123">'
    +'<label for="ttmTuLast5">轉出帳號末五碼</label><input id="ttmTuLast5" maxlength="5" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="例：12345"></section>'
-   +'<section class="ttm-step'+(tier<0?' locked':'')+'" data-step="4"><h3><i><u>4</u></i><span class="hl">上傳轉帳截圖</span></h3>'
+   +'<section class="ttm-step'+(!t?' locked':'')+'" data-step="4"><h3><i><u>4</u></i><span class="hl">上傳轉帳截圖</span></h3>'
    +'<label class="ttm-upload" for="ttmTuFile"><input type="file" id="ttmTuFile" accept="image/*"><span class="ttm-up-empty"'+(proof?' hidden':'')+'><b>選擇轉帳成功的截圖</b><small>從相簿選擇，或直接拍照</small></span>'
    +'<img id="ttmTuPrev" alt="轉帳截圖預覽"'+(proof?' src="'+proof+'"':' hidden')+'><span class="ttm-up-again"'+(proof?'':' hidden')+'>換一張</span></label>'
    +'<p class="ttm-sub">截圖需看得到轉帳金額與時間。</p></section>'
@@ -166,12 +169,21 @@ const wallet=(()=>{
   const nameEl=page.querySelector('#ttmTuName');if(nameEl)nameEl.value=keep.name??dcName();
   const lastEl=page.querySelector('#ttmTuLast5');if(lastEl&&keep.last5)lastEl.value=keep.last5;
   const mailEl=page.querySelector('#ttmTuEmail');if(mailEl&&keep.email)mailEl.value=keep.email;
+  const cuEl=page.querySelector('#ttmCustomAmt');if(cuEl)cuEl.value=customAmt;
   // v492 貓貓幣區塊：同一個節點重複使用，重畫時搬回去
   const slot=page.querySelector('#ttmCatSlot');if(slot){if(!catHost){catHost=document.createElement('div');catHost.className='ttm-cat';TTCat.mount(catHost);}slot.replaceWith(catHost);}
   bind();sync();if(txOpen)loadTx();
  }
  function bind(){
-  page.querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>{const first=tier<0;tier=+b.dataset.tier;render();if(first){const s2=page.querySelector('.ttm-online')||page.querySelector('[data-step="2"]');if(s2)setTimeout(()=>{try{s2.scrollIntoView({behavior:'smooth',block:'start'})}catch{}},60);}});
+  const cu=page.querySelector('#ttmCustomAmt'),cg=page.querySelector('#ttmCustomGo'),chint=page.querySelector('#ttmCustomHint');
+  if(cu&&cg){const base='最少 NT$ '+fmt(window.TOPUP_MIN||500)+'、最多 NT$ '+fmt(window.TOPUP_MAX||50000)+'，1 元＝1 金幣，銀行轉帳照比例加送貓貓幣';
+   cu.oninput=()=>{cu.value=cu.value.replace(/\D/g,'').slice(0,6);customAmt=cu.value;const ok=window.ttCustomTier&&ttCustomTier(customAmt);
+    if(tier===-2){tier=-1;render();const e=page.querySelector('#ttmCustomAmt');if(e){e.focus();try{e.setSelectionRange(e.value.length,e.value.length);}catch{}}return;}
+    if(chint){chint.textContent=!customAmt?base:ok?'會拿到 '+fmt(ok.amt+(ok.bonus||0))+' 金幣'+(ok.catBonus>0?'，銀行轉帳再送 '+fmt(ok.catBonus)+' 貓貓幣':'')+'，按「用這個金額」':'金額要在 NT$ '+fmt(TOPUP_MIN)+'～'+fmt(TOPUP_MAX)+' 之間';chint.classList.toggle('bad',!!customAmt&&!ok);}};
+   cg.onclick=()=>{const ok=window.ttCustomTier&&ttCustomTier(customAmt);if(!ok){say('金額要在 NT$ '+fmt(window.TOPUP_MIN||500)+'～'+fmt(window.TOPUP_MAX||50000)+' 之間');cu.focus();return;}
+    const first=!cur();tier=-2;render();if(first){const s2=page.querySelector('.ttm-online')||page.querySelector('[data-step="2"]');if(s2)setTimeout(()=>{try{s2.scrollIntoView({behavior:'smooth',block:'start'})}catch{}},60);}};
+   cu.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();cg.click();}};}
+  page.querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>{const first=!cur();tier=+b.dataset.tier;render();if(first){const s2=page.querySelector('.ttm-online')||page.querySelector('[data-step="2"]');if(s2)setTimeout(()=>{try{s2.scrollIntoView({behavior:'smooth',block:'start'})}catch{}},60);}});
   page.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copy(b.dataset.copy,b,b.dataset.label));
   page.querySelectorAll('#ttmTuName,#ttmTuLast5').forEach(i=>i.oninput=()=>{if(i.id==='ttmTuLast5')i.value=i.value.replace(/\D/g,'').slice(0,5);sync();});
   const f=page.querySelector('#ttmTuFile');
@@ -180,7 +192,7 @@ const wallet=(()=>{
    catch{say('這張圖片讀不到，請換一張截圖');}finally{proofBusy=false;f.value='';sync();}};
   const s=page.querySelector('#ttmTuSend');if(s)s.onclick=send;
   const on=page.querySelector('#ttmTuOnline');
-  if(on)on.onclick=async()=>{const t=tiers()[tier];if(!t||typeof ttPayOnline!=='function')return;on.disabled=true;on.textContent='連線中…';
+  if(on)on.onclick=async()=>{const t=cur();if(!t||typeof ttPayOnline!=='function')return;on.disabled=true;on.textContent='連線中…';
    const em=page.querySelector('#ttmTuEmail');
    const ok=await ttPayOnline(t,{name:page.querySelector('#ttmTuName')?.value.trim()||dcName(),email:em?em.value.trim():'',onEmail:()=>{const b=page.querySelector('#ttmTuEmailBox');if(b)b.hidden=false;em?.focus();}});
    if(!ok){on.disabled=!ONLINE_PAYMENT_READY;on.textContent=ONLINE_PAYMENT_READY?'線上付款 NT$ '+fmt(t.amt):'線上付款準備中';}};
@@ -196,14 +208,14 @@ const wallet=(()=>{
   }).catch(()=>{box.textContent='交易紀錄暫時讀不到，請稍後再試';});
  }
  function send(){
-  if(sending||!ready())return;const list=tiers(),t=list[tier];if(!t){say('請先選擇儲值金額');return;}
+  if(sending||!ready())return;const t=cur();if(!t){say('請先選擇儲值金額');return;}
   if(typeof submitTopup!=='function'||typeof curTier==='undefined'){say('儲值功能暫時無法使用，請聯絡客服');return;}
   // 交給原本的儲值送出（同一筆 clientOrders＋clientOrderProofs，同一套驗證與通知）。
   $('tuName').value=page.querySelector('#ttmTuName').value.trim();$('tuLast5').value=page.querySelector('#ttmTuLast5').value.trim();
   curTier=t;tuProofData=proof;sending=true;sync();
   const before=myOrderIds().length;submitTopup();
   let n=0;const wait=setInterval(()=>{n++;
-   if(myOrderIds().length>before){clearInterval(wait);sending=false;done={amt:t.amt,get:t.amt+(t.bonus||0)};proof=null;tier=-1;render();return;}
+   if(myOrderIds().length>before){clearInterval(wait);sending=false;done={amt:t.amt,get:t.amt+(t.bonus||0)};proof=null;tier=-1;customAmt='';render();return;}
    if(!_submitting&&n>2||n>80){clearInterval(wait);sending=false;sync();}
   },250);
  }

@@ -1,5 +1,43 @@
 # 小小酒館修改紀錄
 
+## 2026/11/16 v537 小人擠壓不糊、大廳走路彈跳還原、設定視窗拿掉網點（Claude）
+- D：「人物待機的擠壓會害小人模糊」「呼吸感就是擠壓」「現在的走路沒有當初討論出來的那種彈跳效果，現在就是抖動」。
+  試過「抽排」的像素擠壓（不縮放），D 比較喜歡整張縮放的樣子 → 撤掉，改成「先放大成高解析、再整張縮放」。
+- 大廳（lobby.html makeAgent）：小人畫布改 64×AG_K（AG_K＝6），context 設 setTransform(6)＋最近鄰，所有畫小人的程式照舊用 64 格座標；顯示 image-rendering:auto。
+  站著呼吸還原整張壓扁（ttIdlePose，2.3 節奏、3.1%／4.4%）。
+  走路還原 v531 之前的雙拍彈跳＋落地擠壓＋微傾（v531 取整到像素格＝看起來一頓一頓）。試過照 11/12 走路試做「骨架彈跳・順」的拋球弧 Q 彈，D：「算了 上一版比較好」→ 撤回。
+  讀小人像素的 TTScene.metrics 讀的是 a.frames.idle（64 格），不受影響。
+- 小屋（house/room.html）：動作照舊，自己與朋友改畫 hiOf()（8 倍最近鄰放大、0.5 秒更新一次）再用高品質縮放 → 擠壓、彈跳時像素不再忽粗忽細。
+- 設定視窗標頭（theme-skin.css settings panel-head）：拿掉兩層粉紅網點（dc-a、ht-pink-tr）；theme-skin.css?v=537。
+- 驗證：大廳無頭瀏覽器 走路 rotate／scale 會動、站著 scale 連續變化、沒有錯誤；小屋 2.4 倍縮放新舊 20 格對照（tt-room-kit/house-picker/小人呼吸_高解析擠壓對照_1116.webp）。
+
+## 2026/11/16 v537 自訂儲值金額＋扭蛋十連必得一件還沒有的家具＋森林燈具（Claude；需部署付款主機 pay-v535）
+- D：「儲值區可以做一個自訂儲值金額的地方嗎」「最低500最高50000」；「轉蛋請改為必得一件未取得的家具」→ 選「只有十連保證一件新的」。
+- 自訂金額：500～50,000 的整數，1 元＝1 金幣、不送金幣；銀行轉帳照比例加送貓貓幣（D：「要自行換算比例送貓貓幣」）＝照「不超過這個金額的最大方案」的 catBonus／amt 比例、無條件捨去（350 送 300、1000 送 1000 → 500 送 428、2500 送 2500），線上付款不送（同方案）；剛好等於方案金額就照方案算。
+  入帳的貓貓幣以店長頁 topupCustomCat 為準（網站 ttCustomTier 同算法只顯示）。範圍三處要同步：
+  網站 lobby.html window.TOPUP_MIN／TOPUP_MAX＋ttCustomTier(v)、付款主機 server/lib/topup.js CUSTOM_MIN／CUSTOM_MAX、店長頁 admin.html TOPUP_MIN／TOPUP_MAX。
+  電腦錢包（live.js renderTopup）方案下面多一張整列「03 / 自訂金額」卡（輸入框＋儲值鈕，打字即時顯示會拿到幾金幣），按下 pickTier(物件) 開原本的付款視窗（收據寫「自訂金額」）；
+  手機儲值頁（mobile-app.js，tier -2＝自訂）第 1 步多「自訂金額」框，按「用這個金額」才算選好，之後線上付款／銀行轉帳照原流程。
+  訂單多 custom:true（轉帳單網站寫、線上單主機寫）；店長頁儲值標籤顯示「自訂金額」，不是方案也不在範圍內標警告（topupCustomNote）。topupCredit 本來就是非方案金額 1:1，不用改。資料庫規則不用改。
+  付款主機 startTopup：不是方案金額、在範圍內就當 {amt,bonus:0,custom:true}；超出範圍照舊 BAD_AMOUNT（網站提示改用銀行轉帳或換金額）。
+- 扭蛋：lib/gacha.js roll 在原本保底之後加一段——十連還是沒有任何「抽之前沒有」的家具（稀有以上收齊後才會發生），就把一件重複的普通換成這個卡池還沒有的家具；整池收齊才沒有新的。
+  原本「還沒收齊稀有以上時保證一件還沒有的稀有以上」不變（D 選的「任何稀有度都算」若照字面會比原本弱，所以保留原保底再加這條）。
+  網站 g3d.js 同步試做版 roll、十連鈕「必得一件還沒有的家具」、圖鑑說明；g3d.js?v=82、lobby-ui/gacha.js VER 535；tt-room-kit/gacha/3d 同步（舊檔 g3d.js.bak1116）。
+- 森林卡池加三件燈具（D：「加這三個好了 進森林卡池 然後編排浪漫的燈光效果」）：螢火蟲罐架（稀有）、樹枝燈柱、螢火蟲壁燈（普通）；森林卡池 37→40 件（限定 3／稀有 9／普通 28）。
+  主機 gacha-pools.json、網站 gacha/items.json＋img＋3d/models/*.glb（tt-room-kit/bed/export_gacha_all.py 匯出；它會整份重寫 pal.json，跑完要把舊檔合回去只加新三件）、
+  小屋：house/atl_v535.png 小圖集（SPR src 指這張；atlas() 本來就支援多張）、HOUSE_KEYS、house/catalog.json（DEF 本來就有）。圖用 _t4 抖動版（bed/props/hp_*_t4）。產生腳本 scratchpad/fl/add_forest.py。
+  罐架原模型有問題（D：「你的原模型就有問題了」）：共用 tube() 在直柱轉彎處換參考軸、截面轉 90 度 → 拱門左肩擰成尖角斷掉。bed/set_props_P_b.py 罐架改用平行移動截面 tube_pt（Catmull-Rom 插點）、
+  反向那片葉子貼回柱子、上層板靠右柱加撐木（反向看不再透洞）；重算 FORCE=1 render_x2.sh → OSFX=_t4 PALX=forest to_p1t.sh → to_p1g.sh（_p1）。舊檔 bed/_backup_1116_jarshelf/。
+  （共用 tube 的擰轉問題其他家具可能也有，沒全面檢查。）
+- 燈效新類型 firefly：玻璃罐／燈泡（lfxGlass＋lfxJarOk 黃色玻璃）裡暖光呼吸（底金黃、上帶粉）＋螢火蟲繞小圈一閃一滅＋偶爾一顆星光，夜晚照四周柔和暖光；反向圖不是鏡像的另給 jarsR（lfxGlass O.raw）。
+  幾個罐子畫完再一起剪（lfxGlassUnion），一個一個剪會擦掉前一個。
+- 修 v534 bug：lfxGlass 快取把畫面座標一起存了 → 同一種燈效家具擺兩件，第二件燈效不亮（兩座水族箱、兩盞壁燈…）。改成快取只存圖上的形狀（lfxGlassAt 每件各自換算）。
+- 主機測試：gacha 12 項（新增：三個卡池一直十連到收齊，每次都有新家具、次數不超過件數）、topup 23 項（新增：500／777／50,000 建單 1:1 標 custom、方案金額照舊算加送；499、50,001 拒絕）。
+  部署：C:\tinytavern\server\pay-v535-貼上主機.txt 整段貼到 pay-server 網頁 SSH（bash 子程序跑，失敗不會關掉終端機）：核對主機 gacha.js／topup.js 是 v504 版（sha 89862aea…／338d12a3…）→ 備份 ~/pay/backup-v504/ → 換 4 個檔（各自核 sha）→ 兩組測試（沒過自動還原）→ pm2 restart pay → 印 V535_PAY_DEPLOYED。假主機演練：第一次換好、第二次停在核對。
+- 網站驗證（scratchpad/g535/t_custom.cjs，本機預覽＋模擬資料庫＋假付款主機）電腦 21／手機 19 項：範圍提示、轉帳加送 2,500／500 送 428、499／50,001 擋下、只能打數字、等於方案照方案算、線上付款送出 2500、轉帳單 amount／coinAmount 2500 custom、選方案照舊加送、沒有水平捲動與頁面錯誤。
+- 版本：原定 v535，同時另兩個工作階段先推了 v535（串門子不看翻卡）、v536（半格擺設），所以接在後面改 v537：verTag v537、ver.json 537、lobby-view 537、fixed-view 537、house.js VER 537、live.js／live.css／mobile-app.js／mobile-theme.css ?v=535、gacha.js ?v=537（主機部署包名稱沿用 pay-v535）。
+- 上線順序：①部署付款主機 ②推網站。網站先上也不會壞：自訂金額線上付款會被舊主機拒絕（提示改用銀行轉帳），轉帳照常；扭蛋只是說明文字先變。
+
 ## 2026/11/16 v534 小屋家具燈效各自設計、不外露（Claude）
 - D：燈效要照家具類型各自設計（寶箱是縫隙透光…）、不能有方形破圖感、光不能跑出家具外；泡泡管上下微亮中間暗、一顆顆氣泡慢慢往上；水族箱氣泡更小更多；壁爐不能有方形光。
 - house/room.html 新增 LFX（家具燈效表，14 件）：每件用自己的畫法（type：寶箱縫隙、水柱、爐火、燈罩…），光一律剪在家具圖形內——

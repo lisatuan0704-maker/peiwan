@@ -354,7 +354,7 @@ html body .tt-live-ui .panel .panel-head{background-image:var(--sk-topband),var(
   background-position:0 0,right 70px center,58% 40%,54% 30%,58% 46%,66% 70%,46% 70%,right 0 top 0,0 0,0 0!important;
   background-repeat:no-repeat!important}
 html body .tt-live-ui .panel[data-view=settings] .panel-head{background-image:var(--sk-topband),var(--sk-mascot),var(--st-pink),var(--st-blue),var(--sk-orbit),var(--dc-a),var(--ht-pink-tr),linear-gradient(115deg,transparent 0 64%,rgba(140,215,248,.32) 64% 72%,rgba(255,255,255,.85) 72% 72.8%,rgba(140,215,248,.16) 72.8% 78%,transparent 78%),var(--sk-headbase)!important;
-  background-size:100% 7px,auto 78%,18px 18px,16px 16px,110px 50px,150px 62px,130px 86px,auto,auto!important;
+  background-size:100% 7px,auto 78%,18px 18px,16px 16px,110px 50px,0 0,0 0,auto,auto!important;   /* v537 D：「設定的紅點太多好噁心」→ 拿掉兩層粉紅網點（dc-a、ht-pink-tr） */
   background-position:0 0,right 92px bottom 0,right 150px top 20%,right 172px top 46%,57% 30%,60% 80%,right 0 top 0,0 0,0 0!important}
 /* 我的酒館標題也做成傾斜標題卡 */
 html body #ttHub h1{display:inline-block;position:relative;padding:4px 30px 6px 16px;margin-top:8px;font-size:30px;text-shadow:none;
@@ -381,7 +381,7 @@ html body #ttHub .hub-tabs button{-webkit-text-stroke:0}
   html body #setM:not(.hub-embedded) .panel[data-view=settings] .title-chip{padding:5px 26px 6px 44px!important;background-size:20px 20px,auto!important;background-position:14px 50%,0 0!important}
   html body #setM:not(.hub-embedded) .panel[data-view=settings] .title-chip h1{font-size:26px!important}
   html body #setM:not(.hub-embedded) .panel[data-view=settings] .close{width:42px!important;height:40px!important;top:20px!important;right:16px!important}
-  html body .tt-live-ui .panel[data-view=settings] .panel-head{background-size:100% 6px,0 0,0 0,0 0,0 0,90px 60px,110px 74px,auto,auto!important}
+  html body .tt-live-ui .panel[data-view=settings] .panel-head{background-size:100% 6px,0 0,0 0,0 0,0 0,0 0,0 0,auto,auto!important}
   html body #ttHub .hub-header{background-size:100% 6px,0 0,0 0,110px 50px,16px 16px,0 0,0 0,0 0,130px 90px,auto,auto,auto!important}
 }
 

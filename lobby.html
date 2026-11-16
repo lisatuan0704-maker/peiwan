@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=536"></script>
+<script src="lobby-ui/fixed-view.js?v=537"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=469"></script>
@@ -1450,7 +1450,7 @@ body.artBub.bub3s .npc .bub{
 <link rel="stylesheet" href="lobby-ui/contacts.css?v=341">
 <script src="lobby-ui/contacts.js?v=504"></script>
 <link rel="stylesheet" href="tavern-ui-shell.css?v=288">
-<link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=496">
+<link rel="stylesheet" href="lobby-ui/approved.css?v=256"><link rel="stylesheet" href="lobby-ui/live.css?v=535">
 <link rel="stylesheet" href="lobby-ui/scene.css?v=357">
 <script src="lobby-ui/scene.js?v=481"></script>
 <script src="lobby-ui/hair-motion.js?v=272"></script>
@@ -1701,7 +1701,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v536</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v537</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3042,11 +3042,14 @@ function switchMap(to){
 }
 let bosses={};
 
+const AG_K=6;
 function makeAgent(key,b){
   const h=hash(key);
   const el=document.createElement('div');
   el.className='npc tt-await-position';
-  const cv=document.createElement('canvas');cv.width=64;cv.height=64;
+  // v537 小人畫布改 6 倍高解析：畫的時候照 64 格座標（畫布本身縮放 6 倍、最近鄰），顯示時再由瀏覽器縮到螢幕大小。
+  // 走路彈跳、落地擠壓、呼吸壓扁都在高解析圖上做 → 動作是順的、像素也不會被補間糊掉（原本 64 格圖直接拉大＋縮放會糊或一抖一抖）。
+  const cv=document.createElement('canvas');cv.width=cv.height=64*AG_K;{const g0=cv.getContext('2d');g0.setTransform(AG_K,0,0,AG_K,0,0);g0.imageSmoothingEnabled=false;}cv.style.imageRendering='auto';
   const sh=document.createElement('div');sh.className='shadow';
   const tag=document.createElement('div');tag.className='tag';
   el.appendChild(sh);el.appendChild(cv);el.appendChild(tag);
@@ -3402,23 +3405,26 @@ function tick(now){
     a._hairMotion=null;
     let bob=0, hopRot=0, sqx=1, sqy=1;
     if(walking){
-      /* 走路手感(純程式,零美術成本):
-         雙拍節奏 —— 左右腳落地的重量不同,做出「踏、踏」的律動感;
-         落地時擠壓 + 微幅左右傾,比單純上下彈跳更有走路的感覺。 */
+      /* 走路手感：雙拍節奏（左右腳落地輕重不同）＋落地擠壓＋微幅左右傾。v537 還原 v531 之前的版本（v531 取整到像素格＝看起來一頓一頓）；
+         試過 Q 彈拋球弧，D：「算了 上一版比較好」。糊的問題由高解析畫布（AG_K）解決 */
       const ph=(tt*5.5+a.seed)%1;
       const jump=Math.abs(Math.sin(ph*Math.PI));
       const stepIdx=Math.floor(tt*5.5+a.seed)%2;          // 這一步是哪隻腳
       const heavy=stepIdx?1:0.86;                          // 兩腳落地輕重不同 → 律動
       bob=-jump*5*heavy;
-      /* v531：像素圖每幀縮放、旋轉會糊、邊緣閃 → 拿掉落地擠壓與左右傾，只留整數像素的上下彈跳（彈跳照舊浮誇） */
-      const px=size/64;bob=Math.round(bob/px)*px;
+      const landing=jump<0.25;
+      sqy=landing?(1-0.042*heavy):1+jump*0.021;
+      sqx=landing?(1+0.035*heavy):1;
+      const lean=(stepIdx?1:-1)*(landing?1.9:0.7);   // 落地那一瞬往支撐腳那側微傾，離地時回正
+      hopRot=Math.sin(tt*11+a.seed)*0.75+lean;
       // Hop as one standing sprite; do not alternate the feet or swing the arms.
       setFrame(a,'idle');
     }else{
       // B.整體呼吸壓扁(D 實測定案:速度2.3、幅度2.2%)
       // v531：人改成「吐氣時往下沉 1 個像素」（同節奏，不縮放就不糊）；史萊姆照舊壓扁
       if(a.slime)({sqx,sqy}=ttIdlePose(now,a.seed,a.slime));
-      else{const pulse=Math.max(0,Math.sin(now/1000*2.3*Math.PI+a.seed));bob=pulse>.5?size/64:0;}
+      // v537 D：「不要整格上下，呼吸感就是擠壓」「大廳也要改成順暢的擠壓」→ 人也照小屋整張壓扁（同 2.3 節奏、幅度 3.1%／4.4%）；試過「抽排」的像素擠壓，D 比較喜歡整張縮放
+      else ({sqx,sqy}=ttIdlePose(now,a.seed,a.slime));
       setFrame(a,'idle');
     }
     if(_hairMotionPreference.matches){bob=0;hopRot=0;sqx=1;sqy=1;}
@@ -4668,13 +4674,26 @@ function renderWalletTx(){
     }).join('')+'</div>';
   }).catch(()=>{ box.innerHTML=''; });
 }
+/* v535 自訂儲值金額（D 11/16）：500～50,000 的整數，1 元＝1 金幣、沒有加送（跟方案一樣的金額就照方案算）。
+   範圍改了要同步付款主機 server/lib/topup.js CUSTOM_MIN／CUSTOM_MAX、店長頁 admin.html TOPUP_MIN／TOPUP_MAX */
+window.TOPUP_MIN=500; window.TOPUP_MAX=50000;
+window.ttCustomTier=function(v){
+  const s=String(v==null?'':v).replace(/[,，\s]/g,'');
+  if(!/^\d+$/.test(s)) return null;
+  const a=Number(s); if(!Number.isSafeInteger(a)||a<TOPUP_MIN||a>TOPUP_MAX) return null;
+  const L=((window.__topupCfg||{}).tiers||[]).filter(t=>t&&Number(t.amt)>0);
+  const hit=L.find(t=>Number(t.amt)===a); if(hit) return hit;
+  // 轉帳加送貓貓幣照「不超過這個金額的最大方案」的比例、無條件捨去（店長頁 admin.html topupCustomCat 同一個算法，入帳以店長頁為準）
+  const b=L.filter(t=>Number(t.amt)<=a&&Number(t.catBonus)>0).sort((x,y)=>Number(y.amt)-Number(x.amt))[0];
+  return {amt:a,bonus:0,catBonus:b?Math.floor(a*Number(b.catBonus)/Number(b.amt)):0,custom:true};
+};
 function pickTier(i){
   const tiers=((window.__topupCfg||{}).tiers||[]).filter(t=>t&&t.amt>0);
-  curTier=tiers[i]; if(!curTier) return;
+  curTier=(i&&typeof i==='object')?i:tiers[i]; if(!curTier) return;   // v535 也可以直接給 ttCustomTier 的結果
   if(window.gClose) gClose('topupM');
   const get=curTier.amt+(curTier.bonus||0);
   document.getElementById('tuPayInfo').innerHTML=
-    '<div class="tu-receipt"><div><span>儲值金額</span><b>NT$'+curTier.amt+'</b></div>'+
+    '<div class="tu-receipt"><div><span>'+(curTier.custom?'自訂金額':'儲值金額')+'</span><b>NT$'+Number(curTier.amt).toLocaleString()+'</b></div>'+
     '<div><span>入帳金幣</span><b>'+get+' <small>金幣</small></b>'+(curTier.bonus>0?'<small class="tu-bonus">內含贈送 '+curTier.bonus+' 金幣</small>':'')+(curTier.catBonus>0?'<small class="tu-bonus">銀行轉帳再送 '+curTier.catBonus+' 貓貓幣</small>':'')+'</div></div>'+
     '<div class="tu-section-heading"><span>01 / ONLINE PAYMENT</span><h4>線上付款</h4><p>'+(ONLINE_PAYMENT_READY?esc(ttPayMethodsText())+'都可以，付款完成金幣自動入帳'+(curTier.catBonus>0?'（線上付款沒有加送貓貓幣）':'')+'。':'線上付款準備中，可以先用銀行轉帳。')+'</p></div>'+
     '<div id="tuEmailBox"'+(((window.__payCfg||{}).needEmail)?'':' hidden')+'><label for="tuEmail">Email（電子發票會寄到這裡）</label><input type="email" id="tuEmail" maxlength="120" autocomplete="email" placeholder="例:boss@example.com"></div>'+
@@ -4730,7 +4749,7 @@ window.ttPayOnline=async function(tier,opt){
   else if(c==='BAD_EMAIL') toast('Email 格式不太對,再檢查一下');
   else if(c==='LOGIN_REQUIRED') needLogin();
   else if(c==='NOT_LIVE'){ ONLINE_PAYMENT_READY=false; toast('線上付款準備中,可以先用銀行轉帳'); }
-  else if(c==='BAD_AMOUNT') toast('儲值方案剛更新,請重新選一次');
+  else if(c==='BAD_AMOUNT') toast(tier.custom?'這個金額目前不能線上付款，可以改用銀行轉帳，或換一個金額':'儲值方案剛更新,請重新選一次');
   else if(c==='TOO_MANY') toast('按太多次了,請等幾分鐘再試');
   else toast('線上付款暫時忙線,可以先用銀行轉帳,或稍後再試');
   return false;
@@ -4795,7 +4814,7 @@ function submitTopup(){
   const _fuse3=submitGuard('tuSubmitBtn','送出儲值');
   const get=curTier.amt+(curTier.bonus||0);
   const catB=Math.max(0,Math.floor(Number(curTier.catBonus)||0));   // v516 轉帳加送貓貓幣（顯示用；入帳數量由店長頁照方案算）
-  const o={ type:'topup', planName:'儲值 '+get+' 金幣', amount:curTier.amt, coinAmount:get, bonus:curTier.bonus||0, ...(catB?{catBonus:catB}:{}),
+  const o={ type:'topup', planName:'儲值 '+get+' 金幣', amount:curTier.amt, coinAmount:get, bonus:curTier.bonus||0, ...(catB?{catBonus:catB}:{}), ...(curTier.custom?{custom:true}:{}),
     name, last5, hasProof:true, status:'pending', createdAt:Date.now(),
     payDue:Date.now()+PAY_MINS*60000, myKey:myKey||null };
   const ref=db.ref(ROOT+'/clientOrders').push();
@@ -8690,19 +8709,19 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-splits.js?v=441"></script>
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
-<script src="lobby-ui/vip-outfit.js?v=450"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=532"></script>
+<script src="lobby-ui/vip-outfit.js?v=537"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=537"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=500"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
 <script src="lobby-ui/companion-achievements.js?v=532"></script>
-<script src="lobby-ui/live.js?v=516"></script>
+<script src="lobby-ui/live.js?v=535"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/photo-mode.js?v=532"></script><link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=526"><script src="lobby-ui/house.js?v=536"></script><script src="lobby-ui/house-trip.js?v=512"></script><script src="lobby-ui/gacha.js?v=532"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=526"><script src="lobby-ui/house.js?v=537"></script><script src="lobby-ui/house-trip.js?v=512"></script><script src="lobby-ui/gacha.js?v=537"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>
@@ -8714,14 +8733,14 @@ const orderVoice=installOrderVoice({auth:firebase.auth(),notice:msg=>toast(msg)}
 let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmit=async function(){if(_submitting||voiceChecking)return;voiceChecking=true;try{if(curKind==='play'){if(!orderVoice.ensureLogin())return;try{const selected=_selStaff();if(selected)await orderVoice.preflight((selected.members||[selected]).map(s=>s.cid),myKey)}catch(e){toast(e.message);return}}/* v432: 預約送出前再確認一次時段 */if(curKind==='play'&&curBooking&&curReserveAt&&window.TTCancelReason){let amount=0;try{const n=window.TTOrderFlow?.members?.().length||1;if(n<=1)amount=payFinalAmount();}catch(_){}if(!await TTCancelReason.confirmBooking({when:fmtRes(curReserveAt),staff:ttSelectedStaffDisplayName(),plan:(curPlan&&curPlan.n)||'',amount}))return;}return await originalPaySubmit()}finally{voiceChecking=false}};
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
-</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=530"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=508"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
+</script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=537"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=508"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
 <script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=427"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
-<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=532"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=532">
-<script src="lobby-ui/mobile-app.js?v=532"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-app.css?v=532"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=535">
+<script src="lobby-ui/mobile-app.js?v=535"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
 <script src="lobby-ui/vip-card.js?v=513"></script>
 <link rel="stylesheet" href="lobby-ui/order-guide.css?v=514"><script src="lobby-ui/order-guide.js?v=514"></script>

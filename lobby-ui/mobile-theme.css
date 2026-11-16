@@ -44,7 +44,7 @@ html.ttm-on #ttM{background:radial-gradient(circle at 12% 8%,#FFE3EF 0,transpare
 #ttmWallet .ttm-tiers button[aria-pressed=true] .pick{color:var(--ttm-ink)}
 /* 還沒選方案前，後面的步驟變淡並提示 */
 #ttmWallet .ttm-step.locked{opacity:.5;filter:grayscale(.4);pointer-events:none}
-#ttmWallet .ttm-step.locked h3::after{content:'先選上面的方案';margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ttm-soft)}
+#ttmWallet .ttm-step.locked h3::after{content:'先選上面的方案或金額';margin-left:auto;font-size:11.5px;font-weight:700;color:var(--ttm-soft)}
 /* 匯款資料 */
 #ttmWallet .ttm-bank{border:2px solid #D3D8F2!important;border-radius:12px!important;background:#fff!important}
 #ttmWallet .ttm-row{border-bottom:1.5px dashed #D3D8F2!important}
@@ -163,3 +163,13 @@ html.ttm-on:not([data-ttm-tab=orders]) #ttM #ttmIdle,html.ttm-on:not([data-ttm-t
  html.ttm-on .tt-order-flow .of-ghost{display:none!important}
  html.ttm-on .tt-order-flow .of-track{padding-top:4px!important;padding-bottom:4px!important;min-height:0!important}
 }
+/* v535 自訂儲值金額 */
+#ttmWallet .ttm-custom{margin-top:12px;padding:12px;border:2.5px dashed var(--ttm-ink);border-radius:14px;background:#fff}
+#ttmWallet .ttm-custom.on{border-style:solid;background:#FFF0F6;box-shadow:0 4px 0 var(--ttm-ink)}
+#ttmWallet .ttm-custom label{display:block;font-weight:800;margin-bottom:6px;color:var(--ttm-ink)}
+#ttmWallet .ttm-custom-row{display:flex;align-items:center;gap:8px}
+#ttmWallet .ttm-custom-row span{font-weight:800;color:var(--ttm-ink)}
+#ttmWallet .ttm-custom-row input{flex:1;min-width:0;font:inherit;font-size:18px;font-weight:800;padding:8px 10px;border:2px solid var(--ttm-ink);border-radius:10px;background:#fff;color:var(--ttm-ink)}
+#ttmWallet .ttm-custom-row button{font:inherit;font-weight:800;font-size:13px;padding:9px 12px;border:2px solid var(--ttm-ink);border-radius:10px;background:linear-gradient(180deg,#FF7AA8,#E8467F);color:#fff;text-shadow:0 1px 0 #B02A5E;box-shadow:0 2px 0 var(--ttm-ink);white-space:nowrap}
+#ttmWallet .ttm-custom .ttm-sub{margin:8px 0 0}
+#ttmWallet .ttm-custom .ttm-sub.bad{color:#D0457A}

@@ -295,3 +295,14 @@ html body.tt214 #hud2#hud2::after{left:78px;background:linear-gradient(118deg,rg
 body.tt214 #hud2 .h2who .h2nm{max-width:11em;overflow:hidden;text-overflow:ellipsis}
 /* v495 商城、背包開著時（#ttApprovedUI z-index 11000），大廳的確認框與提示要蓋在最上面（商城裡買聊天氣泡用大廳的確認框） */
 body.tt-approved-open .ttc{z-index:11050!important}body.tt-approved-open #toast{z-index:11060!important}
+/* v535 錢包自訂儲值金額 */
+.tt-live-ui .tt-custom-pack{grid-column:1/-1;min-height:0;cursor:default}
+.tt-live-ui .tt-custom-pack:after{content:none}
+.tt-live-ui .tt-custom-pack label{display:block;margin:6px 0 8px;font-size:14px;font-weight:800;color:#745494}
+.tt-live-ui .tt-custom-row{display:flex;align-items:center;gap:8px}
+.tt-live-ui .tt-custom-row span{font-weight:800;color:#745494}
+.tt-live-ui .tt-custom-row input{flex:1;min-width:0;font:inherit;font-size:18px;font-weight:800;color:#1C2156;padding:8px 12px;border:2px solid #1C2156;border-radius:10px;background:#fff}
+.tt-live-ui .tt-custom-row button{font:inherit;font-weight:800;font-size:14px;padding:9px 20px;border:2px solid #1C2156;border-radius:10px;background:linear-gradient(180deg,#FF7AA8,#E8467F);color:#fff;text-shadow:0 1px 0 #B02A5E;box-shadow:0 2px 0 #1C2156;cursor:pointer}
+.tt-live-ui .tt-custom-row button:disabled{background:#E6E0EE;color:#9A8FB0;box-shadow:none;cursor:not-allowed}
+.tt-live-ui .tt-custom-pack p{margin:8px 0 0}
+.tt-live-ui .tt-custom-pack p.bad{color:#D0457A}

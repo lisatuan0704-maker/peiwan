@@ -1674,7 +1674,7 @@ function renderClientOrders(){
     return '<div style="border:2px solid '+(o.status==='done'?'#D8D0D4':'#E8C7D4')+';padding:11px 13px;margin-bottom:10px;background:'+(o.status==='done'?'#FAFAFA':'#FFF')+'">'
       +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">'
       +'<div><b>'+esc(o.planName||'?')+'</b>　<b style="color:#D96A8B">'+(o.paidBy==='cat'?(Number(o.catAmount)||0)+' 貓貓幣（金幣等值 '+(Number(o.amount)||0)+'）':'NT$'+(Number(o.amount)||0))+'</b>'+lowPriceWarn(o)
-      +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+topupCredit(o)+' 金幣'+((o.credited?(Number(o.catCredited)||0):topupCatBonus(o))?'＋'+(o.credited?Number(o.catCredited):topupCatBonus(o))+' 貓貓幣':'')+(topupTampered(o)?' ⚠ 金幣數被改過':'')+(o.credited?'・已入帳':'')+'</span>':'')
+      +(o.type==='topup'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">🪙 儲值 '+topupCredit(o)+' 金幣'+((o.credited?(Number(o.catCredited)||0):topupCatBonus(o))?'＋'+(o.credited?Number(o.catCredited):topupCatBonus(o))+' 貓貓幣':'')+(topupTampered(o)?' ⚠ 金幣數被改過':'')+topupCustomNote(o)+(o.credited?'・已入帳':'')+'</span>':'')
       +(o.payChannel==='oen'?'　'+oenBadge(o):'')
       +(o.paidBy==='wallet'?'　<span style="background:#FBEFC0;color:#B8860B;font-size:12px;font-weight:700;padding:2px 8px">金幣支付</span>':'')
       +(o.paidBy==='cat'?'　<span style="background:#FCE8DA;color:#B5643C;font-size:12px;font-weight:700;padding:2px 8px">貓貓幣支付</span>':'')
@@ -1948,6 +1948,13 @@ function topupCredit(o){
   const c=Number(o&&o.coinAmount);
   return (Number.isSafeInteger(c)&&c>=0&&c<=expect)?c:expect;
 }
+/* v535 自訂儲值金額（D 11/16：最低 500、最高 50,000，1 元＝1 金幣、沒有加送）：不是方案金額的儲值單標「自訂金額」，超出範圍標警告 */
+const TOPUP_MIN=500,TOPUP_MAX=50000;
+function topupCustomNote(o){
+  const amt=Number(o&&o.amount);
+  if(((topupCfg&&topupCfg.tiers)||[]).some(x=>x&&Number(x.amt)===amt)) return '';
+  return (Number.isSafeInteger(amt)&&amt>=TOPUP_MIN&&amt<=TOPUP_MAX)?'・自訂金額':' ⚠ 金額不在 500～50,000（不是方案也不是自訂範圍）';
+}
 /* v499 線上付款（應援）訂單的標記：付款方式、進度、異常 */
 function oenBadge(o){
   const M={card:'信用卡',applePay:'Apple Pay',cvs:'超商代碼',atm:'ATM',linePay:'LINE Pay'};
@@ -1961,8 +1968,17 @@ function topupTampered(o){ const c=Number(o&&o.coinAmount); return o&&o.coinAmou
 function topupCatBonus(o){
   if(!o||o.type!=='topup'||o.payChannel==='oen') return 0;
   const amt=Math.max(0,Math.floor(Number(o.amount)||0));
-  const t=((topupCfg&&topupCfg.tiers)||[]).find(x=>x&&Number(x.amt)===amt);
-  return t?Math.max(0,Math.floor(Number(t.catBonus)||0)):0;
+  const L=((topupCfg&&topupCfg.tiers)||[]).filter(x=>x&&Number(x.amt)>0);
+  const t=L.find(x=>Number(x.amt)===amt);
+  if(t) return Math.max(0,Math.floor(Number(t.catBonus)||0));
+  if(amt<TOPUP_MIN||amt>TOPUP_MAX) return 0;
+  return topupCustomCat(L,amt);
+}
+/* v535 自訂金額轉帳加送貓貓幣（D 11/16「要自行換算比例送貓貓幣」）：照「不超過這個金額的最大方案」的比例，無條件捨去
+   例：方案 350 送 300、1000 送 1000 → 自訂 500 送 428、2500 送 2500。網站 lobby.html ttCustomTier 用同一個算法（只顯示，入帳以這裡為準） */
+function topupCustomCat(L,amt){
+  const b=L.filter(x=>Number(x.amt)<=amt&&Number(x.catBonus)>0).sort((x,y)=>Number(y.amt)-Number(x.amt))[0];
+  return b?Math.max(0,Math.floor(amt*Number(b.catBonus)/Number(b.amt))):0;
 }
 function months(){
   const set=new Set(Object.values(orders).map(o=>o.month).filter(Boolean));

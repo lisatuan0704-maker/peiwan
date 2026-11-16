@@ -163,11 +163,25 @@
     $('topupBody').innerHTML='<div class="purse-summary framed-motion"><div class="wallet-balance"><small>目前可用金幣</small><strong>'+TTCat.gold(48,'c')+' '+bal.toLocaleString()+'</strong><p>為下一次相聚，存一點期待。</p></div><div class="coin-scene" aria-hidden="true"><span class="coin-orbit"></span>'+TTCat.gold(96,'s')+'<i class="coin-spark">✦</i><span class="coin-label">TAVERN COINS</span></div>'+motion(3)+'</div>'
       +'<div class="section-caption"><b>貓貓幣</b><span>CAT COINS</span></div><div id="ttCatSlot"></div>'
       +(cfg.note?'<p class="body-note">'+text(cfg.note)+'</p>':'')+'<div class="section-caption"><b>補充一點快樂</b><span>TOP UP</span></div><div class="packages">'
-      +(tiers.length?tiers.map((t,i)=>'<button type="button" class="package framed-motion" data-tier="'+i+'"><span class="coupon-id">'+String(i+1).padStart(2,'0')+' / 儲值</span><strong>'+TTCat.gold(26,'c')+' '+Number(t.amt+(t.bonus||0)).toLocaleString()+'</strong>'+(t.bonus>0?'<small class="tt-bonus">含贈送 '+TTCat.gtag(t.bonus,14)+'</small>':'')+(t.catBonus>0?'<small class="tt-bonus">銀行轉帳送 '+Number(t.catBonus).toLocaleString()+' 貓貓幣</small>':'')+'<p>NT$ '+Number(t.amt).toLocaleString()+'</p><span class="coupon-arrow">↗</span>'+motion(i%2)+'</button>').join(''):'<p class="body-note">目前尚未開放儲值，敬請期待。</p>')+'</div>'
+      +(tiers.length?tiers.map((t,i)=>'<button type="button" class="package framed-motion" data-tier="'+i+'"><span class="coupon-id">'+String(i+1).padStart(2,'0')+' / 儲值</span><strong>'+TTCat.gold(26,'c')+' '+Number(t.amt+(t.bonus||0)).toLocaleString()+'</strong>'+(t.bonus>0?'<small class="tt-bonus">含贈送 '+TTCat.gtag(t.bonus,14)+'</small>':'')+(t.catBonus>0?'<small class="tt-bonus">銀行轉帳送 '+Number(t.catBonus).toLocaleString()+' 貓貓幣</small>':'')+'<p>NT$ '+Number(t.amt).toLocaleString()+'</p><span class="coupon-arrow">↗</span>'+motion(i%2)+'</button>').join('')
+        // v535 自訂金額（500～50,000，1 元＝1 金幣、沒有加送）
+        +'<div class="package tt-custom-pack framed-motion"><span class="coupon-id">'+String(tiers.length+1).padStart(2,'0')+' / 自訂金額</span><label for="ttCustomAmt">想儲值多少，自己填</label>'
+        +'<div class="tt-custom-row"><span>NT$</span><input id="ttCustomAmt" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="'+(window.TOPUP_MIN||500)+'～'+Number(window.TOPUP_MAX||50000).toLocaleString()+'"><button type="button" id="ttCustomGo" disabled>儲值</button></div>'
+        +'<p id="ttCustomHint">最少 NT$ '+Number(window.TOPUP_MIN||500).toLocaleString()+'、最多 NT$ '+Number(window.TOPUP_MAX||50000).toLocaleString()+'，1 元＝1 金幣，銀行轉帳照比例加送貓貓幣</p></div>'
+        :'<p class="body-note">目前尚未開放儲值，敬請期待。</p>')+'</div>'
       +'<p class="body-note">1 金幣 = 1 元，可以點冒險者一起玩，也能買時裝。<br>線上付款自動入帳；銀行轉帳由店長核對，入帳時會收到通知'+(tiers.some(t=>t.catBonus>0)?'，<b>銀行轉帳還會加送貓貓幣</b>':'')+'。</p><div class="text-links"><a class="text-btn" href="https://discord.gg/sw95eYeJ2P" target="_blank" rel="noopener">找店長幫忙 ↗</a><button type="button" class="text-btn" id="ttWalletTx">查看交易紀錄 →</button></div><div id="walletTxBox"></div>';
     if(!catHost){catHost=document.createElement('div');catHost.className='tt-cat-slot';TTCat.mount(catHost);}
     $('ttCatSlot').replaceWith(catHost);
     $('topupBody').querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>pickTier(Number(b.dataset.tier)));
+    const ci=$('ttCustomAmt'),cg=$('ttCustomGo'),ch=$('ttCustomHint');
+    if(ci&&cg&&window.ttCustomTier){
+      const base=ch.textContent;
+      const upd=()=>{ci.value=ci.value.replace(/[^\d]/g,'').slice(0,6);const t=ttCustomTier(ci.value);cg.disabled=!t;
+        ch.textContent=!ci.value?base:t?'會拿到 '+Number(t.amt+(t.bonus||0)).toLocaleString()+' 金幣'+(t.catBonus>0?'，銀行轉帳再送 '+Number(t.catBonus).toLocaleString()+' 貓貓幣':'')+(t.custom?'':'（跟方案一樣，照方案算）'):'金額要在 NT$ '+Number(TOPUP_MIN).toLocaleString()+'～'+Number(TOPUP_MAX).toLocaleString()+' 之間';
+        ch.classList.toggle('bad',!!ci.value&&!t);};
+      ci.oninput=upd;cg.onclick=()=>{const t=ttCustomTier(ci.value);if(t)pickTier(t);};
+      ci.onkeydown=e=>{if(e.key==='Enter'&&!cg.disabled){e.preventDefault();cg.click();}};
+    }
     $('ttWalletTx').onclick=()=>renderWalletTx();
   };
 
