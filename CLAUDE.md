@@ -1,5 +1,13 @@
 # 小小酒館修改紀錄
 
+## 2026/11/17 v544 扭蛋十連抽到新燈具，房間整間不見（Claude）
+- D 截圖：客人十連結果全黑、家具名牌全擠在左邊、沒有「丟進房間」的畫面。原因：v537 加的三件燈具（螢火蟲罐架／樹枝燈柱／螢火蟲壁燈）沒加進 gacha/3d/room/room.json，
+  tenRoom 只要有一件不在 room.json 就整間房間不畫（單抽 roomPlan 同理）。
+- 修法：room.json 補三筆（照同大小家具的 A／doll／dij，w/h/ax/ay 用小屋圖集）；g3d.js 載入時缺資料的家具先給同大小替身（console.warn，不會整間消失），DV ?v=74、g3d.js?v=83；
+  tt-room-kit/gacha/sync_to_site.py 加檢查：items.json 有、room.json 沒有就不准同步。lobby-ui/gacha.js VER 544（扭蛋頁網址換版本）。
+- ⚠ 以後扭蛋加新家具：items.json、room.json、模型、小屋圖集都要一起加。驗證：scratchpad/ray gacha3.cjs 本機十連抽到樹枝燈柱＋螢火蟲壁燈，房間正常、名牌在家具旁。
+- 版本：verTag v544、ver.json 544、lobby-view／fixed-view 544、gacha.js?v=544。
+
 ## 2026/11/17 v543 林間葉影／螢火綠光的光也摺上牆（Claude）
 - D：「林間葉影的光也一樣!!」：葉影（drawLeafSun）沒切地板，靠牆時整片葉影照螢幕橢圓畫到牆上；周圍壓暗（drawVig）補回光池的橢圓也一樣。
 - 葉影改 floorClip 只在地板，牆上用 lightFold 摺上去（暖光、沒有葉子）；drawVig 的光池補回改地板橢圓＋lightFold(op lighter, rk)。lightFold 多了 stops／rk／op 參數。

@@ -530,7 +530,7 @@ fShadow.rotation.x=-Math.PI/2;fShadow.visible=false;world.add(fShadow);
 // ---------- 家具本體 v5（D 11/07：「平平的很微妙」→ 改用小屋家具的原始 3D 模型）----------
 // 模型：bed/export_gacha_glb.py 從 Blender 原檔轉出（models/<key>.glb，只有幾何＋材質名）。
 // 上色：models/tone.json＝從原圖量出來的「每個材質 8 階顏色＋明暗門檻」，轉到斜角時明暗分布跟原圖一樣；停好後換成原圖（整數倍、一格對一格）。
-const GLL=new GLTFLoader(),FCACHE={},DV='?v=73';let TONE={},FPAL={};   // DV＝資料版本：家具重匯後改這裡，瀏覽器才不會讀到舊的快取
+const GLL=new GLTFLoader(),FCACHE={},DV='?v=74';let TONE={},FPAL={};   // DV＝資料版本：家具重匯後改這裡，瀏覽器才不會讀到舊的快取
 const PPU=45.255,EL30=Math.PI/6;
 function loadFurn(k){return FCACHE[k]||(FCACHE[k]=GLL.loadAsync('models/'+k+'.glb'+DV).then(gl=>{gl.scene.updateMatrixWorld(true);const parts=[];
   gl.scene.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.clone().applyMatrix4(o.matrixWorld);for(const a of Object.keys(g.attributes))if(a!=='position'&&a!=='normal')g.deleteAttribute(a);parts.push({g,mat:o.material.name});});
@@ -1798,6 +1798,7 @@ async function lookMode(){await G.pull(1,null,7);const P=plan,D0=-TZD,e0=P.H0+10
   setUI(HEAD+`<div class="p btns">${V.map((v,i)=>`<button class="btn" data-look="${i}" style="white-space:nowrap;padding:calc(3px*var(--s)) calc(8px*var(--s));font-size:calc(8px*var(--s))">${v[0]}</button>`).join('')}</div>`);
   ui.addEventListener('click',ev=>{const b=ev.target.closest('[data-look]');if(b)show(+b.dataset.look);});G.look=(e,k)=>{LOOK={e,k};};show(0);}
 (async()=>{try{makeTargets();ITEMS=await fetch('../items.json'+DV).then(r=>r.json());[TONE,FPAL,ROOMD,FIT,TAVPAL]=await Promise.all(['models/tone.json'+DV,'models/pal.json'+DV,'room/room.json'+DV,'models/fit.json'+DV,'tavern/tav_pal.json'].map(u=>fetch(u).then(r=>r.json()).catch(()=>({}))));
+  if(ROOMD&&ROOMD.items)for(const it of ITEMS)if(!ROOMD.items[it.k]){const tp=Object.values(ROOMD.items).find(v=>v.kind===it.kind&&(it.kind==='wall'?Math.abs(v.w-(it.w||30))<12:v.di===1&&v.dj===1));if(tp)ROOMD.items[it.k]={...tp,set:it.set||tp.set,spr:it.k,w:it.w||tp.w,h:it.h||tp.h};console.warn('[gacha] room.json 少了',it.k,'先用替身');}   // 11/17：新家具忘了加進 room.json 時，十連整間房間都不見（客人畫面全黑）→ 先用同大小的替身
   await Promise.all(Object.keys(ROOMD?.sets||{}).map(k=>new Promise(r=>{const i=new Image();i.onload=()=>{ROOMI[k]=i;r();};i.onerror=()=>r();i.src='room/room_'+k+'.png'+DV;})));
   const load=(k,src)=>new Promise(r=>{const i=new Image();i.onload=()=>{IMG[k]=i;r();};i.onerror=()=>r();i.src=src;});
   await Promise.all([load('coin','../img/cat-coin-px48.png'),...ITEMS.map(i=>load('raw_'+i.k,'../img/'+i.k+'.png'+DV))]);for(const i of ITEMS)if(IMG['raw_'+i.k])IMG['f_'+i.k]=grade(IMG['raw_'+i.k]);
