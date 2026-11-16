@@ -48,8 +48,19 @@ html.tt-phone body[data-area] .preview.preview>.stage{grid-column:1!important;gr
 html.tt-phone body[data-area] .preview.preview>.dye{grid-column:2!important;grid-row:2!important;height:auto!important}
 html.tt-phone body[data-area] .preview.preview>.previewbar{grid-column:2!important;grid-row:3!important;align-self:end}
 /* 整頁一起捲（小螢幕衣服清單原本只剩 17px 高）；原本的排版規則選擇器很重，這裡用 #catalog#catalog、重複 class 壓過去 */
-html.tt-phone body[data-area][data-area] .workspace.workspace.workspace{overflow-y:auto!important;overscroll-behavior:contain}
-html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog#catalog,
+/* v547 D：「試穿看看固定住，下面的商店可以直接滑著看東西」→ 整頁不捲，試衣區固定在上面，只有下面的商品區（#catalog）自己捲；分類列黏在商品區頂端 */
+html.tt-phone body[data-area][data-area] .workspace.workspace.workspace{display:flex!important;flex-direction:column!important;overflow:hidden!important}
+html.tt-phone body[data-area][data-area] .workspace>.preview{flex:0 0 auto!important}
+html.tt-phone body[data-area][data-area] #catalog#catalog#catalog{flex:1 1 0!important;min-height:0!important;height:auto!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;margin-top:8px!important;padding-bottom:12px!important}
+html.tt-phone body[data-area][data-area] #catalog #categories{position:sticky!important;top:0!important;z-index:3;background:#FCFCFF!important}
+/* v547 D：「目前搭配拿掉」→ 手機不顯示目前搭配清單；商城試穿了還沒買的東西時，只在最下面留一條「確認選購」（單買部件要靠它結帳） */
+html.tt-phone body[data-area] #lookSummary#lookSummary{display:none!important}
+html.tt-phone body[data-area=store] #lookSummary#lookSummary:has(.look-checkout:not(:disabled)){display:block!important;flex:0 0 auto!important;order:9!important;margin:6px 0 0!important;padding:6px 10px!important;min-height:0!important;height:auto!important;border-radius:14px!important}
+html.tt-phone body[data-area=store] #lookSummary:has(.look-checkout:not(:disabled))>header,html.tt-phone body[data-area=store] #lookSummary:has(.look-checkout:not(:disabled))::before,html.tt-phone body[data-area=store] #lookSummary:has(.look-checkout:not(:disabled))::after{display:none!important}
+html.tt-phone body[data-area=store] #lookSummary:has(.look-checkout:not(:disabled))>footer{position:static!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:0!important;margin:0!important}
+html.tt-phone body[data-area=store] #lookSummary:has(.look-checkout:not(:disabled)) .look-checkout{flex:0 0 auto!important;width:auto!important;min-width:150px;margin:0!important}
+/* v547 D：「試穿看看的小人可以大一點」 */
+html.tt-phone body[data-area] .preview .stage:not(.has-following-pet) #avatar#avatar{width:176px!important;height:176px!important;max-width:none!important;max-height:none!important}
 html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles.singles.singles.singles.singles.singles{flex:0 0 auto!important;overflow:visible!important;min-height:0!important;height:auto!important}
 html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles>.grid.grid.grid.grid.grid.grid{flex:0 0 auto!important;overflow:visible!important;height:auto!important;max-height:none!important}
 /* v545 商城「當季套組」：#bundles 原本 flex 撐滿＋自己捲，整頁一起捲時被壓成 0 高 → 卡片整個被裁掉、看起來空白 */
