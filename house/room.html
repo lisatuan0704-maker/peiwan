@@ -780,14 +780,14 @@ function drawRays(now,P,ctx){now*=P.ts||1;const pl=poolOf(P)||{i:N/2,j:N/2,r:N*.
 // 牆面打光（D 11/17 畫圖說明）：地板上的光圈碰到牆，超出牆的那一截「摺起來」貼到牆上——牆面上是一個跟著牆透視的半圓，
 //   亮度照地板光圈同一套漸層算（牆腳那條線上下一樣亮，接得起來）；純色無花紋。lightFold 也給夜晚光照圖用（家具靠牆不會上下半截亮暗不同）
 const POOL_STOPS=[[0,1],[.45,.9],[.75,.4],[1,0]],VT=Z2PX/2;   // VT：牆上往上一格是幾像素
-function lightFold(ctx,pl,col,alpha,breath){const H=WALL_H*Z2PX,o0=iso(0,0),R=pl.r*(breath||1);
+function lightFold(ctx,pl,col,alpha,breath,stops,rk,op){const H=WALL_H*Z2PX,o0=iso(0,0),R=pl.r*(breath||1)*(rk||1);
   for(const side of ['L','R']){const d=side==='L'?pl.i:pl.j;if(d>=R)continue;
     const u0=side==='L'?pl.j:pl.i,e=side==='L'?iso(0,1):iso(1,0),dx=e.x-o0.x,dy=e.y-o0.y;
     ctx.save();ctx.beginPath();const P2=(x,y)=>side==='L'?iso(x,y):iso(y,x),quad=[P2(0,0),P2(0,N),{x:P2(0,N).x,y:P2(0,N).y-H},{x:P2(0,0).x,y:P2(0,0).y-H}];
-    quad.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.clip();ctx.globalCompositeOperation='lighter';
+    quad.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.clip();ctx.globalCompositeOperation=op||'lighter';
     ctx.transform(dx,dy,0,-1,o0.x,o0.y);   // 牆面座標：x＝沿著牆第幾格、y＝離地幾像素（往上）
     ctx.translate(u0,-d*VT);ctx.scale(1,VT);   // 光圈中心在牆外 d 格：摺上來＝從牆腳往上算
-    const gr=ctx.createRadialGradient(0,0,0,0,0,R);for(const [t,v] of POOL_STOPS)gr.addColorStop(t,`rgba(${col},${alpha*v})`);
+    const gr=ctx.createRadialGradient(0,0,0,0,0,R);for(const [t,v] of (stops||POOL_STOPS))gr.addColorStop(t,`rgba(${col},${alpha*v})`);
     ctx.fillStyle=gr;ctx.fillRect(-R,d,R*2,R);ctx.restore();}}
 function drawWallWash(now,P,ctx){const pl=poolOf(P);if(!pl)return;const br=reduceMotion.matches?1:.92+.08*Math.sin(now/2300);
   lightFold(ctx,pl,P.c,Math.min(.45,P.a*1.3*(isNight()?1.4:1))*br);}
@@ -1109,12 +1109,14 @@ function leafFrames(P){const r=(P.pool?.r)||5,key=r+'|'+(P.seed||3);if(LEAFSUN[k
   return LEAFSUN[key]=out;}
 function drawLeafSun(ctx,now,P,alpha,plain){if(plain)return;const pl=poolOf(P);if(!pl)return;const fr=leafFrames(P),n=fr.length,rm=reduceMotion.matches;
   const k=rm?0:Math.floor(now/(P.ms||170))%(n*2),idx=k<n?k:2*n-1-k,c=iso(pl.i,pl.j),im=fr[idx];   // 來回播放＝樹枝左右搖
-  ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=alpha;ctx.imageSmoothingEnabled=false;ctx.drawImage(im,Math.round(c.x-im.width/2),Math.round(c.y-im.height/2));ctx.restore();}
+  ctx.save();floorClip(ctx);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=alpha;ctx.imageSmoothingEnabled=false;ctx.drawImage(im,Math.round(c.x-im.width/2),Math.round(c.y-im.height/2));ctx.restore();
+  lightFold(ctx,pl,P.c,Math.min(.6,(P.a||.9)*.5)*alpha,1,[[0,1],[.55,.6],[1,0]]);}   // D 11/17「林間葉影的光也一樣」：葉影只在地板，碰到牆的那截摺上牆（跟著牆透視，沒有葉子）
 // 周圍壓暗、光池保留（讓陽光那一片跳出來）
 function drawVig(P){const pl=poolOf(P)||{i:N/2,j:N/2,r:N*.3},c=iso(pl.i,pl.j),R=pl.r*Math.SQRT2*TW*(P.rk||1.25);g.save();roomClip(g);g.globalCompositeOperation='multiply';
   g.fillStyle=`rgb(${P.c})`;const a=iso(0,0),b=iso(N,N),l=iso(0,N),r=iso(N,0);g.fillRect(l.x-4,a.y-WALL_H*Z2PX-4,r.x-l.x+8,b.y-a.y+WALL_H*Z2PX+8);g.restore();
   g.save();roomClip(g);g.globalCompositeOperation='lighter';const [cr,cg,cb]=P.c.split(',').map(Number),inv=`${255-cr},${255-cg},${255-cb}`;   // 光池範圍補回去
-  ovalGlow(g,c.x,c.y,R,[[0,`rgba(${inv},.9)`],[.6,`rgba(${inv},.55)`],[1,`rgba(${inv},0)`]]);g.restore();}
+  g.restore();g.save();floorClip(g);g.globalCompositeOperation='lighter';ovalGlow(g,c.x,c.y,R,[[0,`rgba(${inv},.9)`],[.6,`rgba(${inv},.55)`],[1,`rgba(${inv},0)`]]);g.restore();
+  lightFold(g,pl,inv,1,1,[[0,.9],[.6,.55],[1,0]],P.rk||1.25);}   // 牆上那截摺上去（跟著牆透視）
 
 // 【狼嚎・午夜狂想曲】舞台噴火：樂器區前方地上一排噴火口，跟著節奏輪流／齊發噴出像素火柱，整間被火光照亮，火星與黑煙往上散
 // 【重低音】（狼嚎，D：「整個房間沒有那種重低音感」）：每一拍畫面震一下、音箱／鼓組鼓動、地上一圈圈音波往外擴、整間燈光跟著閃；齊噴火時大震

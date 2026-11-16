@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## 2026/11/17 v543 林間葉影／螢火綠光的光也摺上牆（Claude）
+- D：「林間葉影的光也一樣!!」：葉影（drawLeafSun）沒切地板，靠牆時整片葉影照螢幕橢圓畫到牆上；周圍壓暗（drawVig）補回光池的橢圓也一樣。
+- 葉影改 floorClip 只在地板，牆上用 lightFold 摺上去（暖光、沒有葉子）；drawVig 的光池補回改地板橢圓＋lightFold(op lighter, rk)。lightFold 多了 stops／rk／op 參數。
+- 版本：verTag v543、ver.json 543、lobby-view／fixed-view 543、house.js VER 543。驗證：scratchpad/ray forest.cjs 四個位置＋e2e 11 項。
+
 ## 2026/11/17 v542 牆上的光＝地板光圈「摺」上牆（Claude）
 - D 畫圖：光圈到牆那邊，透視要跟著牆變（牆上是一個半圓）；「光柱舊版比較好看 換回去」（中間試過的柔邊光霧版沒上線）。
 - lightFold(ctx,pl,色,透明度)：光圈中心離牆 d 格、半徑 r，牆面座標（沿牆格數 × 往上像素，VT＝Z2PX/2 像素一格）裡畫圓心在牆腳下方 d 格的放射漸層，
