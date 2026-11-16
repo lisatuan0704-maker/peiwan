@@ -52,6 +52,8 @@ html.tt-phone body[data-area][data-area] .workspace.workspace.workspace{overflow
 html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog#catalog,
 html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles.singles.singles.singles.singles.singles{flex:0 0 auto!important;overflow:visible!important;min-height:0!important;height:auto!important}
 html.tt-phone body[data-area]:not([data-shop-category=other]):not([data-shop-category=seat]) #catalog .singles>.grid.grid.grid.grid.grid.grid{flex:0 0 auto!important;overflow:visible!important;height:auto!important;max-height:none!important}
+/* v545 商城「當季套組」：#bundles 原本 flex 撐滿＋自己捲，整頁一起捲時被壓成 0 高 → 卡片整個被裁掉、看起來空白 */
+html.tt-phone body[data-area] #catalog #bundles.bundles{flex:0 0 auto!important;overflow:visible!important;height:auto!important;max-height:none!important;min-height:0!important}
 /* 色票：原本左右撐開（第二排三顆散在左中右），改成靠左排好；稍微放大一點好按 */
 html.tt-phone body .preview .dye .swatches{justify-content:flex-start!important;gap:6px!important;flex-wrap:wrap!important}
 html.tt-phone body .preview .dye .swatches>button{width:24px!important;height:24px!important;flex:0 0 auto!important}

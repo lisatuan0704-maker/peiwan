@@ -1,5 +1,11 @@
 # 小小酒館修改紀錄
 
+## 2026/11/17 v545 手機商城「當季套組」一片空白（Claude）
+- D 的朋友用手機打開商城，選「當季套組」分類列下面全空。卡片其實都有載入：手機版（phone-bag.css）讓整頁一起捲，但 #bundles 還照電腦版 flex 撐滿＋自己捲，被壓成 0 高，六張卡全被裁掉（v529 起只處理了 .singles／.grid）。
+- tavern-ui/phone-bag.css 加一條：html.tt-phone 的 #catalog #bundles 照內容長高、不自己捲。只改外觀。
+- 版本：verTag v545、ver.json 545、lobby-view 545、fixed-view 545；手機背包連鎖 tavern-ui-bridge.js?v=545 → tavern-ui/index.html?v=545 → 時裝間比較.html?v=545 → live-wardrobe.js?v=545、phone-bag.css?v=545。
+- 驗證：本機預覽＋模擬資料庫，手機 360／390／430：六張當季卡都看得到、往下捲正常、頭髮分類 15 件照常、沒有水平捲動；修改前同畫面 #bundles 高 0。
+
 ## 2026/11/17 v544 扭蛋十連抽到新燈具，房間整間不見（Claude）
 - D 截圖：客人十連結果全黑、家具名牌全擠在左邊、沒有「丟進房間」的畫面。原因：v537 加的三件燈具（螢火蟲罐架／樹枝燈柱／螢火蟲壁燈）沒加進 gacha/3d/room/room.json，
   tenRoom 只要有一件不在 room.json 就整間房間不畫（單抽 roomPlan 同理）。
