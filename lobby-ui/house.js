@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='546';
+const VER='550';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={fx:null,fxHost:{},fxOpen:false,fxTry:null,fxT:0,fxRemote:false,on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -453,13 +453,15 @@ async function visit(key,via){
   if(S.on)await teardown();
   useSeat(st);
   try{window.TinyTavernUI?.close?.();window.TTHub?.close?.();window.dmClose?.();}catch(_){}
-  S.visit={key,name,layout:view.layout,size:sizeOk(view.size),paint:view.paint||null,via,likes:0,liked:false};S.key=mk;S.hk=key;S.on=true;S.mode='walk';
+  S.visit={key,name,layout:view.layout,size:sizeOk(view.size),paint:view.paint||null,at:view.at||0,via,likes:0,liked:false};S.key=mk;S.hk=key;S.on=true;S.mode='walk';
   if(owner&&owner.doll){S.dolls[key]=dollCanvasOf(owner.doll);redrawDoll(key,owner.doll);}
   document.body.classList.add('tt-house-on','tt-house-visit');document.body.classList.remove('tt-house-edit');
   setSign('Tiny Tavern・拜訪小屋',name+' 的小屋');
   if(via==='random')S.seen.add(key);
   DB().ref(R()+'/houseVisit/'+key+'/'+mk).update({name:myName(),at:TS()}).catch(()=>{});
   watch('houseVisit/'+key,v=>{const vs=v||{},m=vs[mk];if(!S.visit||S.visit.key!==key)return;S.visit.likes=Object.values(vs).filter(x=>x&&x.like===true).length;S.visit.liked=!!(m&&m.like===true);renderTop();});
+  watch('houseView/'+key,v=>{const V=S.visit;if(!V||V.key!==key||!v||!v.at||v.at===V.at)return;V.at=v.at;   // v550 D：「朋友布置完後朋友看不到」——在別人家時，主人改擺設／壁紙地板／擴建，這邊馬上跟著換
+   V.layout=Array.isArray(v.layout)?v.layout:[];V.paint=v.paint||null;const sz=sizeOk(v.size);if(sz!==V.size){V.size=sz;room('setSize',sz);}room('setLayout',V.layout);room('setPaint',V.paint||{});});
   S.fxHost={};watch('houseFx/'+key,v=>{if(!S.visit||S.visit.key!==key)return;S.fxHost=fxClean(v&&v.e);fxApply();});   // v526 主人開的光效（主人改了這邊也跟著變）
   startRoom(key);
   openFrame(name+' 的小屋',()=>{fxApply();room('spawn',+S.seat);S.last=null;pubPos();pushPeers();const host=SEATS.some(s=>S.room[s]&&S.room[s].k===key&&S.room[s].at>SNOW()-STALE);

@@ -2304,7 +2304,9 @@ window.TTRoom={ready,
     if(k==='escape'){cancel();return true;}return false;},
   layout:()=>houseSerial(),visiting:()=>!!VISIT,
   // v522 me().path：剩下的路（格子），house.js 轉成「要轉的彎」送給朋友
-  me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0,path:me.path.slice(0,60).map(([a,b])=>[Math.floor(a),Math.floor(b)])}),setPeers,say:peerSay,spawn:spawnAt,size:()=>N,setSize:houseSetSize,previewSize:housePreviewSize,
+  me:()=>({i:me.i,j:me.j,f:me.face<0?-1:1,moving:me.path.length>0,path:me.path.slice(0,60).map(([a,b])=>[Math.floor(a),Math.floor(b)])}),setPeers,say:peerSay,spawn:spawnAt,size:()=>N,setSize:houseSetSize,
+  setLayout(L){if(!VISIT)return;const it=houseLayout(L);if(!it)return;try{for(const o of it)for(const k of DEF[o.t].spr)loadKey(K(k));}catch(e){}held=null;items=it;try{OPEN_K='';}catch(e){}},   // v550 拜訪中主人改了擺設，這邊跟著換（D 11/17「朋友布置完後朋友看不到」）
+previewSize:housePreviewSize,
   thumb:(k,S=88)=>thumbOf(k,S),
   joy(x,y,m){const on=!!(x||y);if(!on&&JOY){JOY=null;if(mode==='walk')me.path=[];return;}JOY=on?{x,y,m}:null;},   // v539 手機浮空搖桿
   follow(on){FOLLOW=!!on;if(FOLLOW&&cam.z<2)cam.z=2;},
