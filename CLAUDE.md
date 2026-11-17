@@ -1,5 +1,21 @@
 # 小小酒館修改紀錄
 
+## 2026/11/18 v552 大廳位置同步省流量（Claude；分支 claude/pos-split，**要先發布規則第二十六批再推網站**）
+- D 11/17：資料只有 1.22 MB、這個月已下載 31.89 GB（整月約 56 GB、US$46），同時在線最高 32 人。流量跟在線人數平方成長。
+- 位置按地圖分開：pos/{hall|forest}/{key}（精簡封包：不帶 m／v、0 的欄位不帶、只帶伺服器時間 ts），只聽自己那張地圖；在小屋不寫也不聽位置。
+  在線節點 online/{key}:{m,at 伺服器時間}（換地圖／重新連線寫、平常 4 分鐘一次、斷線自動清除）；別張地圖／小屋的人在 posMap 裡是「沒位置的在線」（m＝away／house／forest），
+  通訊錄、邀請好友、在線人數照舊看 posMap。進私人房間（rooms/world-bridge.js）呼叫 window.ttPosClear 全部清掉。admin 刪客人多清 pos/hall|forest|house、online。
+- 過渡期（這一版）：舊路徑 pos/{key} 照寫給舊版分頁看（hall／forest 那份不帶 v）；新版用 pos.orderByChild('v').equalTo(1) 只抓舊版分頁寫的（規則 pos 加 .indexOn v）。
+  **下一版（約一週後）拿掉：lobby 寫入的舊路徑、posLegacyQ 查詢、規則 pos/$k 與 .indexOn。**
+- 方向鍵／搖桿：轉向（12 度）、變速（兩成）、停下、撞牆馬上送＋每 1 秒校正（原 0.3／0.45 秒）；觀看端往前推算 1.25 秒、方向鍵畫面晚 0.05 秒（停下不衝過頭）。座標小數 6→4 位（0.16px，不是取整到像素格）。
+  修舊問題：撞牆時送出的速度沒扣掉被地板擋住的部分（_kv 在 clamp 之前算）→ 別人看到繼續走再退回（v551 約 50px）。
+- **桌機點地板走路本來就關掉**（lobby.html COARSE 段把 moveMeTo 換成空的），桌機只有方向鍵 → 方向鍵送出頻率是流量大宗。
+- 規則第二十六批（harden-phase26、test-phase26 27 項全過；快照 rules-before-v552.json；run.sh 已加）。全套：第 6、7、9 批照舊各 2～3 項日期測試失敗（改動前一樣）。
+- 本機量測（emulator、一半的人走路、每分鐘全部分身合計下載）：5 人 275.7→144.5 KB（−48%）、10 人 1012→431 KB（−57%）、10 人其中 4 人在小屋 589→179 KB（−70%，在小屋的人從 58 KB→1 KB）。
+  方向鍵模擬：每秒封包 3.5→1.5、最大單幀位移不變（約 3px）。兩分身實測：最大單幀位移 3.2→3.1px、往回跳 4→1 次。功能測試（新舊版混用、小屋／森林切換、斷線清除、手機搖桿）全過。
+  工具在 session fbc789d9 scratchpad/bw（bw.cjs 量流量、fn.cjs 功能、smooth.cjs 順暢度）；交接筆記在 side-session-notes「位置同步流量-v552-交接.md」。
+- tests：presence-v353/v354、social-v347、mobile-v353、viewport-v352、hub-actions-v299 通過；presence-v231、seats-v361、lobby-v346、lobby-v358 在 v551 原檔一樣失敗（舊測試）。
+
 ## 2026/11/17 v551 蘑菇燈傘下的光有一條橫的硬邊（Claude）
 - D：「蘑菇燈下方有一樣的光邊問題」。LFXT.mush 傘底往下灑的三層光是平塗梯形，底邊停在地面那條線（floorY）→ 一條橫的硬邊。改成每層從傘底往下漸淡、到地面剛好 0。
 - 驗證：scratchpad/ray mush.cjs 放大截圖。版本：verTag v551、ver.json 551、lobby-view／fixed-view 551、house.js VER 551。

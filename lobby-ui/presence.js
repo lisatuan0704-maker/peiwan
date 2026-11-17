@@ -6,10 +6,13 @@
    往前推算最多 0.6 秒（對方分頁切到背景、網路斷掉時不會自己走完全程）；沒帶路線的舊版封包照 v483 的方式。
    v531（流量）：點地板走路改成換目的地／停下才馬上送，其餘每 1 秒一包 → 往前推算放寬到 1.6 秒；方向鍵每 0.3 秒一包 → 推 0.35 秒。
    封包多帶 sb（基本速度，沒乘遠近），觀看者照「越下面走越快」一路算（本人 sp＝165×遠近），推算才會跟本人對上。
-   追趕最多 1.25 倍速（原 2.2 倍＝看起來暴衝）；差太遠（>320px）改成淡出淡入，不直接閃過去。 */
+   追趕最多 1.25 倍速（原 2.2 倍＝看起來暴衝）；差太遠（>320px）改成淡出淡入，不直接閃過去。
+   v552（Firebase 流量）：方向鍵／搖桿也改成「轉向、變速、停下馬上送＋路上每 1 秒校正」→ 往前推算放寬到 1.25 秒；
+   座標小數 6 位→4 位（0.16px，不是取整到像素格）；compact() 給「按地圖分開」的新路徑用（不帶 m／v、0 的欄位不帶、只帶伺服器時間 ts）。
+   m:'away'＝在線上但不在我這張地圖（只有在線節點、沒有位置）：當作不在畫面上。 */
 (function(root){
   'use strict';
-  const MAX=.32,MIN=.03,AHEAD=1600,KEY_AHEAD=350;
+  const MAX=.32,MIN=.03,AHEAD=1600,KEY_AHEAD=1250,KEY_LAG=50;   // v552：方向鍵畫面晚 0.05 秒（看不出來），停下時就不會衝過頭再退回來
   // 大廳地板上緣 343/900、下緣 .97（lobby.html MAPS.hall.floor）；遠近係數同 lobby.html depthNow
   const depth=y=>.82+(y/900-343/900)/(.97-343/900)*.33;
   let OFF=0,offOK=false;
@@ -33,7 +36,7 @@
   // v521：封包送出後過了 age 毫秒，對方應該走到哪（照路線一段一段走，走到終點就停）
   function predict(pr,age){
     let x=pr.b[0]*1600,y=pr.b[1]*900;
-    if(pr.k){const s=Math.min(age,KEY_AHEAD)/1000;return {x:(x+pr.k[0]*s)/1600,y:(y+pr.k[1]*s)/900,moving:true};}   // 方向鍵：只往前推一點點，放開時不會衝過頭
+    if(pr.k){const s=Math.max(0,Math.min(age,KEY_AHEAD)-KEY_LAG)/1000;return {x:(x+pr.k[0]*s)/1600,y:(y+pr.k[1]*s)/900,moving:true};}   // 方向鍵：只往前推一點點，放開時不會衝過頭
     if(pr.sb){   // v531：照遠近一小段一小段算（每段最多 6px）
       let t=Math.min(age,AHEAD)/1000;
       for(let i=0;i<pr.r.length;i+=2){const px=pr.r[i],py=pr.r[i+1];let L=Math.hypot(px-x,py-y);
@@ -79,7 +82,7 @@
   }
   function receive(a,p,now,legacyClamp){
     if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return false;
-    const map=p.m==='forest'?'forest':p.m==='house'?'house':'hall';   // v510 在小屋裡＝不在大廳畫面上
+    const map=p.m==='forest'?'forest':p.m==='house'?'house':p.m==='away'?'away':'hall';   // v510 在小屋裡＝不在大廳畫面上；v552 away＝在別張地圖
     let point=[Math.max(0,Math.min(1,p.x)),Math.max(0,Math.min(1,p.y))];
     // 舊版可能回報門牆內的位置；新版已在本人端完成碰撞，不再由觀看者重算。
     if(p.v!==1&&legacyClamp)point=legacyClamp(point,map);
@@ -111,7 +114,7 @@
   }
   function packet(a,map,now){
     const st=root.TTSeats?.current(a)||null;
-    const out={x:+a.x.toFixed(6),y:+a.y.toFixed(6),f:a.faceLeft?1:0,s:a.sitting?1:0,m:map,
+    const out={x:+a.x.toFixed(4),y:+a.y.toFixed(4),f:a.faceLeft?1:0,s:a.sitting?1:0,m:map,
       w:['walk','walkKey'].includes(a.state)?1:0,v:1,t:now,st,sa:st?a._seatAt:null};
     // v521：走路中帶上「剩下的路線＋速度」或「方向鍵速度」，讓別人照著推算
     if(out.w===1&&a.state==='walk'&&a._spd>0){
@@ -121,13 +124,28 @@
     if(offOK)out.ts=Math.round(now+OFF);
     return out;
   }
+  // v552：寫進 pos/{地圖}/{key} 的精簡版（地圖看路徑就知道；讀的那邊 lobby.html 補回 m、v:1、t）
+  function compact(p){
+    const o={x:p.x,y:p.y};
+    for(const k of ['f','s','w'])if(p[k])o[k]=p[k];
+    if(p.st){o.st=p.st;o.sa=p.sa;}
+    if(Number.isFinite(p.ts))o.ts=p.ts;else o.t=p.t;
+    for(const k of ['r','sp','sb','k'])if(p[k]!=null)o[k]=p[k];
+    return o;
+  }
   function changed(a,b){return !b||['x','y','f','s','m','w','st','sa'].some(k=>a[k]!==b[k]);}
   // v521：換了目的地（或方向鍵換方向）要馬上送，不等下一次 0.15 秒
   function turned(a,b){
     if(!b)return true;
     if(a.r)return !b.r||a.r[a.r.length-2]!==b.r[b.r.length-2]||a.r[a.r.length-1]!==b.r[b.r.length-1];
-    if(a.k)return !b.k||Math.sign(a.k[0])!==Math.sign(b.k[0])||Math.sign(a.k[1])!==Math.sign(b.k[1]);
+    if(a.k){   // v552：方向（含搖桿斜角）差 12 度以上、或速度差兩成以上才算轉向
+      if(!b.k)return true;
+      const A=Math.hypot(a.k[0],a.k[1]),B=Math.hypot(b.k[0],b.k[1]);
+      if(!A||!B)return A!==B;
+      if(Math.abs(A-B)>Math.max(A,B)*.2)return true;
+      return (a.k[0]*b.k[0]+a.k[1]*b.k[1])/(A*B)<Math.cos(12*Math.PI/180);
+    }
     return false;
   }
-  root.TTPresence={receive,packet,changed,turned,setClockOffset};
+  root.TTPresence={receive,packet,compact,changed,turned,setClockOffset,get clockOK(){return offOK;},now:()=>Date.now()+OFF};
 })(typeof window!=='undefined'?window:globalThis);

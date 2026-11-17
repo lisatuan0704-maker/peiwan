@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=551"></script>
+<script src="lobby-ui/fixed-view.js?v=552"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=469"></script>
@@ -1458,7 +1458,7 @@ body.artBub.bub3s .npc .bub{
 <script src="lobby-ui/walk-parts.js?v=270"></script>
 <script src="js/tt-seats.js?v=2"></script>
 <script src="lobby-ui/seats.js?v=373"></script>
-<script src="lobby-ui/presence.js?v=531"></script>
+<script src="lobby-ui/presence.js?v=552"></script>
 <script src="lobby-ui/staff-names.js?v=433"></script>
 <script src="lobby-ui/payment-safety.js?v=492"></script>
 <script src="lobby-ui/cat-coin.js?v=530"></script>
@@ -1701,7 +1701,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v551</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v552</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2925,6 +2925,25 @@ const SPOTS=[
 const agents=new Map();
 /* v39:大家看到同一個大廳 —— 位置同步 + 掛機亂走設定(預設關) */
 let posMap={};
+/* v552 位置按地圖分開（Firebase 流量）：自己目前寫在 pos/{哪張地圖}（null＝沒寫，例如在小屋）；換地圖先刪掉舊的那份。
+   在線節點 online/{key}:{m,at}：換地圖、重新連線時寫，平常 4 分鐘一次（別人判斷 10 分鐘沒更新才當作離開），斷線自動清除。 */
+let ttPosMapW=null,ttOnlineW=null,ttOnlineAt=0,ttOnlineDc=0;
+function ttPosMapMove(key,nm){
+  if(ttPosMapW===nm)return;
+  const old=ttPosMapW;ttPosMapW=nm;if(!old)return;
+  const r=db.ref(ROOT+'/pos/'+old+'/'+key);try{r.onDisconnect().cancel();}catch(e){}
+  TTWorldScope.write(()=>r.remove()).catch(()=>{});
+  const a=me();if(a&&a._odcMap===old)a._odcMap=null;
+}
+function ttOnlineBeat(key,m){
+  const now=Date.now();if(ttOnlineW===m&&now-ttOnlineAt<240000)return;
+  ttOnlineW=m;ttOnlineAt=now;const r=db.ref(ROOT+'/online/'+key);
+  if(!ttOnlineDc){ttOnlineDc=1;try{TTWorldScope.disconnect(r).catch(()=>{ttOnlineDc=0;});}catch(e){}}
+  TTWorldScope.write(()=>r.set({m,at:firebase.database.ServerValue.TIMESTAMP})).catch(()=>{ttOnlineW=null;ttOnlineAt=0;});
+}
+/* 進私人房間（rooms/world-bridge.js）時把自己在大廳的位置、在線全部清掉（那時 TTWorldScope 已停寫，所以直接刪） */
+window.ttPosClear=key=>{key=key||myKey;ttPosMapW=null;ttOnlineW=null;ttOnlineDc=0;const a=me();if(a)a._odcMap=null;
+  return Promise.all(['pos/'+key,'pos/hall/'+key,'pos/forest/'+key,'online/'+key].map(p=>db.ref(ROOT+'/'+p).remove().catch(()=>{})));};
 let WANDER_ON=false; try{ WANDER_ON=localStorage.getItem('tt_wander')==='1'; }catch(e){}
 /* 從其他頁按「上一頁」回來:瀏覽器快照還原時清掉轉場黑幕與時間差,避免畫面卡住 */
 window.addEventListener('pageshow',e=>{
@@ -3366,21 +3385,29 @@ function tick(now){
     if(!(a.staff&&a.state==='post'&&STAFF_LAYOUT[a.cid])&&(a.isMe||!posMap[a.key]||a.staff||a.slime||a.cloak)){ const fl = a.slime ? MAPS.forest.floor : (a.isMe ? FLOOR : (MAPS[a.mapLoc]||MAPS.hall).floor);
       let c=clampIn(fl,a.x,a.y);
       if(fl===MAPS.hall.floor)c=TTScene.nearest([c[0]*1600,c[1]*900]).map((v,i)=>v/(i?900:1600));
+      if(a.isMe&&a.state==='walkKey'&&Array.isArray(a._kv)&&dt>0)a._kv=[a._kv[0]+(c[0]-a.x)*1600/dt,a._kv[1]+(c[1]-a.y)*900/dt];   // v552：被地板邊界擋住的部分也扣掉，撞牆＝速度 0（別人才不會照原速度一直往前推算）
       a.x=c[0]; a.y=c[1]; }
     /* 位置與停止狀態一起回報；只有成功送出才記住，失敗會重試。 */
     const pmap=document.body.classList.contains('tt-house-on')?'house':curMap;   // v510 D：進小屋就從大廳消失（還算在線，好友照樣看得到、邀得到），回大廳再出現
     if(a.isMe && window.TTRoomSession?.active) TTRoomSession.offer(TTPresence.packet(a,pmap,Date.now()));
     if(!TTWorldScope.isolated && a.isMe && a.key===myKey && typeof db!=='undefined' && db && myKey){
       const packet=TTPresence.packet(a,pmap,Date.now());
-      const changed=TTPresence.changed(packet,a._sentPosition);
+      const changed=TTPresence.changed(packet,a._sentPosition),turn=TTPresence.turned(packet,a._sentPosition);   // v552：撞牆停住（位置沒變、速度變 0）也算，要馬上送
       const stopped=a._sentPosition?.w===1&&packet.w===0;
       if(!a._positionSending&&now>=(a._positionRetryAt||0)&&
-          ((!a._sentPosition)||(changed&&(stopped||(TTPresence.turned(packet,a._sentPosition)&&(!window.TTGame||now-(a._positionSentAt||0)>=200))||now-(a._positionSentAt||0)>=(packet.r?1000:(window.TTGame?450:300))))||now-(a._positionSentAt||0)>=45000)){
-        /* v521：換目的地馬上送。v531（Firebase 流量）：點地板走路別人照路線推算，路上每 1 秒校正一次（原 0.15 秒）；方向鍵 0.3 秒；
-           站著不動的心跳 5 秒→45 秒（判斷離開是 10 分鐘＋斷線自動清除，不受影響）。停下、坐下、轉向照舊馬上送。 */
+          ((!a._sentPosition)||((changed||turn)&&(stopped||(turn&&now-(a._positionSentAt||0)>=150)||now-(a._positionSentAt||0)>=((packet.r||packet.k)?1000:300)))||now-(a._positionSentAt||0)>=45000)){
+        /* v521：換目的地馬上送。v531（Firebase 流量）：點地板走路別人照路線推算，路上每 1 秒校正一次（原 0.15 秒）；
+           站著不動的心跳 5 秒→45 秒（判斷離開是 10 分鐘＋斷線自動清除，不受影響）。停下、坐下、轉向照舊馬上送。
+           v552：方向鍵／搖桿也改成「轉向、變速、停下馬上送＋每 1 秒校正」（原 0.3／0.45 秒）。
+           位置按地圖分開寫 pos/{hall|forest}/{key}（大家只聽自己那張地圖）；在小屋裡不寫位置，只寫在線節點 online/{key}。
+           過渡期（舊分頁還開著）：舊路徑 pos/{key} 照寫一份給舊版看；hall／forest 那份不帶 v，新版的舊路徑查詢（v＝1）就不會收到。 */
         const ownerKey=myKey;a._positionSending=true;
+        const nm=pmap==='house'?null:pmap,flat=Object.assign({},packet);if(nm)delete flat.v;
         if(!a._odc){ a._odc=1; try{ TTWorldScope.disconnect(db.ref(ROOT+'/pos/'+ownerKey)).catch(()=>{a._odc=0;}); }catch(e){} }
-        TTWorldScope.write(()=>db.ref(ROOT+'/pos/'+ownerKey).set(packet)).then(()=>{
+        ttPosMapMove(ownerKey,nm);
+        if(nm&&a._odcMap!==nm){ a._odcMap=nm; try{ TTWorldScope.disconnect(db.ref(ROOT+'/pos/'+nm+'/'+ownerKey)).catch(()=>{a._odcMap=null;}); }catch(e){} }
+        ttOnlineBeat(ownerKey,pmap);
+        TTWorldScope.write(()=>Promise.all([db.ref(ROOT+'/pos/'+ownerKey).set(flat),nm?db.ref(ROOT+'/pos/'+nm+'/'+ownerKey).set(TTPresence.compact(packet)):null])).then(()=>{
           a._sentPosition=packet;a._positionSentAt=now;a._positionRetryAt=0;
           if(!posWriteOK||posErr){posWriteOK=true;posErr='';syncBadge();}
         }).catch(e=>{
@@ -5912,11 +5939,39 @@ if(db){
      暫停時畫面上的人、名單與 lobbyWant 的個別監聽都先凍住（個別監聽留著：沒變動就不花流量，拿掉反而回來要整份重下載）。
      切回來再聽；重新聽到的第一包當基準（像剛開頁）：新來的人馬上出現、這段時間走掉的人直接拿掉、還在的人直接站到新位置，不從舊位置滑過去。
      posGate 讓 TTWorldScope 照舊管這條監聽（進房間 isolate 時一樣永久停掉）。window.__posPauseMs 是測試用（縮短 3 分鐘）。 */
-  const posRef=db.ref(ROOT+'/pos'),POS_PAUSE=30000;   // v531：分頁在背景 30 秒就先不收別人的位置（原 3 分鐘），省流量
+  /* v552（Firebase 流量，D 11/17：這個月下載 31.89 GB、跟在線人數平方成長）：
+     位置按地圖分開 pos/{hall|forest}/{key}，只聽自己這張地圖；在小屋裡不聽位置（也不寫）。
+     誰在線上看在線節點 online/{key}（很少變動）：在別張地圖、小屋裡的人在 posRaw 裡是「有在線、沒位置」（m＝away／house／別張地圖），
+     通訊錄、邀請好友、在線人數照舊用 posMap 判斷在線。
+     過渡期：舊版分頁只寫舊路徑 pos/{key}（帶 v:1）→ 用 orderByChild('v').equalTo(1) 只抓這些（新版寫的 hall／forest 舊路徑不帶 v，抓不到自己人；
+     要規則 pos 的 .indexOn v，沒有的話 SDK 會整包下載再自己篩，畫面一樣只是不省）。下一版拿掉舊路徑時，這條查詢跟寫入的舊路徑一起拿掉。 */
+  const POS_PAUSE=30000;   // v531：分頁在背景 30 秒就先不收別人的位置（原 3 分鐘），省流量
   let posFn=null,posFail=null,posOn=false,posDead=false,posPaused=false,posBase=false,posHidAt=document.hidden?Date.now():0;
+  let posLm=null,posMapRef=null,posMapRaw={},posLegacyRaw={},posOnlineRaw={},posGot={};
+  const posLegacyQ=db.ref(ROOT+'/pos').orderByChild('v').equalTo(1),posOnlineRef=db.ref(ROOT+'/online');
+  const posWantMap=()=>document.body.classList.contains('tt-house-on')?null:curMap;
+  const posFire=()=>{if(posFn)posFn();};
+  const hMap=s=>{posMapRaw=s.val()||{};posGot.map=1;posFire();},hLegacy=s=>{posLegacyRaw=s.val()||{};posGot.legacy=1;posFire();},hOnline=s=>{posOnlineRaw=s.val()||{};posGot.online=1;posFire();};
+  const hFail=n=>e=>{posGot[n]=1;if(posFail)posFail(e);posFire();};   // 讀不到（例如規則還沒發布）當作空的，不要整個大廳等不到
+  const posReady=()=>posGot.legacy&&posGot.online&&(posGot.map||!posLm);
+  function posMapOn(){posLm=posWantMap();posMapRaw={};posGot.map=0;if(posLm){posMapRef=db.ref(ROOT+'/pos/'+posLm);posMapRef.on('value',hMap,hFail('map'));}}
+  function posMapOff(){if(posMapRef){try{posMapRef.off('value',hMap);}catch(e){}}posMapRef=null;}
+  function posMerge(){
+    const out={},ok=p=>p&&typeof p==='object'&&Number.isFinite(p.x)&&Number.isFinite(p.y);
+    for(const k in posLegacyRaw)if(ok(posLegacyRaw[k]))out[k]=posLegacyRaw[k];
+    if(posLm)for(const k in posMapRaw){const p=posMapRaw[k];if(ok(p))out[k]=Object.assign({},p,{m:posLm,v:1,t:Number.isFinite(p.t)?p.t:p.ts});}
+    for(const k in posOnlineRaw){const o=posOnlineRaw[k];if(out[k]||!o||typeof o!=='object')continue;
+      const m=o.m==='forest'||o.m==='house'?o.m:'hall';
+      out[k]={x:.5,y:.5,m:m===curMap?'away':m,v:1,t:Number.isFinite(o.at)?o.at:Date.now()};}   // 沒位置的在線：不會出現在我的畫面上
+    return out;
+  }
   const posGate={on(ev,fn,err){posFn=fn;posFail=err;posAttach();},off(){posDead=true;posPaused=posBase=false;posDetach();}};
-  function posAttach(){if(posOn||posDead||!posFn)return;posOn=true;posRef.on('value',posFn,posFail);}
-  function posDetach(){if(!posOn)return;posOn=false;try{posRef.off('value',posFn);}catch(e){}}
+  function posAttach(){if(posOn||posDead||!posFn)return;posOn=true;posGot={};posMapOn();posLegacyQ.on('value',hLegacy,hFail('legacy'));posOnlineRef.on('value',hOnline,hFail('online'));}
+  function posDetach(){if(!posOn)return;posOn=false;posMapOff();try{posLegacyQ.off('value',hLegacy);posOnlineRef.off('value',hOnline);}catch(e){}}
+  function posMapCheck(){   // 換地圖、進出小屋：換聽的那張地圖，重新聽到的第一包當基準（同分頁切回來）
+    if(!posOn||posWantMap()===posLm)return;
+    posMapOff();posMapOn();posBase=true;if(!posLm)posFire();
+  }
   function posPauseCheck(){
     if(posDead)return;
     if(document.hidden){
@@ -5933,19 +5988,20 @@ if(db){
   }
   document.addEventListener('visibilitychange',posPauseCheck);
   window.ttPosSync=()=>({on:posOn,paused:posPaused,waiting:posBase});
-  setInterval(()=>{posPauseCheck();if(posPaused||posBase)return;   // 暫停中／等第一包時不重算（不然 10 分鐘沒心跳的判斷會把大家清掉再冒出來）
+  setInterval(()=>{posPauseCheck();posMapCheck();if(posPaused||posBase)return;   // 暫停中／等第一包時不重算（不然 10 分鐘沒心跳的判斷會把大家清掉再冒出來）
     if(applyPos()&&typeof applyPresence==='function')applyPresence();lobbyWant();},1000);
   TTWorldScope.listen(posGate,'value',
-    s=>{ posRaw=s.val()||{};
+    ()=>{ if(!posReady())return;   // v552：三條（這張地圖、舊路徑、在線）都到了才算
+      posRaw=posMerge();
       if(posBase){posBase=false;posBaseline();}
-      /* 自己的位置被晚到的離線清除刪掉 → 下一幀就補寫（不用等 5 秒心跳） */
-      const mine=me();if(mine&&mine._sentPosition&&typeof myKey==='string'&&myKey&&!posRaw[myKey])mine._sentPosition=null;
+      /* 自己的位置被晚到的離線清除刪掉 → 下一幀就補寫（不用等 5 秒心跳）；v552 在線節點被刪也一樣 */
+      const mine=me();if(mine&&mine._sentPosition&&typeof myKey==='string'&&myKey&&(!posRaw[myKey]||(posLm&&posLm===ttPosMapW&&!posMapRaw[myKey])||!posOnlineRaw[myKey])){mine._sentPosition=null;ttOnlineW=null;}
       applyPos();lobbyWant();
       if(!posReadOK){posReadOK=true; syncBadge();}
       if(typeof applyPresence==='function') applyPresence(); },
     e=>{ posErr='讀取被拒(需開放 pos 規則)'; syncBadge(); console.warn('pos read',e); });
   TTWorldScope.listen(db.ref('.info/connected'),'value',s=>{
-    if(s.val()){const a=me();if(a){a._sentPosition=null;a._odc=0;a._positionRetryAt=0;}}
+    if(s.val()){const a=me();if(a){a._sentPosition=null;a._odc=0;a._odcMap=null;a._positionRetryAt=0;}ttOnlineW=null;ttOnlineDc=0;}
     else{posWriteOK=false;syncBadge();}
   });
   setTimeout(syncBadge,1500);
@@ -8730,7 +8786,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/photo-mode.js?v=532"></script><link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=551"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=549"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=552"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=549"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>
@@ -8743,7 +8799,7 @@ let voiceChecking=false;const originalPaySubmit=window.paySubmit;window.paySubmi
 const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,auth:firebase.auth(),staffDisplayName:name=>ttStaffDisplayName(null,name),onItems:items=>orderVoice.update(items),notify:()=>window.lobbyNotify?.({icon:'note',title:'語音房已準備好',sub:'請到訂單進入語音房',onclick:()=>{shopOpen(4)}})});
 
 </script><link rel="stylesheet" href="lobby-ui/rooms/entry.css?v=346"><link rel="stylesheet" href="lobby-ui/compact.css?v=358"><link rel="stylesheet" href="lobby-ui/theme-skin.css?v=537"><link rel="stylesheet" href="lobby-ui/welcome-gate.css?v=508"><link rel="stylesheet" href="lobby-ui/avatar-crop.css?v=415">
-<script src="lobby-ui/rooms/world-bridge.js?v=373-343"></script>
+<script src="lobby-ui/rooms/world-bridge.js?v=552"></script>
 <script type="module" src="lobby-ui/rooms/entry.mjs?v=427"></script>
 <script type="module">import {installCardShare} from './lobby-ui/card-share.mjs?v=427';try{if(window.firebase)installCardShare({auth:firebase.auth()});}catch(e){console.warn('闆卡分享載入失敗',e);}</script>
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
