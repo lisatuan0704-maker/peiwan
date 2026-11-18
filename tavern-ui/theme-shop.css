@@ -241,3 +241,16 @@ html body #lookSummary>footer button:disabled{background:#EEF1FA!important;color
   /* 置中的對話框扣掉外掛區，仍對齊主框中央 */
   html body dialog[open]{translate:calc(var(--look-out) / -2) 0}
 }
+
+/* v555：迴紋針原本夾在右上角、壓在「01 / FITTING ROOM」上（那一行已被「今天的我」和英文小標塞滿，字沒地方讓）→ 改夾在右側邊框、標題列下面；漸層染髮卡縮小一點、上下留空，不再貼著色票和按鈕 */
+@media(min-width:601px){
+  html body[data-area] aside.preview::after{top:34px!important;right:-9px!important}
+  /* 色票那一列原本固定 48px：背包多了膚色那排時被染髮卡蓋住 → 改成照內容高度 */
+  html body[data-area]:not([data-section=collection]) aside.preview.preview.preview:not(:has(.has-following-pet)){grid-template-rows:26px minmax(140px,1fr) auto auto 30px!important;row-gap:8px!important}
+  html body[data-area] .preview #dyeTicket.dye-cta{width:calc(100% - 20px)!important;margin:4px auto 2px!important;min-height:40px!important;padding:4px 12px!important;gap:10px!important;background-size:40px 28px,auto!important}
+  html body[data-area] .preview #dyeTicket .dye-cta-art{width:32px!important;height:32px!important;box-shadow:inset 0 0 0 3px #fff,0 2px 5px #c99cb955!important}
+  html body[data-area] .preview #dyeTicket .dye-cta-art i{transform:scale(.75)}
+  html body[data-area] .preview #dyeTicket .dye-cta-text{gap:1px!important;line-height:1.3}
+  html body[data-area] .preview #dyeTicket .dye-cta-text strong{font-size:13px!important}
+  html body[data-area] .preview #dyeTicket .dye-cta-text small{font-size:10.5px!important}
+}
