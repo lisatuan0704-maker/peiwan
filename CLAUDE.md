@@ -1575,3 +1575,18 @@ tavern-ui/daily-v494.js NAMES：髮型 俏皮外翹髮／甜心側馬尾／刺�
 - 落地家具 i/j、牆上家具 c 可以是 .5，資料格式不變，舊整數擺設照常；規則本來就只檢查 -2~30 的數字，不用改。
 - 程式在 house/room.html 大廳版區塊「v536 半格擺設」（覆寫 cells/validFloor/validDeco/moveHeld/rotate），已同步進 tt-room-kit/house-lobby/house-embed.js。
   家具彼此看實際範圍重疊（半格可貼著放）；走路找路時家具碰到的格子整格都擋。
+
+## 2026/11/19 v557 冒險者頭像框解鎖慶祝彈窗（Claude；D 預覽後說上）
+- 原需求是 TT 把慶祝 GIF 貼到 Discord；D 改成「不要放 DC，達成時在他自己的頁面跳出成就、循環播放、點任何地方關閉」「特效炫技一點」。
+  所以**沒動主機、沒動資料庫規則、不發 Discord**。
+- 新檔 lobby-ui/companion-celebrate.js（TTCompanionCelebrate.show/check），lobby.html 在 vip-card.js 後載入。全螢幕 canvas 即時畫：
+  斜切光帶開場 → 雜誌風字卡（老闆名牌＋「已獲得與 X 的羈絆」＋10 小時數字跳）→ 頭像框砸下（震動／白閃／衝擊波／碎片）→
+  框裡老闆小人跳出 → 蓋 UNLOCKED 章 → 冒險者滑進來、頭上像素對話框冒愛心 → 老闆轉身看她，之後循環。
+  開場中點一下＝快轉，之後點任何地方／Esc 關閉；底部提示到「闆卡手帳 → 頭像框」換上。音效用 Web Audio 合成，跟 window.__sfxOn。
+- D 的回饋（都已照做）：拿掉飛向老闆的愛心；「像素就是可愛在小人的樣子」不要整個放大（上限 1 倍）；
+  「獲得的東西才是主體」→ 頭像框 291、框裡老闆每格 3 點，冒險者配角每格約 1.5 點（手機 1.25）；「老闆要轉過來看著陪玩」→
+  小人原圖面向右，冒險者站定時老闆翻面面向左（冒險者原圖本來就面向右）。像素圖都在裝置座標整數倍對齊（crisp）。
+- 冒險者圖：img/companions-v352/{rira,kabuki,momo}-staff-sheet.png（staff GIF 16 格拆成橫排，118×114 一格）。
+- 偵測：聽 order-voice.mjs 的 tt-companion-rewards（約每分鐘 /v1/voice/rewards），frames 裡 unlocked 且本機 tt_fc_seen_<闆卡> 沒記過就跳；
+  一次一個排隊；教學（#ttCoach）進行中、分頁在背景、還沒載到自己的小人時先等。**每台裝置各跳一次；已經滿 10 小時的老闆更新後第一次進大廳也會跳一次。**
+- 本機預覽工具在 session 88ad685a 的 scratchpad/proto（serve.cjs＝本機 emulator＋假登入＋右上預覽面板；shots.cjs 定時截圖）。
