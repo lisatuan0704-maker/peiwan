@@ -68,7 +68,7 @@ window.TTStickerCatalog=[
     "id": "sticker-09",
     "name": "計算中",
     "sourceFile": "0817a5.png",
-    "asset": "sticker-assets/sticker-09-black-v532.png",
+    "asset": "sticker-assets/sticker-09-black-v532.webp",
     "nativeWidth": 1254,
     "nativeHeight": 1254
   },

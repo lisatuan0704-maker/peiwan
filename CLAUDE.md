@@ -1,6 +1,17 @@
 # 小小酒館修改紀錄
 
-## 2026/11/18 v552 大廳位置同步省流量（Claude；分支 claude/pos-split，**要先發布規則第二十六批再推網站**）
+## 2026/11/18 v553 大廳只載在線的人＋名簿壓圖＋大廳內嵌圖片搬出（Claude；D：「都一起做吧」）
+- 大廳客人資料：拿掉 lobby 的 limitToLast(120) 整包監聽（每次開大廳要下載 120 人闆卡含頭貼、還替不在線的人都先建好小人），
+  只聽在線的人＋自己（lobbyWant 逐人聽 lobby/{key}，在線名單來自 v552 的 posRaw／online）。聊天紀錄右鍵「看闆卡」遇到已離開的人改成現查一次 lobby/{key}。
+  好友名單名字、通訊錄頭像對不在線的人本來就會自己查。本機量測（5 人在線、100 位不在線帶頭貼）：開大廳每人下載 1460KB → 73KB。
+- 名簿／冒險者資訊大圖轉 WebP（品質 95，尺寸不變）：三張立繪 *-artist-v2、lobby-context、profile-* 背景九張、sticker-09-black-v532；
+  合計 29.3MB → 4.0MB（開名簿＋點三位約 17.5MB → 約 2.5MB）。原 PNG 留在 repo 沒刪（要退回只要把引用改回 .png）。放大比對看不出差別。
+- lobby.html 內嵌圖片 TTF／AICON／PACKI／BKA 搬到 lobby-ui/lobby-art.js（主程式 <script> 前面載入，內容一字不改）：lobby.html 1.5MB → 0.73MB，
+  每次改版大家只重新下載 0.73MB。**改這四組圖要改 lobby-art.js，並把 lobby.html 裡 lobby-art.js?v= 加一；內容沒變就不要動那個數字。** TP 留在 lobby.html（card/admin 同步的習慣不變）。
+- 版本：verTag／ver.json／lobby-view／fixed-view／house.js VER 都是 553；tavern-ui-bridge 開名簿 ?v=553、sticker-catalog ?v=553、名簿三個 CSS ?v=553。
+- 舊位置路徑 pos/{key} 照 v552 計畫約一週後（11/25 左右）再拿掉，要先發布規則。
+
+## 2026/11/18 v552 大廳位置同步省流量（Claude；規則第二十六批 D 已發布，11/18 已上線）
 - D 11/17：資料只有 1.22 MB、這個月已下載 31.89 GB（整月約 56 GB、US$46），同時在線最高 32 人。流量跟在線人數平方成長。
 - 位置按地圖分開：pos/{hall|forest}/{key}（精簡封包：不帶 m／v、0 的欄位不帶、只帶伺服器時間 ts），只聽自己那張地圖；在小屋不寫也不聽位置。
   在線節點 online/{key}:{m,at 伺服器時間}（換地圖／重新連線寫、平常 4 分鐘一次、斷線自動清除）；別張地圖／小屋的人在 posMap 裡是「沒位置的在線」（m＝away／house／forest），

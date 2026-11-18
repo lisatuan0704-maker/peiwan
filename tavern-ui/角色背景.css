@@ -1,12 +1,12 @@
 /* 角色主題 v2：原創生成底圖，分層圖形另以程式呈現動態。 */
 .profile-window{
-  --profile-image:url('assets/profile-KABUKI-bold-v2.png');
+  --profile-image:url('assets/profile-KABUKI-bold-v2.webp');
   --theme-ink:#29496b;--theme-line:#72a5ce;--theme-light:#edf7ff;--theme-button:#377cad;
   background-image:var(--profile-image);background-size:cover;background-position:center;
   color:var(--theme-ink);border-color:var(--theme-ink);
 }
-.profile-window[data-cast="MOMO"]{--profile-image:url('assets/profile-MOMO-bold-v2.png');--theme-ink:#6d345d;--theme-line:#c479a5;--theme-light:#fff0f6;--theme-button:#b95382}
-.profile-window[data-cast="RIRA"]{--profile-image:url('assets/profile-RIRA-bold-v2.png');--theme-ink:#43275f;--theme-line:#a380d0;--theme-light:#f5edff;--theme-button:#8552b1}
+.profile-window[data-cast="MOMO"]{--profile-image:url('assets/profile-MOMO-bold-v2.webp');--theme-ink:#6d345d;--theme-line:#c479a5;--theme-light:#fff0f6;--theme-button:#b95382}
+.profile-window[data-cast="RIRA"]{--profile-image:url('assets/profile-RIRA-bold-v2.webp');--theme-ink:#43275f;--theme-line:#a380d0;--theme-light:#f5edff;--theme-button:#8552b1}
 .profile-window::before{border-color:#fff9}
 .profile-window>.window-head,.profile-window>.profile-body,.profile-window>.window-foot{position:relative;background:transparent}
 .profile-window>.window-head,.profile-window>.window-foot{z-index:2}
@@ -82,7 +82,7 @@
 .profile-window .profile-identity{padding-bottom:21px}
 .profile-window .profile-name h2{font-size:43px}
 .profile-window .profile-name .roman{font-size:21px}
-.profile-window[data-cast="MOMO"]{--profile-image:url('assets/profile-MOMO-soft-v3.png');--theme-ink:#473b42;--theme-line:#bc929e;--theme-light:#f7ece8;--theme-button:#ac7f8d}
+.profile-window[data-cast="MOMO"]{--profile-image:url('assets/profile-MOMO-soft-v3.webp');--theme-ink:#473b42;--theme-line:#bc929e;--theme-light:#f7ece8;--theme-button:#ac7f8d}
 .profile-window[data-cast="MOMO"] .window-head{background:linear-gradient(90deg,#f9f1e9e8,#f9f1e960 65%,transparent)}
 .profile-window[data-cast="MOMO"] .title{color:var(--theme-ink);-webkit-text-stroke:3px #fff8ef;filter:none}
 .profile-window[data-cast="MOMO"] .heading small{background-image:linear-gradient(100deg,#473b42,#927783,#473b42)}

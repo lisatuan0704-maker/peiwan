@@ -1,5 +1,5 @@
 /* 原底圖清除靜態星芒後，以同座標圖層演出；人物與閱讀區保持在前。 */
-#profileWindow[data-cast="RIRA"][data-rira-layered="true"]{--profile-image:url('assets/profile-RIRA-animation-plate-v34.png')}
+#profileWindow[data-cast="RIRA"][data-rira-layered="true"]{--profile-image:url('assets/profile-RIRA-animation-plate-v34.webp')}
 #profileWindow>.rira-layered-art{display:none;position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;border-radius:inherit}
 #profileWindow[data-cast="RIRA"]>.rira-layered-art{display:block}
 .rira-layered-art svg{display:block;width:100%;height:100%;overflow:hidden}
