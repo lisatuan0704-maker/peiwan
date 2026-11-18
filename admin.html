@@ -2101,7 +2101,7 @@ function renderAll(){
         <td>${charFace(o.cid,chars[o.cid])} ${esc(TTStaffNames.display(o.charName,o.cid))}</td>
         <td>${esc(o.serviceName)}${o.mode==='package'?'':' ×'+o.qty}${o.dispute?`<br><span style="font-size:11px;color:var(--warn-deep)">⚠ ${esc(o.dispute)}</span>`:(o.note?`<br><span style="font-size:11px;color:var(--ink-soft)">💬 ${esc(o.note)}</span>`:"")}</td>
         <td>NT$ ${(+o.amount||0).toLocaleString()}</td>
-        <td style="font-size:12px;white-space:nowrap">${o.accumSec?hmsShort(o.accumSec):(o.status==='serving'?'計時中…':'—')}
+        <td style="font-size:12px;white-space:nowrap">${(()=>{const run=o.running&&o.segStart, sec=(o.accumSec||0)+(run?Math.max(0,Math.floor((Date.now()-o.segStart)/1000)):0); return run?`${hmsShort(sec)}<br><span style="font-size:10px;color:var(--ok-deep,#3a9a5b)">計時中</span>`:(sec?hmsShort(sec):(o.status==='serving'?'計時中…':'—'));})()}
           ${o.timelog?`<button class="btn sm ghost" onclick="toggleLog('${id}')" title="時間紀錄">🕐</button>`:''}</td>
         <td>${esc(o.customer)}</td>
         <td>${esc(o.kefuName||'—')}</td>
