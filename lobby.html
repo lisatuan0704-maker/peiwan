@@ -1701,7 +1701,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v555</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v556</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -5194,15 +5194,29 @@ function nextBlockAfter(cid,fromMs,skipId){
 /* v554 同組續單（D 11/18：老闆點了兩位冒險者，按續單只續到一位）：
    同組委託是每位冒險者各一筆 clientOrders（共用 groupId），以前續單只對「其中一筆」送申請 → 只延長、也只扣那一位。
    現在續單一律整組一起：每一筆各送一張 renewReq（各自的冒險者手札照舊處理自己的、扣自己那一份），金額顯示整組合計。 */
+/* v556 D 11/19：老闆分開點了三張單（三位冒險者一起玩），吊卡跟續單只認得其中一位 →
+   除了同組（groupId），「現在正在玩」（已開始、還沒結束超過半小時）的其他單也一起列出、一起續；同一位冒險者只留最新那筆，避免重複扣。 */
 function renewGroup(id,o){
-  const out=[{id,o}];
-  if(!o||!o.groupId) return out;
+  const now=Date.now(), seen=new Set(), out=[];
+  const ok=(k,x)=>x&&!(x.type&&x.type!=='play')&&x.status==='confirmed'&&x.accepted&&!x.staffDeclined&&!x.refunded;
+  const add=(k,x)=>{ if(seen.has(k)) return; seen.add(k); out.push({id:k,o:x}); };
+  add(id,o);
   Object.entries(myOrdersCache||{}).forEach(([k,x])=>{
-    if(k===id||!x||x.groupId!==o.groupId||(x.type&&x.type!=='play')) return;
-    if(x.status!=='confirmed'||!x.accepted||x.staffDeclined||x.refunded) return;
-    out.push({id:k,o:x});
+    if(k===id||!ok(k,x)) return;
+    const sameGroup=o&&o.groupId&&x.groupId===o.groupId;
+    const playing=x.servingSince&&sessionEndOf(x)>=now-30*60000;
+    if(sameGroup||playing) add(k,x);
   });
-  return out;
+  const by={};
+  out.forEach(m=>{ const c=m.o.staffCid||('_'+m.id), p=by[c];
+    if(!p||(m.o.servingSince?sessionEndOf(m.o):0)>(p.o.servingSince?sessionEndOf(p.o):0)) by[c]=m; });
+  const keep=new Set(Object.values(by).map(m=>m.id));
+  return out.filter(m=>keep.has(m.id));
+}
+function renewEndsText(g){
+  const ends=g.map(m=>sessionEndOf(m.o)), lo=Math.min(...ends), hi=Math.max(...ends);
+  if(hi-lo<=2*60000) return null;
+  return g.map(m=>esc(ttOrderStaffDisplayName(m.o))+' '+hhmm(sessionEndOf(m.o))).join('・');
 }
 function renewNames(g){ return g.map(m=>ttOrderStaffDisplayName(m.o)).join('、'); }
 function renewPriceOf(o,mins){ return Math.round(unitPerHour(o)*mins/60); }
@@ -5215,8 +5229,9 @@ function renewOptions(id,o){
     if(b-RENEW_BUFFER-e<limit){ limit=b-RENEW_BUFFER-e; nb=b; nbName=ttOrderStaffDisplayName(m.o); }
   });
   /* 同組裡有人續得比較少（以前只續到一位、或上次有一位沒續成）→ 先讓他補到跟大家一樣 */
-  const top=Math.max(...g.map(m=>+m.o.extraMins||0));
-  const lag=g.filter(m=>(+m.o.extraMins||0)<top).map(m=>({id:m.id,o:m.o,mins:top-(+m.o.extraMins||0)}));
+  const lg=g.filter(m=>m.id===id||(o.groupId&&m.o.groupId===o.groupId));
+  const top=Math.max(...lg.map(m=>+m.o.extraMins||0));
+  const lag=lg.filter(m=>(+m.o.extraMins||0)<top).map(m=>({id:m.id,o:m.o,mins:top-(+m.o.extraMins||0)}));
   return { end, nb, nbName:nbName||ttOrderStaffDisplayName(o), limit, group:g, lag,
     lagPrice:lag.reduce((s,m)=>s+renewPriceOf(m.o,m.mins),0),
     list:RENEW_BLOCKS.filter(m=>limit===Infinity||m*60000<=limit)
@@ -5230,15 +5245,15 @@ function renewCardHtml(){
     +'<div class="pcHead"><span class="pcDot"></span><b>'+esc(ttOrderStaffDisplayName(o))+'</b> 接下你的委託囉</div>'
     +'<div class="pcTime">到 Discord 跟冒險者會合，開始玩之後才會開始算時間 ✦</div>'
     +'</div>';
-  const end=sessionEndOf(o), left=Math.round((end-Date.now())/60000);
-  if(left<-30) return '';
-  const soon=left<=15;
   const grp=renewGroup(id,o);
+  const end=Math.min(...grp.map(m=>sessionEndOf(m.o))), left=Math.round((end-Date.now())/60000);
+  const soon=left<=15, many=renewEndsText(grp);
   const pending=grp.some(m=>{ const r=(__renewRes||{})[m.id]; return r&&!r.done; });
   return '<div id="playCard" class="'+(soon?'soon':'')+'">'
     +'<div class="pcHead"><span class="pcDot"></span>正在跟 <b>'+esc(renewNames(grp))+'</b> 玩</div>'
-    +'<div class="pcTime">預計 <b>'+hhmm(end)+'</b> 結束'+(left>=0?'<span class="pcLeft">還有 '+left+' 分</span>':'<span class="pcLeft">時間到囉</span>')+'</div>'
-    +(o.extraMins?'<div class="pcExt">已續 +'+o.extraMins+' 分 ✦</div>':'')
+    +(many?'<div class="pcTime" style="font-size:12px">'+many+' 結束</div>':'')
+    +'<div class="pcTime">'+(many?'最早 ':'預計 ')+'<b>'+hhmm(end)+'</b> 結束'+(left>=0?'<span class="pcLeft">還有 '+left+' 分</span>':'<span class="pcLeft">時間到囉</span>')+'</div>'
+    +(grp.length===1&&o.extraMins?'<div class="pcExt">已續 +'+o.extraMins+' 分 ✦</div>':'')
     +(pending
       ? '<div class="pcWait">續單處理中…</div>'
       : '<button class="pcRenew" onclick="openRenew()">'+(soon?'快結束囉,要再續嗎? ✦':'想續單嗎?')+'</button>')
@@ -5296,8 +5311,8 @@ function openRenew(){
   }
   const b=m.querySelector('#renewBody');
   let h='<h3 style="margin:0 0 4px;font-size:17px;color:#C2537D">想再玩久一點?</h3>'
-    +'<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:12px">跟 <b style="color:#5A4880">'+esc(renewNames(opt.group))+'</b> 的這筆單<br>目前預計 <b>'+hhmm(opt.end)+'</b> 結束'
-    +(opt.group.length>1?'<br>同組 '+opt.group.length+' 位一起續，下面是 '+opt.group.length+' 位合計的金幣':'')+'</div>';
+    +'<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:12px">跟 <b style="color:#5A4880">'+esc(renewNames(opt.group))+'</b> 的這筆單<br>'+(renewEndsText(opt.group)?'目前預計 '+renewEndsText(opt.group)+' 結束':'目前預計 <b>'+hhmm(opt.end)+'</b> 結束')
+    +(opt.group.length>1?'<br>'+opt.group.length+' 位一起續，各自往後加，下面是 '+opt.group.length+' 位合計的金幣':'')+'</div>';
   if(opt.lag.length){
     const afford=bal>=opt.lagPrice, mm=opt.lag[0].mins;
     h+='<div style="background:#EEF6FF;border-radius:12px;padding:10px 12px;font-size:12.5px;color:#4A5C8A;line-height:1.7;margin-bottom:11px">'
@@ -5350,7 +5365,7 @@ async function doRenew(id,mins,price,lag){
   for(const m of todo){
     try{
       await db.ref(ROOT+'/renewReq/'+m.id).set({ myKey, staffCid:m.o.staffCid||null, planName:m.o.planName||'',
-        mins:m.mins, price:renewPriceOf(m.o,m.mins), at:Date.now(), ...(o.groupId?{groupId:o.groupId}:{}) });
+        mins:m.mins, price:renewPriceOf(m.o,m.mins), at:Date.now(), ...(m.o.groupId?{groupId:m.o.groupId}:{}) });
       sent.push(m);
     }catch(e){ failed=m; console.warn('[續單] 沒送出',m.id,e&&e.code||e); break; }
   }
@@ -8842,7 +8857,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/photo-mode.js?v=532"></script><link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=555"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=549"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=556"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=549"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>
