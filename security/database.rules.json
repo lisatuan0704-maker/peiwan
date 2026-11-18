@@ -23,7 +23,7 @@
         ],
         "$id": {
           ".read": "((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(data.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == data.child('myKey').val())",
-          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || (!data.exists() && newData.exists() && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val()) && root.child('peiwan/clientOrders').child($id).child('myKey').val() == newData.child('myKey').val())",
+          ".write": "(auth != null && (auth.uid == root.child('peiwan/config/adminUid').val() || root.child('peiwan/links').child(auth.uid).child('type').exists())) || ((!data.exists() || data.child('done').exists()) && newData.exists() && !newData.child('done').exists() && ((auth != null && root.child('secureV1/members').child(auth.uid).child('active').val() == true) && root.child('secureV1/owners').child(newData.child('myKey').val()).val() == auth.uid && root.child('secureV1/members').child(auth.uid).child('key').val() == newData.child('myKey').val()) && root.child('peiwan/clientOrders').child($id).child('myKey').val() == newData.child('myKey').val())",
           ".validate": "!newData.exists() || $id.matches(/^[A-Za-z0-9_-]{1,200}$/)"
         }
       },

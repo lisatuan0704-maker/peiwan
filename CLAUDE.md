@@ -1,5 +1,22 @@
 # 小小酒館修改紀錄
 
+## 2026/11/18 v554 同組續單一起續、同一張單可以再續、冒險者頭像框顯示累積時數（Claude；需發布第二十七批規則）
+- D 回報：老闆點了兩位冒險者（同組），按續單只續到蕪一位。原因：同組是每位冒險者各一筆 clientOrders（共用 groupId），大廳 activeOrder 只回傳其中一筆，doRenew 只對那筆寫 renewReq
+  → 只延長、也只扣那一位（280），另一位沒延長也沒扣錢。
+- 修法（lobby.html 續單區，冒險者手札 processRenew 沒動）：renewGroup() 找同組還在進行的單；吊卡寫「正在跟 蕪、桃 玩」；續單視窗顯示整組合計金額，可續多久取全組最早被卡住的那位；
+  按下後每筆各送一張 renewReq（各自的手札處理、各扣各的），之前續過的那幾筆先送，被擋就不送後面的（不會只續到一部分）；
+  同組有人續得比較少（以前只續到一位）會出現「幫 桃 補上（N 金幣）」只補那幾位；結果通知寫是哪一位。單人單照舊。
+- 同一張單續第二次會「送出失敗」（renewReq 規則 !data.exists()）→ 規則第二十七批（harden-phase27、test-phase27 12 項；快照 rules-before-v554.json）：
+  上一張申請已處理完（有 done）可以整筆換成新的申請，處理中不能蓋、客人不能自己帶 done。run.sh 全跑只剩第 6、7、9 批原本就失敗的日期測試。
+- 「續單後多開一間聊天室」：查主機程式（roomstay 版）續單不會讓主機開房（主機只看 orderVoiceV1/orders，續單沒碰）；最可能是老闆續不到另一位／第二次續單失敗後另外又點了一張單（每張新單一間）。這版修掉這兩個原因。
+- 冒險者頭像框（一起玩的十小時）：主機 /v1/voice/rewards 本來就回傳 frames[].seconds 與 requiredSeconds，以前只拿來判斷解鎖。lobby-ui/companion-achievements.js 卡片加「已累積 X／10 小時」進度條與「還差 Y 解鎖」，
+  頭像框選擇視窗（buildFrames2）沒解鎖的冒險者框寫「2.5／10 小時」＋細進度條。說明改「每次委託結束後，這次一起玩的時間會自動算進去（暫停的時間不算）」。
+  ⚠ 主機時數只在「語音系統有這張單、冒險者在手札按開始與完成」時才累積，而且每張單上限是原本的預約時長（續單不會延長 endAt → 續單的時間不算）。
+- 版本：verTag v554、ver.json 554、lobby-view 554、fixed-view 554、house.js VER 554、companion-achievements.js?v=554。
+- 測試（scratchpad bw/renew.cjs，本機模擬資料庫＋真的大廳）：同組吊卡兩位、補續只送桃那筆 60 分 280、整組 +30 兩筆都送（蕪那筆處理完的換成新的）、單人單照舊、沒有頁面錯誤；
+  payment-safety-v273、hub-actions-v299、social-v347、mobile-v353、viewport-v352 通過。
+- 上線順序：網站先上沒關係（第一次續單、補續都不用新規則）；同一張單第二次續單要 D 在 Firebase 主控台發布 security/database.rules.json 之後才會成功。
+
 ## 2026/11/18 v553 大廳只載在線的人＋名簿壓圖＋大廳內嵌圖片搬出（Claude；D：「都一起做吧」）
 - 大廳客人資料：拿掉 lobby 的 limitToLast(120) 整包監聽（每次開大廳要下載 120 人闆卡含頭貼、還替不在線的人都先建好小人），
   只聽在線的人＋自己（lobbyWant 逐人聽 lobby/{key}，在線名單來自 v552 的 posRaw／online）。聊天紀錄右鍵「看闆卡」遇到已離開的人改成現查一次 lobby/{key}。

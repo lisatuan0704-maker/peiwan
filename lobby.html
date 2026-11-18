@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=553"></script>
+<script src="lobby-ui/fixed-view.js?v=554"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=469"></script>
@@ -1701,7 +1701,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v553</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v554</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -5184,21 +5184,43 @@ function activeOrder(){
   return wait;
 }
 /* 陪玩接下來最近一個不能被佔用的時刻(行事曆 + 他的其他預約) */
-let _renewBlocks=[];      // 由 staffBookedTimes 補進來
+let _renewBlocksBy={};    // 每位冒險者的其他預約（staffBookedTimes 補進來）
 function nextBlockAfter(cid,fromMs,skipId){
   let best=Infinity;
   (Object.values((STAFF_CARDS[cid]||{}).busy||{})).forEach(x=>{ if(x&&x.s>=fromMs&&x.s<best) best=x.s; });
-  _renewBlocks.forEach(t=>{ if(t>=fromMs&&t<best) best=t; });
+  (_renewBlocksBy[cid]||[]).forEach(t=>{ if(t>=fromMs&&t<best) best=t; });
   return best;
 }
+/* v554 同組續單（D 11/18：老闆點了兩位冒險者，按續單只續到一位）：
+   同組委託是每位冒險者各一筆 clientOrders（共用 groupId），以前續單只對「其中一筆」送申請 → 只延長、也只扣那一位。
+   現在續單一律整組一起：每一筆各送一張 renewReq（各自的冒險者手札照舊處理自己的、扣自己那一份），金額顯示整組合計。 */
+function renewGroup(id,o){
+  const out=[{id,o}];
+  if(!o||!o.groupId) return out;
+  Object.entries(myOrdersCache||{}).forEach(([k,x])=>{
+    if(k===id||!x||x.groupId!==o.groupId||(x.type&&x.type!=='play')) return;
+    if(x.status!=='confirmed'||!x.accepted||x.staffDeclined||x.refunded) return;
+    out.push({id:k,o:x});
+  });
+  return out;
+}
+function renewNames(g){ return g.map(m=>ttOrderStaffDisplayName(m.o)).join('、'); }
+function renewPriceOf(o,mins){ return Math.round(unitPerHour(o)*mins/60); }
 function renewOptions(id,o){
-  const end=sessionEndOf(o);
-  const nb=o.staffCid? nextBlockAfter(o.staffCid,end,id) : Infinity;
-  const limit=(nb===Infinity)? Infinity : (nb-RENEW_BUFFER-end);
-  const rate=unitPerHour(o);
-  return { end, nb, limit,
+  const g=renewGroup(id,o), end=sessionEndOf(o);
+  let nb=Infinity, nbName='', limit=Infinity;
+  g.forEach(m=>{
+    const e=sessionEndOf(m.o), b=m.o.staffCid? nextBlockAfter(m.o.staffCid,e,m.id) : Infinity;
+    if(b===Infinity) return;
+    if(b-RENEW_BUFFER-e<limit){ limit=b-RENEW_BUFFER-e; nb=b; nbName=ttOrderStaffDisplayName(m.o); }
+  });
+  /* 同組裡有人續得比較少（以前只續到一位、或上次有一位沒續成）→ 先讓他補到跟大家一樣 */
+  const top=Math.max(...g.map(m=>+m.o.extraMins||0));
+  const lag=g.filter(m=>(+m.o.extraMins||0)<top).map(m=>({id:m.id,o:m.o,mins:top-(+m.o.extraMins||0)}));
+  return { end, nb, nbName:nbName||ttOrderStaffDisplayName(o), limit, group:g, lag,
+    lagPrice:lag.reduce((s,m)=>s+renewPriceOf(m.o,m.mins),0),
     list:RENEW_BLOCKS.filter(m=>limit===Infinity||m*60000<=limit)
-      .map(m=>({mins:m, price:Math.round(rate*m/60)})) };
+      .map(m=>({mins:m, price:g.reduce((s,x)=>s+renewPriceOf(x.o,m),0)})) };
 }
 /* ---- 遊玩中吊卡(左上角個人 UI 下面) ---- */
 function renewCardHtml(){
@@ -5211,10 +5233,10 @@ function renewCardHtml(){
   const end=sessionEndOf(o), left=Math.round((end-Date.now())/60000);
   if(left<-30) return '';
   const soon=left<=15;
-  const req=(__renewRes||{})[id];
-  const pending=req&&!req.done;
+  const grp=renewGroup(id,o);
+  const pending=grp.some(m=>{ const r=(__renewRes||{})[m.id]; return r&&!r.done; });
   return '<div id="playCard" class="'+(soon?'soon':'')+'">'
-    +'<div class="pcHead"><span class="pcDot"></span>正在跟 <b>'+esc(ttOrderStaffDisplayName(o))+'</b> 玩</div>'
+    +'<div class="pcHead"><span class="pcDot"></span>正在跟 <b>'+esc(renewNames(grp))+'</b> 玩</div>'
     +'<div class="pcTime">預計 <b>'+hhmm(end)+'</b> 結束'+(left>=0?'<span class="pcLeft">還有 '+left+' 分</span>':'<span class="pcLeft">時間到囉</span>')+'</div>'
     +(o.extraMins?'<div class="pcExt">已續 +'+o.extraMins+' 分 ✦</div>':'')
     +(pending
@@ -5234,11 +5256,13 @@ function paintPlayCard(){
   if(!mobile) positionPlayCard();
   /* 順便更新這位陪玩的其他預約(用來算可續多久) */
   const a=activeOrder();
-  if(a&&a.o.staffCid&&_renewCid!==a.o.staffCid){
-    _renewCid=a.o.staffCid;
-    try{ staffBookedTimes(a.o.staffCid,list=>{ _renewBlocks=list.filter(t=>t!==a.o.reserveAt); }); }catch(e){}
+  const cids=a?[...new Set(renewGroup(a.id,a.o).map(m=>m.o.staffCid).filter(Boolean))].sort():[];
+  const ck=cids.join(',');
+  if(ck&&_renewCid!==ck){
+    _renewCid=ck; _renewBlocksBy={};
+    cids.forEach(cid=>{ try{ staffBookedTimes(cid,list=>{ if(_renewCid===ck) _renewBlocksBy[cid]=list.filter(t=>t!==a.o.reserveAt); }); }catch(e){} });
   }
-  if(!a){ _renewCid=null; _renewBlocks=[]; }
+  if(!ck){ _renewCid=null; _renewBlocksBy={}; }
 }
 /* 吊卡要貼在個人 UI 的正下方 —— 個人 UI 的高度會隨內容(綁定按鈕、掛機開關)變動,
    所以每次都實際量一次,不能寫死 top,不然會被擋到。 */
@@ -5272,16 +5296,25 @@ function openRenew(){
   }
   const b=m.querySelector('#renewBody');
   let h='<h3 style="margin:0 0 4px;font-size:17px;color:#C2537D">想再玩久一點?</h3>'
-    +'<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:12px">跟 <b style="color:#5A4880">'+esc(ttOrderStaffDisplayName(o))+'</b> 的這筆單<br>目前預計 <b>'+hhmm(opt.end)+'</b> 結束</div>';
+    +'<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:12px">跟 <b style="color:#5A4880">'+esc(renewNames(opt.group))+'</b> 的這筆單<br>目前預計 <b>'+hhmm(opt.end)+'</b> 結束'
+    +(opt.group.length>1?'<br>同組 '+opt.group.length+' 位一起續，下面是 '+opt.group.length+' 位合計的金幣':'')+'</div>';
+  if(opt.lag.length){
+    const afford=bal>=opt.lagPrice, mm=opt.lag[0].mins;
+    h+='<div style="background:#EEF6FF;border-radius:12px;padding:10px 12px;font-size:12.5px;color:#4A5C8A;line-height:1.7;margin-bottom:11px">'
+      +'<b>'+esc(renewNames(opt.lag))+'</b> 還沒續到，跟大家差 '+(opt.lag.every(m=>m.mins===mm)?mm+' 分鐘':'一點時間')
+      +'<button '+(afford?'onclick="doRenew('+ja(id)+',0,0,1)"':'disabled')+' style="display:block;width:100%;margin-top:8px;border:none;font-family:inherit;cursor:'+(afford?'pointer':'not-allowed')
+      +';background:'+(afford?'linear-gradient(180deg,#FFF,#EAF3FF)':'#F2EDF5')+';border-radius:11px;padding:10px 12px;font-size:14px;font-weight:800;color:'+(afford?'#3E64B8':'#B0A5BC')
+      +';box-shadow:inset 0 0 0 2px '+(afford?'#BFD6F7':'#E6DFEC')+'">幫 '+esc(renewNames(opt.lag))+' 補上（'+opt.lagPrice+' 金幣）</button></div>';
+  }
   if(!opt.list.length){
     h+='<div style="background:#FFF0DA;border-radius:12px;padding:12px 13px;font-size:13px;color:#8A5A2B;line-height:1.8">'
       +(opt.nb!==Infinity
-        ? '<b>'+esc(ttOrderStaffDisplayName(o))+' '+hhmm(opt.nb)+' 有別的安排</b><br>這次沒辦法再續了,不然會耽誤到下一位老闆 (´・ω・`)'
+        ? '<b>'+esc(opt.nbName)+' '+hhmm(opt.nb)+' 有別的安排</b><br>這次沒辦法再續了,不然會耽誤到下一位老闆 (´・ω・`)'
         : '目前沒辦法續單,晚點再試試看')+'</div>';
   }else{
     if(opt.nb!==Infinity)
       h+='<div style="background:#FFF0DA;border-radius:10px;padding:8px 11px;font-size:12px;color:#8A5A2B;line-height:1.7;margin-bottom:11px">'
-        +esc(ttOrderStaffDisplayName(o))+' '+hhmm(opt.nb)+' 有別的預約,最多只能續到 <b>'+hhmm(opt.nb-RENEW_BUFFER)+'</b></div>';
+        +esc(opt.nbName)+' '+hhmm(opt.nb)+' 有別的預約,最多只能續到 <b>'+hhmm(opt.nb-RENEW_BUFFER)+'</b></div>';
     h+='<div style="display:flex;flex-direction:column;gap:9px">'
       +opt.list.map(x=>{
         const afford=bal>=x.price;
@@ -5302,18 +5335,30 @@ function openRenew(){
   m.style.display='flex';
 }
 let _renewing=false;
-function doRenew(id,mins,price){
+/* lag＝1：只幫同組裡續得比較少的人補到一樣（每人補的分鐘數各自算）；否則整組每人 +mins。
+   每一筆各送一張申請單（各自的冒險者手札處理、各扣各的）。之前續過的那幾筆先送：
+   萬一被擋（例如資料庫設定還沒更新、同一張單不能再送），後面就不送，不會只續到一部分。 */
+async function doRenew(id,mins,price,lag){
   if(_renewing) return; _renewing=true;
   const o=myOrdersCache[id]||{};
-  db.ref(ROOT+'/renewReq/'+id).set({ myKey, staffCid:o.staffCid||null, planName:o.planName||'',
-    mins, price, at:Date.now() })
-    .then(()=>{
-      _renewing=false;
-      const m=document.getElementById('renewM'); if(m) m.style.display='none';
-      if(window.lobbyNotify) lobbyNotify({icon:'coin',title:'續單送出囉!',sub:'正在跟 '+ttOrderStaffDisplayName(o)+' 確認時間,一下下就好 ✦',hold:6000});
-      paintPlayCard();
-    })
-    .catch(()=>{ _renewing=false; toast('送出失敗,請再試一次'); });
+  const opt=renewOptions(id,o), RR=__renewRes||{};
+  let todo=lag? opt.lag : opt.group.map(m=>({id:m.id,o:m.o,mins}));
+  todo=todo.filter(m=>m.mins>0&&!(RR[m.id]&&!RR[m.id].done));   // 處理中的不重送
+  todo.sort((a,b)=>(RR[b.id]?1:0)-(RR[a.id]?1:0));
+  if(!todo.length){ _renewing=false; toast('續單處理中，稍等一下'); return; }
+  const sent=[]; let failed=null;
+  for(const m of todo){
+    try{
+      await db.ref(ROOT+'/renewReq/'+m.id).set({ myKey, staffCid:m.o.staffCid||null, planName:m.o.planName||'',
+        mins:m.mins, price:renewPriceOf(m.o,m.mins), at:Date.now(), ...(o.groupId?{groupId:o.groupId}:{}) });
+      sent.push(m);
+    }catch(e){ failed=m; console.warn('[續單] 沒送出',m.id,e&&e.code||e); break; }
+  }
+  _renewing=false;
+  const md=document.getElementById('renewM'); if(md&&sent.length) md.style.display='none';
+  if(sent.length&&window.lobbyNotify) lobbyNotify({icon:'coin',title:'續單送出囉!',sub:'正在跟 '+renewNames(sent)+' 確認時間,一下下就好 ✦',hold:6000});
+  if(failed) toast(sent.length?(ttOrderStaffDisplayName(failed.o)+' 的續單沒送出去，等一下再按一次續單幫他補上'):'續單沒送出去，請稍後再試一次');
+  paintPlayCard();
 }
 /* 續單結果回來 → 告訴客人成功或為什麼不行 */
 (function(){
@@ -5335,12 +5380,13 @@ function doRenew(id,mins,price){
       Object.entries(__renewRes).forEach(([id,r])=>{
         if(!r||!r.done||seen[id]===r.done) return;
         seen[id]=r.done; seenSave();
-        if(r.ok){ if(window.lobbyNotify) lobbyNotify({ok:true,icon:'star',title:'續單成功! +'+r.mins+' 分鐘',
+        const ro=(myOrdersCache||{})[id], who=(ro&&ro.groupId&&(+ro.groupSize||0)>1)?ttOrderStaffDisplayName(ro)+' ':'';   // 同組：每位各一則
+        if(r.ok){ if(window.lobbyNotify) lobbyNotify({ok:true,icon:'star',title:'續單成功! '+who+'+'+r.mins+' 分鐘',
           sub:'延長到 '+hhmm(r.endAt)+',繼續玩吧 ✦',hold:8000}); }
         else {
           /* 沒有 ver = 陪玩那台跑的是舊版角色手札(舊版有已知的扣款誤判) */
           const tail = r.ver ? '・金幣沒有扣' : '・請冒險者重新整理「冒險者手札」頁面後再試一次(他那邊是舊版)';
-          if(window.lobbyNotify) lobbyNotify({icon:'coupon',title:'這次沒辦法續單',sub:(r.why||'請稍後再試')+tail,hold:11000});
+          if(window.lobbyNotify) lobbyNotify({icon:'coupon',title:'這次沒辦法續單'+(who?'（'+who.trim()+'）':''),sub:(r.why||'請稍後再試')+tail,hold:11000});
           else toast(r.why||'沒辦法續單'); }
         try{ updateCoinChip(); }catch(e){}
         paintPlayCard();
@@ -6995,7 +7041,11 @@ const SFX=(function(){
       if(!f.own){ const lw=document.createElement('div'); lw.className='lkw';
         const li=document.createElement('img'); li.src=AICON.lock; lw.appendChild(li); fav.appendChild(lw); }
       cell.appendChild(fav);
-      cell.insertAdjacentHTML('beforeend','<div class="fn2">'+f.n+'</div><div class="fs2 '+(f.own?'own':'lk')+'">'+(f.own?'已擁有':(f.vip?('VIP '+f.vip+' 解鎖'):(f.req||'')))+'</div>');
+      /* v554 冒險者頭像框：沒解鎖的直接寫已累積幾小時＋細進度條（主機回傳的時數） */
+      const cp=(f.companion&&!f.own&&window.TTCompanionAchievements)?TTCompanionAchievements.progress(f.cls,window.TTCompanionRewards,myKey):null;
+      if(cp){ TTCompanionAchievements.injectCss(); if(f.req) cell.title=f.req; }
+      cell.insertAdjacentHTML('beforeend','<div class="fn2">'+f.n+'</div><div class="fs2 '+(f.own?'own':'lk')+'">'+(f.own?'已擁有':(cp&&cp.loaded?esc(cp.text):(f.vip?('VIP '+f.vip+' 解鎖'):(f.req||''))))+'</div>'
+        +(cp&&cp.loaded?'<div class="fpg2"><i style="width:'+cp.pct.toFixed(1)+'%"></i></div>':''));
       cell.addEventListener('click',async()=>{
         if(frameSaving)return;
         if(!f.own){ cell.classList.remove('shake'); void cell.offsetWidth; cell.classList.add('shake'); return; }
@@ -8787,12 +8837,12 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="lobby-ui/staff-book.js?v=500"></script>
 <script src="lobby-ui/character-snapshot.js?v=1"></script>
 <script src="lobby-ui/avatar-snap.js?v=437"></script>
-<script src="lobby-ui/companion-achievements.js?v=532"></script>
+<script src="lobby-ui/companion-achievements.js?v=554"></script>
 <script src="lobby-ui/live.js?v=535"></script>
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/photo-mode.js?v=532"></script><link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=553"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=549"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=554"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=549"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>
