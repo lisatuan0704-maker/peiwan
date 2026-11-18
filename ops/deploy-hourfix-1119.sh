@@ -80,7 +80,7 @@ R=[
  ('rehearsal.cjs',"const ledger=(await ref.child('loyalty/'+identity.uid).once('value')).val();",
    "const ledger=await require('./loyalty-frames.cjs').paidLedger(db,member.key); // 11/19 D：頭像框時數照買了幾小時算",1),
  ('booking-room.cjs',"async function dropText(discord,job){\n if(!job.textId||job.textGone)return job;\n",DROP,1),
- ('voice.cjs',"rooms.dropText(discord,job)","rooms.dropText(discord,job,order,id)",5),
+ ('voice.cjs',"rooms.dropText(discord,job)","rooms.dropText(discord,job,order,id)",0),  # 0＝至少一處、全部換（11/11 收房修正有沒有部署，處數不同：4 或 5）
 ]
 files={}
 for f,_,_,_ in R:
@@ -89,7 +89,7 @@ for f,_,_,_ in R:
   if not os.path.isfile(p):print('找不到 '+f+'，為了安全停止，沒有任何變動。請拍給 Claude。');sys.exit(1)
   files[f]=open(p,encoding='utf-8',newline='').read().replace('\r\n','\n')
 if 'paidLedger' in files['loyalty-frames.cjs']:print('已經改過，跳過');sys.exit(0)
-bad=['%s（%d）'%(f,files[f].count(o)) for f,o,_,n in R if files[f].count(o)!=n]
+bad=['%s（%d）'%(f,files[f].count(o)) for f,o,_,n in R if (files[f].count(o)<4 if n==0 else files[f].count(o)!=n)]
 if bad:print('程式跟預期不同：'+'、'.join(bad)+'，為了安全停止，沒有任何變動。請拍給 Claude。');sys.exit(1)
 if mode=='check':print('可以改（%d 處）'%len(R));sys.exit(0)
 for f,o,nw,n in R:files[f]=files[f].replace(o,nw)
