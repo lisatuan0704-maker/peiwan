@@ -1,5 +1,16 @@
 # 小小酒館修改紀錄
 
+## 2026/11/19 主機：頭像框時數照「買了幾小時」、同一位老闆多組房間不刪聊天室、收掉招募（Claude；security-v428 ops）
+- D：「當然是一單就是一小時」「我們的計費就是不論遊戲都是算一小時的一個價位」（v312 寫成照冒險者實際計時、沒問過 D）。
+  loyalty-frames.cjs paidLedger：直接讀 clientOrders（myKey＝老闆闆卡），每張委託 planMins（方案名稱有「N 小時」照寫，否則 60）＋extraMins；
+  取消／退款／冒險者拒接／測試單不算；status done，或 confirmed＋accepted 且時間已過才算。/v1/voice/rewards 與 /v1/voice/frame 都改用它（舊 loyalty 帳本不再使用），以前的單自動重算。
+- 營業中事故：老闆（羊）續單失敗改點新單，一位老闆好幾組「yang的專屬房間」；空著那組收房時把大家正在用的聊天室刪了。
+  booking-room.cjs dropText(discord,job,order,selfId)：同一位老闆（orders customerId）還有別組沒收（phase 不是 deleted 且有語音房或聊天室）→ 聊天室先留著，記 orderVoiceV1/orphanTexts/<客人>/<頻道>；最後一組收掉時一起刪。voice.cjs 的呼叫全部帶 order,id。
+  已知：兩組同一瞬間收房可能互相以為對方還在，留下沒人收的聊天室（手動刪即可）；roomstay 補丁裡新加的那處呼叫沒帶 order（照舊直接刪）。
+- 主機實況：11/19 前主機是 20261111-interviewdm，**11/11 的 roomstay 一直沒部署**（所以一直照原本結束時間收房）。11/19 D 已部署 ops/deploy-hourfix-1119.sh → 20261119-hourfix（58 項測試通過、健康）。
+  之後要依序貼 deploy-roomstay-1111.sh（86c62b4cb7ab9c2a99bff9c218908d44d74e4bf0）、deploy-recruitoff-1119.sh（收掉冒險者招募：recruit-desk ensurePanel 直接返回，TT 不再建應徵頻道／補發貼文，之後 D 手動刪頻道）。
+- 教訓：給 D 的 raw.githubusercontent 網址一定用 git rev-parse 拿完整雜湊、curl 確認 200，不可以自己把短雜湊補長（11/19 給錯一次，404）。
+
 ## 2026/11/19 v556 分開點的單也一起續（Claude，營業中緊急修正）
 - D：老闆（羊）跟縭、蕪、桃三位一起玩，吊卡只寫「正在跟 蕪 玩」、續單只續一位。原因：三張是分開點的（只有蕪＋縭那次是同組），v554 只把同 groupId 當一起。
 - lobby.html renewGroup：同組＋「現在正在玩」（已按開始、結束沒超過半小時）的其他單都算一起；同一位冒險者只留最新那筆（避免舊單重複扣）。
