@@ -1,6 +1,6 @@
 # 小小酒館修改紀錄
 
-## 2026/11/20 主機：冒險者角色框「已擁有」卻戴不上（Claude；ops/deploy-framefix-1120.sh，等 D 貼）
+## 2026/11/20 主機：冒險者角色框「已擁有」卻戴不上（Claude；ops/deploy-framefix-1120.sh，11/20 D 已在主機執行）
 - 老闆反應：頭像框視窗裡縭／蕪角色框顯示「已擁有」，點了跳「尚未完成解鎖或儲存失敗，請稍後重試」（lobby.html 約 7123 行 equipFrame 的 catch）。
 - 原因（主機 loyalty-frames.cjs selectFrame，v312 起就這樣）：transaction 要 secureV1/characters/<闆卡> 存在才肯戴，
   但這格只有私人房註冊（secure-social character-create）才會建立；網站 Discord 登入的老闆只有 members／owners → 一律 ACCOUNT_REQUIRED。
@@ -14,6 +14,7 @@
 - 部署：主機 root 終端機貼
   curl -fsSL https://raw.githubusercontent.com/lisatuan0704-maker/peiwan/08c46b00e349e164f277187376455302a9d29b78/ops/deploy-framefix-1120.sh -o /tmp/f.sh && bash /tmp/f.sh
   （成功印 FRAMEFIX_DEPLOYED_AND_HEALTHY）。之後請老闆重新整理大廳再點角色框。
+- 11/20 D 已貼，回報成功（腳本成功時主機會換成 tinytavern-service:20261120-framefix）。老闆那邊重新整理大廳再點角色框，有沒有戴上還要等老闆回覆。
 
 ## 2026/11/19 v558 遊玩吊卡：早就結束的人不再掛著、續單可以挑人（Claude）
 - D 截圖（老闆吊卡）：「正在跟 縭、蕪 玩／縭 21:04・蕪 18:52 結束／最早 18:52 結束 時間到囉／快結束喔，要再續嗎？」。
