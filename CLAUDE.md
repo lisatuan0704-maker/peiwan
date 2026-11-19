@@ -1,5 +1,20 @@
 # 小小酒館修改紀錄
 
+## 2026/11/20 主機：冒險者角色框「已擁有」卻戴不上（Claude；ops/deploy-framefix-1120.sh，等 D 貼）
+- 老闆反應：頭像框視窗裡縭／蕪角色框顯示「已擁有」，點了跳「尚未完成解鎖或儲存失敗，請稍後重試」（lobby.html 約 7123 行 equipFrame 的 catch）。
+- 原因（主機 loyalty-frames.cjs selectFrame，v312 起就這樣）：transaction 要 secureV1/characters/<闆卡> 存在才肯戴，
+  但這格只有私人房註冊（secure-social character-create）才會建立；網站 Discord 登入的老闆只有 members／owners → 一律 ACCOUNT_REQUIRED。
+  以前沒人滿 10 小時所以沒發現；11/19 hourfix 照買了幾小時重算後，第一批老闆解鎖了才撞到。
+- 修法：先確認 peiwan/lobby/<闆卡>/name 有這張闆卡；secureV1/characters/<闆卡> 沒有就只建 {pub:{frm}} 這一格（已有的其他欄位不動）。
+  資料庫規則 lobby/$key/pub/frm 的 companion_ 要跟這格比對，所以一定要寫；規則不用改。
+  只建這一格對其他模組的影響已看過：account-state 沒有 name 照舊 review、commerce 沒有 name 照舊擋、booking-voice／drinks 名字退回大廳名字或「老闆」。
+- 驗證：frame-1120.test.cjs 7 項（舊程式「沒有 characters 的老闆」2 項失敗＝重現）；正式規則在模擬資料庫重播：
+  主機建那格之前老闆發佈名牌帶角色框被拒、之後允許、換成沒解鎖的框被拒、換回花圈框允許、老闆自己改 secureV1 那格被拒。
+  假主機演練：以 hourfix、roomstay 為底都只多 1 個測試檔＋改 2 處，fix-1119 一起跑 11 項通過；主機還沒 hourfix 會停。
+- 部署：主機 root 終端機貼
+  curl -fsSL https://raw.githubusercontent.com/lisatuan0704-maker/peiwan/08c46b00e349e164f277187376455302a9d29b78/ops/deploy-framefix-1120.sh -o /tmp/f.sh && bash /tmp/f.sh
+  （成功印 FRAMEFIX_DEPLOYED_AND_HEALTHY）。之後請老闆重新整理大廳再點角色框。
+
 ## 2026/11/19 v558 遊玩吊卡：早就結束的人不再掛著、續單可以挑人（Claude）
 - D 截圖（老闆吊卡）：「正在跟 縭、蕪 玩／縭 21:04・蕪 18:52 結束／最早 18:52 結束 時間到囉／快結束喔，要再續嗎？」。
   原因：renewGroup 對同組（groupId）的人不看時間——蕪 早就到時間（沒按結束）還一直掛著，吊卡拿最早的時間喊「時間到囉」；
