@@ -507,6 +507,13 @@ img.h2ic,.mhic,#shopBtn img,#ordBtn img,#dressBtn img,#wardBtn img,#joinBtn img,
 #playCard .pcTime b{font-size:14px;color:#8E68C8}
 #playCard .pcLeft{display:inline-block;background:#EFE4FB;color:#7A5FB0;font-size:11px;padding:1px 7px;border-radius:7px;margin-left:5px}
 #playCard.soon .pcLeft{background:#FCE0EA;color:#C2537D;font-weight:700}
+/* v558 一起玩的人結束時間不一樣 → 每人一行 */
+#playCard .pcRows{margin-top:5px;display:flex;flex-direction:column;gap:3px}
+#playCard .pcRow{font-size:12.5px;color:#5A4880;display:flex;align-items:center;gap:5px;white-space:nowrap}
+#playCard .pcRow .pcWho{min-width:2em;font-weight:700;color:#7A5FB0}
+#playCard .pcRow b{font-size:13.5px;color:#8E68C8}
+#playCard .pcRow .pcLeft{margin-left:auto}
+#playCard.soon .pcRow:not(.hot) .pcLeft{background:#EFE4FB;color:#7A5FB0;font-weight:400}
 #playCard .pcExt{font-size:11px;color:#3E9E6B;margin-top:3px}
 #playCard .pcWait{font-size:11.5px;color:#8E7AB0;margin-top:8px;text-align:center;padding:7px 0;background:#F4EEFB;border-radius:9px}
 #playCard .pcRenew{width:100%;margin-top:8px;border:none;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;
@@ -1701,7 +1708,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v557</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v558</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -5195,7 +5202,9 @@ function nextBlockAfter(cid,fromMs,skipId){
    同組委託是每位冒險者各一筆 clientOrders（共用 groupId），以前續單只對「其中一筆」送申請 → 只延長、也只扣那一位。
    現在續單一律整組一起：每一筆各送一張 renewReq（各自的冒險者手札照舊處理自己的、扣自己那一份），金額顯示整組合計。 */
 /* v556 D 11/19：老闆分開點了三張單（三位冒險者一起玩），吊卡跟續單只認得其中一位 →
-   除了同組（groupId），「現在正在玩」（已開始、還沒結束超過半小時）的其他單也一起列出、一起續；同一位冒險者只留最新那筆，避免重複扣。 */
+   除了同組（groupId），「現在正在玩」（已開始、還沒結束超過半小時）的其他單也一起列出、一起續；同一位冒險者只留最新那筆，避免重複扣。
+   v558 D 11/19（吊卡寫「縭 21:04・蕪 18:52 結束／最早 18:52 結束 時間到囉」）：同組的人以前不看時間，早就結束的人一直掛在吊卡上、
+   還拿他的時間喊「時間到囉」→ 同組也要「還沒結束超過半小時」才列；同組裡還沒按開始的照舊列（續單一起續，時間等他開始才算）。 */
 function renewGroup(id,o){
   const now=Date.now(), seen=new Set(), out=[];
   const ok=(k,x)=>x&&!(x.type&&x.type!=='play')&&x.status==='confirmed'&&x.accepted&&!x.staffDeclined&&!x.refunded;
@@ -5205,7 +5214,7 @@ function renewGroup(id,o){
     if(k===id||!ok(k,x)) return;
     const sameGroup=o&&o.groupId&&x.groupId===o.groupId;
     const playing=x.servingSince&&sessionEndOf(x)>=now-30*60000;
-    if(sameGroup||playing) add(k,x);
+    if(playing||(sameGroup&&!x.servingSince)) add(k,x);
   });
   const by={};
   out.forEach(m=>{ const c=m.o.staffCid||('_'+m.id), p=by[c];
@@ -5213,29 +5222,48 @@ function renewGroup(id,o){
   const keep=new Set(Object.values(by).map(m=>m.id));
   return out.filter(m=>keep.has(m.id));
 }
-function renewEndsText(g){
-  const ends=g.map(m=>sessionEndOf(m.o)), lo=Math.min(...ends), hi=Math.max(...ends);
-  if(hi-lo<=2*60000) return null;
-  return g.map(m=>esc(ttOrderStaffDisplayName(m.o))+' '+hhmm(sessionEndOf(m.o))).join('・');
+/* 按過開始的才有結束時間 */
+function renewStarted(g){ return g.filter(m=>m.o.servingSince); }
+/* 一起玩的人結束時間差超過 2 分鐘、或有人還沒開始 → 吊卡每人一行、續單可以挑人 */
+function renewSpread(g){
+  if(g.length<2) return false;
+  const st=renewStarted(g); if(st.length<g.length) return true;
+  const ends=st.map(m=>sessionEndOf(m.o)); return Math.max(...ends)-Math.min(...ends)>2*60000;
+}
+function renewLeftText(m,now){
+  if(!m.o.servingSince) return '等開始計時';
+  const left=Math.round((sessionEndOf(m.o)-now)/60000);
+  return left>=0?'還有 '+left+' 分':'時間到囉';
+}
+/* 續單預設勾誰：大家差不多同時結束 → 全部；不一樣 → 只勾最早結束的那幾位（跟最早的差 15 分鐘內） */
+function renewDefaultSel(g){
+  const all=new Set(g.map(m=>m.id)), st=renewStarted(g); if(!st.length) return all;
+  const ends=st.map(m=>sessionEndOf(m.o)), lo=Math.min(...ends);
+  if(Math.max(...ends)-lo<=2*60000) return all;
+  return new Set(st.filter(m=>sessionEndOf(m.o)<=lo+15*60000).map(m=>m.id));
 }
 function renewNames(g){ return g.map(m=>ttOrderStaffDisplayName(m.o)).join('、'); }
 function renewPriceOf(o,mins){ return Math.round(unitPerHour(o)*mins/60); }
-function renewOptions(id,o){
-  const g=renewGroup(id,o), end=sessionEndOf(o);
+function renewOptions(id,o,sel){
+  const g=renewGroup(id,o), pick=sel?g.filter(m=>sel.has(m.id)):g, pst=renewStarted(pick);
+  const end=pst.length?Math.min(...pst.map(m=>sessionEndOf(m.o))):sessionEndOf(o);
   let nb=Infinity, nbName='', limit=Infinity;
-  g.forEach(m=>{
+  pick.forEach(m=>{
     const e=sessionEndOf(m.o), b=m.o.staffCid? nextBlockAfter(m.o.staffCid,e,m.id) : Infinity;
     if(b===Infinity) return;
     if(b-RENEW_BUFFER-e<limit){ limit=b-RENEW_BUFFER-e; nb=b; nbName=ttOrderStaffDisplayName(m.o); }
   });
-  /* 同組裡有人續得比較少（以前只續到一位、或上次有一位沒續成）→ 先讓他補到跟大家一樣 */
+  /* 同組裡有人續得比較少（以前只續到一位、或上次有一位沒續成）→ 先讓他補到跟大家一樣
+     v558：可以挑人續之後，續得少但結束得比大家晚（本來就比較晚開始）的不算 */
   const lg=g.filter(m=>m.id===id||(o.groupId&&m.o.groupId===o.groupId));
-  const top=Math.max(...lg.map(m=>+m.o.extraMins||0));
-  const lag=lg.filter(m=>(+m.o.extraMins||0)<top).map(m=>({id:m.id,o:m.o,mins:top-(+m.o.extraMins||0)}));
-  return { end, nb, nbName:nbName||ttOrderStaffDisplayName(o), limit, group:g, lag,
+  const top=Math.max(...lg.map(m=>+m.o.extraMins||0)), lst=renewStarted(lg);
+  const hiEnd=lst.length?Math.max(...lst.map(m=>sessionEndOf(m.o))):0;
+  const lag=lg.filter(m=>(+m.o.extraMins||0)<top&&(!m.o.servingSince||sessionEndOf(m.o)<hiEnd-2*60000))
+    .map(m=>({id:m.id,o:m.o,mins:top-(+m.o.extraMins||0)}));
+  return { end, nb, nbName:nbName||ttOrderStaffDisplayName(o), limit, group:g, pick, lag,
     lagPrice:lag.reduce((s,m)=>s+renewPriceOf(m.o,m.mins),0),
     list:RENEW_BLOCKS.filter(m=>limit===Infinity||m*60000<=limit)
-      .map(m=>({mins:m, price:g.reduce((s,x)=>s+renewPriceOf(x.o,m),0)})) };
+      .map(m=>({mins:m, price:pick.reduce((s,x)=>s+renewPriceOf(x.o,m),0)})) };
 }
 /* ---- 遊玩中吊卡(左上角個人 UI 下面) ---- */
 function renewCardHtml(){
@@ -5245,18 +5273,26 @@ function renewCardHtml(){
     +'<div class="pcHead"><span class="pcDot"></span><b>'+esc(ttOrderStaffDisplayName(o))+'</b> 接下你的委託囉</div>'
     +'<div class="pcTime">到 Discord 跟冒險者會合，開始玩之後才會開始算時間 ✦</div>'
     +'</div>';
-  const grp=renewGroup(id,o);
-  const end=Math.min(...grp.map(m=>sessionEndOf(m.o))), left=Math.round((end-Date.now())/60000);
-  const soon=left<=15, many=renewEndsText(grp);
+  const grp=renewGroup(id,o), now=Date.now(), st=renewStarted(grp);
+  const end=Math.min(...st.map(m=>sessionEndOf(m.o))), left=Math.round((end-now)/60000);
+  const soon=left<=15, spread=renewSpread(grp);
+  const hot=st.filter(m=>sessionEndOf(m.o)-now<=15*60000);
   const pending=grp.some(m=>{ const r=(__renewRes||{})[m.id]; return r&&!r.done; });
+  /* v558：結束時間不一樣就每人一行，「時間到囉」只標在那個人身上；續單鈕只點名快結束的人 */
+  const rows=spread?'<div class="pcRows">'+grp.map(m=>'<div class="pcRow'+(hot.includes(m)?' hot':'')+'"><span class="pcWho">'+esc(ttOrderStaffDisplayName(m.o))+'</span>'
+      +(m.o.servingSince?'<b>'+hhmm(sessionEndOf(m.o))+'</b> 結束':'')+'<span class="pcLeft">'+renewLeftText(m,now)+'</span></div>').join('')+'</div>'
+    : '<div class="pcTime">預計 <b>'+hhmm(end)+'</b> 結束'+(left>=0?'<span class="pcLeft">還有 '+left+' 分</span>':'<span class="pcLeft">時間到囉</span>')+'</div>';
+  const ask=!soon?'想續單嗎?'
+    : (spread&&hot.length&&hot.length<st.length)
+      ? renewNames(hot)+(hot.every(m=>sessionEndOf(m.o)<now)?' 時間到囉，要續嗎？ ✦':' 快到時間囉，要續嗎？ ✦')
+      : '快結束囉,要再續嗎? ✦';
   return '<div id="playCard" class="'+(soon?'soon':'')+'">'
     +'<div class="pcHead"><span class="pcDot"></span>正在跟 <b>'+esc(renewNames(grp))+'</b> 玩</div>'
-    +(many?'<div class="pcTime" style="font-size:12px">'+many+' 結束</div>':'')
-    +'<div class="pcTime">'+(many?'最早 ':'預計 ')+'<b>'+hhmm(end)+'</b> 結束'+(left>=0?'<span class="pcLeft">還有 '+left+' 分</span>':'<span class="pcLeft">時間到囉</span>')+'</div>'
+    +rows
     +(grp.length===1&&o.extraMins?'<div class="pcExt">已續 +'+o.extraMins+' 分 ✦</div>':'')
     +(pending
       ? '<div class="pcWait">續單處理中…</div>'
-      : '<button class="pcRenew" onclick="openRenew()">'+(soon?'快結束囉,要再續嗎? ✦':'想續單嗎?')+'</button>')
+      : '<button class="pcRenew" onclick="openRenew()">'+esc(ask)+'</button>')
     +'</div>';
 }
 function paintPlayCard(){
@@ -5294,34 +5330,54 @@ addEventListener('resize',()=>{ try{ paintPlayCard(); }catch(e){} });
 try{ if(window.ResizeObserver){ const h=document.getElementById('hud2');
   if(h) new ResizeObserver(()=>{ try{ positionPlayCard(); }catch(e){} }).observe(h); } }catch(e){}
 let _renewCid=null, __renewRes={};
-/* ---- 續單彈窗 ---- */
-function openRenew(){
+/* ---- 續單彈窗 ----
+   v558：一起玩的人有好幾位時可以挑要幫誰續（_renewSel；預設見 renewDefaultSel），從吊卡打開會重設成預設 */
+let _renewSel=null, _renewSelFor=null;
+function renewPick(k){
+  if(!_renewSel) return;
+  if(_renewSel.has(k)) _renewSel.delete(k); else _renewSel.add(k);
+  openRenew(true);
+}
+function openRenew(keep){
   const a=activeOrder(); if(!a){ toast('目前沒有進行中的訂單'); return; }
   if(a.waiting){ toast('開始玩之後就可以續單囉'); return; }
-  const {id,o}=a;
-  const opt=renewOptions(id,o);
+  const {id,o}=a, grp=renewGroup(id,o), now=Date.now();
+  if(keep!==true||_renewSelFor!==id||!_renewSel){ _renewSel=renewDefaultSel(grp); _renewSelFor=id; }
+  _renewSel=new Set([..._renewSel].filter(k=>grp.some(m=>m.id===k)));
+  const opt=renewOptions(id,o,_renewSel);
   const bal=(window.__wallet||0);
   let m=document.getElementById('renewM');
   if(!m){
     m=document.createElement('div'); m.id='renewM';
     m.style.cssText='position:fixed;inset:0;z-index:420;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(40,25,55,.55)';
-    m.innerHTML='<div id="renewBody" style="max-width:340px;width:100%;background:#FFF9FC;border-radius:18px;padding:20px 18px;box-shadow:0 0 0 3px #fff,0 0 0 8px #F7A8C6,0 20px 44px rgba(90,60,110,.4)"></div>';
+    m.innerHTML='<div id="renewBody" style="max-width:340px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;box-sizing:border-box;background:#FFF9FC;border-radius:18px;padding:20px 18px;box-shadow:0 0 0 3px #fff,0 0 0 8px #F7A8C6,0 20px 44px rgba(90,60,110,.4)"></div>';
     m.addEventListener('click',e=>{ if(e.target===m) m.style.display='none'; });
     document.body.appendChild(m);
   }
   const b=m.querySelector('#renewBody');
-  let h='<h3 style="margin:0 0 4px;font-size:17px;color:#C2537D">想再玩久一點?</h3>'
-    +'<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:12px">跟 <b style="color:#5A4880">'+esc(renewNames(opt.group))+'</b> 的這筆單<br>'+(renewEndsText(opt.group)?'目前預計 '+renewEndsText(opt.group)+' 結束':'目前預計 <b>'+hhmm(opt.end)+'</b> 結束')
-    +(opt.group.length>1?'<br>'+opt.group.length+' 位一起續，各自往後加，下面是 '+opt.group.length+' 位合計的金幣':'')+'</div>';
-  if(opt.lag.length){
-    const afford=bal>=opt.lagPrice, mm=opt.lag[0].mins;
-    h+='<div style="background:#EEF6FF;border-radius:12px;padding:10px 12px;font-size:12.5px;color:#4A5C8A;line-height:1.7;margin-bottom:11px">'
-      +'<b>'+esc(renewNames(opt.lag))+'</b> 還沒續到，跟大家差 '+(opt.lag.every(m=>m.mins===mm)?mm+' 分鐘':'一點時間')
-      +'<button '+(afford?'onclick="doRenew('+ja(id)+',0,0,1)"':'disabled')+' style="display:block;width:100%;margin-top:8px;border:none;font-family:inherit;cursor:'+(afford?'pointer':'not-allowed')
-      +';background:'+(afford?'linear-gradient(180deg,#FFF,#EAF3FF)':'#F2EDF5')+';border-radius:11px;padding:10px 12px;font-size:14px;font-weight:800;color:'+(afford?'#3E64B8':'#B0A5BC')
-      +';box-shadow:inset 0 0 0 2px '+(afford?'#BFD6F7':'#E6DFEC')+'">幫 '+esc(renewNames(opt.lag))+' 補上（'+opt.lagPrice+' 金幣）</button></div>';
+  let h='<h3 style="margin:0 0 4px;font-size:17px;color:#C2537D">想再玩久一點?</h3>';
+  if(grp.length>1){
+    /* v558：以前另外一格「幫 ○○ 補上」，現在直接在名單上標「少續 N 分」，勾他續就好（預設本來就會勾最早結束的人） */
+    const lagOf={}; opt.lag.forEach(x=>{ lagOf[x.id]=x.mins; });
+    h+='<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:8px">正在跟<b style="color:#5A4880">'+esc(renewNames(grp))+'</b> 玩，要幫誰續呢？</div>'
+      +'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">'
+      +grp.map(m=>{
+        const on=_renewSel.has(m.id);
+        return '<button type="button" onclick="renewPick('+ja(m.id)+')" aria-pressed="'+on+'" style="display:flex;align-items:center;gap:9px;border:none;font-family:inherit;cursor:pointer;text-align:left;'
+          +'background:'+(on?'#FDF2F7':'#FFF')+';border-radius:11px;padding:9px 12px;box-shadow:inset 0 0 0 2px '+(on?'#F7A8C6':'#E6DFEC')+'">'
+          +'<span style="flex:none;width:18px;height:18px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;'
+          +'background:'+(on?'#E5739E':'#fff')+';box-shadow:inset 0 0 0 2px '+(on?'#E5739E':'#CFC4DA')+'">'+(on?'✓':'')+'</span>'
+          +'<b style="font-size:14px;color:#5A4880">'+esc(ttOrderStaffDisplayName(m.o))+'</b>'
+          +(lagOf[m.id]?'<span style="font-size:11px;color:#3E64B8;background:#EAF3FF;border-radius:7px;padding:1px 6px">少續 '+lagOf[m.id]+' 分</span>':'')
+          +'<span style="margin-left:auto;font-size:12px;color:#8E7AB0">'+(m.o.servingSince?hhmm(sessionEndOf(m.o))+' 結束・':'')+renewLeftText(m,now)+'</span></button>';
+      }).join('')+'</div>'
+      +(opt.pick.length>1?'<div style="font-size:12px;color:#8E7AB0;margin-bottom:11px">勾的 '+opt.pick.length+' 位各自往後加，下面是 '+opt.pick.length+' 位合計的金幣</div>':'');
+  }else{
+    h+='<div style="font-size:12.5px;color:#8E7AB0;line-height:1.75;margin-bottom:12px">跟 <b style="color:#5A4880">'+esc(renewNames(grp))+'</b> 的這筆單<br>目前預計 <b>'+hhmm(opt.end)+'</b> 結束</div>';
   }
-  if(!opt.list.length){
+  if(!opt.pick.length){
+    h+='<div style="background:#F4EEFB;border-radius:12px;padding:12px 13px;font-size:13px;color:#7A5FB0;line-height:1.8;text-align:center">先勾選要幫誰續 ✦</div>';
+  }else if(!opt.list.length){
     h+='<div style="background:#FFF0DA;border-radius:12px;padding:12px 13px;font-size:13px;color:#8A5A2B;line-height:1.8">'
       +(opt.nb!==Infinity
         ? '<b>'+esc(opt.nbName)+' '+hhmm(opt.nb)+' 有別的安排</b><br>這次沒辦法再續了,不然會耽誤到下一位老闆 (´・ω・`)'
@@ -5345,19 +5401,19 @@ function openRenew(){
       +'<div style="font-size:12px;color:#8E7AB0;margin-top:11px;text-align:center">你的錢包:<b style="color:#E0A233">'+bal+' 金幣</b>'
       +(opt.list.some(x=>bal<x.price)?'<br><a href="#" onclick="document.getElementById(\'renewM\').style.display=\'none\';openTopup();return false" style="color:#C2537D">金幣不夠?去儲值 ›</a>':'')+'</div>';
   }
-  h+='<button onclick="document.getElementById(\'renewM\').style.display=\'none\'" style="width:100%;margin-top:14px;border:none;background:#F0E7F7;color:#7A5FB0;font-family:inherit;font-size:14px;padding:12px;border-radius:11px;cursor:pointer">'+(opt.list.length?'先不用':'知道了')+'</button>';
+  h+='<button onclick="document.getElementById(\'renewM\').style.display=\'none\'" style="width:100%;margin-top:14px;border:none;background:#F0E7F7;color:#7A5FB0;font-family:inherit;font-size:14px;padding:12px;border-radius:11px;cursor:pointer">'+(opt.list.length||!opt.pick.length?'先不用':'知道了')+'</button>';
   b.innerHTML=h;
   m.style.display='flex';
 }
 let _renewing=false;
-/* lag＝1：只幫同組裡續得比較少的人補到一樣（每人補的分鐘數各自算）；否則整組每人 +mins。
+/* lag＝1：只幫同組裡續得比較少的人補到一樣（每人補的分鐘數各自算）；否則勾選的人（v558，預設見 renewDefaultSel）每人 +mins。
    每一筆各送一張申請單（各自的冒險者手札處理、各扣各的）。之前續過的那幾筆先送：
    萬一被擋（例如資料庫設定還沒更新、同一張單不能再送），後面就不送，不會只續到一部分。 */
 async function doRenew(id,mins,price,lag){
   if(_renewing) return; _renewing=true;
   const o=myOrdersCache[id]||{};
-  const opt=renewOptions(id,o), RR=__renewRes||{};
-  let todo=lag? opt.lag : opt.group.map(m=>({id:m.id,o:m.o,mins}));
+  const opt=renewOptions(id,o,_renewSelFor===id?_renewSel:null), RR=__renewRes||{};
+  let todo=lag? opt.lag : opt.pick.map(m=>({id:m.id,o:m.o,mins}));
   todo=todo.filter(m=>m.mins>0&&!(RR[m.id]&&!RR[m.id].done));   // 處理中的不重送
   todo.sort((a,b)=>(RR[b.id]?1:0)-(RR[a.id]?1:0));
   if(!todo.length){ _renewing=false; toast('續單處理中，稍等一下'); return; }
