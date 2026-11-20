@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="lobby-ui/retired-outfits.js?v=434"></script>
-<script src="lobby-ui/fixed-view.js?v=554"></script>
+<script src="lobby-ui/fixed-view.js?v=560"></script>
 <script src="lobby-ui/rooms/world-scope.js?v=343"></script>
 <script src="lobby-ui/legacy-identity-guard.js?v=334"></script>
 <script src="lobby-ui/discord-auth.js?v=379"></script><script src="lobby-ui/secure-login.js?v=469"></script>
@@ -1708,7 +1708,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v558</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v560</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -3106,7 +3106,7 @@ function makeAgent(key,b){
     tx:0,ty:0,state:'idle',timer:1.5+(h%50)/10,seed:h%10,
     myKey:key, isMe:(key===myKey),idleFor:0,sitting:false,
     sh:sh, faceLeft:((h>>3)%2===1), flipT:1};
-  if(a.isMe){ el.style.filter='drop-shadow(0 0 0 #fff)'; }
+  if(a.isMe&&!window.TTGame){ el.style.filter='drop-shadow(0 0 0 #fff)'; }   // v560 手機不加：看不出差別，但濾鏡會讓手機每幀多畫一層
   { const c=TTScene.spawn(h); a.x=c[0]/WORLD.w; a.y=c[1]/WORLD.h; a.mapLoc='hall'; }
   a.tx=a.x;a.ty=a.y;
   a.frames={};
@@ -3218,12 +3218,13 @@ function tick(now){
   if(window.TTGameLow&&now-last<30){requestAnimationFrame(tick);return;}   // v539 低階手機（記憶體 ≤3GB 或 ≤4 核）大廳改約 30 幀，省電不燙
   if(document.hidden){last=now;requestAnimationFrame(tick);return;}
   /* 全螢幕視窗開著時,暫停背景世界演算(每秒 2 幀維持狀態即可)——弱機開書/開視窗不再卡 */
-  if(fsOverlayOpen()){
+  /* v560 手機：人在小屋裡時大廳整個被房間蓋住，一樣每秒 2 幀就好（房間自己的畫面照常） */
+  if(fsOverlayOpen()||(window.TTGame&&(document.body.classList.contains('tt-house-on')||document.getElementById('ttGachaOv')))){   // 扭蛋是整個螢幕的 3D 畫面，後面的大廳也一樣慢下來
     if(!tick._slow||now-tick._slow>500){ tick._slow=now; last=now; }
     else { requestAnimationFrame(tick); return; }
   }
   const dt=Math.min(.05,(now-last)/1000); last=now;
-  const W=window.innerWidth,H=window.innerHeight;
+  // v560：原本這裡讀 window.innerWidth／innerHeight（沒用到），每一幀都逼瀏覽器先把樣式算完一次 → 拿掉
   _spriteFrameBudget=performance.now()+6;
   agents.forEach(a=>{
     const depthNow=0.82+(a.y-FLOOR.y0)/(FLOOR.y1-FLOOR.y0)*0.33;
@@ -3535,6 +3536,7 @@ function updateCamera(dt, now){
     cam.tzoom = Math.max(vw/1920, vh/WORLD.h*(window.TTGameZoom||1));   // 上下剛好塞滿（場景高 900），不露出場景外的底色
     tx = a ? a.x*WORLD.w : WORLD.w*0.5;
     ty = a ? a.y*WORLD.h - 40/cam.tzoom : WORLD.h*0.5;
+    if(a&&!updateCamera._gSet){updateCamera._gSet=1;cam.zoom=cam.tzoom;cam.x=tx;cam.y=ty;}   // v560：手機一開始就定好縮放（不從小畫面慢慢拉近，拉近的那一秒每幀都要重畫整個場景）
   }else if(isMobile()){
     // 手機直屏:楓谷式跟隨鏡頭——拉近讓小人變大,上下左右都跟著小人,裁掉多餘空地板
     cam.tzoom = (vh/WORLD.h) * 1.42;
@@ -3564,6 +3566,9 @@ function updateCamera(dt, now){
   { // v531：鏡頭位移也對齊螢幕整數像素
     const q=1/(cam.zoom*ttPxUnit);camView.x=Math.round(camView.x/q)*q;camView.y=Math.round(camView.y/q)*q; }
   world.style.transform='scale('+cam.zoom+') translate('+(-camView.x)+'px,'+(-camView.y)+'px)';
+  // v560 手機遊戲畫面：場景一定塞滿畫面，兩側延伸片與模糊底景都被蓋住（mobile-game.css 藏起來）→ 不寫下面這些變數。
+  // 寫在 #hall 上的變數每變一次，整個大廳（所有小人、圖層）都要重算樣式，跟著走路的鏡頭就是每一幀都在重算。
+  if(window.TTGame)return;
   // 只在左右有留白時柔化接縫；換算成世界單位，螢幕上維持 14px。
   const softSides=vw-WORLD.w*cam.zoom>1;
   hall.classList.toggle('tt-extended',softSides);
@@ -8902,7 +8907,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <script src="tavern-ui/outfit-fx.js?v=449"></script>
 <script src="tavern-ui/season-display.js?v=445"></script>
 <script src="lobby-ui/vip-outfit.js?v=537"></script>
-<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=555"></script>
+<link rel="stylesheet" href="lobby-ui/staff-card.css?v=478c"><script src="lobby-ui/staff-card.js?v=478c"></script><script src="tavern-ui-bridge.js?v=560"></script>
 <script>/* v468 版權測試時裝（露亞人魚、小莓、星夜漫遊裝）一律不畫：別人身上、手機首頁、闆卡、手帳都改用可用的基本部件（不改資料庫裡的穿搭） */
 (function(){if(!window.TTRetiredOutfits||typeof drawDollTo!=='function')return;const draw=drawDollTo;drawDollTo=function(cv,doll,...rest){let d=doll;try{d=TTRetiredOutfits.sanitize(doll,window.__shopCfg||{});}catch(e){}return draw.call(this,cv,d,...rest);};})();</script>
 <script src="lobby-ui/staff-book.js?v=500"></script>
@@ -8913,7 +8918,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/photo-mode.js?v=532"></script><link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=556"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=549"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=539"><script src="lobby-ui/house.js?v=560"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=549"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>
@@ -8932,8 +8937,8 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <link rel="stylesheet" href="lobby-ui/support.css?v=424">
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=532"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=535">
-<script src="lobby-ui/mobile-app.js?v=546"></script>
-<link rel="stylesheet" href="lobby-ui/mobile-game.css?v=546"><script src="lobby-ui/mobile-game.js?v=546"></script>
+<script src="lobby-ui/mobile-app.js?v=560"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-game.css?v=560"><script src="lobby-ui/mobile-game.js?v=560"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
 <script src="lobby-ui/vip-card.js?v=513"></script>
 <script src="lobby-ui/companion-celebrate.js?v=557"></script>

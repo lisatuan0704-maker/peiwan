@@ -11,75 +11,161 @@ html.ttm-game #hall{touch-action:none}
 /* 大廳原本的電腦版介面先收起來（功能都搬到下面的按鈕與選單） */
 html.ttm-game body :is(#hud2,#sign,#hint2,#chattoggle,#joinBtn,#musicbox,#gearBtn,#ttHubButton,#shopBtn,#ordBtn,#frBtn,#ttAchBtn,#ttWalletBtn,#ttMailBtn,#ttIdleHud,#ttDailyBar,#ttHouseKeys,#playCard,.tt-quest,.lobby-geometry,#verTag,.dktip){display:none!important}
 
-/* ---------- 上方：名牌、金幣（選單在下排功能列最右邊） ---------- */
+/* ---------- v560 D 定案「A1 店內視窗風」：照電腦版商城視窗——白紙深藍框＋淡藍內線、底邊粉白藍航空信條紋、英文小標、店裡的像素圖示 ---------- */
+html.ttm-game{--g-lav:#B9A8F0;--g-stripe:repeating-linear-gradient(135deg,#FF9EC2 0 5px,#fff 5px 10px,#9FD3FF 10px 15px,#fff 15px 20px);
+ --g-card:inset 0 0 0 2px #fff,inset 0 0 0 3.5px #DCE3FA,2px 3px 0 rgba(28,33,86,.2);--g-num:'Tavern Numerals','Lilita One','TT Latin',sans-serif;--g-en:'Tavern Numerals','TT Latin','Coiny',sans-serif;
+ --g-barh:calc(env(safe-area-inset-bottom,0px) + 76px);--g-chatw:min(236px,60vw)}
+/* 店裡的像素圖示（lobby-ui/assets，跟電腦版下排同一套）；扭蛋機、對話泡泡是照同一套畫的 16 格像素圖 */
+html.ttm-game{--ic-house:url(assets/house.png);--ic-shop:url(assets/dress.png);--ic-bag:url(assets/gift.png);--ic-menu:url(assets/chat.png);--ic-mail:url(assets/mail.png);--ic-daily:url(assets/coupon.png);
+ --ic-wallet:url(assets/wallet.png);--ic-orders:url(assets/receipt.png);--ic-star:url(assets/star.png);--ic-chair:url(assets/chair.png);
+ --ic-gacha:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -0.5 16 16' shape-rendering='crispEdges'%3E%3Crect x='5' y='0' width='6' height='1' fill='%232b2350'/%3E%3Crect x='3' y='1' width='2' height='1' fill='%232b2350'/%3E%3Crect x='5' y='1' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='7' y='1' width='4' height='1' fill='%23d6ecff'/%3E%3Crect x='11' y='1' width='2' height='1' fill='%232b2350'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%232b2350'/%3E%3Crect x='3' y='2' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='5' y='2' width='4' height='1' fill='%23d6ecff'/%3E%3Crect x='9' y='2' width='1' height='1' fill='%23ff6f9f'/%3E%3Crect x='10' y='2' width='2' height='1' fill='%23d6ecff'/%3E%3Crect x='12' y='2' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='3' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='3' width='1' height='1' fill='%23ffffff'/%3E%3Crect x='3' y='3' width='2' height='1' fill='%23d6ecff'/%3E%3Crect x='5' y='3' width='1' height='1' fill='%23ffd35c'/%3E%3Crect x='6' y='3' width='2' height='1' fill='%23d6ecff'/%3E%3Crect x='8' y='3' width='2' height='1' fill='%23ff6f9f'/%3E%3Crect x='10' y='3' width='4' height='1' fill='%23d6ecff'/%3E%3Crect x='14' y='3' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='4' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='4' width='2' height='1' fill='%23d6ecff'/%3E%3Crect x='4' y='4' width='2' height='1' fill='%23ffd35c'/%3E%3Crect x='6' y='4' width='4' height='1' fill='%23d6ecff'/%3E%3Crect x='10' y='4' width='2' height='1' fill='%237fe0c4'/%3E%3Crect x='12' y='4' width='2' height='1' fill='%23d6ecff'/%3E%3Crect x='14' y='4' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='5' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='5' width='5' height='1' fill='%23d6ecff'/%3E%3Crect x='7' y='5' width='2' height='1' fill='%23ff6f9f'/%3E%3Crect x='9' y='5' width='1' height='1' fill='%23d6ecff'/%3E%3Crect x='10' y='5' width='2' height='1' fill='%237fe0c4'/%3E%3Crect x='12' y='5' width='2' height='1' fill='%23d6ecff'/%3E%3Crect x='14' y='5' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='6' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='6' width='1' height='1' fill='%23d6ecff'/%3E%3Crect x='3' y='6' width='2' height='1' fill='%237fe0c4'/%3E%3Crect x='5' y='6' width='2' height='1' fill='%23d6ecff'/%3E%3Crect x='7' y='6' width='2' height='1' fill='%23ff6f9f'/%3E%3Crect x='9' y='6' width='2' height='1' fill='%23d6ecff'/%3E%3Crect x='11' y='6' width='2' height='1' fill='%23ffd35c'/%3E%3Crect x='13' y='6' width='1' height='1' fill='%23d6ecff'/%3E%3Crect x='14' y='6' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='7' width='1' height='1' fill='%232b2350'/%3E%3Crect x='3' y='7' width='10' height='1' fill='%23d6ecff'/%3E%3Crect x='13' y='7' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='8' width='14' height='1' fill='%232b2350'/%3E%3Crect x='1' y='9' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='9' width='12' height='1' fill='%23ffffff'/%3E%3Crect x='14' y='9' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='10' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='10' width='1' height='1' fill='%23ffffff'/%3E%3Crect x='3' y='10' width='4' height='1' fill='%23ff8db5'/%3E%3Crect x='7' y='10' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='9' y='10' width='1' height='1' fill='%232b2350'/%3E%3Crect x='10' y='10' width='2' height='1' fill='%23ffd35c'/%3E%3Crect x='12' y='10' width='1' height='1' fill='%232b2350'/%3E%3Crect x='13' y='10' width='1' height='1' fill='%23ffffff'/%3E%3Crect x='14' y='10' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='11' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='11' width='7' height='1' fill='%23ffffff'/%3E%3Crect x='9' y='11' width='1' height='1' fill='%232b2350'/%3E%3Crect x='10' y='11' width='2' height='1' fill='%23ffd35c'/%3E%3Crect x='12' y='11' width='1' height='1' fill='%232b2350'/%3E%3Crect x='13' y='11' width='1' height='1' fill='%23ffffff'/%3E%3Crect x='14' y='11' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='12' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='12' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='4' y='12' width='4' height='1' fill='%235a3e6e'/%3E%3Crect x='8' y='12' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='10' y='12' width='2' height='1' fill='%232b2350'/%3E%3Crect x='12' y='12' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='14' y='12' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='13' width='1' height='1' fill='%232b2350'/%3E%3Crect x='2' y='13' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='4' y='13' width='4' height='1' fill='%235a3e6e'/%3E%3Crect x='8' y='13' width='6' height='1' fill='%23ffffff'/%3E%3Crect x='14' y='13' width='1' height='1' fill='%232b2350'/%3E%3Crect x='1' y='14' width='14' height='1' fill='%232b2350'/%3E%3C/svg%3E");
+ --ic-bubble:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -2.0 16 16' shape-rendering='crispEdges'%3E%3Crect x='2' y='0' width='12' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='2' y='1' width='2' height='1' fill='%23ffe3ee'/%3E%3Crect x='4' y='1' width='10' height='1' fill='%23ff9cc2'/%3E%3Crect x='14' y='1' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='2' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23ffe3ee'/%3E%3Crect x='3' y='2' width='11' height='1' fill='%23ff9cc2'/%3E%3Crect x='14' y='2' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='3' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='2' y='3' width='12' height='1' fill='%23ff9cc2'/%3E%3Crect x='14' y='3' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='4' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='2' y='4' width='1' height='1' fill='%23ff9cc2'/%3E%3Crect x='3' y='4' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='5' y='4' width='2' height='1' fill='%23ff9cc2'/%3E%3Crect x='7' y='4' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='9' y='4' width='2' height='1' fill='%23ff9cc2'/%3E%3Crect x='11' y='4' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='13' y='4' width='1' height='1' fill='%23ff9cc2'/%3E%3Crect x='14' y='4' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='5' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='2' y='5' width='1' height='1' fill='%23ff9cc2'/%3E%3Crect x='3' y='5' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='5' y='5' width='2' height='1' fill='%23ff9cc2'/%3E%3Crect x='7' y='5' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='9' y='5' width='2' height='1' fill='%23ff9cc2'/%3E%3Crect x='11' y='5' width='2' height='1' fill='%23ffffff'/%3E%3Crect x='13' y='5' width='1' height='1' fill='%23ff9cc2'/%3E%3Crect x='14' y='5' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='2' y='6' width='12' height='1' fill='%23ff9cc2'/%3E%3Crect x='14' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='7' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='2' y='7' width='1' height='1' fill='%23f07aa6'/%3E%3Crect x='3' y='7' width='10' height='1' fill='%23ff9cc2'/%3E%3Crect x='13' y='7' width='1' height='1' fill='%23f07aa6'/%3E%3Crect x='14' y='7' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='2' y='8' width='4' height='1' fill='%234a2c3a'/%3E%3Crect x='6' y='8' width='1' height='1' fill='%23ff9cc2'/%3E%3Crect x='7' y='8' width='7' height='1' fill='%234a2c3a'/%3E%3Crect x='4' y='9' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='5' y='9' width='2' height='1' fill='%23ff9cc2'/%3E%3Crect x='7' y='9' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='4' y='10' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='5' y='10' width='1' height='1' fill='%23ff9cc2'/%3E%3Crect x='6' y='10' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='4' y='11' width='2' height='1' fill='%234a2c3a'/%3E%3C/svg%3E")}
+
+/* ---------- 上方：名牌（點一下看自己的闆卡）、金幣與貓貓幣（＋＝儲值） ---------- */
 #ttG{display:none}
 html.ttm-game #ttG{display:block}
-html.ttm-game .ttg-top{position:fixed;z-index:58;left:10px;right:10px;top:var(--g-top);display:flex;align-items:center;gap:8px;pointer-events:none}
+html.ttm-game #ttG button{font-family:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer;touch-action:manipulation}
+html.ttm-game .ttg-top{position:fixed;z-index:58;left:8px;right:8px;top:var(--g-top);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;pointer-events:none}
 html.ttm-game .ttg-top>*{pointer-events:auto}
-html.ttm-game #ttG button{font-family:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer}
-html.ttm-game .ttg-me{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;height:50px;padding:4px 12px 4px 4px;border:2px solid var(--g-ink);border-radius:14px;background:#fff;color:var(--g-ink);box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 4px var(--g-line),3px 3px 0 #FFB3CF}
-html.ttm-game .ttg-me canvas{flex:none;width:40px;height:40px;border-radius:10px;background:linear-gradient(180deg,#EEF3FF,#FFE9F2);image-rendering:pixelated;border:1.5px solid var(--g-line)}
-html.ttm-game .ttg-me b{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.5px}
-html.ttm-game .ttg-coins{flex:none;display:flex;flex-direction:column;justify-content:center;gap:1px;height:50px;padding:3px 10px;border:2px solid var(--g-ink);border-radius:14px;background:#FFFBEA;color:var(--g-ink);box-shadow:3px 3px 0 #FFB3CF}
-html.ttm-game .ttg-c{display:flex;align-items:center;gap:4px;font-size:13px;line-height:1}
-html.ttm-game .ttg-c b{font-weight:900;min-width:38px;text-align:right}
-html.ttm-game .ttg-c :is(img,i,span.nyan){width:16px!important;height:16px!important}
-html.ttm-game .ttg-menu{position:relative;flex:1 1 0;max-width:76px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:2px solid var(--g-ink);border-radius:16px;background:var(--g-ink);color:#fff;box-shadow:3px 3px 0 #FFB3CF}
-html.ttm-game .ttg-menu svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round}
-html.ttm-game .ttg-menu span{font-size:10.5px;font-weight:900;letter-spacing:.5px;line-height:1.1}
-/* 下排功能列（像手遊的底部選單）：白紙＋深藍上框；左邊是 #ttMainDock 的功能鈕，最右邊固定「選單」 */
-html.ttm-game .ttg-bar{position:fixed;z-index:57;left:0;right:0;bottom:0;height:var(--g-barh);box-sizing:border-box;padding:5px 8px calc(env(safe-area-inset-bottom,0px) + 7px);display:flex;justify-content:flex-end;align-items:flex-start;
- background:#fff;border-top:2px solid var(--g-ink);box-shadow:inset 0 2px 0 #fff,inset 0 4px 0 var(--g-line),0 -3px 0 #FFB3CF66;pointer-events:auto}
-html.ttm-game.ttg-edit .ttg-bar,html.ttm-game.ttg-chat .ttg-bar,html.ttm-game.ttg-hchat .ttg-bar,html.ttm-game:is(.ttg-chat,.ttg-hchat) body #ttMainDock{display:none!important}
-html.ttm-game .ttg-dot{position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:var(--g-pink);border:2px solid #fff}
+html.ttm-game :is(.ttg-me,.ttg-coins){position:relative;box-sizing:border-box;border:2px solid var(--g-ink);border-radius:12px;background:var(--g-stripe) left bottom/100% 4px no-repeat,#fff;box-shadow:var(--g-card);color:var(--g-ink)}
+html.ttm-game .ttg-me{flex:0 1 auto;min-width:0;max-width:calc(100% - 132px);display:flex;align-items:center;gap:8px;height:60px;padding:5px 12px 8px 5px;text-align:left}
+html.ttm-game .ttg-ava{flex:none;width:44px;height:44px;border-radius:9px;border:1.5px solid #D3D8F2;background:linear-gradient(180deg,#EEF3FF,#FFE9F2);overflow:hidden;box-sizing:border-box}
+html.ttm-game .ttg-ava canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+/* v560 第三輪：名牌頭像套上現在戴的頭像框（花圈框／VIP 框／冒險者框；D：「手機好像看不到頭像框」）。框比頭像大一圈，往外凸出不撐高名牌 */
+html.ttm-game .ttg-ava.ttf{width:58px;height:58px;margin:-6px -4px -6px -6px;border:0;border-radius:0;background:none;overflow:visible}
+html.ttm-game .ttg-ava.ttf .ttfAva{background:linear-gradient(180deg,#EEF3FF,#FFE9F2)}
+html.ttm-game .ttg-ava.ttf .ttfAva img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:auto}
+html.ttm-game .ttg-who{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1.15}
+html.ttm-game .ttg-who small{font:400 8px/1 var(--g-en);letter-spacing:1.6px;color:var(--g-pink);white-space:nowrap}
+html.ttm-game .ttg-who b{max-width:100%;font-size:15px;font-weight:900;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.ttm-game .ttg-who em{font:400 10px/1.5 var(--g-num);font-style:normal;letter-spacing:1px;color:#7A63D6;border:1.5px solid var(--g-lav);border-radius:999px;padding:0 7px;background:#F6F2FF}
+html.ttm-game .ttg-coins{flex:none;display:flex;flex-direction:column;gap:2px;padding:4px 5px 8px 8px}
+html.ttm-game .ttg-c{display:flex;align-items:center;gap:5px;height:23px;padding:0;border:0;background:none;color:var(--g-ink)}
+html.ttm-game .ttg-c :is(img,i,span.nyan){width:18px!important;height:18px!important;flex:none}
+html.ttm-game .ttg-c b{min-width:48px;text-align:right;font:400 15px/1 var(--g-num);letter-spacing:.3px}
+html.ttm-game .ttg-plus{flex:none;width:19px;height:19px;box-sizing:border-box;border:1.5px solid var(--g-ink);border-radius:6px;
+ background:linear-gradient(#fff,#fff) center/9px 2.4px no-repeat,linear-gradient(#fff,#fff) center/2.4px 9px no-repeat,linear-gradient(180deg,#FF8DB5,#FF4F8B)}
+html.ttm-game .ttg-c:active .ttg-plus{translate:0 1px}
+
+/* ---------- 右側活動鈕：每日任務、掛機收益（小進度條，存滿亮紅點）、信箱、私訊 ---------- */
+html.ttm-game .ttg-side{position:fixed;z-index:57;right:8px;top:calc(var(--g-top) + 72px);display:flex;flex-direction:column;gap:8px}
+html.ttm-game .ttg-side button{position:relative;width:62px;height:62px;box-sizing:border-box;padding:6px 0 7px;border:2px solid var(--g-ink);border-radius:12px;
+ background:var(--g-stripe) left bottom/100% 3px no-repeat,#fff;box-shadow:var(--g-card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--g-ink)}
+html.ttm-game .ttg-side button:active{translate:0 2px;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3.5px #DCE3FA,1px 1px 0 rgba(28,33,86,.2)}
+html.ttm-game .ttg-side span{font-size:10.5px;font-weight:900;line-height:1.1;white-space:nowrap;letter-spacing:.3px}
+html.ttm-game :is(.ttg-ic,.ttm-ic){display:block;flex:none;width:30px;height:30px;background:center/contain no-repeat;image-rendering:pixelated}
+html.ttm-game .ttg-ic :is(img,span.nyan){width:28px!important;height:28px!important;display:block;margin:1px auto 0}
+html.ttm-game .ttg-ic[data-ic=daily]{background-image:var(--ic-daily)}
+html.ttm-game .ttg-ic[data-ic=mail]{background-image:var(--ic-mail)}
+html.ttm-game .ttg-ic[data-ic=chat]{background-image:var(--ic-bubble);width:28px}
+html.ttm-game .ttg-mini{position:absolute;left:9px;right:9px;top:4px;height:4px;border-radius:2px;background:#E4E8F7;overflow:hidden}
+html.ttm-game .ttg-mini>i{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,#FFB3CF,#FF4F8B)}
+html.ttm-game .ttg-side button.full{border-color:var(--g-pink)}
+html.ttm-game .ttg-dot{position:absolute;z-index:2;top:-6px;right:-6px;width:15px;height:15px;box-sizing:border-box;border-radius:50%;background:var(--g-pink);border:2.5px solid #fff;box-shadow:0 0 0 1.5px var(--g-ink)}
+html.ttm-game .ttg-dot[hidden]{display:none}
+
+/* ---------- 下排（像手遊的底部選單）：白紙條＋上緣航空信條紋＋探頭的店貓；小屋／商城／扭蛋（中間粉色菱形）／背包／選單 ---------- */
+html.ttm-game .ttg-bar{position:fixed;z-index:57;left:0;right:0;bottom:0;height:var(--g-barh);box-sizing:border-box;pointer-events:none;
+ background:var(--g-stripe) left 0 top 2px/100% 5px no-repeat,linear-gradient(180deg,#fff 40%,#F3F5FF);border-top:2px solid var(--g-ink);box-shadow:0 -2px 0 rgba(28,33,86,.08)}
+html.ttm-game .ttg-peek{position:absolute;left:12px;bottom:calc(100% + 1px);width:64px;height:auto;pointer-events:none;user-select:none}
+html.ttm-game.ttg-edit .ttg-bar,html.ttm-game.ttg-chat .ttg-bar,html.ttm-game.ttg-hchat .ttg-bar,html.ttm-game:is(.ttg-chat,.ttg-hchat,.ttg-edit) body #ttMainDock{display:none!important}
 html.ttm-game .ttg-where{display:none}
-html.ttm-game.ttg-panel #ttG,html.ttm-game.ttg-panel #ttMainDock,html.ttm-game.ttg-panel #chatbox,html.ttm-game.ttg-panel #ttgTools{display:none!important}
-/* 背包／商城（#ttApprovedUI 整頁視窗，四邊留 5px）開著時，下排與聊天鈕會從視窗邊緣露出來 → 一起收起來 */
-html.ttm-game body.tt-approved-open :is(#ttG,#ttMainDock,#chatbox,#ttgTools){display:none!important}
-
-/* ---------- 下排功能鈕：沿用大廳的 #ttMainDock（小屋、背包、商城；小屋裡換成佈置、扭蛋、光效、擴建），排在功能列上、選單左邊 ---------- */
-html.ttm-game body #ttMainDock{position:fixed!important;z-index:58!important;left:8px!important;right:92px!important;top:auto!important;bottom:calc(env(safe-area-inset-bottom,0px) + 7px)!important;transform:none!important;scale:1!important;
- display:flex!important;flex-direction:row!important;justify-content:space-around!important;align-items:flex-start!important;gap:6px!important;width:auto!important;height:auto!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important}
+html.ttm-game body #ttMainDock{position:fixed!important;z-index:58!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;transform:none!important;scale:1!important;
+ display:flex!important;flex-direction:row!important;justify-content:space-around!important;align-items:flex-end!important;gap:6px!important;width:auto!important;height:auto!important;
+ padding:0 8px calc(env(safe-area-inset-bottom,0px) + 7px)!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;pointer-events:none}
 html.ttm-game body #ttMainDock::before,html.ttm-game body #ttMainDock::after{display:none!important}
-html.ttm-game body #ttMainDock>button{position:relative!important;inset:auto!important;flex:1 1 0!important;max-width:76px!important;width:auto!important;height:56px!important;min-width:0!important;margin:0!important;padding:4px 0 3px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:1px!important;
- border:2px solid var(--g-ink)!important;border-radius:16px!important;background:#fff!important;color:var(--g-ink)!important;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3.5px var(--g-line),3px 3px 0 #BFD4FF!important;transform:none!important;scale:1!important;font-size:0!important}
-html.ttm-game body #ttMainDock>button:active{translate:1px 1px;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3.5px var(--g-line),1px 1px 0 #BFD4FF!important}
-html.ttm-game body #ttMainDock>button img{width:28px!important;height:28px!important;image-rendering:pixelated;margin:0!important;position:static!important;transform:none!important}
-html.ttm-game body #ttMainDock>button svg{width:24px!important;height:24px!important;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin:0!important}
-html.ttm-game body #ttMainDock>button :is(span,.tt-dock-label){position:static!important;display:block!important;font-size:10.5px!important;line-height:1.1!important;font-weight:900!important;letter-spacing:.5px!important;white-space:nowrap!important;color:var(--g-ink)!important;background:none!important;padding:0!important;margin:0!important;border:0!important;transform:none!important;text-shadow:none!important}
-html.ttm-game body #ttMainDock>button>.tt-dock-label~*,html.ttm-game body #ttMainDock>#dressBtn::before,html.ttm-game body #ttMainDock>#wardBtn::before{display:none}
-html.ttm-game body #ttMainDock .badge{position:absolute!important;top:-5px!important;right:-5px!important}
-/* 大廳：只留小屋、商城、背包、扭蛋（v546 D：手機要能看大廳＋小屋＋抽卡 → 扭蛋大廳也放一顆） */
-html.ttm-game:not(.ttg-house) body #ttMainDock>button:not(#ttHouseBtn,#wardBtn,#dressBtn,#ttHouseGacha){display:none!important}
-html.ttm-game:not(.ttg-house) body:not(.tt-house-on) #ttMainDock>#ttHouseGacha{display:flex!important;order:9}
-html.ttm-game:not(.ttg-house) body #ttMainDock>#ttHouseBtn{order:-1;background:linear-gradient(180deg,#FFF2F7,#fff)!important}
-/* 小屋：佈置、扭蛋、商城、光效、擴建（拜訪別人家時都不顯示） */
-html.ttm-game.ttg-house body #ttMainDock>button:not(.tt-house-only){display:none!important}
-html.ttm-game.ttg-house body #ttMainDock>button.off,html.ttm-game.ttg-visit body #ttMainDock>button,html.ttm-game.ttg-edit body #ttMainDock>button,html.ttm-game.ttg-house body #ttMainDock>#ttHouseShop{display:none!important}
-html.ttm-game body #ttMainDock>#ttHouseGacha{background:linear-gradient(180deg,#FF7AA8,#FF4F8B)!important;color:#fff!important}
-html.ttm-game body #ttMainDock>#ttHouseGacha span{color:#fff!important}
+html.ttm-game body #ttMainDock>button{pointer-events:auto;position:relative!important;inset:auto!important;flex:1 1 0!important;max-width:68px!important;width:auto!important;height:58px!important;min-width:0!important;margin:0!important;padding:4px 0 6px!important;
+ display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;border:2px solid var(--g-ink)!important;border-radius:12px!important;
+ background:var(--g-stripe) left bottom/100% 3px no-repeat,#fff!important;color:var(--g-ink)!important;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3.5px #DCE3FA,0 3px 0 rgba(28,33,86,.24)!important;transform:none!important;scale:1!important;font-size:0!important;
+ -webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:translate .08s}
+html.ttm-game body #ttMainDock>button:active{translate:0 2px;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3.5px #DCE3FA,0 1px 0 rgba(28,33,86,.24)!important}
+/* 圖示一律畫在 ::before（店裡的像素圖），原本按鈕裡的 img／svg 藏起來 */
+html.ttm-game body #ttMainDock>button>:is(img,svg){display:none!important}
+html.ttm-game body #ttMainDock>button::before{content:""!important;display:block!important;position:static!important;flex:none;width:30px!important;height:30px!important;margin:0!important;background:center/contain no-repeat!important;image-rendering:pixelated;transform:none!important;border:0!important;box-shadow:none!important;opacity:1!important}
+html.ttm-game body #ttMainDock>#ttHouseBtn::before{background-image:var(--ic-house)!important}
+html.ttm-game body #ttMainDock>#dressBtn::before,html.ttm-game body #ttMainDock>#ttHouseMall::before{background-image:var(--ic-shop)!important}
+html.ttm-game body #ttMainDock>#wardBtn::before{background-image:var(--ic-bag)!important}
+html.ttm-game body #ttMainDock>#ttgMenu::before{background-image:var(--ic-menu)!important}
+html.ttm-game body #ttMainDock>#ttHouseFx::before{background-image:var(--ic-star)!important}
+html.ttm-game body #ttMainDock>#ttHouseEdit::before{background-image:var(--ic-chair)!important}
+html.ttm-game body #ttMainDock>#ttHouseExpand::before{background-image:var(--ic-house)!important}
+html.ttm-game body #ttMainDock>button :is(span,.tt-dock-label){position:static!important;display:block!important;font-size:11px!important;line-height:1.1!important;font-weight:900!important;letter-spacing:.5px!important;white-space:nowrap!important;color:var(--g-ink)!important;background:none!important;padding:0!important;margin:0!important;border:0!important;transform:none!important;text-shadow:none!important}
+html.ttm-game body #ttMainDock>button>.tt-dock-label~*:not(.ttg-dot){display:none}
+html.ttm-game body #ttMainDock .badge{position:absolute!important;top:-6px!important;right:-6px!important}
+html.ttm-game body #ttMainDock>button.dot::after{content:"";position:absolute;top:-6px;right:-6px;width:15px;height:15px;box-sizing:border-box;border-radius:50%;background:var(--g-pink);border:2.5px solid #fff;box-shadow:0 0 0 1.5px var(--g-ink)}
+/* 排列：小屋、商城、扭蛋（正中間）、背包、選單；小屋裡：（擴建）、光效、佈置、扭蛋、商城、選單 */
+html.ttm-game body #ttMainDock>#ttHouseBtn{order:1}
+html.ttm-game body #ttMainDock>#dressBtn{order:2}
+html.ttm-game body #ttMainDock>#ttHouseGacha{order:3}
+html.ttm-game body #ttMainDock>#wardBtn{order:4}
+html.ttm-game body #ttMainDock>#ttHouseExpand{order:0}
+html.ttm-game body #ttMainDock>#ttHouseFx{order:1}
+html.ttm-game body #ttMainDock>#ttHouseEdit{order:2}
+html.ttm-game body #ttMainDock>#ttHouseMall{order:4}
+html.ttm-game body #ttMainDock>#ttgMenu{order:9}
+/* 大廳：小屋、商城、背包、扭蛋＋選單 */
+html.ttm-game:not(.ttg-house) body #ttMainDock>button:not(#ttHouseBtn,#wardBtn,#dressBtn,#ttHouseGacha,#ttgMenu){display:none!important}
+html.ttm-game:not(.ttg-house) body:not(.tt-house-on) #ttMainDock>#ttHouseGacha{display:flex!important}
+/* 小屋：光效、佈置、商城、扭蛋、擴建＋選單（拜訪別人家時只剩選單） */
+html.ttm-game.ttg-house body #ttMainDock>button:not(.tt-house-only,#ttgMenu){display:none!important}
+html.ttm-game.ttg-house body #ttMainDock>button.off,html.ttm-game.ttg-visit body #ttMainDock>button:not(#ttgMenu),html.ttm-game.ttg-house body #ttMainDock>#ttHouseShop{display:none!important}
+html.ttm-game body #ttMainDock>#ttgMenu{display:flex!important}
+html.ttm-game.ttg-visit body #ttMainDock>#ttgMenu{flex:0 0 68px!important;margin-left:auto!important}
+/* 扭蛋（v560 第三輪照 A2 稿重做；D：「扭蛋按鈕也很微妙」）：比旁邊的鈕大一號的粉色菱形，下緣貼著底、上半截冒出底排；
+   裡面白色扭蛋機像素圖＋「扭蛋」白字，深藍「PICK UP!」緞帶斜貼在左上那條邊上；每 3.6 秒一道光掃過菱形 */
+html.ttm-game body #ttMainDock>#ttHouseGacha{flex:0 0 92px!important;max-width:none!important;height:58px!important;background:none!important;border:0!important;box-shadow:none!important;padding:0!important;justify-content:center!important;gap:0!important;overflow:visible!important;z-index:1}
+html.ttm-game body #ttMainDock>#ttHouseGacha:active{translate:0 2px;box-shadow:none!important}
+html.ttm-game body #ttMainDock>#ttHouseGacha::before{position:relative!important;z-index:2;width:32px!important;height:32px!important;margin:-40px 0 1px!important;background-image:var(--ic-gacha2)!important;filter:drop-shadow(0 2px 0 rgba(142,31,82,.35))}
+html.ttm-game body #ttMainDock>#ttHouseGacha span{position:relative!important;z-index:2;color:#fff!important;font-size:14px!important;letter-spacing:3px!important;text-indent:3px;text-shadow:0 2px 0 #B8326A,1.5px 0 0 #B8326A,-1.5px 0 0 #B8326A,0 -1.5px 0 #B8326A!important}
+html.ttm-game .ttg-gem{position:absolute;z-index:0;left:50%;top:50%;width:70px;height:70px;margin:-56px 0 0 -35px;box-sizing:border-box;border:3px solid var(--g-ink);border-radius:12px;rotate:45deg;overflow:hidden;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0 14 10 24 12 14 14 12 24 10 14 0 12 10 10z' fill='%23fff'/%3E%3C/svg%3E") 10px 50px/9px 9px no-repeat,
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0 14 10 24 12 14 14 12 24 10 14 0 12 10 10z' fill='%23fff' fill-opacity='.8'/%3E%3C/svg%3E") 50px 10px/7px 7px no-repeat,
+  radial-gradient(circle at 26% 24%,#ffffffa8 0 4px,transparent 5px),linear-gradient(135deg,#FFA6C6,#FF6B9C 50%,#F2427F);
+ box-shadow:inset 0 0 0 2.5px #fff,inset 0 0 0 5px #FF8DB5,3px 3px 0 rgba(28,33,86,.3)}
+html.ttm-game .ttg-gem::after{content:"";position:absolute;left:-60%;top:-60%;width:40%;height:220%;rotate:-45deg;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:ttgShine 3.6s ease-in-out infinite}
+@keyframes ttgShine{0%,62%{translate:-30px 0}100%{translate:150px 0}}
+html.ttm-game .ttg-pick{position:absolute;z-index:3;left:50%;top:50%;width:60px;padding:2px 0 1.5px;box-sizing:border-box;text-align:center;translate:calc(-50% - 22px) calc(-50% - 40px);rotate:-45deg;background:var(--g-ink);color:#fff;font:400 9.5px/1.25 var(--g-en);letter-spacing:1px;white-space:nowrap;font-style:normal;
+ border-top:1.5px solid #fff;border-bottom:1.5px solid #fff;clip-path:polygon(0 0,100% 0,calc(100% - 5px) 50%,100% 100%,0 100%,5px 50%)}
 
-/* ---------- 聊天：平常只看最近幾句（不擋手指）；按「說點什麼」才打開輸入列 ---------- */
-html.ttm-game .ttg-chatbtn{position:fixed;z-index:57;left:10px;bottom:calc(var(--g-barh) + 10px);height:44px;display:flex;align-items:center;gap:6px;padding:0 16px 0 12px;border:2px solid var(--g-ink);border-radius:22px;background:#fff;color:var(--g-ink);font-size:14px;font-weight:800;box-shadow:3px 3px 0 #FFB3CF}
-html.ttm-game .ttg-chatbtn svg{width:20px;height:20px;fill:none;stroke:var(--g-pink);stroke-width:2.2;stroke-linejoin:round}
+/* ---------- 聊天：左下一塊半透明深藍小窗（最近兩句）＋「說點什麼」；按了才打開輸入列 ---------- */
+html.ttm-game .ttg-chatbtn{position:fixed;z-index:57;left:14px;bottom:calc(var(--g-barh) + 48px);width:calc(var(--g-chatw) - 12px);height:34px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:6px;
+ padding:0 8px 0 12px;border:1.5px solid #D3D8F2;border-radius:9px;background:#fff;color:#8A8FB8;font-size:13px;font-weight:700}
+html.ttm-game .ttg-chatbtn svg{width:20px;height:20px;fill:none;stroke:var(--g-ink);stroke-width:2.2;stroke-linejoin:round}
 html.ttm-game.ttg-chat .ttg-chatbtn,html.ttm-game.ttg-hchat .ttg-chatbtn{display:none}
-html.ttm-game body #chatbox{position:fixed!important;z-index:56!important;left:10px!important;right:auto!important;bottom:calc(var(--g-barh) + 62px)!important;top:auto!important;width:min(250px,64vw)!important;max-width:none!important;height:auto!important;max-height:none!important;
- display:block!important;padding:0!important;margin:0!important;transform:none!important;scale:1!important;background:none!important;border:0!important;box-shadow:none!important;pointer-events:none;opacity:1!important;visibility:visible!important}
+html.ttm-game body #chatbox{position:fixed!important;z-index:56!important;left:8px!important;right:auto!important;bottom:calc(var(--g-barh) + 42px)!important;top:auto!important;width:var(--g-chatw)!important;max-width:none!important;height:auto!important;max-height:none!important;
+ display:block!important;box-sizing:border-box!important;padding:6px 10px 46px!important;margin:0!important;transform:none!important;scale:1!important;background:rgba(28,33,86,.44)!important;border:1.5px solid rgba(255,255,255,.28)!important;border-radius:12px!important;box-shadow:none!important;pointer-events:none;opacity:1!important;visibility:visible!important}
 html.ttm-game body #chatbox::before,html.ttm-game body #chatbox::after,html.ttm-game body #chatbox>:not(#chatlog,#chatrow){display:none!important}
-html.ttm-game body #chatbox #chatlog{display:flex!important;flex-direction:column;justify-content:flex-end;max-height:92px!important;height:auto!important;overflow:hidden!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;
- -webkit-mask:linear-gradient(transparent,#000 40%);mask:linear-gradient(transparent,#000 40%)}
-html.ttm-game body.tt214 #chatbox #chatlog>*{width:fit-content;max-width:100%;font-size:12px!important;line-height:1.4!important;color:#fff!important;text-shadow:none!important;background:#1C2156b8!important;border:0!important;border-radius:9px!important;padding:2px 9px!important;margin:2px 0 0!important;box-shadow:none!important}
+html.ttm-game body #chatbox #chatlog{display:flex!important;flex-direction:column;justify-content:flex-end;min-height:18px;max-height:42px!important;height:auto!important;overflow:hidden!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;
+ -webkit-mask:linear-gradient(transparent,#000 35%);mask:linear-gradient(transparent,#000 35%)}
+html.ttm-game body.tt214 #chatbox #chatlog>*{width:auto;max-width:100%;font-size:12px!important;line-height:1.5!important;color:#fff!important;text-shadow:0 1px 0 rgba(28,33,86,.6)!important;background:none!important;border:0!important;border-radius:0!important;padding:0!important;margin:0!important;box-shadow:none!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.ttm-game body.tt214 #chatbox #chatlog>* :is(b,.who,.nm,strong){color:#FFB8D2!important;text-shadow:none!important}
+/* v560 第三輪修：#chatlog 是直排 flex＋限高，每一行又設了 overflow:hidden → 瀏覽器把每行壓扁到 8px，字疊在一起（D：「聊天室被嚴重擠壓到幾乎看不到字」）→ 每行不准縮 */
+html.ttm-game body #chatbox #chatlog>*{flex:none!important}
+/* 貼圖在左下小窗只畫成一個小圖（原本 48px 大圖把整窗撐爆）；打開聊天室時中等大小 */
+html.ttm-game body #chatbox #chatlog .tt-sticker-log,html.ttm-game body #chatbox #chatlog .tt-sticker-log img{display:inline-block!important;width:auto!important;height:18px!important;max-width:none!important;margin:0 0 0 2px!important;vertical-align:-4px!important;border:0!important;box-shadow:none!important;padding:0!important;background:none!important}
+html.ttm-game.ttg-chat body #chatbox #chatlog .tt-sticker-log,html.ttm-game.ttg-chat body #chatbox #chatlog .tt-sticker-log img{height:42px!important;vertical-align:middle!important}
 html.ttm-game body #chatbox #chatrow{display:none!important}
-html.ttm-game.ttg-chat body #chatbox{z-index:60!important;left:8px!important;right:8px!important;width:auto!important;bottom:var(--g-bot)!important;pointer-events:auto;padding:10px!important;border:2px solid var(--g-ink)!important;border-radius:16px!important;background:#fffffff2!important;box-shadow:3px 3px 0 #FFB3CF!important}
+html.ttm-game.ttg-chat body #chatbox{z-index:60!important;left:8px!important;right:8px!important;width:auto!important;bottom:var(--g-bot)!important;pointer-events:auto;padding:10px!important;border:2px solid var(--g-ink)!important;border-radius:14px!important;background:var(--g-stripe) left bottom/100% 4px no-repeat,#fffffff5!important;box-shadow:var(--g-card)!important}
 html.ttm-game.ttg-chat body #chatbox #chatlog{max-height:34vh!important;overflow-y:auto!important;-webkit-mask:none;mask:none;justify-content:flex-start}
-html.ttm-game.ttg-chat body.tt214 #chatbox #chatlog>*{color:var(--g-ink)!important;background:#EEF3FF!important;font-size:13px!important}
+html.ttm-game.ttg-chat body.tt214 #chatbox #chatlog>*{color:var(--g-ink)!important;text-shadow:none!important;background:#EEF3FF!important;border-radius:9px!important;padding:2px 9px!important;margin:2px 0 0!important;font-size:13px!important;white-space:normal;width:fit-content}
 html.ttm-game.ttg-chat body.tt214 #chatbox #chatlog>* :is(b,.who,.nm,strong){color:var(--g-pink)!important}
 html.ttm-game.ttg-chat body #chatbox #chatrow{display:flex!important;gap:6px;margin-top:8px!important}
 html.ttm-game.ttg-chat body #chatbox #chatrow>:is(#chatin,#chatsend,#ttStickerButton){display:flex!important}
 html.ttm-game.ttg-chat body #chatbox #chatin{flex:1;min-width:0;height:42px;font-size:16px!important;border:2px solid var(--g-line)!important;border-radius:12px!important;padding:0 10px!important}
 html.ttm-game.ttg-chat body #chatbox #chatsend{flex:none;height:42px;padding:0 16px!important;border:2px solid var(--g-ink)!important;border-radius:12px!important;background:var(--g-pink)!important;color:#fff!important;font-weight:900}
 html.ttm-game.ttg-house body #chatbox{display:none!important}
+html.ttm-game.ttg-house .ttg-chatbtn{width:170px}
+
+/* 功能頁（#ttM）開著：上方名牌、右側、聊天收起來；下排留著（在功能頁上面，可以直接去小屋、商城、扭蛋…） */
+html.ttm-game.ttg-panel :is(.ttg-top,.ttg-side,.ttg-chatbtn),html.ttm-game.ttg-panel body #chatbox,html.ttm-game.ttg-panel #ttgTools{display:none!important}
+html.ttm-game.ttg-panel .ttg-bar{z-index:61}
+html.ttm-game.ttg-panel .ttg-peek{display:none}
+html.ttm-game.ttg-panel body #ttMainDock{z-index:62!important}
+/* 背包／商城（#ttApprovedUI 整頁視窗，四邊留 5px）開著時，下排與聊天鈕會從視窗邊緣露出來 → 一起收起來 */
+html.ttm-game body.tt-approved-open :is(#ttG,#ttMainDock,#chatbox,#ttgTools){display:none!important}
+html.ttm-game.ttg-edit :is(.ttg-side,.ttg-chatbtn){display:none!important}
+@media (prefers-reduced-motion:reduce){html.ttm-game :is(.ttg-gem,.ttg-gem::after,.ttm-sp,.ttm-orbit){animation:none!important}}
+@media (max-width:370px){html.ttm-game .ttg-me{max-width:calc(100% - 124px)}html.ttm-game .ttg-c b{min-width:42px;font-size:14px}html.ttm-game body #ttMainDock>button{max-width:62px!important}}
 
 /* ---------- 浮空搖桿 ---------- */
 #ttJoy{display:none}
@@ -91,10 +177,86 @@ html.ttm-game #ttJoy.on{opacity:1}
 @keyframes ttJoySpin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){#ttJoy .tt-joy-ring::before{animation:none}}
 
-/* ---------- 功能頁（#ttM）蓋上來時：最上面「回到酒館」 ---------- */
-html.ttm-game #ttM .ttm-back{display:flex;align-items:center;gap:6px;width:100%;height:40px;margin:0 0 8px;padding:0 14px;border:2px solid var(--g-ink);border-radius:12px;background:var(--g-ink);color:#fff;font-size:15px;font-weight:900;letter-spacing:1px}
-html.ttm-game #ttM .ttm-back span{font-size:22px;line-height:1;margin-top:-3px}
-#ttM .ttm-back{display:none}
+/* ---------- 功能頁（#ttM）＝「我的酒館」：上面一條商城視窗那種招牌帶（條紋＋網點＋軌道圓環＋探頭店貓），
+   首頁＝玩家卡、六格功能（01～06）、掛機收益（07）、每日任務（08）；點一格進那一頁，招牌帶換成那一頁的名字 ---------- */
+#ttM .ttm-band,#ttM .ttm-hub,#ttM .ttm-back{display:none}
+html.ttm-game #ttM{background:repeating-linear-gradient(135deg,rgba(185,168,240,.07) 0 2px,transparent 2px 16px),radial-gradient(circle at 92% 70%,#FFE3EF 0,transparent 42%),linear-gradient(180deg,#F7F8FF,#EDF0FF)!important}
+html.ttm-game #ttM .ttm-tabs{display:none!important}
+html.ttm-game #ttM .ttm-top{display:flex!important;flex-direction:column;gap:12px;padding:0 12px 16px!important;bottom:auto;overflow:visible}
+html.ttm-game #ttM .ttm-top>*{flex-shrink:0;max-width:560px;width:100%;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box}
+html.ttm-game #ttM.ttm-hubview .ttm-top{bottom:var(--ttm-bot);padding-bottom:46px!important;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+html.ttm-game #ttM:not(.ttm-hubview) .ttm-top{padding-bottom:0!important}
+html.ttm-game #ttM:not(.ttm-hubview) .ttm-top>:not(.ttm-band){display:none!important}
+html.ttm-game #ttM .ttm-band{order:0}html.ttm-game #ttM .ttm-card{order:1}html.ttm-game #ttM .ttm-hub{order:2}html.ttm-game #ttM #ttmIdle{order:3}html.ttm-game #ttM #ttmDaily{order:4}html.ttm-game #ttM .ttm-actions{order:5}html.ttm-game #ttM .ttm-note{order:6}
+/* 招牌帶 */
+html.ttm-game #ttM .ttm-top>.ttm-band{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;align-items:center;gap:6px 8px;max-width:none;width:auto;
+ margin:0 -12px!important;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 14px;box-sizing:border-box;overflow:hidden;border-bottom:2px solid var(--g-ink);
+ background:var(--g-stripe) left bottom/100% 5px no-repeat,radial-gradient(circle,#FFB9D3 1.1px,transparent 1.6px) right 18px top 12px/8px 8px no-repeat,
+  linear-gradient(105deg,#fff 0 44%,transparent 44.2%),repeating-linear-gradient(115deg,#FFD9E8 0 22px,#DDF0FF 22px 44px,#ECE4FF 44px 66px,#fff 66px 74px)}
+html.ttm-game #ttM .ttm-band>.ttm-back{grid-column:1;grid-row:1;display:inline-flex;align-items:center;gap:3px;width:auto;height:32px;margin:0;padding:0 13px 0 9px;border:2px solid var(--g-ink);border-radius:999px;background:#fff;color:var(--g-ink);font-size:13px;font-weight:900;letter-spacing:.5px;box-shadow:2px 2px 0 rgba(28,33,86,.18)}
+html.ttm-game #ttM .ttm-band>.ttm-back span{font-size:20px;line-height:1;margin-top:-3px}
+html.ttm-game #ttM .ttm-band>.ttm-back b{font-weight:900}
+html.ttm-game #ttM .ttm-x{grid-column:3;grid-row:1;position:relative;z-index:2;width:36px;height:36px;padding:0;border:2.5px solid var(--g-ink);border-radius:9px;background:#fff;color:var(--g-ink);font-size:24px;line-height:1;font-weight:900;box-shadow:2px 2px 0 #FFB3CF;display:grid;place-items:center}
+html.ttm-game #ttM .ttm-title{grid-column:1/-1;grid-row:2;position:relative;z-index:1;display:flex;align-items:center;gap:10px;min-width:0}
+html.ttm-game #ttM .ttm-gem{flex:none;width:34px;height:34px;box-sizing:border-box;display:grid;place-items:center;border:2px solid var(--g-ink);border-radius:9px;background:linear-gradient(180deg,#FF8DB5,#FF4F8B);box-shadow:2px 2px 0 rgba(28,33,86,.2)}
+html.ttm-game #ttM .ttm-gem svg{width:17px;height:17px;fill:#fff}
+html.ttm-game #ttM .ttm-title>span{display:flex;flex-direction:column;min-width:0}
+html.ttm-game #ttM .ttm-title small{font:400 9.5px/1.2 var(--g-en);letter-spacing:2.6px;color:var(--g-pink);white-space:nowrap}
+html.ttm-game #ttM .ttm-title b{font-size:25px;line-height:1.15;font-weight:900;letter-spacing:3px;color:var(--g-ink);text-shadow:2px 2px 0 #FFD1E3;white-space:nowrap}
+html.ttm-game #ttM .ttm-peek{position:absolute;right:58px;bottom:4px;width:84px;height:auto;pointer-events:none;user-select:none}
+html.ttm-game #ttM .ttm-orbit{position:absolute;right:120px;top:calc(env(safe-area-inset-top,0px) + 14px);width:104px;height:30px;border:2px solid #F7A6CF;border-radius:50%;rotate:-14deg;box-shadow:inset 0 0 0 1px #fff;opacity:.85}
+html.ttm-game #ttM .ttm-sp{position:absolute;display:block;pointer-events:none}
+html.ttm-game #ttM .ttm-sp svg{display:block;width:100%;height:100%;fill:currentColor}
+html.ttm-game #ttM .ttm-band .ttm-sp1{right:150px;top:calc(env(safe-area-inset-top,0px) + 34px);width:13px;height:13px;color:#FF5C93;animation:ttmTw 2.4s ease-in-out infinite}
+html.ttm-game #ttM .ttm-band .ttm-sp2{right:104px;top:calc(env(safe-area-inset-top,0px) + 6px);width:10px;height:10px;color:#4FB8F5;animation:ttmTw 2.4s ease-in-out 1.2s infinite}
+@keyframes ttmTw{0%,100%{scale:1;opacity:1}50%{scale:.55;opacity:.55}}
+/* 玩家卡 */
+html.ttm-game #ttM .ttm-card{position:relative;margin:0!important;padding:10px 12px 14px!important;border:2px solid var(--g-ink)!important;border-radius:14px!important;background:var(--g-stripe) left bottom/100% 4px no-repeat,#fff!important;box-shadow:var(--g-card)!important}
+html.ttm-game #ttM #ttmDoll{width:52px;height:52px;border-radius:11px;border:1.5px solid #D3D8F2!important;background:linear-gradient(180deg,#EEF3FF,#FFE9F2)!important}
+html.ttm-game #ttM .ttm-who small{font:400 8.5px/1.3 var(--g-en);letter-spacing:1.6px;color:var(--g-pink)!important;font-size:0!important}
+html.ttm-game #ttM .ttm-who small::before{content:"MY TINY TAVERN";font-size:8.5px}
+html.ttm-game #ttM .ttm-who b{font-size:18px!important}
+html.ttm-game #ttM .ttm-coins{display:grid!important;grid-template-columns:20px auto;align-items:center;gap:2px 6px;margin-left:auto;padding:5px 10px!important;border:1.5px solid #D3D8F2!important;border-radius:10px!important;background:#FBFCFF!important;box-shadow:none!important}
+html.ttm-game #ttM .ttm-coins small{display:none!important}
+html.ttm-game #ttM .ttm-coins b{font:400 16px/1.1 var(--g-num)!important;color:var(--g-ink)!important;text-align:right}
+/* 八格功能（一排四格） */
+html.ttm-game #ttM .ttm-hub{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+html.ttm-game #ttM .ttm-hub>button{position:relative;min-height:88px;padding:16px 2px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:2px solid var(--g-ink);border-radius:14px;
+ background:var(--g-stripe) left bottom/100% 4px no-repeat,linear-gradient(180deg,#fff 60%,#F6F7FF)!important;box-shadow:var(--g-card);color:var(--g-ink);font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:translate .08s}
+html.ttm-game #ttM .ttm-hub>button:active{translate:0 2px;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 3.5px #DCE3FA,1px 1px 0 rgba(28,33,86,.2)}
+html.ttm-game #ttM .ttm-hub em{position:absolute;left:6px;top:4px;font:400 17px/1 var(--g-num);font-style:normal;color:#fff;-webkit-text-stroke:1.6px var(--g-lav);paint-order:stroke fill;letter-spacing:1px}
+html.ttm-game #ttM .ttm-hub .ttm-ic{width:38px;height:38px}
+html.ttm-game #ttM .ttm-hub span{font-size:13.5px;font-weight:900;letter-spacing:.5px;white-space:nowrap}
+html.ttm-game #ttM .ttm-hub .ttm-sp{top:6px;right:6px;width:10px;height:10px;color:var(--g-pink)}
+html.ttm-game #ttM .ttm-hub>button:nth-child(2n) .ttm-sp{color:#4FB8F5}
+html.ttm-game #ttM .ttm-ic[data-ic=orders]{background-image:var(--ic-orders)}
+html.ttm-game #ttM .ttm-ic[data-ic=chat]{background-image:var(--ic-bubble);width:40px}
+html.ttm-game #ttM .ttm-ic[data-ic=wallet]{background-image:var(--ic-wallet)}
+html.ttm-game #ttM .ttm-ic[data-ic=mail]{background-image:var(--ic-mail)}
+html.ttm-game #ttM .ttm-ic[data-ic=shop]{background-image:var(--ic-shop)}
+html.ttm-game #ttM .ttm-ic[data-ic=ward]{background-image:var(--ic-bag)}
+html.ttm-game #ttM .ttm-ic[data-ic=frames]{background-image:var(--ic-frame)}
+html.ttm-game #ttM .ttm-ic[data-ic=bubbles]{background-image:var(--ic-skin)}
+html.ttm-game #ttM .ttm-hub .ttm-dot{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;box-sizing:border-box;padding:0 5px;border-radius:999px;background:var(--g-pink);border:2.5px solid #fff;box-shadow:0 0 0 1.5px var(--g-ink);color:#fff;font:400 11px/15px var(--g-num);text-align:center}
+html.ttm-game #ttM .ttm-hub .ttm-dot[hidden]{display:none}
+/* 掛機收益（09）、每日任務（10）：同一種白紙卡＋鏤空編號 */
+html.ttm-game #ttM :is(#ttmIdle,#ttmDaily){position:relative;margin:0!important}
+/* mobile-theme.css 原本只在「訂單」分頁顯示這兩張（:not([data-ttm-tab=orders]) 藏起來）→ 改成在「我的酒館」首頁顯示 */
+html.ttm-game.ttm-on #ttM.ttm-hubview #ttmIdle:not([hidden]){display:block!important}
+html.ttm-game.ttm-on #ttM.ttm-hubview #ttmDaily:not([hidden]){display:grid!important}
+html.ttm-game #ttM :is(#ttmIdle,#ttmDaily)>*{border:2px solid var(--g-ink)!important;border-radius:14px!important;background:var(--g-stripe) left bottom/100% 4px no-repeat,#fff!important;box-shadow:var(--g-card)!important}
+html.ttm-game #ttM #ttmDaily{border:2px solid var(--g-ink)!important;border-radius:14px!important;background:var(--g-stripe) left bottom/100% 4px no-repeat,#fff!important;box-shadow:var(--g-card)!important}
+html.ttm-game #ttM #ttmDaily>*{border:0!important;box-shadow:none!important;background:none!important}
+html.ttm-game #ttM :is(#ttmIdle,#ttmDaily)::before{position:absolute;z-index:4;left:12px;top:-10px;font:400 17px/1 var(--g-num);color:#fff;-webkit-text-stroke:1.5px var(--g-lav);paint-order:stroke fill;letter-spacing:1px;pointer-events:none}
+html.ttm-game #ttM #ttmIdle::before{content:"09"}
+html.ttm-game #ttM #ttmDaily::before{content:"10"}
+/* 下面一排小按鈕：存闆卡圖、聯絡客服、冒險者通訊錄（儲值改由 03 那格） */
+html.ttm-game #ttM .ttm-actions{display:flex!important;flex-wrap:wrap;justify-content:center;gap:8px;margin:0!important}
+html.ttm-game #ttM .ttm-actions>#ttmTopup{display:none!important}
+html.ttm-game #ttM .ttm-actions>.ttm-help{flex:0 1 auto!important;min-height:36px!important;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0 14px!important;border:2px solid var(--g-ink)!important;border-radius:999px!important;background:#fff!important;color:var(--g-ink)!important;font-size:13px!important;font-weight:900!important;box-shadow:2px 2px 0 rgba(28,33,86,.16)!important;text-decoration:none}
+html.ttm-game #ttM .ttm-note{display:block!important;margin:0!important;font-size:11.5px;line-height:1.5;color:#7B7FA8;text-align:center}
+/* 進到某一頁（訂單／私訊／儲值／信箱）：內容在招牌帶與下排之間 */
+html.ttm-game #ttM .ttm-empty{display:none}
 
 /* ---------- 小屋（html.ttg-house） ---------- */
 html.ttm-game.ttg-house body #ttHouseFrame{touch-action:none}
@@ -119,8 +281,13 @@ html.ttm-game body :is(#ttVisitPanel,#ttFxPanel){position:fixed!important;z-inde
 html.ttm-game.ttg-edit .ttg-chatbtn{display:none}
 /* 拿著家具時：轉向、收回、取消（電腦是 R／Delete／Esc；放好＝在房間點一下） */
 #ttgTools{display:none}
-html.ttm-game #ttgTools:not([hidden]){display:flex;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100vw - 20px);position:fixed;z-index:59;left:50%;translate:-50% 0;bottom:calc(42vh + 10px);gap:8px;padding:6px;border:2px solid var(--g-ink);border-radius:16px;background:#fff;box-shadow:3px 3px 0 #FFB3CF}
-html.ttm-game #ttgTools button{height:40px;padding:0 14px;white-space:nowrap;flex:none;border:2px solid var(--g-ink);border-radius:12px;background:#fff;color:var(--g-ink);font:inherit;font-size:14px;font-weight:900}
+html.ttm-game #ttgTools:not([hidden]){display:flex;gap:9px;position:fixed;z-index:59;left:0;top:0;bottom:auto;width:auto;max-width:none;translate:none;padding:0;margin:0;background:none;border:0;box-shadow:none;will-change:transform}
+/* v560 第三輪 D：「三個小小的按鈕跟著家具底下」→ 28px 小圓鈕（手指按的範圍用 ::after 往外多 5px） */
+html.ttm-game #ttgTools button{position:relative;width:28px;height:28px;flex:none;display:grid;place-items:center;padding:0;border:2px solid var(--g-ink);border-radius:50%;background:#fff;color:var(--g-ink);box-shadow:0 2px 0 rgba(28,33,86,.28);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html.ttm-game #ttgTools button::after{content:"";position:absolute;inset:-5px;border-radius:50%}
+html.ttm-game #ttgTools button svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+html.ttm-game #ttgTools button:active{translate:0 1px;box-shadow:0 1px 0 rgba(28,33,86,.28)}
+html.ttm-game #ttgTools button:disabled{opacity:.4}
 html.ttm-game #ttgTools button[data-k=delete]{background:#FFE3EE}
 html.ttm-game #ttgTools button[data-k=escape]{background:var(--g-ink);color:#fff}
 html.ttm-game body #ttHouseBag .tt-hb-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
@@ -129,8 +296,86 @@ html.ttm-game body #ttHouseBag :is(.tt-hb-pic,.tt-hb-pic img){width:84px!importa
 html.ttm-game body #ttHouseBag header{flex-wrap:wrap}
 html.ttm-game body #ttHouseBag .tt-hb-title small{display:none}
 html.ttm-game #ttCurtain.off{pointer-events:none}
-html.ttm-game #ttgTools small{flex:1 0 100%;text-align:center;font-size:11.5px;font-weight:700;color:#5C6196}
+#ttgHoldTip{display:none}
+html.ttm-game #ttgHoldTip:not([hidden]){display:block;position:fixed;z-index:59;left:50%;top:calc(var(--g-top) + 6px);translate:-50% 0;padding:5px 14px;border:2px solid #fff;border-radius:999px;background:rgba(28,33,86,.86);color:#fff;font-size:12.5px;font-weight:800;white-space:nowrap;pointer-events:none}
+/* 拿著家具時「我的家具」往下滑走，放好後滑回來 */
+html.ttm-game body #ttHouseBag{transition:transform .28s cubic-bezier(.3,.7,.3,1)!important}
+html.ttm-game.ttg-holding body #ttHouseBag{transform:translateY(calc(100% + 24px))!important;pointer-events:none}
 /* 通知小卡：放在名牌下面、右側按鈕左邊，不蓋住按鈕 */
-html.ttm-game body #notifs{top:calc(var(--g-top) + 62px)!important;right:10px!important;left:10px!important;width:auto!important;max-width:none!important;bottom:auto!important}
+/* v560 修：電腦版置中用的 translateX(-50%) 還在 → 手機上通知整張往左偏一半、左半邊被切掉（v546 起；D：「領取貓貓幣的通知被裁切」） */
+html.ttm-game body #notifs{top:calc(var(--g-top) + 66px)!important;right:10px!important;left:10px!important;width:auto!important;max-width:none!important;bottom:auto!important;transform:none!important;translate:none!important}
 html.ttm-game body #notifs .ntf{max-width:100%!important}
 html.ttm-game #chatrow #ttStickerPicker{bottom:calc(100% + 10px)!important}
+
+/* ---------- v560 流暢度：場景一定塞滿畫面 → 兩側延伸片、模糊底景、暗角都被蓋住，不畫；整個世界自己一層（鏡頭跟著走只要搬圖層，不重畫） ---------- */
+html.ttm-game body :is(#hallBackdrop,.tt-mirror-side,#hallShade){display:none!important}
+html.ttm-game #world{will-change:transform}
+html.ttm-game #ttJoy:not(.on) .tt-joy-ring::before{animation-play-state:paused}
+/* 燈光光暈：手機改一般疊色（「濾色」混合要把整個場景另外畫一層再混，手機顯示卡吃不消），透明度補一點讓亮度接近 */
+html.ttm-game .amGlow{mix-blend-mode:normal;background:radial-gradient(circle,rgba(255,206,130,.42),rgba(255,186,100,0) 70%)}
+
+/* ---------- v560 第三輪：新圖示（扭蛋菱形裡的白扭蛋機、首頁「頭像框」「聊天氣泡」） ---------- */
+html.ttm-game{--ic-gacha2:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='4' y='0' width='8' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='1' width='2' height='1' fill='%238E1F52'/%3E%3Crect x='4' y='1' width='8' height='1' fill='%23FFFFFF'/%3E%3Crect x='12' y='1' width='2' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='2' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='2' width='2' height='1' fill='%23FFFFFF'/%3E%3Crect x='4' y='2' width='2' height='1' fill='%23FF8DB5'/%3E%3Crect x='6' y='2' width='4' height='1' fill='%23FFFFFF'/%3E%3Crect x='10' y='2' width='2' height='1' fill='%237FC8F2'/%3E%3Crect x='12' y='2' width='2' height='1' fill='%23FFFFFF'/%3E%3Crect x='14' y='2' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='3' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='3' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='3' y='3' width='4' height='1' fill='%23FF8DB5'/%3E%3Crect x='7' y='3' width='2' height='1' fill='%23FFFFFF'/%3E%3Crect x='9' y='3' width='4' height='1' fill='%237FC8F2'/%3E%3Crect x='13' y='3' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='14' y='3' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='0' y='4' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='4' width='2' height='1' fill='%23FFFFFF'/%3E%3Crect x='3' y='4' width='4' height='1' fill='%23FF8DB5'/%3E%3Crect x='7' y='4' width='2' height='1' fill='%23FFFFFF'/%3E%3Crect x='9' y='4' width='4' height='1' fill='%237FC8F2'/%3E%3Crect x='13' y='4' width='2' height='1' fill='%23FFFFFF'/%3E%3Crect x='15' y='4' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='0' y='5' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='5' width='3' height='1' fill='%23FFFFFF'/%3E%3Crect x='4' y='5' width='2' height='1' fill='%23FF8DB5'/%3E%3Crect x='6' y='5' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='7' y='5' width='2' height='1' fill='%23FFD86B'/%3E%3Crect x='9' y='5' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='10' y='5' width='2' height='1' fill='%237FC8F2'/%3E%3Crect x='12' y='5' width='3' height='1' fill='%23FFFFFF'/%3E%3Crect x='15' y='5' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='0' y='6' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='6' width='5' height='1' fill='%23FFFFFF'/%3E%3Crect x='6' y='6' width='4' height='1' fill='%23FFD86B'/%3E%3Crect x='10' y='6' width='5' height='1' fill='%23FFFFFF'/%3E%3Crect x='15' y='6' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='7' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='7' width='12' height='1' fill='%23FFFFFF'/%3E%3Crect x='14' y='7' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='0' y='8' width='16' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='9' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='9' width='12' height='1' fill='%23FFC2D8'/%3E%3Crect x='14' y='9' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='10' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='10' width='4' height='1' fill='%23FFFFFF'/%3E%3Crect x='6' y='10' width='3' height='1' fill='%238E1F52'/%3E%3Crect x='9' y='10' width='5' height='1' fill='%23FFFFFF'/%3E%3Crect x='14' y='10' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='11' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='11' width='3' height='1' fill='%23FFFFFF'/%3E%3Crect x='5' y='11' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='6' y='11' width='3' height='1' fill='%23FF8DB5'/%3E%3Crect x='9' y='11' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='10' y='11' width='4' height='1' fill='%23FFFFFF'/%3E%3Crect x='14' y='11' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='12' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='12' width='4' height='1' fill='%23FFFFFF'/%3E%3Crect x='6' y='12' width='3' height='1' fill='%238E1F52'/%3E%3Crect x='9' y='12' width='5' height='1' fill='%23FFFFFF'/%3E%3Crect x='14' y='12' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='13' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='13' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='3' y='13' width='3' height='1' fill='%238E1F52'/%3E%3Crect x='6' y='13' width='8' height='1' fill='%23FFFFFF'/%3E%3Crect x='14' y='13' width='1' height='1' fill='%238E1F52'/%3E%3Crect x='1' y='14' width='14' height='1' fill='%238E1F52'/%3E%3Crect x='2' y='15' width='2' height='1' fill='%238E1F52'/%3E%3Crect x='12' y='15' width='2' height='1' fill='%238E1F52'/%3E%3C/svg%3E");--ic-frame:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 13' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='16' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='1' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='1' width='14' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='1' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='2' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='2' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='2' width='12' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='2' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='2' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='3' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='3' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='3' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='3' y='3' width='2' height='1' fill='%23FFF3F8'/%3E%3Crect x='5' y='3' width='6' height='1' fill='%238A5A3C'/%3E%3Crect x='11' y='3' width='2' height='1' fill='%23FFF3F8'/%3E%3Crect x='13' y='3' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='3' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='3' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='4' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='4' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='4' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='3' y='4' width='1' height='1' fill='%23FFF3F8'/%3E%3Crect x='4' y='4' width='8' height='1' fill='%238A5A3C'/%3E%3Crect x='12' y='4' width='1' height='1' fill='%23FFF3F8'/%3E%3Crect x='13' y='4' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='4' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='4' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='5' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='5' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='5' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='3' y='5' width='1' height='1' fill='%23FFF3F8'/%3E%3Crect x='4' y='5' width='1' height='1' fill='%238A5A3C'/%3E%3Crect x='5' y='5' width='6' height='1' fill='%23FFE0CC'/%3E%3Crect x='11' y='5' width='1' height='1' fill='%238A5A3C'/%3E%3Crect x='12' y='5' width='1' height='1' fill='%23FFF3F8'/%3E%3Crect x='13' y='5' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='5' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='5' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='6' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='3' y='6' width='1' height='1' fill='%23FFF3F8'/%3E%3Crect x='4' y='6' width='1' height='1' fill='%238A5A3C'/%3E%3Crect x='5' y='6' width='1' height='1' fill='%23FFE0CC'/%3E%3Crect x='6' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='7' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='8' y='6' width='2' height='1' fill='%23FFE0CC'/%3E%3Crect x='10' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='11' y='6' width='1' height='1' fill='%238A5A3C'/%3E%3Crect x='12' y='6' width='1' height='1' fill='%23FFF3F8'/%3E%3Crect x='13' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='6' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='6' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='7' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='7' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='7' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='3' y='7' width='2' height='1' fill='%23FFF3F8'/%3E%3Crect x='5' y='7' width='1' height='1' fill='%238A5A3C'/%3E%3Crect x='6' y='7' width='4' height='1' fill='%23FFE0CC'/%3E%3Crect x='10' y='7' width='1' height='1' fill='%238A5A3C'/%3E%3Crect x='11' y='7' width='2' height='1' fill='%23FFF3F8'/%3E%3Crect x='13' y='7' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='7' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='7' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='8' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='8' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='8' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='3' y='8' width='2' height='1' fill='%23FFF3F8'/%3E%3Crect x='5' y='8' width='6' height='1' fill='%237FC8F2'/%3E%3Crect x='11' y='8' width='2' height='1' fill='%23FFF3F8'/%3E%3Crect x='13' y='8' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='8' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='8' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='9' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='9' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='9' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='3' y='9' width='1' height='1' fill='%23FFF3F8'/%3E%3Crect x='4' y='9' width='8' height='1' fill='%237FC8F2'/%3E%3Crect x='12' y='9' width='1' height='1' fill='%23FFF3F8'/%3E%3Crect x='13' y='9' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='9' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='9' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='10' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='10' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='2' y='10' width='12' height='1' fill='%234a2c3a'/%3E%3Crect x='14' y='10' width='1' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='10' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='11' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='1' y='11' width='14' height='1' fill='%23FF9CC2'/%3E%3Crect x='15' y='11' width='1' height='1' fill='%234a2c3a'/%3E%3Crect x='0' y='12' width='16' height='1' fill='%234a2c3a'/%3E%3C/svg%3E");--ic-skin:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12' shape-rendering='crispEdges'%3E%3Crect x='2' y='0' width='12' height='1' fill='%233B2E66'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='2' y='1' width='12' height='1' fill='%23D9CCFF'/%3E%3Crect x='14' y='1' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='0' y='2' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='1' y='2' width='1' height='1' fill='%23D9CCFF'/%3E%3Crect x='2' y='2' width='2' height='1' fill='%23FFFFFF'/%3E%3Crect x='4' y='2' width='11' height='1' fill='%23D9CCFF'/%3E%3Crect x='15' y='2' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='0' y='3' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='1' y='3' width='1' height='1' fill='%23D9CCFF'/%3E%3Crect x='2' y='3' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='3' y='3' width='8' height='1' fill='%23D9CCFF'/%3E%3Crect x='11' y='3' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='12' y='3' width='3' height='1' fill='%23D9CCFF'/%3E%3Crect x='15' y='3' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='0' y='4' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='1' y='4' width='9' height='1' fill='%23D9CCFF'/%3E%3Crect x='10' y='4' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='11' y='4' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='12' y='4' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='13' y='4' width='2' height='1' fill='%23D9CCFF'/%3E%3Crect x='15' y='4' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='0' y='5' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='1' y='5' width='10' height='1' fill='%23D9CCFF'/%3E%3Crect x='11' y='5' width='1' height='1' fill='%23FFFFFF'/%3E%3Crect x='12' y='5' width='3' height='1' fill='%23D9CCFF'/%3E%3Crect x='15' y='5' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='0' y='6' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='1' y='6' width='14' height='1' fill='%23B9A3F5'/%3E%3Crect x='15' y='6' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='0' y='7' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='1' y='7' width='14' height='1' fill='%23B9A3F5'/%3E%3Crect x='15' y='7' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='1' y='8' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='2' y='8' width='12' height='1' fill='%23B9A3F5'/%3E%3Crect x='14' y='8' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='2' y='9' width='3' height='1' fill='%233B2E66'/%3E%3Crect x='5' y='9' width='2' height='1' fill='%23B9A3F5'/%3E%3Crect x='7' y='9' width='6' height='1' fill='%233B2E66'/%3E%3Crect x='4' y='10' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='5' y='10' width='1' height='1' fill='%23B9A3F5'/%3E%3Crect x='6' y='10' width='1' height='1' fill='%233B2E66'/%3E%3Crect x='4' y='11' width='2' height='1' fill='%233B2E66'/%3E%3C/svg%3E");}
+
+/* ---------- 聊天氣泡視窗（首頁 08；手帳在手機上排不下，改用跟「選擇頭像框」一樣的小視窗） ---------- */
+#ttgBubM .gcard{width:min(440px,100%)}
+#ttgBubM .ttg-bublist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+#ttgBubM .tt-bubble-card{margin:0;padding:8px 10px;border:2px solid #D3D8F2;border-radius:12px;background:var(--g-stripe,none) left bottom/100% 3px no-repeat,#fff}
+#ttgBubM .tt-bubble-card strong{color:var(--g-ink,#1C2156);font-weight:900}
+#ttgBubM .tt-bubble-card small{color:#6A7199;font-weight:700}
+#ttgBubM .tt-bubble-card button{min-height:36px;padding:6px 12px;border:2.5px solid var(--g-ink,#1C2156);border-radius:10px;background:linear-gradient(180deg,#FF8DB5,#FF4F8B 60%,#F03C7C);color:#fff;font-weight:900;font-size:13px;box-shadow:0 2px 0 var(--g-ink,#1C2156)}
+#ttgBubM .tt-bubble-card button:disabled{background:#EEF1FB;color:#8A8FB8;border-color:#C9CFEA;box-shadow:none}
+#ttgBubM .ttg-bubhow{margin-top:10px;padding:8px 12px;border:1.5px dashed #C9CFEA;border-radius:10px;font-size:12px;line-height:1.7;color:#6A7199;font-weight:700}
+
+/* ---------- 闆卡：直立手機一頁看完（D：「都做直立式了，希望闆卡可以排版成一面就能看完全部資訊不用滑」）
+   上面：名字牌；頭像框（框外站著小人）｜Discord、VIP、標籤；下面三列「編號＋小標｜內容」：成就、生日／常玩、一段話；最下面按鈕 ---------- */
+html.ttm-game body #cardOverlay{box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 10px) 10px calc(env(safe-area-inset-bottom,0px) + 10px)!important;align-items:center!important;justify-content:center!important}
+html.ttm-game body #cardBox{width:100%!important;max-width:460px!important;max-height:100%!important}
+html.ttm-game body #cardBox .pcard{width:100%!important;max-height:none!important;gap:6px!important}
+html.ttm-game body #cardBox .pcHd{padding:9px 58px 10px 14px!important;border-radius:14px!important}
+html.ttm-game body #cardBox .pcHd .eyebrow{font-size:8.5px!important;letter-spacing:2px!important;margin-bottom:4px!important}
+html.ttm-game body #cardBox .pcHd .title-chip{font-size:18px!important;padding:1px 20px 2px 46px!important;-webkit-text-stroke:.9px currentColor;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6),3px 3px 0 #A9DEF7;
+ background:var(--st-white) 10px 50%/16px 16px no-repeat,linear-gradient(90deg,#FF5C93 0 34px,var(--sk-ink) 34px 37px,transparent 37px),var(--gem-tab) 0 0/100% 100% no-repeat!important}
+html.ttm-game body #cardClose{top:11px!important;right:11px!important;width:38px!important;height:38px!important;font-size:18px!important;border-radius:10px!important}
+html.ttm-game body #cardBox .pcGrid{position:relative;isolation:isolate;display:grid!important;grid-template-columns:44px 96px minmax(0,1fr)!important;align-items:center;column-gap:10px;row-gap:8px;overflow:hidden!important;padding:12px 12px 14px!important;border-radius:14px!important;counter-reset:pcs}
+html.ttm-game body #cardBox :is(.pcL,.pcR,.pcHead,.pcHead>div){display:contents!important}
+/* 上半截的底色（原本左欄的粉紫星星底）改畫在一塊墊底的格子上 */
+html.ttm-game body #cardBox .pcGrid::before{content:"";grid-area:1/1/5/-1;align-self:stretch;margin:-12px -12px -4px;z-index:-1;border-bottom:2.5px solid var(--sk-ink);
+ background:var(--st-blue) 6% 12%/16px 16px no-repeat,var(--st-pink) 96% 10%/13px 13px no-repeat,var(--st-purple) 94% 84%/12px 12px no-repeat,var(--ht-pink-br) right 3px bottom 3px/110px 70px no-repeat,var(--ht-sky-tr) right 3px top 3px/90px 60px no-repeat,linear-gradient(170deg,#FFF0F7,#F8EEFF 50%,#EAF5FF)}
+html.ttm-game body #cardBox .pcTop{grid-column:1/3;grid-row:2/5;justify-self:start;align-self:center;position:relative;width:140px!important;margin:0!important;transform:none!important;translate:none!important;display:block!important}
+html.ttm-game body #cardBox .pcTop .pcStage{width:124px!important;height:124px!important}
+html.ttm-game body #cardBox .pcStage .ttfAva :is(canvas,img){width:100%!important;height:100%!important}
+html.ttm-game body #cardBox .pcStage .pcBeside{position:absolute!important;left:auto!important;right:-22px!important;top:auto!important;bottom:-4px!important;transform:none!important;translate:none!important;margin:0!important;z-index:3}
+html.ttm-game body #cardBox .pcStage .pcBeside canvas{width:50px!important;height:50px!important}
+html.ttm-game body #cardBox .pcStage .pcBeside::after{width:36px;height:6px;margin-top:-4px}
+html.ttm-game body #cardBox .pcName{grid-column:1/-1;grid-row:1;justify-self:start;align-self:center;max-width:calc(100% - 6px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:20px!important;padding:1px 18px 2px 40px!important;margin-left:2px;-webkit-text-stroke:1px currentColor;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='8' r='4.5' fill='%23fff'/%3E%3Cpath d='M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z' fill='%23fff'/%3E%3C/svg%3E") 7px 50%/17px 17px no-repeat,linear-gradient(90deg,#FF7FAE 0 30px,var(--sk-ink) 30px 32.5px,transparent 32.5px),var(--gem-tab) 0 0/100% 100% no-repeat!important}
+html.ttm-game body #cardBox .pcDc{grid-column:3;grid-row:2;align-self:end;margin:0 0 0 4px!important;font-size:11.5px!important;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html.ttm-game body #cardBox .pcVip{grid-column:3;grid-row:3;justify-self:start;font-size:13.5px!important;padding:3px 16px!important;border-width:2.5px!important;border-radius:8px!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 3px 0 var(--sk-ink)!important;margin:0!important}
+html.ttm-game body #cardBox .pcTags{grid-column:3;grid-row:4;align-self:start;justify-content:flex-start!important;margin:2px 0 0!important;gap:5px!important}
+html.ttm-game body #cardBox .pcTag{font-size:11.5px!important;padding:2px 8px!important;border-width:2px!important;border-radius:7px!important;box-shadow:0 2px 0 #FFB6D2!important}
+/* 下面三列：左邊「01 成就」小標，右邊內容 */
+html.ttm-game body #cardBox .pcSec{grid-column:1;align-self:stretch;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:1px;counter-increment:pcs;margin:0!important;padding:4px 0!important;
+ border:2px solid var(--sk-ink)!important;border-radius:10px!important;background:linear-gradient(180deg,#FF6E9F,#FF3F80)!important;color:#fff!important;font-family:inherit;font-size:11.5px!important;font-weight:900;-webkit-text-stroke:0!important;letter-spacing:.5px;box-shadow:0 2px 0 rgba(28,33,86,.25)!important;line-height:1.15}
+html.ttm-game body #cardBox .pcSec::before{content:counter(pcs,decimal-leading-zero);display:block;font:400 16px/1 var(--g-num);color:#fff;-webkit-text-stroke:0}
+html.ttm-game body #cardBox .pcSec::after,html.ttm-game body #cardBox .pcSec small{display:none!important}
+html.ttm-game body #cardBox .pcR>.pcSec:nth-child(2){grid-row:5}
+html.ttm-game body #cardBox .pcR>.pcSec:nth-child(4){grid-row:6}
+html.ttm-game body #cardBox .pcR>.pcSec:nth-child(6){grid-row:7}
+html.ttm-game body #cardBox :is(.pcAch,.pcMeta,.pcQuote){grid-column:2/-1;align-self:stretch;margin:0!important;border:2px solid #D3D8F2!important;border-radius:10px!important;box-shadow:0 2px 0 rgba(28,33,86,.06)!important;background:#fff!important;min-width:0}
+html.ttm-game body #cardBox .pcAch{grid-row:5;display:flex!important;flex-wrap:wrap;align-items:center;gap:6px!important;padding:6px 8px!important}
+html.ttm-game body #cardBox .pcAb{width:38px!important;height:38px!important;border-radius:9px!important}
+html.ttm-game body #cardBox .pcAb img{width:26px!important;height:26px!important}
+html.ttm-game body #cardBox .pcMeta{grid-row:6;display:flex!important;flex-direction:column;gap:5px!important;padding:6px!important}
+html.ttm-game body #cardBox .pcBox{display:flex;align-items:center;gap:8px;padding:5px 8px 5px 32px!important;border-width:1.5px!important;border-radius:8px!important;min-width:0}
+html.ttm-game body #cardBox .pcBox::after{left:9px!important;top:50%!important;margin-top:-8.5px;width:17px!important;height:17px!important}
+html.ttm-game body #cardBox .pcBox::before{width:4px!important}
+html.ttm-game body #cardBox .pcBk{flex:none;font-size:11.5px!important;line-height:1.2}
+html.ttm-game body #cardBox .pcBv{min-width:0;font-size:15px!important;line-height:1.25;margin:0!important;-webkit-text-stroke:.5px currentColor;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;word-break:break-word}
+html.ttm-game body #cardBox .pcQuote{grid-row:7;padding:8px 10px!important;font-size:13px!important;line-height:1.5;color:var(--sk-ink)!important;font-weight:700;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;word-break:break-word}
+html.ttm-game body #cardBox .pcQuote>span{display:inline!important;padding:0!important;border:0!important;font-weight:700}
+html.ttm-game body #cardBox .pcQuote>span::before{display:none!important}
+html.ttm-game body #cardBox #pcSocial{grid-column:1/-1;grid-row:8;margin:4px 0 0!important;gap:8px!important;flex-wrap:wrap!important}
+html.ttm-game body #cardBox #pcSocial:empty{display:none!important}
+html.ttm-game body #cardBox #pcSocial :is(.pcGo,button){flex:1 1 auto!important;min-width:calc(33% - 6px);min-height:42px;margin:0!important;padding:6px 10px!important;font-size:14px!important;white-space:nowrap;translate:none!important;transform:none!important}
+html.ttm-game body #cardBox #pcSocial>span{flex:1;text-align:center}

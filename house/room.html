@@ -1808,7 +1808,8 @@ function decoTint(it){const d=DEF[it.t];g.save();g.lineWidth=1;   // 拿著小�
   g.fillStyle=held.ok?'rgba(110,200,120,.55)':'rgba(230,70,90,.55)';g.fill();g.restore();}
 function tint(it){g.fillStyle=held.ok?'rgba(110,200,120,.45)':'rgba(230,70,90,.45)';for(const [a,b] of cells(it)){const p=iso(a,b);diamond(p.x,p.y);g.fill();}}
 // 走路手感＝大廳同款：雙拍「踏、踏」彈跳、落地擠壓、往支撐腳微傾；站著時整體呼吸；轉身像紙片翻面
-const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+// v560 流暢度：房間在大廳的 iframe 裡，每讀一次 matchMedia().matches 都會逼外面的大廳先把樣式與排版算完（每幀讀幾十次）→ 記住結果，設定改了才更新
+const reduceMotion=(()=>{const q=matchMedia('(prefers-reduced-motion: reduce)'),o={matches:q.matches};try{q.addEventListener('change',e=>{o.matches=e.matches;});}catch(_){}return o;})();
 function pose(){const tt=me.t/1000;let bob=0,rot=0,sqx=1,sqy=1;
   if(me.path.length){const ph=(tt*5.5+me.seed)%1,jump=Math.abs(Math.sin(ph*Math.PI)),step=Math.floor(tt*5.5+me.seed)%2,heavy=step?1:0.86;
     bob=-jump*1.9*heavy;const landing=jump<0.25;sqy=landing?(1-0.042*heavy):1+jump*0.021;sqx=landing?(1+0.035*heavy):1;
@@ -1920,7 +1921,8 @@ function thumbs(){const sets=[...new Set(Object.values(DEF).filter(d=>d.kind!=='
 // ---- 畫布填滿舞台；視角可拖曳、縮放 ----
 const ZOOMS=[1,1.5,2,2.5,3,4];
 function roomBounds(){const top=iso(0,0).y-3.6*Z2PX-14,bot=iso(N,N).y+20;return {x0:iso(0,N).x-12,x1:iso(N,0).x+12,y0:top,y1:bot};}
-function fit(){const st=$('stage'),w=st.clientWidth,h=st.clientHeight;DPR=devicePixelRatio||1;cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);cv.style.width=w+'px';cv.style.height=h+'px';}
+// v560 低階手機（大廳 TTGameLow：記憶體 ≤3GB 或 ≤4 核）畫布最多 2 倍解析度：每幀要填的像素少一半以上，畫面照樣放大成同一個大小
+function fit(){const st=$('stage'),w=st.clientWidth,h=st.clientHeight;let low=false;try{low=!!parent.TTGameLow&&!!parent.TTGame;}catch(_){}DPR=Math.min(devicePixelRatio||1,low?2:9);cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);cv.style.width=w+'px';cv.style.height=h+'px';}
 function frameRoom(){fit();const b=roomBounds(),w=cv.width/DPR,h=cv.height/DPR,z=Math.min(w/(b.x1-b.x0),h/(b.y1-b.y0));
   cam.z=[...ZOOMS].reverse().find(v=>v<=z)||1;cam.x=(b.x0+b.x1)/2;cam.y=(b.y0+b.y1)/2;}
 function clampCam(){const b=roomBounds();cam.x=Math.max(b.x0,Math.min(b.x1,cam.x));cam.y=Math.max(b.y0,Math.min(b.y1,cam.y));}
@@ -2298,6 +2300,8 @@ window.TTRoom={ready,
     setHint('「'+d.name+'」拿在手上了，移到想放的地方再點一下');return true;},
   placed(){const m={};for(const o of items)m[o.t]=(m[o.t]||0)+1;return m;},
   holding:()=>!!held,
+  // v560 手機佈置：拿著的家具在房間畫面上的位置（中心 x、上緣 y、下緣 b；CSS 像素），大廳把「轉向／收回／取消」三顆小圓鈕放在家具底下
+  heldBox(){if(!held||mode!=='edit')return null;const r=rectOf(held.it),[S,,,,tx,ty]=viewT();return {x:((r.x+r.w/2)*S+tx)/DPR,y:(r.y*S+ty)/DPR,b:((r.y+r.h)*S+ty)/DPR,wall:DEF[held.it.t].kind==='wall',ok:!!held.ok,isNew:!!held.isNew};},
   key(k){k=String(k||'').toLowerCase();if(mode!=='edit'||!held)return false;   // 大廳那邊按的鍵（焦點不在房間時）轉過來
     if(k==='r'){rotate();if(lastP)moveHeld(lastP);return true;}
     if(k==='delete'||k==='backspace'){held.isNew?cancel():removeHeld();return true;}

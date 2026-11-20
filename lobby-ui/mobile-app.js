@@ -34,16 +34,25 @@ function staffEntry(){
  body.before(b);
 }
 const root=document.documentElement;root.classList.add('ttm-on');
+// v560 手機遊戲畫面（D 定案 A1 店內視窗風）：功能頁＝「我的酒館」首頁（玩家卡、六格功能、掛機收益、每日任務）→ 點一格進那一頁，上面的招牌帶換成那一頁的名字
+const STAR='<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0C5.4 3.2 6.8 4.6 10 5 6.8 5.4 5.4 6.8 5 10 4.6 6.8 3.2 5.4 0 5 3.2 4.6 4.6 3.2 5 0z"/></svg>';
+const HUB=[['orders','訂單'],['chat','私訊'],['wallet','儲值'],['mail','信箱'],['shop','商城'],['ward','背包'],['frames','頭像框'],['bubbles','聊天氣泡']];   // v560 第三輪：手帳在手機上排不下，頭像框、聊天氣泡從這裡開（D：「手機好像看不到頭像框跟老闆購買的聊天氣泡」）
+const TITLE={orders:['訂單','MY ORDERS'],chat:['私訊','MESSAGES'],wallet:['儲值','WALLET'],mail:['信箱','MAILBOX']};
 const app=document.createElement('div');app.id='ttM';
 app.innerHTML='<header class="ttm-top" id="ttmTop">'
- +(window.TTGame?'<button type="button" class="ttm-back" id="ttmBack"><span aria-hidden="true">‹</span>回到酒館</button>':'')   // v539 手機遊戲畫面：功能頁是蓋在大廳上的一頁，最上面一條回大廳
+ +(window.TTGame?'<div class="ttm-band" id="ttmBand"><button type="button" class="ttm-back" id="ttmBack"><span aria-hidden="true">‹</span><b id="ttmBackT">回到酒館</b></button>'   // v539 手機遊戲畫面：功能頁是蓋在大廳上的一頁；v560 改成商城視窗那種招牌帶
+   +'<div class="ttm-title"><i class="ttm-gem" aria-hidden="true">'+STAR+'</i><span><small id="ttmKick">MY TINY TAVERN</small><b id="ttmTitle">我的酒館</b></span></div>'
+   +'<button type="button" class="ttm-x" id="ttmX" aria-label="回到酒館"><span aria-hidden="true">×</span></button>'
+   +'<img class="ttm-peek" src="lobby-ui/assets/theme/peek-line.png" alt="" aria-hidden="true"><i class="ttm-orbit" aria-hidden="true"></i><i class="ttm-sp ttm-sp1" aria-hidden="true">'+STAR+'</i><i class="ttm-sp ttm-sp2" aria-hidden="true">'+STAR+'</i></div>':'')
  +'<div class="ttm-card"><canvas id="ttmDoll" width="64" height="64" aria-hidden="true"></canvas>'
  +'<div class="ttm-who"><small>我的闆卡</small><b id="ttmName">小小酒館</b></div>'
  +'<button type="button" class="ttm-coins" id="ttmCoins" aria-label="金幣與貓貓幣餘額，點一下打開錢包">'+TTCat.gold(18,'c')+'<b id="ttmCoinN">0</b><small>金幣</small>'+TTCat.coin(18,'c','data-cat-pop')+'<b id="ttmCatN">0</b><small>貓貓幣</small></button></div>'
  +'<div class="ttm-actions" id="ttmActions"><button type="button" class="ttm-order" id="ttmTopup"><span aria-hidden="true">＋</span>儲值金幣</button>'
  +'<button type="button" class="ttm-help" id="ttmCardImg" style="font-family:inherit;cursor:pointer">存闆卡圖</button>'
- +'<a class="ttm-help" href="lobby.html?contact=1" data-contact-support>聯絡客服</a></div>'
+ +'<a class="ttm-help" href="lobby.html?contact=1" data-contact-support>聯絡客服</a>'
+ +(window.TTGame?'<button type="button" class="ttm-help ttm-staffbk" id="ttmStaffHub" style="font-family:inherit;cursor:pointer">冒險者通訊錄</button>':'')+'</div>'
  +'<p class="ttm-note" id="ttmNote">'+(window.TTGame?'邀冒險者一起玩請用電腦版；手機可以逛大廳、回小屋、換穿與儲值。':'手機版可儲值、逛商城買時裝、換穿、查看訂單與私訊；邀冒險者一起玩請用電腦版。')+'</p>'
+ +(window.TTGame?'<nav class="ttm-hub" id="ttmHub" aria-label="我的酒館">'+HUB.map(([k,l],i)=>'<button type="button" data-go="'+k+'"><em aria-hidden="true">'+String(i+1).padStart(2,'0')+'</em><i class="ttm-ic" data-ic="'+k+'" aria-hidden="true"></i><span>'+l+'</span><i class="ttm-sp" aria-hidden="true">'+STAR+'</i><b class="ttm-dot" hidden></b></button>').join('')+'</nav>':'')
  +'</header><div class="ttm-empty" id="ttmEmpty">載入中…</div>'
  +'<section class="ttm-page" id="ttmWallet" aria-label="儲值金幣"></section>'
  +'<nav class="ttm-tabs" role="tablist" aria-label="手機版功能">'
@@ -54,9 +63,11 @@ const top=$('ttmTop'),tabBar=app.querySelector('.ttm-tabs');
 let current=null,busy=false;
 const tab=key=>TABS.find(t=>t.key===key);
 const visible=n=>!!n&&(n.classList.contains('on')||n.style.display==='flex'||n.style.display==='block');
+// v560 手機遊戲畫面：功能頁下面露出遊戲的下排（不用分頁列），內容的下緣＝下排白條的上緣
+function botY(){if(window.TTGame){const b=$('ttgBar');if(b&&b.getClientRects().length)return b.getBoundingClientRect().top;}return tabBar.getBoundingClientRect().top;}
 function layout(){
  root.style.setProperty('--ttm-top',Math.ceil(top.getBoundingClientRect().bottom)+'px');
- root.style.setProperty('--ttm-bot',Math.ceil(window.innerHeight-tabBar.getBoundingClientRect().top)+'px');
+ root.style.setProperty('--ttm-bot',Math.ceil(window.innerHeight-botY())+'px');
 }
 new ResizeObserver(layout).observe(top);new ResizeObserver(layout).observe(tabBar);addEventListener('resize',layout);
 // v528 iPhone Safari：網址列收起來時可見畫面變高，固定在底部的分頁列沒跟著往下（下面空一條）→ 量多出來的高度，整個手機版往下延伸
@@ -78,7 +89,7 @@ function show(key,{remember=true}={}){
   try{t.open();}catch(e){console.warn('[mobile] open '+key,e);}
   if(!n){const n2=$(t.node);if(n2){guard(n2);n2.classList.add('ttm-tabview');}}   // v508：第一次打開時視窗是 open() 才建出來的，建好再套分頁樣式（不然先閃一下電腦版視窗）
   if(remember)try{sessionStorage.setItem('ttm_tab',key);}catch{}
-  layout();
+  setBand();layout();
  }finally{busy=false;}
 }
 // v528 客人：手機很多東西疊在一起 → 按下方分頁時，把從分頁裡打開、蓋在上面的視窗（冒險者通訊錄、私訊對話、闆卡、說一句話、客服）先收掉
@@ -93,7 +104,7 @@ const NO_ORDER='邀冒險者一起玩請用電腦版，手機可以儲值、逛�
 function block(name,allow){const f=window[name];if(typeof f!=='function')return;window[name]=function(...a){if(allow&&allow(...a))return f.apply(this,a);say(NO_ORDER);};}
 block('shopStep');block('shopOpen',n=>n===4||(n===3&&typeof curKind!=='undefined'&&curKind==='shop'));   // v532：商城結帳（時裝、染髮券）放行，點冒險者照舊擋block('backFromPlans');block('openReserve');block('reorderPlay');block('pickPlan');
 // 其他視窗（付款、取消確認、私訊對話、客服）關閉後，把目前分頁補回來。
-function center(){const r=top.getBoundingClientRect(),b=tabBar.getBoundingClientRect();return [innerWidth/2,(r.bottom+b.top)/2];}
+function center(){const r=top.getBoundingClientRect();return [innerWidth/2,(r.bottom+botY())/2];}
 setInterval(()=>{
  if(!current||busy||document.hidden)return;
  const t=tab(current),n=$(t.node);
@@ -227,26 +238,36 @@ const wallet=(()=>{
 function paintCard(){
  try{const a=typeof me==='function'?me():null;const b=a&&a.b;
   if(b?.name)$('ttmName').textContent=b.name;
-  if(b?.doll&&typeof drawDollTo==='function')drawDollTo($('ttmDoll'),b.doll,'idle');}catch{}
+  if(b?.doll&&typeof drawDollTo==='function'){const sig=JSON.stringify(b.doll),t=Date.now();   // v560：穿搭沒變就不每 1.5 秒重畫（部件晚載好的，10 秒補畫一次）
+   if(sig!==paintCard.sig||t-(paintCard.at||0)>10000){paintCard.sig=sig;paintCard.at=t;drawDollTo($('ttmDoll'),b.doll,'idle');}}}catch{}
  const k=fmt(window.__cat);if($('ttmCatN')&&$('ttmCatN').textContent!==k)$('ttmCatN').textContent=k;   // v492
  const c=fmt(window.__wallet);if($('ttmCoinN').textContent!==c){$('ttmCoinN').textContent=c;if(current==='wallet'&&!document.activeElement?.closest?.('#ttmWallet'))wallet.render();}
 }
 function paintBadges(){
  for(const t of TABS){if(!t.badge)continue;const src=$(t.badge),dot=tabBar.querySelector('[data-tab="'+t.key+'"] .ttm-dot');if(!dot)continue;
   const txt=(src?.textContent||'').trim(),on=!!src&&src.style.display!=='none'&&getComputedStyle(src).display!=='none'&&txt!==''&&txt!=='0';
-  dot.hidden=!on;dot.textContent=on&&/^\d+$/.test(txt)?(+txt>99?'99+':txt):'';}
+  dot.hidden=!on;dot.textContent=on&&/^\d+$/.test(txt)?(+txt>99?'99+':txt):'';
+  const hd=window.TTGame&&app.querySelector('#ttmHub [data-go="'+t.key+'"] .ttm-dot');if(hd){hd.hidden=dot.hidden;hd.textContent=dot.textContent;}}
 }
 [200,700,1500,3000].forEach(ms=>setTimeout(paintCard,ms));setInterval(()=>{paintCard();paintBadges();},1500);
 // 第一次進來：上次停留的分頁，預設「訂單」。
 // v539 手機遊戲畫面：平常看大廳，功能頁（訂單／私訊／儲值／信箱）按了才蓋上來，「回到酒館」收起來
-function openPanel(key){closeStray();root.classList.add('ttg-panel');show(key||current||'orders');layout();}
-function closePanel(){
- if(current){const t=tab(current),n=$(t.node);n?.classList.remove('ttm-tabview');try{t.hide();}catch{}}
- current=null;delete root.dataset.ttmTab;root.classList.remove('ttg-panel');
- for(const b of tabBar.children)b.setAttribute('aria-selected','false');
-}
-if(window.TTGame){$('ttmBack').onclick=closePanel;$('ttmCoins').onclick=()=>openPanel('wallet');$('ttmTopup').onclick=()=>openPanel('wallet');
- tabBar.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b&&!tab(b.dataset.tab)?.launch)root.classList.add('ttg-panel');},true);}
+// v560：open() 不帶分頁＝「我的酒館」首頁；open(null,'ttmIdle') 打開首頁並捲到那一張（右側活動鈕用）
+function openPanel(key,focus){closeStray();root.classList.add('ttg-panel');if(key&&tab(key)&&!tab(key).launch)show(key);else{home();if(key)show(key);}layout();
+ if(focus)setTimeout(()=>{const el=$(focus);if(el&&!el.hidden)el.scrollIntoView({block:'center',behavior:'smooth'});},60);}
+function hideCurrent(){if(current){const t=tab(current),n=$(t.node);n?.classList.remove('ttm-tabview');try{t.hide();}catch{}}
+ current=null;delete root.dataset.ttmTab;for(const b of tabBar.children)b.setAttribute('aria-selected','false');}
+function home(){closeStray();hideCurrent();setBand();layout();top.scrollTop=0;}
+function closePanel(){hideCurrent();root.classList.remove('ttg-panel');setBand();}
+function setBand(){if(!window.TTGame)return;const t=current&&TITLE[current];
+ $('ttmTitle').textContent=t?t[0]:'我的酒館';$('ttmKick').textContent=t?t[1]:'MY TINY TAVERN';$('ttmBackT').textContent=current?'我的酒館':'回到酒館';
+ app.classList.toggle('ttm-hubview',!current);}
+if(window.TTGame){$('ttmBack').onclick=()=>current?home():closePanel();$('ttmX').onclick=closePanel;$('ttmCoins').onclick=()=>openPanel('wallet');$('ttmTopup').onclick=()=>openPanel('wallet');
+ $('ttmStaffHub').onclick=()=>window.TTStaffBook?.open();
+ $('ttmHub').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(!b)return;const k=b.dataset.go;
+  if(k==='frames'){window.__openFrames?.();return;}if(k==='bubbles'){window.TTGameUI?.openBubbles?.();return;}   // 這兩格開小視窗，蓋在「我的酒館」上面，關掉回到這裡
+  if(!tab(k)?.launch)closeStray();show(k);});
+ tabBar.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b&&!tab(b.dataset.tab)?.launch)root.classList.add('ttg-panel');},true);setBand();}
 function start(){
  $('ttmEmpty').textContent='';
  if(window.TTGame){paintCard();paintBadges();const q=new URLSearchParams(location.search);if(q.has('mail'))openPanel('mail');else if(q.has('topup'))openPanel('wallet');return;}
@@ -255,5 +276,5 @@ function start(){
  show(tab(first)?first:'orders');paintCard();paintBadges();
 }
 if(document.readyState==='complete')setTimeout(start,0);else addEventListener('load',()=>setTimeout(start,0),{once:true});
-window.TTMobileApp={show,open:openPanel,close:closePanel,badges:()=>TABS.filter(t=>t.badge).map(t=>({key:t.key,on:!tabBar.querySelector('[data-tab="'+t.key+'"] .ttm-dot')?.hidden})),get current(){return current;}};
+window.TTMobileApp={show,open:openPanel,close:closePanel,home,badges:()=>TABS.filter(t=>t.badge).map(t=>({key:t.key,on:!tabBar.querySelector('[data-tab="'+t.key+'"] .ttm-dot')?.hidden})),get current(){return current;}};
 })();

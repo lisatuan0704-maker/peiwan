@@ -1,5 +1,23 @@
 # 小小酒館修改紀錄
 
+## 2026/11/20 v560 手機版改成直立手遊介面（Claude；電腦版不受影響）
+- D：「手機頁整體更優化視覺跟操作便利一些，把手機介面當作一款手遊製作」「手遊是直立的」「確保手機的畫面不會卡」。比稿（C:\tinytavern\設計稿\手機手遊介面_1120\）D 選 A1 店內視窗風＋扭蛋維持 A2 的粉色菱形＋PICK UP! 緞帶。
+- 只在 html.ttm-game（v546 起手機預設的遊戲畫面）生效；金流、訂單、資料庫寫入都沒動。v559 這號沒用到（交辦時說有人推過 v559，實際正式站停在 v558）。
+- 畫面（lobby-ui/mobile-game.js／.css 重寫）：上方名牌（現在戴的頭像框，用 window.ttFrame 同電腦版；花圈會動、低階手機不動）＋VIP、金幣／貓貓幣（＋＝儲值）；右側每日任務／掛機收益（小進度條）／信箱／私訊；左下聊天小窗（最近兩句）＋「說點什麼」；
+  下排白紙條＋探頭店貓：小屋、商城、扭蛋（中間粉色大菱形、白扭蛋機像素圖、PICK UP! 緞帶、每 3.6 秒掃光）、背包、選單（#ttgMenu 放進 #ttMainDock）。像素圖示在 mobile-game.css 開頭的 --ic-*。
+- 「選單」＝我的酒館（lobby-ui/mobile-app.js，只 TTGame）：招牌帶＋玩家卡＋八格（01 訂單 02 私訊 03 儲值 04 信箱 05 商城 06 背包 07 頭像框 08 聊天氣泡）＋09 掛機收益＋10 每日任務。TTMobileApp.open(key,focusId)／home()／close()。
+  手帳（#bookM）在手機排版是壞的 → 07 開原本的 #frameM（__openFrames），08 開新小視窗 #ttgBubM（清單、換上、購買都用大廳原本的 bkBubbleRender／bkBubbleTap，開著時借用 id bkBubList）。
+- 闆卡直立一頁看完（D：「都做直立式了，希望闆卡一面就能看完不用滑」）：只用 CSS（.pcL/.pcR/.pcHead display:contents 改三欄格線）：名字牌→頭像框｜Discord、VIP、標籤→「01 成就／02 關於我／03 一段話」→按鈕；名字太長自動縮字（mobile-game.js 看 #pcard）、常玩最多三行。
+- 修：手機聊天小窗字疊在一起（#chatlog 直排 flex＋限高＋每行 overflow:hidden → 每行被壓成 8px；改 flex:none，貼圖在小窗縮成 18px）；
+  通知卡被切一半（電腦版置中用的 translateX(-50%) 還在，v546 起就有 → transform:none）。
+- 商城／背包的頭髮、眉毛、眼睛、衣服、配件縮圖改成「素體小人穿上去」（D 要求；tavern-ui/live-wardrobe.js wornDoll：旁分瀏海＋微翹後髮、棕色杏眼、圓圓眉、簡易休閒服、普通膚色，只換上這一件；臉／耳環／面部配件放大成 64×40 長條，眉眼疊在瀏海上；換不上的照舊畫部件）。電腦版商城同一支程式，也一起換了。
+- 小屋佈置拿著家具：下方「我的家具」往下滑走，家具底下跟著三顆 28px 小圓鈕（轉向／收回背包／取消），放好後列表滑回來（house/room.html TTRoom.heldBox()；D：「三個小小的按鈕跟著家具底下」）。
+- 流暢度（390×844 DPR3、CPU 6 倍降速、搖桿走 6 秒：大廳 55fps／掉幀 12 → 59.8／0；小屋 46.5／18 → 59.8／0）：lobby.html tick 拿掉沒用的 innerWidth 讀取（每幀逼排版）；
+  updateCamera 手機不寫 #hall 的 --tt-stage-* 變數、一開始就定好縮放；人在小屋或開扭蛋時大廳 tick 降速；本人小人手機不加 drop-shadow；手機藏延伸片／模糊底景／暗角、#world will-change、光暈不用濾色混合；
+  room.html 的 reduceMotion 改成記住的值（iframe 裡讀 matchMedia().matches 會逼大廳重排）、低階手機畫布最多 2 倍。room.html 的三處已同步回 tt-room-kit（house-lobby/house-embed.js 的 heldBox、room/house-trial.html 的 reduceMotion 與 fit，備份 *.bak-v560）。
+- 版本：verTag v560、ver.json 560、lobby-view／fixed-view 560、fixed-view.js／mobile-app.js／mobile-game.css／mobile-game.js／house.js ?v=560、house.js VER 560（room.html?v=560）、bridge→tavern-ui index→時裝間比較→live-wardrobe 560。
+- 驗證（本機模擬資料庫、觸控模擬）：手機操作流程 21 項、第三輪 14 項、小屋拿家具 6 項，390／360 都通過、沒有水平捲動、沒有程式錯誤；mobile-v353、payment-safety-v273、topup-online-v499、hub-actions-v299、social-v347、presence-v353／v354、movement-v278 通過；電腦版 1366 畫面與改動前相同。viewport-v352 改動前就失敗（測試寫死 v=554）。沒在真的手機上試過。
+
 ## 2026/11/20 主機：冒險者角色框「已擁有」卻戴不上（Claude；ops/deploy-framefix-1120.sh，11/20 D 已在主機執行）
 - 老闆反應：頭像框視窗裡縭／蕪角色框顯示「已擁有」，點了跳「尚未完成解鎖或儲存失敗，請稍後重試」（lobby.html 約 7123 行 equipFrame 的 catch）。
 - 原因（主機 loyalty-frames.cjs selectFrame，v312 起就這樣）：transaction 要 secureV1/characters/<闆卡> 存在才肯戴，

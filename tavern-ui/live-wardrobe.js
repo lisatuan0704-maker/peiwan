@@ -190,7 +190,31 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
   if(removing)tell('已卸下「'+p.name+'」；完成後按「穿上搭配」保存。');
   else if(removedDependency)tell('已卸下不適用於目前搭配的配件。');
  }
+ // v560 D：「眉毛眼睛、衣服、頭髮這種的，應該放個素體小人給他們看穿上去的樣子」→ 商品格改成同一個中性小人（旁分瀏海＋微翹後髮、棕色杏眼、圓圓眉毛、簡易休閒服、普通膚色）
+ // 只換上這一件，用試穿區同一套畫法（api.draw）；眼睛、眉毛、耳環、臉上的配件放大到頭部。換不上的（例如要搭特定部件的配件）照舊只畫部件。
+ const MANNEQUIN={front:{base:4,slot:'front'},back:{base:4,slot:'back'},cloth:{base:3,slot:'cloth'},eye:{base:3,slot:'eye'},brow:{base:2,slot:'brow'}};
+ const HEAD_ZOOM=[16,4,32,20],FACE_ZOOM=[16,23,32,20];   // 放大成扁長條（32×20 → 畫布 64×40，剛好 2 倍）：格子不夠高，正方形會壓到下面的商品名
+ function wornDoll(p){
+  if(!['hair','eye','face','cloth','acc'].includes(p.category)||p.product?.drink)return null;   // 「臉」分類的鍵是 eye（眼型＋眉毛）
+  const sel={...MANNEQUIN};
+  if(p.parts)p.parts.forEach(q=>sel[key(q)]=ref(q));else sel[key(p)]=ref(p);
+  if(p.category==='acc'&&api.compatible?.(p,sel)===false)return null;
+  try{return api.makeDoll(api.normalizeSelection?.(sel)||sel,{hair:color.hair??0,skin:0,...(Number.isInteger(color.highlight)?{highlight:color.highlight}:{})});}catch(e){return null;}
+ }
+ function zoomOf(p){return ['eye','face'].includes(p.category)?FACE_ZOOM:(p.category==='acc'&&['ear','face'].includes(p.group))?FACE_ZOOM:(p.category==='acc'&&p.group==='head')?HEAD_ZOOM:null;}
+ function drawWorn(cv,p){
+  const d=wornDoll(p);if(!d)return false;const z=zoomOf(p),sig=p.id+'|'+JSON.stringify(color);
+  if(cv.dataset.worn===sig)return true;cv.dataset.worn=sig;cv.classList.add('worn-thumb');
+  if(!z){if(cv.height!==64){cv.width=cv.height=64;cv.style.objectFit='';}delete cv.dataset.fixedPixelPreview;api.draw(cv,d);return true;}
+  cv.width=z[2]*2;cv.height=z[3]*2;cv.style.objectFit='contain';cv.dataset.fixedPixelPreview='1';
+  const over=['eye','face'].includes(p.category);   // 眉毛、眼睛再畫一次在瀏海上面（不然被瀏海蓋住看不到）
+  api.draw(cv,d,src=>{if(over){const t=document.createElement('canvas');t.width=t.height=64;api.drawPart(t,ref(p),color);src.getContext('2d').drawImage(t,0,0);}
+   const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.imageSmoothingEnabled=false;c.drawImage(src,z[0],z[1],z[2],z[3],0,0,cv.width,cv.height);});
+  return true;
+ }
  function drawPart(cv,p){
+  if(drawWorn(cv,p))return;
+  delete cv.dataset.worn;cv.classList.remove('worn-thumb');
   if(p.parts){const c=cv.getContext('2d');c.clearRect(0,0,64,64);for(const slot of ['back','front']){const q=p.parts.find(x=>x.slot===slot);if(!q)continue;const tmp=document.createElement('canvas');tmp.width=tmp.height=64;api.drawPart(tmp,ref(q),color);c.drawImage(tmp,0,0);}}
   else api.drawPart(cv,ref(p),color);
   if(mobile)fitThumb(cv);
