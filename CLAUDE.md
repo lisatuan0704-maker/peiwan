@@ -17,6 +17,7 @@
 - 小屋：**house/room.html 不能再用 build.py 整份重建**（v510 起好幾版是直接改的，重建會蓋掉）→ 新家具用 tt-room-kit/house-lobby/patch_live.py
   「只補新的」：暫存區先跑 build.py 拿圖與清單，再把新家具的圖接到正式 atl.png 下面、補 SPR／HOUSE_KEYS／HOUSE_VARS（異色 DEF 照原色複製）／catalog.json。
   ⚠ 圖集 1.6MB → 3.1MB（多 144 件 1 倍圖）；之後可考慮把異色分一張圖集用到才載。
+- 燈效（room.html 直接改）：LFX 加中華燈具（宮燈立架、蝠翼燈籠＝candle；雙燈籠立架、燈籠串、寶塔燈＝新型別 lanterns 多盞各自閃、右向圖另給座標），異色由 HOUSE_VARS 照原色共用燈效。
 - 異色圖：tt-room-kit/bed/cnvar.py（依每格材質重新上色＋吸到乾淨色階，原色檔不動）；D 11/21「主色沒問題，細節換色後要更乾淨」→ 已加金邊／金飾分組與吸色。
 - 驗證：主機測試 29/29、規則第二十八批 31/31、大廳端 39/39、端到端（真的 lib/gacha.js＋模擬資料庫）14/14；通用／人魚卡池回歸截圖正常。
 - 版本：verTag v561、ver.json 561、lobby-view 561、house.js／house.css／gacha.js ?v=561、house.js VER 561、gacha.js VER 561。
