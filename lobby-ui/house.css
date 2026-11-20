@@ -268,3 +268,15 @@ body:not(.tt-house-fxp) #ttFxPanel,body:not(.tt-house-on) #ttFxPanel,body.tt-hou
 #ttFxPanel button:focus-visible,#ttFxPanel input:focus-visible{outline:3px solid #8FD3FF;outline-offset:2px}
 #ttMainDock #ttHouseFx{position:relative}
 #ttMainDock #ttHouseFx.dot::after{content:"";position:absolute;right:-4px;top:-4px;width:12px;height:12px;border-radius:50%;background:#FF3F80;border:2.5px solid var(--sk-ink,#1C2156)}
+/* 家具券（11/23 中華卡池起）：「我的家具」上面一條膠囊，顯示餘額；點了打開扭蛋（圖鑑裡用家具券換家具） */
+.tt-hb-tix{align-self:flex-start;display:flex;align-items:center;gap:5px;max-width:100%;box-sizing:border-box;padding:4px 12px 4px 8px;border:2px solid var(--sk-ink,#1C2156);border-radius:999px;
+  background:linear-gradient(180deg,#fff,#FFF0F6);color:var(--sk-ink,#1C2156);font:inherit;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 var(--sk-ink,#1C2156);white-space:nowrap}
+.tt-hb-tix[hidden]{display:none}
+.tt-hb-tix svg{width:22px;height:22px;flex:none;fill:#FFE3EE;stroke:#FF3F80;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tt-hb-tix svg .tt-tix-gem{fill:#FF3F80;stroke:none}
+.tt-hb-tix b{font:800 15px/1 'Tavern Numerals',var(--sk-head,'LINE Seed TW'),sans-serif;color:#FF3F80;letter-spacing:.5px}
+.tt-hb-tix small{margin-left:4px;font-size:11px;font-weight:700;color:var(--sk-mute,#5C6196);overflow:hidden;text-overflow:ellipsis}
+.tt-hb-tix:hover{background:#FFE3EE}
+.tt-hb-tix:active{transform:translateY(1px);box-shadow:0 1px 0 var(--sk-ink,#1C2156)}
+html.ttm-game body #ttHouseBag .tt-hb-tix{padding:2px 10px 2px 6px}
+html.ttm-game body #ttHouseBag .tt-hb-tix small{display:none}

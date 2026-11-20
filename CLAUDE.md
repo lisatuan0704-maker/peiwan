@@ -1,5 +1,27 @@
 # 小小酒館修改紀錄
 
+## 2026/11/21 v561 中華卡池＋家具券新制度＋色違（Claude；分支 claude/cn-pool，等 D 預覽說「上」）
+- D 11/21 拍板：中華卡池 **11/23（一）04:00～12/07（一）04:00**；**從中華開始所有卡池**抽到重複家具不再多一件、改給「家具券」
+  （普通 1／稀有 3／限定 10 張）；券在扭蛋「家具圖鑑」點已收集的家具兌換：原色再一件 2／5／15、異色每色 6／15／40（要先抽到原色）。
+  中華 36 件（限定 3／稀有 9／普通 24，清單 tt-room-kit/house-picker/cn-pool/pool.json）每件三種異色：玄墨／翡翠／桃花（key＝<原key>~1..3）。
+- 付款主機（C:\tinytavern\server）：lib/gacha.js tix.from（11/23 04:00）前完全照舊；之後重複→券、`POST /api/house-tix {myKey,k,c}`、
+  gacha-info 多回 tix＋variants；gacha-pools.json 加 cn 卡池／檔期／36 件。部署＝`pay-cn1121-貼上主機.txt`（核對主機 v535 版 sha，不對就停；
+  自動備份 ~/pay/backup-cn1121/、跑測試、沒過自動還原，成功印 CN1121_PAY_DEPLOYED）。改清單後要 `node pack-cn1121.js` 重產貼上檔。
+- 資料庫：houseTix/<key>{balance,lastTx}、houseTixTx/<key>/<id>（只有主機寫、本人／店員可讀）；houseInv 的異色一樣是 houseInv/<key>/<k~n>/<id>{src:'tix'}。
+  **規則第二十八批**（tests/security-rules-v428/build/harden-phase28.cjs）：上面兩個節點＋擺設／拜訪快照接受 `k~n`（舊規則 /^[a-z0-9_]{1,60}$/ 會擋）。
+- 扭蛋頁（tt-room-kit/gacha/3d → sync_to_site.py）：中華場景＝月夜戲台（待機）＋朱紅宅門（酒館那一鏡），手繪紋樣貼圖（toonT）、Tripo 石獅（tavern/cn_lion.glb）、
+  燈籠一盞盞亮、限定＝金龍盤旋（cnFX）；中華色盤 CN_PAL。POOLS.cn.lim＝主機檔期表沒有它就整個藏起來（網站比主機早上也不會變常駐池）。
+  家具券：右上餘額、結果名牌「券+N」、圖鑑兌換面板（店裡視窗風格）；試做頁的券存在 localStorage tt_gacha_tix。重複的家具不交給「去擺放」。
+- 大廳：lobby-ui/gacha.js（TTGachaHost.tix／tixInfo／tixOpen／tixCost／buyTix／loadInfo、事件 tt-house-tix）、house.js（背包／擺放／拜訪吃 `k~n`、
+  「我的家具」上方家具券膠囊、FX_SETS 加中華「金粉紅韻／紅燈籠夜」）。
+- 小屋：**house/room.html 不能再用 build.py 整份重建**（v510 起好幾版是直接改的，重建會蓋掉）→ 新家具用 tt-room-kit/house-lobby/patch_live.py
+  「只補新的」：暫存區先跑 build.py 拿圖與清單，再把新家具的圖接到正式 atl.png 下面、補 SPR／HOUSE_KEYS／HOUSE_VARS（異色 DEF 照原色複製）／catalog.json。
+  ⚠ 圖集 1.6MB → 3.1MB（多 144 件 1 倍圖）；之後可考慮把異色分一張圖集用到才載。
+- 異色圖：tt-room-kit/bed/cnvar.py（依每格材質重新上色＋吸到乾淨色階，原色檔不動）；D 11/21「主色沒問題，細節換色後要更乾淨」→ 已加金邊／金飾分組與吸色。
+- 驗證：主機測試 29/29、規則第二十八批 31/31、大廳端 39/39、端到端（真的 lib/gacha.js＋模擬資料庫）14/14；通用／人魚卡池回歸截圖正常。
+- 版本：verTag v561、ver.json 561、lobby-view 561、house.js／house.css／gacha.js ?v=561、house.js VER 561、gacha.js VER 561。
+- 上線順序（D）：① GCP 網頁 SSH 貼 pay-cn1121-貼上主機.txt ② Firebase 主控台發布 security/database.rules.json（第二十八批）③ Claude push。
+
 ## 2026/11/20 v560 手機版改成直立手遊介面（Claude；電腦版不受影響）
 - D：「手機頁整體更優化視覺跟操作便利一些，把手機介面當作一款手遊製作」「手遊是直立的」「確保手機的畫面不會卡」。比稿（C:\tinytavern\設計稿\手機手遊介面_1120\）D 選 A1 店內視窗風＋扭蛋維持 A2 的粉色菱形＋PICK UP! 緞帶。
 - 只在 html.ttm-game（v546 起手機預設的遊戲畫面）生效；金流、訂單、資料庫寫入都沒動。v559 這號沒用到（交辦時說有人推過 v559，實際正式站停在 v558）。
