@@ -600,6 +600,9 @@ function noise(d,v,f0,f1,t0=0){if(!SND||MUTE)return;const A=ac(),t=A.currentTime
 function meow(p=1,t0=0,v=.09){if(!SND||MUTE)return;const A=ac(),t=A.currentTime+t0,o=A.createOscillator(),lf=A.createOscillator(),lg=A.createGain(),bp=A.createBiquadFilter(),gn=A.createGain();
   o.type='triangle';o.frequency.setValueAtTime(560*p,t);o.frequency.linearRampToValueAtTime(980*p,t+.12);o.frequency.linearRampToValueAtTime(640*p,t+.42);lf.frequency.value=7;lg.gain.value=14*p;lf.connect(lg).connect(o.frequency);
   bp.type='bandpass';bp.frequency.value=1300*p;bp.Q.value=1.4;gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(v,t+.04);gn.gain.exponentialRampToValueAtTime(.001,t+.46);o.connect(bp).connect(gn).connect(A.destination);o.start(t);lf.start(t);o.stop(t+.5);lf.stop(t+.5);}
+// 中華卡池（11/21）：燈籠亮起的小鈴、金龍出現的風聲、開門的銅鑼
+const cnSfx={bell:(i)=>tone(1320*Math.pow(1.06,i%7),.16,'sine',.025),dragon:()=>{noise(.7,.1,300,1800);tone(220,.7,'triangle',.05,0,660);tone(330,.5,'sine',.04,.25,990);},
+  gong:(v=1)=>{tone(98,2.4,'sine',.2*v);tone(200,1.8,'sine',.08*v,.01);tone(439,1.3,'triangle',.04*v,.02);tone(587,1,'sine',.03*v,.02);noise(.3,.07*v,1400,250);}};
 const sfx={coin:()=>{tone(1320,.12,'square',.04);tone(1980,.22,'square',.04,.06);},click:()=>tone(240,.04,'square',.05),whoosh:()=>noise(.28,.12,400,2400),pop:()=>{tone(620,.14,'triangle',.12,0,200);noise(.08,.08,3000,800);},
   land:()=>tone(160,.08,'sine',.12),charge:k=>tone(k==='limited'?330:262,.5,'sine',.06,0,k==='limited'?990:784),
   up:k=>{const b=k==='limited'?660:523;[0,1,2,3].forEach(i=>tone(b*Math.pow(1.26,i),.18,'triangle',.08,i*.05));},crack:()=>noise(.06,.14,4000,1800),
@@ -743,6 +746,7 @@ function planOne(it,seed,F){const st=RANK[it.r],P={n:1,it,st,seed,res:[it],best:
   P.stages.forEach(sg=>{P.snd.push([sg.t,()=>sfx.charge(sg.to)],[sg.t+P.UPG,()=>{sfx.up(sg.to);meow(1.25,0,.06);}]);});
   P.STARS.forEach((t,i)=>P.snd.push([t,()=>{tone(1047*Math.pow(1.26,i),.2,'square',.035);tone(2093*Math.pow(1.26,i),.3,'triangle',.04,.03);}]));
   P.snd.push([P.POP0,()=>{sfx.pop();sfx.whoosh();}],[P.LAND,()=>{tone(130,.12,'sine',.16);noise(.12,.08,900,300);meow(1.2,.2,.05);}]);
+  if(THEME==='cn'){CNL.filter(L=>L.house).forEach((L,i)=>P.snd.push([P.ARR-650+(1-L.ord)*620,()=>cnSfx.bell(i)]));P.snd.push([P.OPEN,()=>cnSfx.gong(st?1:.6)]);if(st===2)P.snd.push([P.stages[1].t,cnSfx.dragon]);}
   FURN?.dispose();FURN=furn3D(F);P.FU=FURN;
   // 最後交給 2D 時用原圖（不調色，跟小屋裡一樣）
   const raw=IMG['raw_'+it.k]||L.im;P.spr=document.createElement('canvas');P.spr.width=L.fw;P.spr.height=L.fh;{const x=P.spr.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(raw,0,0,L.fw,L.fh);}
@@ -943,6 +947,7 @@ function planTen(res,seed,Fs){const r=rng(seed);PA.clear();PN.clear();const best
   P.shk=[[P.COIN,.03,120],[P.SHOOT,.05,160],[P.ARR,.06,160],[P.OPEN,P.st?.15:.08,320]];P.pun=[[P.ENG-120,.06,120],[P.OPEN,.05,160]];
   P.fl=[[P.OPEN+60,'#fff1e3',.14,200],[P.RC-90,'#ffffff',.5,90],[P.RC,'#ffffff',.9,240]];P.imp=[];
   P.snd=[[P.ENG-140,sfx.whoosh],[P.ARR,()=>{tone(150,.1,'sine',.14);tone(150,.1,'sine',.12,.16);}],[P.OPEN,()=>{sfx.burst(P.best.r==='limited'?'rare':P.best.r);noise(.4,.12,300,2600);}],[P.RC,()=>{sfx.whoosh();tone(880,.2,'triangle',.05,0,1320);}]];
+  if(THEME==='cn'){CNL.filter(L=>L.house).forEach((L,i)=>P.snd.push([P.ARR-650+(1-L.ord)*620,()=>cnSfx.bell(i)]));P.snd.push([P.OPEN,()=>cnSfx.gong(P.best.r==='common'?.6:1)]);if(P.best.r==='limited')P.snd.push([P.OPEN-1500,cnSfx.dragon]);}
   for(let i=0;i<16;i++){const tt=P.T0+(i+.6)*(P.T1-P.T0)/16;P.shk.push([tt,.016,60]);P.snd.push([tt,sfx.click]);}
   for(let i=0;i<10;i++)P.snd.push([P.COIN*.07*i+P.COIN*.37*COIN_IN,sfx.coin]);P.snd.push([P.COIN,()=>meow(1.1)]);if(P.st)P.snd.push([P.TEASE,()=>meow(1.35,0,.07)]);
   res.forEach((_,i)=>{P.snd.push([P.shoot[i],sfx.pop],[P.b1[i],()=>tone(170,.05,'triangle',.05)]);});
@@ -1804,7 +1809,7 @@ if(TAV3_ON&&STG3_ON){
     // 門樓：正面紅牆（下段石裙牆）、兩側山牆
     for(const sd of[-1,1]){const x0=TDA+.26,x1=3.75,cx=sd*(x0+x1)/2;T3(new THREE.BoxGeometry(x1-x0,3.95,.3),CN.red,[cx,1.975,Z-.15]);T3(new THREE.BoxGeometry(x1-x0+.04,.55,.34),CN.stoneD,[cx,.275,Z-.15]);
       cnOverlay(G,TX.wall(x1-x0,3.4),x1-x0,3.4,[cx,2.25,Z+.003]);cnOverlay(G,TX.skirt(x1-x0+.04,.55),x1-x0+.04,.55,[cx,.275,Z+.023]);
-      T3(new THREE.BoxGeometry(.3,3.95,1.9),CN.red,[sd*3.75,1.975,Z-1.05]);}
+      T3(new THREE.BoxGeometry(.3,3.95,1.9),toonT(TX.stageWall,{rep:[1.2,.67]}),[sd*3.75,1.975,Z-1.05]);}   // 側面山牆也有牆板紋樣
     // 門框、門楣＋四顆金門簪、門檻、門楣上的走馬板
     for(const sd of[-1,1])T3(new THREE.BoxGeometry(.26,TDH+.3,.36),CN.redD,[sd*(TDA+.13),(TDH+.3)/2,Z-.06]);
     T3(new THREE.BoxGeometry(TDA*2+.52,.3,.38),CN.redD,[0,TDH+.15,Z-.05]);for(const x of[-.72,-.24,.24,.72])T3(new THREE.CylinderGeometry(.08,.08,.14,6),CN.gold,[x,TDH+.15,Z+.18],[Math.PI/2,0,0]);
@@ -1839,7 +1844,7 @@ if(TAV3_ON&&STG3_ON){
       for(let k=0;k<6;k++){const x=4.6+k*1.15;cnLant(G,sd*x,2.36,zw+.42,.14,{cord:.14,house:true,ord:(x-4)/7.5,amp:.07});}
       cnPlum(G,sd*5.2,0,zw-1.2,1.25,sd);cnPlum(G,sd*9.4,0,zw-1.6,1.1,-sd);cnBamboo(G,sd*7.2,0,zw-1.0,5,3.6);cnBamboo(G,sd*10.8,0,zw-.9,4,3.2);}
     // 門樓後面的正廳屋頂（有深度）、遠處的寶塔與屋簷剪影、山
-    T3(new THREE.BoxGeometry(10.4,4.6,3.6),CN.redD,[0,2.3,Z-6.2],[0,0,0],[1,1,1],false);cnRoof(G,0,4.6,Z-6.2,5.4,1.9,2.2,{lift:.65,over:.6,wing:.8,rafter:false});
+    T3(new THREE.BoxGeometry(10.4,4.6,3.6),toonT(TX.stageWall,{rep:[6.5,.78],midM:[.8,.7,.8],shdM:[.6,.46,.62]}),[0,2.3,Z-6.2],[0,0,0],[1,1,1],false);   // 後面正廳：一間間的格扇牆cnRoof(G,0,4.6,Z-6.2,5.4,1.9,2.2,{lift:.65,over:.6,wing:.8,rafter:false});
     {const px=12.5,pz=Z-24;for(let k=0;k<6;k++){const w=2.6-k*.32,y=k*1.35;T3(new THREE.BoxGeometry(w*.7,1.0,w*.7),CN.redD,[px,y+.5,pz],[0,.3,0],[1,1,1],false);T3(new THREE.ConeGeometry(w*.75,.55,4),CN.tileD,[px,y+1.25,pz],[0,Math.PI/4+.3,0],[1,1,1],false);}
       T3(new THREE.ConeGeometry(.12,1.1,6),CN.gold,[px,8.6,pz],[0,0,0],[1,1,1],false);}
     for(let i=0;i<9;i++){const x=-40+i*10+R3()*4;T3(new THREE.SphereGeometry(1,20,8,0,6.283,0,Math.PI/2),CN.tileD,[x,-.1,-38-R3()*8],[0,R3()*3,0],[7+R3()*3,3+R3()*2.5,4],false).userData.noCast=1;}
