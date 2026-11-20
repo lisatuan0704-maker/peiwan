@@ -17,7 +17,7 @@ async function wanted(){
  for(const c of cat){if(c.starter||c.gacha)continue;if(!Number.isSafeInteger(c.price)||c.price%10)throw Error('家具價格有誤：'+c.name);out['house:'+c.k]={name:c.name,price:c.price/10,cur:'cat',type:'小屋家具',active:true};}
  out['house:size18']={name:'小屋擴建・18×18',price:300,cur:'cat',type:'小屋擴建',active:true};   // v507
  out['house:size22']={name:'小屋擴建・22×22',price:600,cur:'cat',type:'小屋擴建',active:true};
- for(const [t,n] of [['forest','森林精靈小屋'],['mermaid','海底人魚屋']]){   // v510 小屋商城：每個系列的壁紙、地板各 500 貓貓幣（買一次就能貼任何一格）
+ for(const [t,n] of [['forest','森林精靈小屋'],['mermaid','海底人魚屋'],['cn','中華小惡魔']]){   // v561 加中華   // v510 小屋商城：每個系列的壁紙、地板各 500 貓貓幣（買一次就能貼任何一格）
   out['house:wall_'+t]={name:n+'・壁紙',price:50,cur:'cat',type:'小屋壁紙',active:true};out['house:floor_'+t]={name:n+'・地板',price:50,cur:'cat',type:'小屋地板',active:true};}
  const P=window.TTDailyPrices||{};
  for(const [id,d] of Object.entries(window.TTSeasonDrafts||{})){if(!d.daily)continue;const p=P[d.dailyKind];if(!Number.isSafeInteger(p)||p<=0)throw Error('日常系列價格有誤：'+d.name);out[id]={name:d.name,price:p,cur:'cat',custom:true,active:true,type:'時裝'};}

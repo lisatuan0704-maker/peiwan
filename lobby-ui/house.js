@@ -42,7 +42,7 @@ const r2=v=>Math.round(v*100)/100;
 // ---------- 資料 ----------
 // v510 壁紙／地板（D 11/08：小屋右下多一個「商城」，專門賣之後每個系列的壁紙跟地板；買了可以選要貼哪幾面牆、哪幾格地板，不用全換）
 // 商品：shopConfig house:wall_<系列>／house:floor_<系列>（貓貓幣，跟家具同一條購買路、進 houseInv）；擺法存 house/<key>/paint {f:{'i_j':系列},w:{'L3':系列}}，拜訪快照 houseView 也帶著
-const PAINTS=[{t:'forest',name:'森林精靈小屋'},{t:'mermaid',name:'海底人魚屋'}],PAINT_BY={};
+const PAINTS=[{t:'forest',name:'森林精靈小屋'},{t:'mermaid',name:'海底人魚屋'},{t:'cn',name:'中華小惡魔'}],PAINT_BY={};
 for(const p of PAINTS){PAINT_BY['wall_'+p.t]={k:'wall_'+p.t,name:p.name+'・壁紙',label:'小屋壁紙',paint:{kind:'w',theme:p.t}};PAINT_BY['floor_'+p.t]={k:'floor_'+p.t,name:p.name+'・地板',label:'小屋地板',paint:{kind:'f',theme:p.t}};}
 const hasPaint=p=>!!p&&(Object.keys(p.f||{}).length>0||Object.keys(p.w||{}).length>0);
 const itemOf=k=>S.byKey[k]||PAINT_BY[k];

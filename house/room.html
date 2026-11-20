@@ -2333,7 +2333,8 @@ previewSize:housePreviewSize,
 // 主題房的外殼（2 倍圖 house/paint/<系列>_<大小>.png，用到才載）照格子剪下來疊在原本的外殼上；同一個系列的格子併成一條路徑一次剪，格子之間不會有縫。
 // PAINT.f['i_j']＝這格地板用哪個系列；PAINT.w['L3'／'R3']＝第幾段牆（L：左牆 i=0、沿 j；R：右牆 j=0、沿 i）。
 var PAINT_META={forest:{14:{w:460,h:388,ax:230,ay:261.03},18:{w:588,h:452,ax:294,ay:293.03},22:{w:716,h:516,ax:358,ay:325.03}},
- mermaid:{14:{w:460,h:388,ax:230,ay:261.03},18:{w:588,h:452,ax:294,ay:293.03},22:{w:716,h:516,ax:358,ay:325.03}}};
+ mermaid:{14:{w:460,h:388,ax:230,ay:261.03},18:{w:588,h:452,ax:294,ay:293.03},22:{w:716,h:516,ax:358,ay:325.03}},
+ cn:{14:{w:472,h:394,ax:236,ay:262.53},18:{w:600,h:458,ax:300,ay:294.53},22:{w:728,h:522,ax:364,ay:326.53}}};   // v561 中華小惡魔（舊流程的 1 倍外殼放大 2 倍，錨點照原圖）
 var PAINT={f:{},w:{}},PTOOL=null,PHOVER=null,PDRAG=null,PIMG={};
 const paintOk=t=>Object.prototype.hasOwnProperty.call(PAINT_META,t);
 function cleanPaint(p){const o={f:{},w:{}};if(p&&typeof p==='object'){
