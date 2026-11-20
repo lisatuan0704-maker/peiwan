@@ -1860,9 +1860,9 @@ if(TAV3_ON&&STG3_ON){
     // 鱗片：小小的 U 形暗邊（貼圖只拿來「減一點顏色」，鱗片一排排錯開）
     const SZ=16,sd=new Uint8Array(SZ*SZ*4);for(let y=0;y<SZ;y++)for(let x=0;x<SZ;x++){const u=(x+.5)/SZ,v=(y+.5)/SZ,d=Math.hypot(u-.5,(v-.05)*1.3);sd[(y*SZ+x)*4]=d>.4&&d<.52?255:0;sd[(y*SZ+x)*4+3]=255;}
     const st=new THREE.DataTexture(sd,SZ,SZ);st.wrapS=st.wrapT=THREE.RepeatWrapping;st.magFilter=st.minFilter=THREE.NearestFilter;st.needsUpdate=true;
-    const BM=toon('#ffe27a','#f2b53e','#b8692a',{spec:.7,rim:'#fff3c2',rimA:.45,map:st,side:DS});BM.uniforms.uMapC.value.setRGB(-.2,-.2,-.08);BM.uniforms.uMapI.value.set(1,0);
+    const BM=toon('#ffe27a','#f2b53e','#b8692a',{spec:.7,rim:'#fff3c2',rimA:.45,map:st,side:DS});BM.uniforms.uMapC.value.setRGB(-.3,-.34,-.16);BM.uniforms.uMapI.value.set(1,0);
     const body=new THREE.Mesh(G0,BM);body.frustumCulled=false;D.add(body);const bo=new THREE.Mesh(G0,OLM);bo.frustumCulled=false;D.add(bo);
-    const NF=17,fins=new THREE.InstancedMesh(new THREE.ConeGeometry(.065,.24,4),CN.fin,NF);   // 背鰭大一點（原本 .17 在像素畫面上只剩紅點）fins.frustumCulled=false;D.add(fins);
+    const NF=17,fins=new THREE.InstancedMesh(new THREE.ConeGeometry(.065,.24,4),CN.fin,NF);fins.frustumCulled=false;D.add(fins);   // 背鰭大一點（原本 .17 在像素畫面上只剩紅點）
     const LG=new THREE.CylinderGeometry(.026,.02,.17,5);LG.translate(0,-.085,0);const legs=new THREE.InstancedMesh(LG,CN.dragon,4);legs.frustumCulled=false;D.add(legs);
     const CL=new THREE.InstancedMesh(new THREE.ConeGeometry(.018,.07,4),CN.skin,12);CL.frustumCulled=false;D.add(CL);
     const tail=new THREE.Group();D.add(tail);for(const [a,s] of[[0,1],[.5,.75],[-.5,.75]])mk(new THREE.ConeGeometry(.06*s,.3*s,5),CN.fin,tail,[Math.sin(a)*.05,0,-.12*s],[-Math.PI/2,0,a*.6]);
