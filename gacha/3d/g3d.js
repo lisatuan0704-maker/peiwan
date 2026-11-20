@@ -1844,7 +1844,7 @@ if(TAV3_ON&&STG3_ON){
       for(let k=0;k<6;k++){const x=4.6+k*1.15;cnLant(G,sd*x,2.36,zw+.42,.14,{cord:.14,house:true,ord:(x-4)/7.5,amp:.07});}
       cnPlum(G,sd*5.2,0,zw-1.2,1.25,sd);cnPlum(G,sd*9.4,0,zw-1.6,1.1,-sd);cnBamboo(G,sd*7.2,0,zw-1.0,5,3.6);cnBamboo(G,sd*10.8,0,zw-.9,4,3.2);}
     // 門樓後面的正廳屋頂（有深度）、遠處的寶塔與屋簷剪影、山
-    T3(new THREE.BoxGeometry(10.4,4.6,3.6),toonT(TX.stageWall,{rep:[6.5,.78],midM:[.8,.7,.8],shdM:[.6,.46,.62]}),[0,2.3,Z-6.2],[0,0,0],[1,1,1],false);   // 後面正廳：一間間的格扇牆cnRoof(G,0,4.6,Z-6.2,5.4,1.9,2.2,{lift:.65,over:.6,wing:.8,rafter:false});
+    T3(new THREE.BoxGeometry(10.4,4.6,3.6),toonT(TX.stageWall,{rep:[6.5,.78],midM:[.8,.7,.8],shdM:[.6,.46,.62]}),[0,2.3,Z-6.2],[0,0,0],[1,1,1],false);cnRoof(G,0,4.6,Z-6.2,5.4,1.9,2.2,{lift:.65,over:.6,wing:.8,rafter:false});   // 後面正廳：一間間的格扇牆＋屋頂
     {const px=12.5,pz=Z-24;for(let k=0;k<6;k++){const w=2.6-k*.32,y=k*1.35;T3(new THREE.BoxGeometry(w*.7,1.0,w*.7),CN.redD,[px,y+.5,pz],[0,.3,0],[1,1,1],false);T3(new THREE.ConeGeometry(w*.75,.55,4),CN.tileD,[px,y+1.25,pz],[0,Math.PI/4+.3,0],[1,1,1],false);}
       T3(new THREE.ConeGeometry(.12,1.1,6),CN.gold,[px,8.6,pz],[0,0,0],[1,1,1],false);}
     for(let i=0;i<9;i++){const x=-40+i*10+R3()*4;T3(new THREE.SphereGeometry(1,20,8,0,6.283,0,Math.PI/2),CN.tileD,[x,-.1,-38-R3()*8],[0,R3()*3,0],[7+R3()*3,3+R3()*2.5,4],false).userData.noCast=1;}
