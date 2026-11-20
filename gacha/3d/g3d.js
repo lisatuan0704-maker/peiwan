@@ -1862,7 +1862,7 @@ if(TAV3_ON&&STG3_ON){
     const st=new THREE.DataTexture(sd,SZ,SZ);st.wrapS=st.wrapT=THREE.RepeatWrapping;st.magFilter=st.minFilter=THREE.NearestFilter;st.needsUpdate=true;
     const BM=toon('#ffe27a','#f2b53e','#b8692a',{spec:.7,rim:'#fff3c2',rimA:.45,map:st,side:DS});BM.uniforms.uMapC.value.setRGB(-.2,-.2,-.08);BM.uniforms.uMapI.value.set(1,0);
     const body=new THREE.Mesh(G0,BM);body.frustumCulled=false;D.add(body);const bo=new THREE.Mesh(G0,OLM);bo.frustumCulled=false;D.add(bo);
-    const NF=17,fins=new THREE.InstancedMesh(new THREE.ConeGeometry(.05,.17,4),CN.fin,NF);fins.frustumCulled=false;D.add(fins);
+    const NF=17,fins=new THREE.InstancedMesh(new THREE.ConeGeometry(.065,.24,4),CN.fin,NF);   // 背鰭大一點（原本 .17 在像素畫面上只剩紅點）fins.frustumCulled=false;D.add(fins);
     const LG=new THREE.CylinderGeometry(.026,.02,.17,5);LG.translate(0,-.085,0);const legs=new THREE.InstancedMesh(LG,CN.dragon,4);legs.frustumCulled=false;D.add(legs);
     const CL=new THREE.InstancedMesh(new THREE.ConeGeometry(.018,.07,4),CN.skin,12);CL.frustumCulled=false;D.add(CL);
     const tail=new THREE.Group();D.add(tail);for(const [a,s] of[[0,1],[.5,.75],[-.5,.75]])mk(new THREE.ConeGeometry(.06*s,.3*s,5),CN.fin,tail,[Math.sin(a)*.05,0,-.12*s],[-Math.PI/2,0,a*.6]);
@@ -1881,6 +1881,12 @@ if(TAV3_ON&&STG3_ON){
       for(const [y,z,a] of[[.05,-.14,.6],[-.02,-.13,.85],[.12,-.1,.4]])mk(new THREE.ConeGeometry(.045,.24,5),RM,Hd,[sx*.11,y,z],[-Math.PI/2+.2,0,-sx*a]);
       mk(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(sx*.05,0,.36),V3(sx*.24,.03,.32),V3(sx*.42,-.08,.16),V3(sx*.52,-.24,-.04),V3(sx*.5,-.36,-.2)]),16,.011,4,false),CN.skin,Hd,[0,0,0],[0,0,0],[1,1,1],false);}
     Hd.scale.setScalar(1.15);
+    // v2：Tripo 生成的龍頭（tavern/cn_dragon_head.glb）載到就換掉上面程式做的方頭；置中、略往前推（脖子接在龍身上），金色雙面（小破洞不透黑）
+    GLL.loadAsync('tavern/cn_dragon_head.glb'+DV).then(gl=>{gl.scene.updateMatrixWorld(true);const ps=[];gl.scene.traverse(o=>{if(o.isMesh){const g=o.geometry.clone().applyMatrix4(o.matrixWorld);for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='normal'&&k!=='uv')g.deleteAttribute(k);if(!g.attributes.normal)g.computeVertexNormals();g.userData.map=o.material&&o.material.map;ps.push(g);}});if(!ps.length)return;
+      const bb=new THREE.Box3();for(const g of ps){g.computeBoundingBox();bb.union(g.boundingBox);}const c=bb.getCenter(V3()),sz=bb.getSize(V3()),k=.5/Math.max(sz.x,sz.y,sz.z);
+      for(const ch of[...Hd.children])ch.visible=false;const HM=toon('#ffe27a','#f2b53e','#b8692a',{spec:.8,rim:'#fff3c2',rimA:.45,side:DS});
+      for(const g of ps){g.translate(-c.x,-c.y,-c.z);g.scale(k,k,k);g.translate(0,.02,sz.z*k*.32);const mp=g.userData.map;   // 有貼圖就用 Tripo 的顏色（紅鬃、紅舌、眼睛），卡通打光分三階
+        if(mp){mp.colorSpace=THREE.NoColorSpace;mp.needsUpdate=true;}mk(g,mp&&g.attributes.uv?toonT(mp,{side:DS,midM:[1.08,1,.9],shdM:[.8,.62,.6],rim:'#fff3c2',rimA:.4}):HM,Hd);}}).catch(()=>{});
     CNDRG={D,N,RS,G0,pos,nrm:G0.attributes.normal.array,fins,NF,legs,CL,tail,Hd};}
   // ===== 中華卡池：月夜戲台（待機）=====
   BUILD=STG_C;{const FY=-.34,ZB=-8.4,MR=3.0,MY=FY+2.95;cnDome(STG_C,-28,9);cnFloor(STG_C,FY,-2,34);
