@@ -541,7 +541,7 @@ fShadow.rotation.x=-Math.PI/2;fShadow.visible=false;world.add(fShadow);
 // ---------- 家具本體 v5（D 11/07：「平平的很微妙」→ 改用小屋家具的原始 3D 模型）----------
 // 模型：bed/export_gacha_glb.py 從 Blender 原檔轉出（models/<key>.glb，只有幾何＋材質名）。
 // 上色：models/tone.json＝從原圖量出來的「每個材質 8 階顏色＋明暗門檻」，轉到斜角時明暗分布跟原圖一樣；停好後換成原圖（整數倍、一格對一格）。
-const GLL=new GLTFLoader(),FCACHE={},DV='?v=76';let TONE={},FPAL={};   // DV＝資料版本：家具重匯後改這裡，瀏覽器才不會讀到舊的快取
+const GLL=new GLTFLoader(),FCACHE={},DV='?v=77';let TONE={},FPAL={};   // DV＝資料版本：家具重匯後改這裡，瀏覽器才不會讀到舊的快取
 const PPU=45.255,EL30=Math.PI/6;
 function loadFurn(k){return FCACHE[k]||(FCACHE[k]=GLL.loadAsync('models/'+k+'.glb'+DV).then(gl=>{gl.scene.updateMatrixWorld(true);const parts=[];
   gl.scene.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.clone().applyMatrix4(o.matrixWorld);for(const a of Object.keys(g.attributes))if(a!=='position'&&a!=='normal')g.deleteAttribute(a);parts.push({g,mat:o.material.name});});

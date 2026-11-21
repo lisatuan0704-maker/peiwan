@@ -40,6 +40,10 @@
   **可以走上去的家具**（house/room.html v562 段，DEF.walk {h0,h,p,half}）：不擋路（blocked(except,walk)）、只能從兩頭上下（walkStepOK）、站上去的小人／朋友照拱形抬高（walkH、liftP）、畫在橋前面（behind）、
   別的家具不能放在橋上。測試 scratchpad cn/e2e_bridge.cjs 8 項（真的大廳＋模擬資料庫）。⚠ 手機搖桿從側邊推還是能上橋（只擋了點地板找路）。
   預覽屋：tt-room-kit/room/house-cn36.html（36 件各一個、白天光線；scratchpad make_cn36.py＋walk_patch.py 產生）。
+  **拱橋第二版（11/22 D「看起來完全不像走在上面」「兩側圍欄太小」）**：欄杆加高到小人腰（尋杖 0.45、望柱 0.50＋金頂、實心華板金菱、淨瓶短柱、紅地栿、四角抱鼓石）、拱高 0.26→0.32（walk.h＝0.32）。
+  近側欄杆（模型 -Y 那排，iso／isor 都朝鏡頭）零件標 o['front']；build_props.py `FRONTMASK=1` 多算 {view}_front.png → bed/front_mask.py 縮成 1 倍遮罩 → DEF.vs_bridge.walk.fm（data URL，[iso,isor]）。
+  room.html v562b（scratchpad walk_patch2.py）：frontImg／frontOver：小人、朋友站在橋上時，畫完小人再把「前側欄杆」蓋上去（只蓋小人那一塊）；sil／dollLift 照拱形抬高、提亮扣掉前側欄杆；
+  搖桿 walkMoveOK：只能從橋頭上下、橋上離欄杆 ≥0.3 格（之前的⚠已修）。e2e_bridge 8/8。⚠ 近距離畫面（小人在橋上每一格、白天／夜晚）還沒逐格看過。
 - 異色圖：tt-room-kit/bed/cnvar.py（依每格材質重新上色＋吸到乾淨色階，原色檔不動）；D 11/21「主色沒問題，細節換色後要更乾淨」→ 已加金邊／金飾分組與吸色。
 - 驗證：主機測試 29/29、規則第二十八批 31/31、大廳端 39/39、端到端（真的 lib/gacha.js＋模擬資料庫）14/14；通用／人魚卡池回歸截圖正常。
 - 版本：verTag v561、ver.json 561、lobby-view 561、house.js／house.css／gacha.js ?v=561、house.js VER 561、gacha.js VER 561。
