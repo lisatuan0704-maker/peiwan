@@ -80,9 +80,9 @@ let ovTex=null,FINAL=null;
 
 // 最後一道：轉像素
 FINAL=new THREE.ShaderMaterial({uniforms:{tW:{value:null},tC:{value:null},tO:{value:ovTex},tB:{value:null},tR:{value:null},uBg:{value:0},uRoom:{value:0},uBgDim:{value:0},uRes:RESU,uPL:{value:[...PALETTE.map(oklab),...Array(64-PALETTE.length).fill(0).map(()=>V3(9,9,9))]},uPR:{value:[...PALETTE.map(C),...Array(64-PALETTE.length).fill(0).map(()=>C('#000000'))]},uN:{value:PALETTE.length},
-  uFlash:{value:new THREE.Vector4(1,1,1,0)},uDith:{value:.075},uGrade:{value:0},uGL:{value:Array.from({length:24},()=>new THREE.Vector4())},uGN:{value:0},uImp:{value:new THREE.Vector4(1,1,1,0)},uImpD:{value:C('#2f1d4a')}},
+  uFlash:{value:new THREE.Vector4(1,1,1,0)},uDith:{value:.075},uGrade:{value:0},uNight:{value:1},uGL:{value:Array.from({length:24},()=>new THREE.Vector4())},uGN:{value:0},uImp:{value:new THREE.Vector4(1,1,1,0)},uImpD:{value:C('#2f1d4a')}},
   vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`,
-  fragmentShader:`precision highp float;uniform sampler2D tW,tC,tO,tB,tR;uniform float uBg,uRoom,uBgDim;uniform vec2 uRes;uniform vec3 uPL[64];uniform vec3 uPR[64];uniform int uN;uniform vec4 uFlash,uImp;uniform vec3 uImpD;uniform float uDith,uGrade;uniform vec4 uGL[24];uniform int uGN;varying vec2 vUv;
+  fragmentShader:`precision highp float;uniform sampler2D tW,tC,tO,tB,tR;uniform float uBg,uRoom,uBgDim;uniform vec2 uRes;uniform vec3 uPL[64];uniform vec3 uPR[64];uniform int uN;uniform vec4 uFlash,uImp;uniform vec3 uImpD;uniform float uDith,uGrade,uNight;uniform vec4 uGL[24];uniform int uGN;varying vec2 vUv;
 vec3 toLin(vec3 c){return mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),step(.04045,c));}
 vec3 lab(vec3 c){c=toLin(clamp(c,0.,1.));float l=.4122214708*c.r+.5363325363*c.g+.0514459929*c.b;float m=.2119034982*c.r+.6806995451*c.g+.1073969566*c.b;float s=.0883024619*c.r+.2817188376*c.g+.6299787005*c.b;
 l=pow(max(l,0.),1./3.);m=pow(max(m,0.),1./3.);s=pow(max(s,0.),1./3.);return vec3(.2104542553*l+.793617785*m-.0040720468*s,1.9779984951*l-2.428592205*m+.4505937099*s,.0259040371*l+.7827717662*m-.808675766*s);}
@@ -98,8 +98,8 @@ for(int i=0;i<64;i++){if(i>=uN)break;vec3 d=L-uPL[i];float e=dot(d,d);if(e<best)
 if(b0<.00012)q=q0;
 if(bg)q=clamp(c,0.,1.);
 if(uImp.a>.5){float on=step(.86,dot(c,vec3(.3,.55,.15)));if(uImp.a>1.5)on=1.-on;q=mix(uImpD,uImp.rgb,on);}   /* 衝擊格：只剩亮／暗兩色（漫畫的衝擊畫面），第二格反白 */
-if(uGrade>0.){vec2 g=(vUv-vec2(.5,.62))*vec2(uRes.x/uRes.y,1.);float d=length(g),warm=1.-smoothstep(.05,.85,d),vg=smoothstep(.55,1.15,length((vUv-.5)*vec2(uRes.x/uRes.y,1.)));   /* 中華：燈籠夜的暖光濾鏡（轉色盤之後蓋上去，不會變網點） */
-  float low=1.-smoothstep(.0,.55,vUv.y);vec3 gq=q*mix(vec3(.9,.86,1.03),vec3(1.14,.97,.86),max(warm,low*.6))+vec3(.11,.04,.0)*warm*warm+vec3(.05,.012,.0)*low;gq=mix(gq,gq*vec3(.48,.36,.62),vg*.75);   /* 地面帶一點燈籠照下來的暖色 */
+if(uGrade>0.){vec2 g=(vUv-vec2(.5,.62))*vec2(uRes.x/uRes.y,1.);float d=length(g),warm=1.-smoothstep(.05,.72,d),vg=smoothstep(.2,.95,length((vUv-.5)*vec2(uRes.x/uRes.y,1.)));   /* 中華：燈籠夜的暖光濾鏡（轉色盤之後蓋上去，不會變網點） */
+  float low=1.-smoothstep(.0,.55,vUv.y);vec3 gq=q*mix(vec3(.9,.86,1.03),vec3(1.14,.97,.86),max(warm,low*.6))+vec3(.11,.04,.0)*warm*warm+vec3(.05,.012,.0)*low;gq*=mix(vec3(1.),vec3(.5,.42,.68),min(1.,uNight*(1.-warm)));gq=mix(gq,gq*vec3(.2,.15,.32),min(1.,vg*(.45+.45*uNight)));   /* 燈籠照不到的外圈整體壓暗＋四角更暗（11/22 D「周圍不夠黑」，uNight 強度） */   /* 地面帶一點燈籠照下來的暖色 */
   float gl=0.;for(int i=0;i<24;i++){if(i>=uGN)break;vec4 L=uGL[i];vec2 dd=(vUv-L.xy)*vec2(uRes.x/uRes.y,1.);gl+=L.w*exp(-dot(dd,dd)/(L.z*L.z));}   /* 每盞燈籠周圍一圈暖暖的光 */
   gq+=vec3(1.,.52,.3)*min(gl,1.4)*.55;q=mix(q,gq,uGrade);}
 if(uRoom>.5){vec4 rm=texture2D(tR,vUv);q=mix(q,mix(rm.rgb,uFlash.rgb,uFlash.a),rm.a);}
@@ -2183,7 +2183,7 @@ function rkHide(){if(rk.dataset.k){rk.dataset.k='';rk.className='';}}
 let mode='idle',plan=null,T0=0,fired=new Set(),paused=false,skipTo=-1,LOOK=null;
 const showTime=e=>{let s=e;for(const[t,d]of(plan?.holds||[]))if(e>t)s-=Math.min(e-t,d);return s;};
 // 燈籠暖光（最後一道 uGL）：每盞看得到的燈籠投到螢幕上（中心 uv、半徑、亮度）；扭蛋機翅膀下那盞也算
-const _gv=V3(),_gr=V3();
+const _gv=V3(),_gr=V3(),NIGHT0=Q.has('night')?+Q.get('night'):1;   // ?night= 可以臨時調夜色強度（比較用）
 function cnGlow(){const U=FINAL.uniforms,GL=U.uGL.value;let n=0;cam.updateMatrixWorld();const rt=V3(1,0,0).applyQuaternion(cam.quaternion);
   const add=(o,R,I)=>{if(n>=24||!(I>.02))return;o.getWorldPosition(_gv);_gr.copy(_gv).addScaledVector(rt,R*4.6);_gv.project(cam);_gr.project(cam);if(_gv.z>1||Math.abs(_gv.x)>1.4||Math.abs(_gv.y)>1.4)return;
     const r=Math.hypot((_gr.x-_gv.x)*.5*W/H,(_gr.y-_gv.y)*.5);GL[n++].set(_gv.x*.5+.5,_gv.y*.5+.5,Math.max(.004,r),I);};
@@ -2193,7 +2193,7 @@ function renderFrame(s,e){themeFX(s);tavShadow();const fl=plan&&mode!=='idle'?fl
   const im=plan&&mode!=='idle'&&!RM?(plan.imp||[]).find(([t,d])=>s>=t&&s<t+d):null;if(im){const c=C(im[3]);FINAL.uniforms.uImp.value.set(c.r,c.g,c.b,im[2]);}else FINAL.uniforms.uImp.value.w=0;
   PA.mat.uniforms.uTime.value=PN.mat.uniforms.uTime.value=s;PA.mat.uniforms.uTime.value=s;for(const m of BB)m.quaternion.copy(cam.quaternion);
   CARD.mf.uniforms.uFoil.value=0;
-  FINAL.uniforms.uGrade.value=THEME==='cn'?1:0;if(THEME==='cn')cnGlow();
+  FINAL.uniforms.uGrade.value=THEME==='cn'?1:0;if(THEME==='cn'){cnGlow();FINAL.uniforms.uNight.value=NIGHT0*(TAV_C.visible?.45:(mode==='idle'?1:.7));}   // 夜色：待機最暗、扭蛋機特寫中等、大門那一鏡（門口有大燈籠照著）減半
   setPal(THEME==='cn'?'cn':(TAV3.visible&&Array.isArray(TAVPAL)&&TAVPAL.length?'tav':'main'));
   const bgOn=TAV.visible||LBG.visible;if(LBG.visible)FINAL.uniforms.uBgDim.value=Math.max(FINAL.uniforms.uBgDim.value,GU.uDim.value*.7);if(bgOn){R.setRenderTarget(rtB);R.setClearColor(0x2f1d4a,1);R.clear();R.render(bgScene,cam);}
   FINAL.uniforms.uBg.value=bgOn?1:0;FINAL.uniforms.tB.value=rtB.texture;FINAL.uniforms.uRoom.value=plan&&mode!=='idle'&&plan.roomOn&&FINAL.uniforms.tR.value?1:0;
