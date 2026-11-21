@@ -10,7 +10,7 @@
 - 資料庫：houseTix/<key>{balance,lastTx}、houseTixTx/<key>/<id>（只有主機寫、本人／店員可讀）；houseInv 的異色一樣是 houseInv/<key>/<k~n>/<id>{src:'tix'}。
   **規則第二十八批**（tests/security-rules-v428/build/harden-phase28.cjs）：上面兩個節點＋擺設／拜訪快照接受 `k~n`（舊規則 /^[a-z0-9_]{1,60}$/ 會擋）。
 - 扭蛋頁（tt-room-kit/gacha/3d → sync_to_site.py）：中華場景＝月夜戲台（待機）＋朱紅宅門（酒館那一鏡），手繪紋樣貼圖（toonT）、Tripo 石獅（tavern/cn_lion.glb）、
-  燈籠一盞盞亮、限定＝金龍盤旋（cnFX，龍身程式做的管狀、龍頭是 Tripo tavern/cn_dragon_head.glb，cn_prop_glb_tex.py 保留貼圖減面；載不到退回程式做的頭）；音效 cnSfx（燈籠小鈴、金龍、銅鑼）；g3d.js?v=88。中華色盤 CN_PAL。POOLS.cn.lim＝主機檔期表沒有它就整個藏起來（網站比主機早上也不會變常駐池）。
+  燈籠一盞盞亮、限定＝金龍盤旋（cnFX，龍身程式做的管狀、龍頭是 Tripo tavern/cn_dragon_head.glb，cn_prop_glb_tex.py 保留貼圖減面；載不到退回程式做的頭）；音效 cnSfx（燈籠小鈴、金龍、銅鑼）；g3d.js?v=89。中華色盤 CN_PAL。POOLS.cn.lim＝主機檔期表沒有它就整個藏起來（網站比主機早上也不會變常駐池）。
   家具券：右上餘額、結果名牌「券+N」、圖鑑兌換面板（店裡視窗風格）；試做頁的券存在 localStorage tt_gacha_tix。重複的家具不交給「去擺放」。
 - 大廳：lobby-ui/gacha.js（TTGachaHost.tix／tixInfo／tixOpen／tixCost／buyTix／loadInfo、事件 tt-house-tix）、house.js（背包／擺放／拜訪吃 `k~n`、
   「我的家具」上方家具券膠囊、FX_SETS 加中華「金粉紅韻／紅燈籠夜」）。
@@ -24,6 +24,9 @@
   燈籠身上竹骨貼圖（TX_LANT）；石獅只描抹平過的外輪廓（smoothHull，原本一身黑點）；舞台陣紋換中華版（MTEX_CN，machTheme 換貼圖）；
   扭蛋機頂：深紫蓋＋朱紅耳內、頂上小金寶珠、兩側正面攤開的小蝙蝠翼（翼骨兩面）、左翼下面提一盞小紅燈籠（放頭頂會擋到匾額「好運連連」；原本金蓋＋金球＋紫葉子看不懂）。
   遠處寶塔改八角塔身＋翹簷＋金塔剎（cnPagoda，原本紅方塊疊四角錐）。
+  v4（D 11/22「後面的樹跟竹林還是不夠精細跟多」「已結束就要拔掉」「背景要中式夜晚燈籠光的濾鏡感」）：梅樹四層細枝、花沿整條枝開（粉／白／深粉三色）；
+  竹叢一叢 10～16 根、前後兩排深淺、細枝垂葉三種綠、整叢隨風輕擺；戲台兩旁各 3 棵梅＋5 叢竹、大門兩旁竹叢加密。卡池清單不列已結束的（網址指定已結束的卡池也換成開著的）。
+  最後一道加中華夜色濾鏡（uGrade：中央上方暖光、地面暖色、四角壓暗偏紫）＋每盞燈籠一圈暖光（cnGlow→uGL，最多 24 盞，亮度跟燈籠 I 走）；都在轉色盤之後疊，不會變網點。
   **中華的顏色一律用 CN_PAL 裡的顏色**（不在色盤裡＝轉像素時整片網點）；手繪貼圖 cnCanvas 畫完每點吸到色盤，toonT 的中／暗兩階另做兩張色盤貼圖（cnShade），不再乘色。
   介面：家具券膠囊不再壓金幣（top 40）、正式版跟著金幣讓出關閉鈕；卡池鈕跟檔期牌拉開；手機直立結果頁三顆鈕固定一排、名牌與圖鑑鈕分開、檔期牌只留「剩 N 天」、卡池拉片半圓完整露出；
   十連名牌也避開家具券／關閉鈕，找不到空位挑疊最少的。檢查工具 scratchpad ui_overlap.cjs（8 種大小 × 試做／正式 × 待機／單抽／十連）。

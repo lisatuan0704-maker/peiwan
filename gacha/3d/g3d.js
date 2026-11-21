@@ -80,9 +80,9 @@ let ovTex=null,FINAL=null;
 
 // 最後一道：轉像素
 FINAL=new THREE.ShaderMaterial({uniforms:{tW:{value:null},tC:{value:null},tO:{value:ovTex},tB:{value:null},tR:{value:null},uBg:{value:0},uRoom:{value:0},uBgDim:{value:0},uRes:RESU,uPL:{value:[...PALETTE.map(oklab),...Array(64-PALETTE.length).fill(0).map(()=>V3(9,9,9))]},uPR:{value:[...PALETTE.map(C),...Array(64-PALETTE.length).fill(0).map(()=>C('#000000'))]},uN:{value:PALETTE.length},
-  uFlash:{value:new THREE.Vector4(1,1,1,0)},uDith:{value:.075},uImp:{value:new THREE.Vector4(1,1,1,0)},uImpD:{value:C('#2f1d4a')}},
+  uFlash:{value:new THREE.Vector4(1,1,1,0)},uDith:{value:.075},uGrade:{value:0},uGL:{value:Array.from({length:24},()=>new THREE.Vector4())},uGN:{value:0},uImp:{value:new THREE.Vector4(1,1,1,0)},uImpD:{value:C('#2f1d4a')}},
   vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`,
-  fragmentShader:`precision highp float;uniform sampler2D tW,tC,tO,tB,tR;uniform float uBg,uRoom,uBgDim;uniform vec2 uRes;uniform vec3 uPL[64];uniform vec3 uPR[64];uniform int uN;uniform vec4 uFlash,uImp;uniform vec3 uImpD;uniform float uDith;varying vec2 vUv;
+  fragmentShader:`precision highp float;uniform sampler2D tW,tC,tO,tB,tR;uniform float uBg,uRoom,uBgDim;uniform vec2 uRes;uniform vec3 uPL[64];uniform vec3 uPR[64];uniform int uN;uniform vec4 uFlash,uImp;uniform vec3 uImpD;uniform float uDith,uGrade;uniform vec4 uGL[24];uniform int uGN;varying vec2 vUv;
 vec3 toLin(vec3 c){return mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),step(.04045,c));}
 vec3 lab(vec3 c){c=toLin(clamp(c,0.,1.));float l=.4122214708*c.r+.5363325363*c.g+.0514459929*c.b;float m=.2119034982*c.r+.6806995451*c.g+.1073969566*c.b;float s=.0883024619*c.r+.2817188376*c.g+.6299787005*c.b;
 l=pow(max(l,0.),1./3.);m=pow(max(m,0.),1./3.);s=pow(max(s,0.),1./3.);return vec3(.2104542553*l+.793617785*m-.0040720468*s,1.9779984951*l-2.428592205*m+.4505937099*s,.0259040371*l+.7827717662*m-.808675766*s);}
@@ -98,6 +98,10 @@ for(int i=0;i<64;i++){if(i>=uN)break;vec3 d=L-uPL[i];float e=dot(d,d);if(e<best)
 if(b0<.00012)q=q0;
 if(bg)q=clamp(c,0.,1.);
 if(uImp.a>.5){float on=step(.86,dot(c,vec3(.3,.55,.15)));if(uImp.a>1.5)on=1.-on;q=mix(uImpD,uImp.rgb,on);}   /* 衝擊格：只剩亮／暗兩色（漫畫的衝擊畫面），第二格反白 */
+if(uGrade>0.){vec2 g=(vUv-vec2(.5,.62))*vec2(uRes.x/uRes.y,1.);float d=length(g),warm=1.-smoothstep(.05,.85,d),vg=smoothstep(.55,1.15,length((vUv-.5)*vec2(uRes.x/uRes.y,1.)));   /* 中華：燈籠夜的暖光濾鏡（轉色盤之後蓋上去，不會變網點） */
+  float low=1.-smoothstep(.0,.55,vUv.y);vec3 gq=q*mix(vec3(.9,.86,1.03),vec3(1.14,.97,.86),max(warm,low*.6))+vec3(.11,.04,.0)*warm*warm+vec3(.05,.012,.0)*low;gq=mix(gq,gq*vec3(.48,.36,.62),vg*.75);   /* 地面帶一點燈籠照下來的暖色 */
+  float gl=0.;for(int i=0;i<24;i++){if(i>=uGN)break;vec4 L=uGL[i];vec2 dd=(vUv-L.xy)*vec2(uRes.x/uRes.y,1.);gl+=L.w*exp(-dot(dd,dd)/(L.z*L.z));}   /* 每盞燈籠周圍一圈暖暖的光 */
+  gq+=vec3(1.,.52,.3)*min(gl,1.4)*.55;q=mix(q,gq,uGrade);}
 if(uRoom>.5){vec4 rm=texture2D(tR,vUv);q=mix(q,mix(rm.rgb,uFlash.rgb,uFlash.a),rm.a);}
 vec4 cc=texture2D(tC,vUv);q=mix(q,cc.rgb,cc.a);vec4 o=texture2D(tO,vUv);q=mix(q,o.rgb,o.a);gl_FragColor=vec4(q,1.);}`});
 const fsq=new FullScreenQuad(FINAL);
@@ -1411,7 +1415,7 @@ const twDate=t=>{const x=tw(t);return x.M+'/'+x.D+'（'+x.W+'）'+x.h+':'+x.m;},
 const leftTxt=ms=>ms>=DAY?'剩 '+Math.floor(ms/DAY)+' 天':ms>=3600e3?'剩 '+Math.floor(ms/3600e3)+' 小時':'剩 '+Math.max(1,Math.ceil(ms/60e3))+' 分鐘';
 const tabTxt=st=>st.perm?'常駐':st.open?leftTxt(st.left):st.soon?twDay(st.start)+'登場':'已結束';
 const firstOpen=()=>Object.keys(POOLS).find(k=>poolState(k).open)||'gen';
-let THEME=POOLS[Q.get('pool')]?Q.get('pool'):firstOpen();if(!poolState(THEME).open&&!Q.get('pool'))THEME=firstOpen();   // 預設的卡池不在檔期內就換一個開著的
+let THEME=POOLS[Q.get('pool')]?Q.get('pool'):firstOpen();if(!poolState(THEME).open&&(!Q.get('pool')||poolState(THEME).ended))THEME=firstOpen();   // 已結束的卡池（11/22 D「已結束就要拔掉」）連網址指定也換掉   // 預設的卡池不在檔期內就換一個開著的
 const poolItems=()=>ITEMS.filter(i=>POOLS[THEME].sets.includes(i.set||ROOMD?.items?.[i.k]?.set));
 const STG_S=new THREE.Group(),STG_F=new THREE.Group(),TAV_S=new THREE.Group(),TAV_F=new THREE.Group();for(const G of[STG_S,STG_F,TAV_S,TAV_F]){G.visible=false;world.add(G);}
 // ---- 中華卡池（D 11/21「中華系列＋專屬轉蛋動畫」，11/23 上）----
@@ -1434,7 +1438,7 @@ const CN_PAL=['#1a1028','#241638','#2f1d4a','#3b2559','#4b2f6c','#5e3b82','#7348
   '#3a2622','#5a3438','#8a4b22','#b8692a','#d9952f','#f2b53e','#ffd25e','#ffe27a','#fff3c2','#c99a8e','#e9b9b4','#f3d3c4','#fbe1cf','#fff6ec','#ffffff',
   '#5c4a63','#7a6680','#9a8499','#bba3b2','#d9c4cc','#5a48a0','#7a64c8','#9a86e6','#b8a2ff','#d4c6ff','#ebe4ff',
   '#2a4a50','#3f7f78','#5fae9a','#8fd9bb','#bff0da','#e6fff3','#56703f','#7a9450','#9cb35e','#c27fb8'];
-const CNL=[],CNSKY=[],CNSWAY=[];let CNDRG=null;   // 燈籠（亮度 cnFX 控制）、孔明燈、會晃的東西、金龍
+const CNL=[],CNSKY=[],CNSWAY=[];let CNDRG=null,CNMLAN=null;   // 燈籠（亮度 cnFX 控制）、孔明燈、會晃的東西、金龍
 // ---- 中華卡池 v2 精緻化（D 11/21「精緻度不夠高，這次主打精緻風，不要難看的色塊」）----
 // 大面積不再是一整片單色：牆板、門板、額枋、走馬板、石裙牆、屋瓦、帷幕、粉牆飾帶都貼「手繪紋樣貼圖」，再照卡通打光分三階明暗。
 // 貼圖只用中華色盤裡的顏色、硬邊（轉像素時才不會變成一片抖動雜點）；暗面乘「玫瑰紫」（犬尤的陰影色，不是黑）。
@@ -1533,7 +1537,7 @@ function cnLant(G,x,yTop,z,R,o={}){const cord=o.cord??.3,P=new THREE.Group();P.p
   const prof=[];for(let i=0;i<=10;i++){const t=i/10;prof.push(new THREE.Vector2(R*(.34+.66*Math.sin(Math.PI*t)),(t-.5)*R*1.7));}
   mk(new THREE.LatheGeometry(prof,12),m,L);for(const sy of[-1,1])mk(new THREE.CylinderGeometry(R*.44,R*.44,R*.16,12),CN.gold,L,[0,sy*R*.86,0]);
   mk(new THREE.SphereGeometry(R*.11,8,6),CN.gold,L,[0,-R*1.02,0],[0,0,0],[1,1,1],false);mk(new THREE.ConeGeometry(R*.2,R*.95,6),CN.redD,L,[0,-R*1.55,0],[Math.PI,0,0]);
-  const rec={P,m,ph:R3()*6,ord:o.ord??0,house:!!o.house};CNL.push(rec);CNSWAY.push({g:P,ph:rec.ph,amp:o.amp??.05});return rec;}
+  const rec={P,m,L,R,I:.5,ph:R3()*6,ord:o.ord??0,house:!!o.house};CNL.push(rec);CNSWAY.push({g:P,ph:rec.ph,amp:o.amp??.05});return rec;}   // rec 的 L、R、I：最後一道的燈籠暖光（cnGlow）用
 // 蝙蝠翼（小惡魔）：屋脊兩端的脊飾、扭蛋機蓋子兩側
 const WINGP=[[0,0],[.22,.08],[.46,.3],[.66,.74],[.53,.6],[.43,.7],[.32,.5],[.19,.58],[.11,.36],[0,.28]];
 function cnWing(G,x,y,z,sd,s,mat=CN.lac,ry=0){const g=new THREE.ExtrudeGeometry(shapeOf(WINGP.map(([a,b])=>[a*s,b*s])),{depth:.06*s/.5,bevelEnabled:false});g.translate(0,0,-.03*s/.5);
@@ -1582,37 +1586,42 @@ function taperTube(pts,r0,r1,rs=6){const cv=new THREE.CatmullRomCurve3(pts,false
   g.computeVertexNormals();return g;}
 // 從 a 到 b 的一根棍子（半徑 r0→r1）
 function segG(a,b,r0,r1=r0,rs=6){const d=V3().subVectors(b,a),L=d.length(),g=new THREE.CylinderGeometry(r1,r0,L,rs);g.translate(0,L/2,0);g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(V3(0,1,0),d.normalize()));g.translate(a.x,a.y,a.z);return g;}
-// 梅樹 v3：深色、一折一折的枝幹（梅枝的樣子），越往外越細；花是一朵朵平的五瓣小花（粉、白、朝鏡頭），
-// 一簇簇開在轉折處與枝頭、中間留空讓枝幹看得到；枝頭一顆深粉花苞。舊版是粗棕管子＋一團團粉色雜點
+// 梅樹 v4（D 11/22「後面的樹跟竹林還是不夠精細跟多」）：枝多分一層細枝（四層）、主幹旁再長一枝；花沿著整條枝開（不只轉折處），
+// 粉、白、深粉三色五瓣小花＋花心、枝頭深粉花苞；花朵一簇 3～6 朵，越外圈越密。枝幹深色一折一折
 const PLUM_M={bark:toon('#5a3438','#3a2622','#241638',{rim:'#c99a8e',rimA:.22}),fP:toon('#ffd4dc','#f290a8','#c8648a',{side:DS}),fW:toon('#ffffff','#ffeef2','#e9b9b4',{side:DS}),
-  bud:toon('#f290a8','#c8648a','#a24a75'),core:toon('#fff3c2','#ffd25e','#d9952f')};
+  fD:toon('#f290a8','#e27d9c','#c8648a',{side:DS}),bud:toon('#f290a8','#c8648a','#a24a75'),core:toon('#fff3c2','#ffd25e','#d9952f')};
 const PLUM_FG=(()=>{const P=[];for(let i=0;i<40;i++){const a=i/40*6.2832,r=.52+.48*Math.pow(Math.abs(Math.cos(a*2.5)),.7);P.push([Math.cos(a+Math.PI/2)*r,Math.sin(a+Math.PI/2)*r]);}return new THREE.ShapeGeometry(shapeOf(P));})(),
   BALL=new THREE.SphereGeometry(1,7,5);
-function cnPlum(G,x,y,z,s,flip=1){const r=rng(Math.round(Math.abs(x*97+z*31+s*13))+5),B=[],FP=[],FW=[],BD=[],CO=[];
-  const turn=(d,a,b)=>{const o=d.clone().applyAxisAngle(V3(0,0,1),a).applyAxisAngle(V3(0,1,0),b);if(o.y<.08)o.y=.08;return o.normalize();};
-  const bloom=(p,n,sp)=>{for(let k=0;k<n;k++){const q=V3(p.x+(r()-.5)*sp,p.y+(r()-.5)*sp*.8,p.z+(r()-.5)*sp*.5),sc=(.065+r()*.03)*Math.min(1.2,s/1.3);
-    (r()<.6?FP:FW).push([q.x,q.y,q.z+.03,sc,(r()-.5)*.6,(r()-.5)*.6,r()*6]);if(r()<.55)CO.push([q.x,q.y,q.z+.045,sc*.24]);}};
+function cnPlum(G,x,y,z,s,flip=1){const r=rng(Math.round(Math.abs(x*97+z*31+s*13))+5),B=[],FL=[[],[],[]],BD=[],CO=[];
+  const turn=(d,a,b)=>{const o=d.clone().applyAxisAngle(V3(0,0,1),a).applyAxisAngle(V3(0,1,0),b);if(o.y<.06)o.y=.06;return o.normalize();};
+  const bloom=(p,n,sp)=>{for(let k=0;k<n;k++){const q=V3(p.x+(r()-.5)*sp,p.y+(r()-.5)*sp*.8,p.z+(r()-.5)*sp*.6),sc=(.06+r()*.03)*Math.min(1.25,s/1.3),u=r();
+    FL[u<.5?0:(u<.82?1:2)].push([q.x,q.y,q.z+.03,sc,(r()-.5)*.6,(r()-.5)*.6,r()*6]);if(r()<.6)CO.push([q.x,q.y,q.z+.045,sc*.24]);}};
   const br=(p,dir,len,rad,d)=>{const pts=[p.clone()];let q=p.clone(),dd=dir.clone();
-    for(let k=0;k<3;k++){dd=turn(dd,(r()-.5)*.75,(r()-.5)*.5);q=q.clone().addScaledVector(dd,len/3);pts.push(q);}
+    for(let k=0;k<3;k++){dd=turn(dd,(r()-.5)*.8,(r()-.5)*.55);q=q.clone().addScaledVector(dd,len/3);pts.push(q);}
     const rEnd=rad*.6;B.push(taperTube(pts,rad,rEnd,d>1?7:5));
-    if(d<=1){for(let k=1;k<pts.length;k++)if(r()<.8)bloom(pts[k],2+Math.floor(r()*3),.13*s);BD.push([q.x,q.y,q.z,.028*s]);}
-    if(d>0){br(q,turn(dd,flip*(.35+r()*.3),(r()-.5)*.6),len*.74,rEnd,d-1);br(q,turn(dd,-flip*(.6+r()*.4),(r()-.5)*.8),len*.6,rEnd*.8,d-1);
-      if(d>=2&&r()<.75)br(pts[1+Math.floor(r()*2)],turn(dd,flip*(.95+r()*.4),(r()-.5)*.6),len*.45,rad*.5,d-2);}};
-  br(V3(x,y,z),V3(.16*flip,1,0).normalize(),1.0*s,.12*s,3);
-  B.push(new THREE.ConeGeometry(.2*s,.28*s,8,1,true).translate(x,y+.12*s,z));   // 樹根往外撐
-  mk(mergeGeometries(B),PLUM_M.bark,G);inst(PLUM_FG,PLUM_M.fP,FP,G);inst(PLUM_FG,PLUM_M.fW,FW,G);inst(BALL,PLUM_M.bud,BD,G);inst(BALL,PLUM_M.core,CO,G);}
-// 竹叢 v3：竹竿一根根分開（看得出是幾根）、上細下粗、淺色竹節；上半段的節長出細枝，枝頭一叢往下垂的細長竹葉（扇形 4～6 片），竿頂一叢往上
-const BAM_M={culm:toon('#9cb35e','#7a9450','#56703f',{rim:'#e6fff3',rimA:.22}),node:toon('#56703f','#56703f','#2a4a50'),
-  leaf:toon('#9cb35e','#7a9450','#56703f',{side:DS}),leafD:toon('#7a9450','#56703f','#2a4a50',{side:DS})};
-const BAM_LG=new THREE.ShapeGeometry(shapeOf([[0,0],[.024,.05],[.032,.15],[.022,.26],[0,.34],[-.022,.26],[-.032,.15],[-.024,.05]]));
-function cnBamboo(G,x,y,z,n,h){const r=rng(Math.round(Math.abs(x*53+z*17+h*7))+9),S=[],N=[],L1=[],L2=[];
-  for(let k=0;k<n;k++){const bx=x+(k-(n-1)/2)*.3+(r()-.5)*.12,bz=z+(r()-.5)*.5,hh=h*(.75+r()*.35),lean=(r()-.5)*.16,rad=.048+r()*.012;
-    const base=V3(bx,y,bz),tip=V3(bx+Math.sin(lean)*hh,y+Math.cos(lean)*hh,bz);S.push(taperTube([base,base.clone().lerp(tip,.5).add(V3(lean*.15,0,0)),tip],rad,rad*.55,7));
-    const nn=Math.floor(hh/.4);for(let i=1;i<=nn;i++){const t=i/(nn+.5),p=base.clone().lerp(tip,t),rr=rad*(1-.42*t);N.push(new THREE.CylinderGeometry(rr*1.2,rr*1.2,.032,7).rotateZ(-lean).translate(p.x,p.y,p.z));
-      if(t>.42&&r()<.8){const sd=r()<.5?-1:1,tw=p.clone().add(V3(sd*(.12+r()*.06),.05+r()*.04,(r()-.5)*.12));N.push(segG(p,tw,.01,.006,4));
-        const m=4+Math.floor(r()*3);for(let j=0;j<m;j++){const a=sd*(.75+(j/(m-1)-.5)*1.5)+(r()-.5)*.2;(r()<.6?L1:L2).push([tw.x,tw.y,tw.z+.01,1+r()*.4,(r()-.5)*.5,(r()-.5)*.7,Math.PI+a]);}}}
-    for(let j=0;j<5;j++)(r()<.5?L1:L2).push([tip.x,tip.y-.04,tip.z+.01,.9+r()*.3,(r()-.5)*.4,(r()-.5)*.5,(j/4-.5)*1.6+(r()-.5)*.2]);}
-  mk(mergeGeometries(S),BAM_M.culm,G);mk(mergeGeometries(N),BAM_M.node,G,[0,0,0],[0,0,0],[1,1,1],false);inst(BAM_LG,BAM_M.leaf,L1,G);inst(BAM_LG,BAM_M.leafD,L2,G);}
+    if(d<=2)for(let k=0;k<3;k++)for(const t of[.45,1]){if(r()>(d<=1?.92:.55))continue;bloom(pts[k].clone().lerp(pts[k+1],t),2+Math.floor(r()*(d<=1?5:3)),.15*s);}
+    if(d===0||r()<.3)BD.push([q.x,q.y,q.z,.026*s]);
+    if(d>0){br(q,turn(dd,flip*(.3+r()*.3),(r()-.5)*.6),len*.74,rEnd,d-1);br(q,turn(dd,-flip*(.55+r()*.4),(r()-.5)*.8),len*.62,rEnd*.82,d-1);
+      if(d>=2&&r()<.8)br(pts[1+Math.floor(r()*2)],turn(dd,flip*(.9+r()*.4),(r()-.5)*.7),len*.5,rad*.5,d-2);
+      if(d>=1&&r()<.55)br(pts[2],turn(dd,-flip*(.95+r()*.4),(r()-.5)*.7),len*.38,rad*.42,0);}};
+  br(V3(x,y,z),V3(.16*flip,1,0).normalize(),.9*s,.12*s,4);br(V3(x+.04*s*flip,y+.25*s,z),V3(-.5*flip,1,.15).normalize(),.6*s,.075*s,3);   // 主幹＋旁邊一枝
+  B.push(new THREE.ConeGeometry(.2*s,.28*s,8,1,true).translate(x,y+.12*s,z));
+  mk(mergeGeometries(B),PLUM_M.bark,G);inst(PLUM_FG,PLUM_M.fP,FL[0],G);inst(PLUM_FG,PLUM_M.fW,FL[1],G);inst(PLUM_FG,PLUM_M.fD,FL[2],G);inst(BALL,PLUM_M.bud,BD,G);inst(BALL,PLUM_M.core,CO,G);}
+// 竹叢 v4：一叢十幾根、分前後兩排（後排深一階＝有景深）、高低錯落；上半段每個節長一兩枝細枝，枝頭一叢 5～8 片往下垂的細長竹葉（三種綠），
+// 竿頂一叢往上；整叢從根部輕輕隨風擺（CNSWAY）。竹節是深色一圈
+const BAM_M={culm:toon('#9cb35e','#7a9450','#56703f',{rim:'#e6fff3',rimA:.22}),culmD:toon('#7a9450','#56703f','#2a4a50'),node:toon('#56703f','#56703f','#2a4a50'),
+  leaf:toon('#9cb35e','#7a9450','#56703f',{side:DS}),leafM:toon('#7a9450','#56703f','#2a4a50',{side:DS}),leafD:toon('#56703f','#2a4a50','#241638',{side:DS})};
+const BAM_LG=new THREE.ShapeGeometry(shapeOf([[0,0],[.022,.05],[.03,.15],[.021,.27],[0,.36],[-.021,.27],[-.03,.15],[-.022,.05]]));
+function cnBamboo(G,x,y,z,n,h){const r=rng(Math.round(Math.abs(x*53+z*17+h*7))+9),P=new THREE.Group();P.position.set(x,y,z);G.add(P);CNSWAY.push({g:P,ph:r()*6,amp:.012});
+  const S=[],SD=[],N=[],LV=[[],[],[]],W=Math.max(.9,n*.12);
+  for(let k=0;k<n;k++){const back=k%3===2||r()<.25,bx=(r()-.5)*W*2,bz=(back?-.35:0)+(r()-.5)*.5,hh=h*(back?.85:.7)+h*.4*r(),lean=(r()-.5)*.18+bx*.04,rad=(back?.042:.05)+r()*.012;
+    const base=V3(bx,0,bz),tip=V3(bx+Math.sin(lean)*hh,Math.cos(lean)*hh,bz);(back?SD:S).push(taperTube([base,base.clone().lerp(tip,.5).add(V3(lean*.15,0,0)),tip],rad,rad*.55,7));
+    const nn=Math.floor(hh/.38);for(let i=1;i<=nn;i++){const t=i/(nn+.5),p=base.clone().lerp(tip,t),rr=rad*(1-.42*t);N.push(new THREE.CylinderGeometry(rr*1.2,rr*1.2,.03,7).rotateZ(-lean).translate(p.x,p.y,p.z));
+      if(t>.38)for(let tw=0;tw<(t>.6?2:1);tw++){if(r()<.25)continue;const sd=tw?-1:(r()<.5?-1:1),e=p.clone().add(V3(sd*(.12+r()*.08),.05+r()*.05,(r()-.5)*.14));N.push(segG(p,e,.009,.005,4));
+        const m=5+Math.floor(r()*4),L=LV[back?2:(r()<.55?0:1)];for(let j=0;j<m;j++){const a=sd*(.7+(j/(m-1)-.5)*1.6)+(r()-.5)*.2;L.push([e.x,e.y,e.z+.01,1+r()*.45,(r()-.5)*.5,(r()-.5)*.7,Math.PI+a]);}}}
+    for(let j=0;j<7;j++)LV[back?2:0].push([tip.x,tip.y-.04,tip.z+.01,.9+r()*.35,(r()-.5)*.4,(r()-.5)*.5,(j/6-.5)*1.9+(r()-.5)*.2]);}
+  if(S.length)mk(mergeGeometries(S),BAM_M.culm,P);if(SD.length)mk(mergeGeometries(SD),BAM_M.culmD,P);mk(mergeGeometries(N),BAM_M.node,P,[0,0,0],[0,0,0],[1,1,1],false);
+  inst(BAM_LG,BAM_M.leaf,LV[0],P);inst(BAM_LG,BAM_M.leafM,LV[1],P);inst(BAM_LG,BAM_M.leafD,LV[2],P);return P;}
 // 紅帷幕 v3：真的有一道道褶子的布（不是平板＋畫上去的條紋）：上面整片垂下、中段被金繩收攏到柱子那側、下面再散開；
 // 收攏處褶子變深（卡通打光自然出亮暗）；布面暗紋、上緣金帶、下緣金回紋滾邊＋流蘇。x0＝柱子那側、x1＝往戲台中間
 const TX_CUR=cnCanvas(64,256,(x,w,h)=>{fr(x,0,0,w,h,CK.R2);
@@ -1839,7 +1848,7 @@ const MACC={sea:new THREE.Group(),forest:new THREE.Group(),cn:new THREE.Group()}
     // 小紅燈籠掛在左翼下面（翅膀提著燈籠）：放頭頂會擋到後面匾額「好運連連」、掛耳朵會擋到耳朵；頭頂只留一顆小金寶珠
     const Lt=new THREE.Group();Lt.position.set(-.93,LY+.16,.12);G.add(Lt);CNSWAY.push({g:Lt,ph:.7,amp:.1});const LR=.12,prof=[];for(let i=0;i<=10;i++){const t=i/10;prof.push(new THREE.Vector2(LR*(.42+.58*Math.sin(Math.PI*t)),(t-.5)*LR*1.8));}
     mk(new THREE.CylinderGeometry(.009,.009,.24,4),CN.gold,Lt,[0,-.12,0],[0,0,0],[1,1,1],false);const LB=new THREE.Group();LB.position.y=-.24-LR*.95;Lt.add(LB);
-    mk(new THREE.LatheGeometry(prof,12),CN.cloth,LB);for(const sy of[-1,1])mk(new THREE.CylinderGeometry(LR*.48,LR*.48,LR*.2,12),CN.gold,LB,[0,sy*LR*.88,0]);
+    mk(new THREE.LatheGeometry(prof,12),CN.cloth,LB);CNMLAN=LB;for(const sy of[-1,1])mk(new THREE.CylinderGeometry(LR*.48,LR*.48,LR*.2,12),CN.gold,LB,[0,sy*LR*.88,0]);
     mk(new THREE.ConeGeometry(LR*.22,LR*1.1,6),CN.fin,LB,[0,-LR*1.55,0],[Math.PI,0,0]);
     mk(new THREE.SphereGeometry(.07,12,10),CN.gold,G,[0,LY+.5,.02]);mk(new THREE.ConeGeometry(.035,.12,6),CN.fin,G,[0,LY+.6,.02]);}
   const K=new THREE.Group();K.position.set(1.12,2.02,.62);G.add(K);mk(new THREE.CylinderGeometry(.01,.01,.2,4),CN.redD,K,[0,-.1,0],[0,0,0],[1,1,1],false);
@@ -1977,7 +1986,7 @@ if(TAV3_ON&&STG3_ON){
       cnRoof(G,cx,2.5,zw,L/2,.2,.32,{lift:.1,over:.22,wing:0,pearl:false,gable:false,rafter:false,eaveR:.06,rib:.19});
       for(const x of[5.6,8.6])cnLattice(G,sd*x,1.35,zw+.16,.38);
       for(let k=0;k<6;k++){const x=4.6+k*1.15;cnLant(G,sd*x,2.36,zw+.42,.14,{cord:.14,house:true,ord:(x-4)/7.5,amp:.07});}
-      cnPlum(G,sd*5.2,0,zw-1.2,1.25,sd);cnPlum(G,sd*9.4,0,zw-1.6,1.1,-sd);cnBamboo(G,sd*7.2,0,zw-1.0,5,3.6);cnBamboo(G,sd*10.8,0,zw-.9,4,3.2);}
+      cnPlum(G,sd*5.2,0,zw-1.2,1.25,sd);cnPlum(G,sd*9.4,0,zw-1.6,1.1,-sd);cnBamboo(G,sd*7.2,0,zw-1.0,10,3.8);cnBamboo(G,sd*10.8,0,zw-.9,9,3.4);cnBamboo(G,sd*8.6,0,zw-2.2,10,4.2);}
     // 門樓後面的正廳屋頂（有深度）、遠處的寶塔與屋簷剪影、山
     T3(new THREE.BoxGeometry(10.4,4.6,3.6),toonT(TX.stageWall,{rep:[6.5,.78],midM:[.8,.7,.8],shdM:[.6,.46,.62]}),[0,2.3,Z-6.2],[0,0,0],[1,1,1],false);cnRoof(G,0,4.6,Z-6.2,5.4,1.9,2.2,{lift:.65,over:.6,wing:.8,rafter:false});   // 後面正廳：一間間的格扇牆＋屋頂
     cnPagoda(G,12.5,0,Z-24,1);   // 遠處寶塔（v3 cnPagoda）
@@ -2049,7 +2058,9 @@ if(TAV3_ON&&STG3_ON){
     // 簷下的紅燈籠（兩旁大、中間小）
     for(const sd of[-1,1]){cnLant(G,sd*2.1,5.45,-5.25,.24,{cord:.24});cnLant(G,sd*3.6,5.45,-5.25,.24,{cord:.34});cnLant(G,sd*6.0,6.05,-4.75,.34,{cord:.32});}
     for(const sd of[-1,1])cnDrum(G,sd*6.9,FY,-4.3,-sd*.42);   // 兩旁大紅鼓（v3 cnDrum）
-    for(const sd of[-1,1]){cnPlum(G,sd*8.6,FY,-6.4,1.6,-sd);cnPlum(G,sd*7.6,FY,-10.2,1.4,sd);cnBamboo(G,sd*10.4,FY,-7.8,6,4.6);cnBamboo(G,sd*12.2,FY,-5.2,5,4.0);}
+    for(const sd of[-1,1]){   // 兩旁：前面一棵大梅樹、後面兩棵；竹林由近到遠好幾叢（v4，D「後面的樹跟竹林還是不夠精細跟多」）
+      cnPlum(G,sd*8.4,FY,-6.0,1.7,-sd);cnPlum(G,sd*7.0,FY,-9.8,1.45,sd);cnPlum(G,sd*10.4,FY,-10.6,1.6,-sd);
+      cnBamboo(G,sd*10.6,FY,-7.4,14,5.0);cnBamboo(G,sd*9.0,FY,-11.6,14,5.6);cnBamboo(G,sd*12.0,FY,-9.6,16,5.8);cnBamboo(G,sd*12.6,FY,-5.2,10,4.6);cnBamboo(G,sd*7.4,FY,-13.0,12,5.4);}
     for(let i=0;i<9;i++){const x=-44+i*11+R3()*4;T3(new THREE.SphereGeometry(1,20,8,0,6.283,0,Math.PI/2),CN.tileD,[x,FY,-34-R3()*10],[0,R3()*3,0],[8+R3()*4,3+R3()*2.4,5],false).userData.noCast=1;}
     cnPagoda(G,-13,FY,-26,1);   // 遠處寶塔（v3 cnPagoda）
     cnSkyLanterns(G,16,-30,30,4,20,-25,-50,2.4);points(G,70,-9,9,FY+.2,6,-8,3,LEAFFALL_V,PETAL_F);}
@@ -2067,7 +2078,7 @@ function themeFX(t){CU.uT.value=t;if(STG3.visible)stageFX(t);
 function cnFX(P,s,tav,isTen,idle){if(THEME!=='cn')return;
   for(const L of CNL){let I=.55+.08*Math.sin(s*.004+L.ph*3);
     if(!idle&&P&&L.house){const on=P.ARR-650+(1-L.ord)*620;I=s<on?.05:Math.min(1,(s-on)/140)*I;for(const sg of P.stages||[])I+=.9*decay(s,sg.t+P.UPG,420);if(s>=P.OPEN)I+=1.1*decay(s,P.OPEN,650);}
-    L.m.uniforms.uEmis.value.setRGB(.42*I,.12*I,.07*I);}
+    L.m.uniforms.uEmis.value.setRGB(.42*I,.12*I,.07*I);L.I=I;}
   const D=CNDRG;if(!D)return;const lim=!idle&&P&&(isTen?P.best.r==='limited':P.it.r==='limited');
   const T0=lim?(isTen?P.OPEN-1500:P.stages[1].t):0;D.D.visible=!!(lim&&tav&&s>=T0-60&&s<P.OPEN+1600);if(!D.D.visible)return;
   const C=isTen?V3(0,.75,T_ZS-.1):V3(0,.36,T_ZS-.05),R0=isTen?1.25:.85,ZK=isTen?.4:.45,ST=V3(3.4,4.6,1.8).add(C),Wd=.0058,to=s-P.OPEN,gr=to>0?EZ.in2(Math.min(1,to/1400)):0;
@@ -2171,10 +2182,18 @@ function rkHide(){if(rk.dataset.k){rk.dataset.k='';rk.className='';}}
 // ---------- 主迴圈 ----------
 let mode='idle',plan=null,T0=0,fired=new Set(),paused=false,skipTo=-1,LOOK=null;
 const showTime=e=>{let s=e;for(const[t,d]of(plan?.holds||[]))if(e>t)s-=Math.min(e-t,d);return s;};
+// 燈籠暖光（最後一道 uGL）：每盞看得到的燈籠投到螢幕上（中心 uv、半徑、亮度）；扭蛋機翅膀下那盞也算
+const _gv=V3(),_gr=V3();
+function cnGlow(){const U=FINAL.uniforms,GL=U.uGL.value;let n=0;cam.updateMatrixWorld();const rt=V3(1,0,0).applyQuaternion(cam.quaternion);
+  const add=(o,R,I)=>{if(n>=24||!(I>.02))return;o.getWorldPosition(_gv);_gr.copy(_gv).addScaledVector(rt,R*4.6);_gv.project(cam);_gr.project(cam);if(_gv.z>1||Math.abs(_gv.x)>1.4||Math.abs(_gv.y)>1.4)return;
+    const r=Math.hypot((_gr.x-_gv.x)*.5*W/H,(_gr.y-_gv.y)*.5);GL[n++].set(_gv.x*.5+.5,_gv.y*.5+.5,Math.max(.004,r),I);};
+  for(const L of CNL)if(L.house?TAV_C.visible:STG_C.visible)add(L.L,L.R,L.I);
+  if(CNMLAN&&MACC.cn.visible&&mach.visible)add(CNMLAN,.12,.55);U.uGN.value=n;}
 function renderFrame(s,e){themeFX(s);tavShadow();const fl=plan&&mode!=='idle'?flashAt(plan.fl,s):[null,0];FINAL.uniforms.uFlash.value.set(...(fl[0]?(()=>{const c=C(fl[0]);return[c.r,c.g,c.b];})():[1,1,1]),RM?fl[1]*.3:fl[1]);
   const im=plan&&mode!=='idle'&&!RM?(plan.imp||[]).find(([t,d])=>s>=t&&s<t+d):null;if(im){const c=C(im[3]);FINAL.uniforms.uImp.value.set(c.r,c.g,c.b,im[2]);}else FINAL.uniforms.uImp.value.w=0;
   PA.mat.uniforms.uTime.value=PN.mat.uniforms.uTime.value=s;PA.mat.uniforms.uTime.value=s;for(const m of BB)m.quaternion.copy(cam.quaternion);
   CARD.mf.uniforms.uFoil.value=0;
+  FINAL.uniforms.uGrade.value=THEME==='cn'?1:0;if(THEME==='cn')cnGlow();
   setPal(THEME==='cn'?'cn':(TAV3.visible&&Array.isArray(TAVPAL)&&TAVPAL.length?'tav':'main'));
   const bgOn=TAV.visible||LBG.visible;if(LBG.visible)FINAL.uniforms.uBgDim.value=Math.max(FINAL.uniforms.uBgDim.value,GU.uDim.value*.7);if(bgOn){R.setRenderTarget(rtB);R.setClearColor(0x2f1d4a,1);R.clear();R.render(bgScene,cam);}
   FINAL.uniforms.uBg.value=bgOn?1:0;FINAL.uniforms.tB.value=rtB.texture;FINAL.uniforms.uRoom.value=plan&&mode!=='idle'&&plan.roomOn&&FINAL.uniforms.tR.value?1:0;
@@ -2211,7 +2230,7 @@ const placeBtn=()=>CAN_PLACE?'<button class="btn go" id="bp">去擺放</button>'
 function setUI(h){ui.innerHTML=h;bind();}
 // v549 手機直立（D：「右邊做一個點一下可以拉出來的半圓形選單」）：卡池收進右邊的半圓拉片，點一下拉出清單、選了就收回（電腦版照舊用左邊的卡池鈕，.pdraw 不顯示）
 ui.addEventListener('click',e=>{const t=e.target.closest('.ptab');if(!t)return;const d=t.parentElement,on=!d.classList.contains('open');d.classList.toggle('open',on);t.setAttribute('aria-expanded',on);t.querySelector('i').textContent=on?'›':'‹';try{sfx.click();}catch(_){}});
-function idleUI(){mkHead();UISIG=sig();const PB=Object.entries(POOLS).filter(([k])=>!poolState(k).hidden).map(([k,P])=>{const st=poolState(k);return `<button data-pool="${k}" class="${k===THEME?'on':''}${st.open?'':' closed'}${st.open&&!st.perm&&st.left<DAY?' last':''}">${P.name}<small>${tabTxt(st)}</small></button>`;}).join('');setUI(HEAD+walletHTML()+`<div class="p pools">${PB}</div><div class="p pdraw"><button class="ptab" aria-label="換卡池" aria-expanded="false"><i>‹</i><b>卡池</b></button><div class="plist"><small>POOLS</small>${PB}</div></div>${poolState(THEME).open?`<div class="p btns">${pullBtn1('抽一次')}${pullBtn10('抽十次')}</div>`
+function idleUI(){mkHead();UISIG=sig();const PB=Object.entries(POOLS).filter(([k])=>{const st=poolState(k);return !st.hidden&&(!st.ended||k===THEME);}).map(([k,P])=>{const st=poolState(k);return `<button data-pool="${k}" class="${k===THEME?'on':''}${st.open?'':' closed'}${st.open&&!st.perm&&st.left<DAY?' last':''}">${P.name}<small>${tabTxt(st)}</small></button>`;}).join('');setUI(HEAD+walletHTML()+`<div class="p pools">${PB}</div><div class="p pdraw"><button class="ptab" aria-label="換卡池" aria-expanded="false"><i>‹</i><b>卡池</b></button><div class="plist"><small>POOLS</small>${PB}</div></div>${poolState(THEME).open?`<div class="p btns">${pullBtn1('抽一次')}${pullBtn10('抽十次')}</div>`
    :`<div class="p btns"><button class="btn" disabled>${poolState(THEME).soon?twDate(poolState(THEME).start)+' 開始':'這一期已經結束了'}</button></div>`}
   <div class="p links"><button id="bo">家具圖鑑・機率</button><button id="bs">音效：${SND?'開':'關'}</button>${LIVE?'':'<button id="br">試做重設（金額＋收藏）</button>'}</div>`);}
 function bind(){const q=$,shut=!poolState(THEME).open;if(q('b1')){q('b1').onclick=()=>start(1);q('b1').disabled=shut||wallet<PRICE1;}if(q('b10')){q('b10').onclick=()=>start(10);q('b10').disabled=shut||wallet<PRICE10;}
