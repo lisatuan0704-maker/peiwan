@@ -2183,7 +2183,7 @@ function rkHide(){if(rk.dataset.k){rk.dataset.k='';rk.className='';}}
 let mode='idle',plan=null,T0=0,fired=new Set(),paused=false,skipTo=-1,LOOK=null;
 const showTime=e=>{let s=e;for(const[t,d]of(plan?.holds||[]))if(e>t)s-=Math.min(e-t,d);return s;};
 // 燈籠暖光（最後一道 uGL）：每盞看得到的燈籠投到螢幕上（中心 uv、半徑、亮度）；扭蛋機翅膀下那盞也算
-const _gv=V3(),_gr=V3(),NIGHT0=Q.has('night')?+Q.get('night'):1;   // ?night= 可以臨時調夜色強度（比較用）
+const _gv=V3(),_gr=V3(),NIGHT0=Q.has('night')?+Q.get('night'):.7;   // 夜色強度（D 11/22 選 A＝.7）；?night= 可以臨時調（比較用）
 function cnGlow(){const U=FINAL.uniforms,GL=U.uGL.value;let n=0;cam.updateMatrixWorld();const rt=V3(1,0,0).applyQuaternion(cam.quaternion);
   const add=(o,R,I)=>{if(n>=24||!(I>.02))return;o.getWorldPosition(_gv);_gr.copy(_gv).addScaledVector(rt,R*4.6);_gv.project(cam);_gr.project(cam);if(_gv.z>1||Math.abs(_gv.x)>1.4||Math.abs(_gv.y)>1.4)return;
     const r=Math.hypot((_gr.x-_gv.x)*.5*W/H,(_gr.y-_gv.y)*.5);GL[n++].set(_gv.x*.5+.5,_gv.y*.5+.5,Math.max(.004,r),I);};
