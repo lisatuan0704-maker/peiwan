@@ -1658,6 +1658,18 @@ function cnDrum(G,x,y,z,ry){const Dg=new THREE.Group();Dg.position.set(x,y,z);Dg
   mk(mergeGeometries(LG),CN.redD,Dg);inst(new THREE.CylinderGeometry(.065,.075,.08,8),CN.gold,FT,Dg);
   for(const [a,b] of[[V3(.74,.04,.42),V3(.5,1.22,.5)],[V3(.98,.04,.3),V3(.66,1.2,.48)]]){mk(segG(a,b,.022,.022,5),STICK_M,Dg);mk(new THREE.SphereGeometry(.065,10,8),CN.fin,Dg,[b.x,b.y,b.z]);}
   return Dg;}
+// 遠處的寶塔 v3：八角塔身（朱紅、上下金邊、每面一扇亮著的小窗）＋每層往外撐、簷角上翹的八角屋簷（紫瓦、金簷邊）＋金色塔剎（寶珠一串＋尖頂）。
+// 舊版是紅方塊疊四角錐，像積木
+function cnPagoda(G,x,y,z,s=1){const T=new THREE.Group();T.position.set(x,y,z);T.scale.setScalar(s);T.rotation.y=.3;G.add(T);
+  const WIN=toon('#fff3c2','#ffd25e','#d9952f',{noDim:true});WIN.uniforms.uEmis.value.setRGB(.25,.14,.04);let yy=0;
+  for(let k=0;k<6;k++){const w=1.3-k*.15,h=1.05-k*.04;mk(new THREE.CylinderGeometry(w*.62,w*.66,h,8),CN.red,T,[0,yy+h/2,0],[0,Math.PI/8,0]);
+    mk(new THREE.CylinderGeometry(w*.68,w*.68,.07,8),CN.gold,T,[0,yy+.04,0],[0,Math.PI/8,0],[1,1,1],false);
+    for(let i=0;i<8;i+=2){const a=i/8*Math.PI*2;mk(new THREE.BoxGeometry(w*.2,h*.42,.02),WIN,T,[Math.sin(a)*w*.63,yy+h*.5,Math.cos(a)*w*.63],[0,a,0],[1,1,1],false);}
+    yy+=h;const R=w*1.18,prof=[new THREE.Vector2(w*.5,.32),new THREE.Vector2(R*.62,.2),new THREE.Vector2(R*.9,.06),new THREE.Vector2(R,0),new THREE.Vector2(R*1.04,.07)];
+    const roof=new THREE.LatheGeometry(prof,8);mk(roof,CN.tile,T,[0,yy-.05,0],[0,Math.PI/8,0]);mk(new THREE.TorusGeometry(R*1.01,.03,4,8),CN.gold,T,[0,yy-.03,0],[Math.PI/2,0,Math.PI/8],[1,1,1],false);
+    yy+=.27;}
+  for(const [r,dy] of[[.13,.12],[.1,.34],[.08,.52],[.065,.68]])mk(new THREE.SphereGeometry(r,10,8),CN.gold,T,[0,yy+dy,0],[0,0,0],[1,1,1],false);
+  mk(new THREE.ConeGeometry(.05,.5,6),CN.gold,T,[0,yy+.98,0],[0,0,0],[1,1,1],false);T.traverse(o=>{if(o.isMesh)o.userData.noCast=1;});return T;}
 // 石獅（坐姿、捲鬃、腳下金繡球）
 function cnLion(G,x,z,sd){const L=new THREE.Group();L.position.set(x,0,z);L.rotation.y=-sd*.3;G.add(L);
   mk(new THREE.BoxGeometry(.74,.46,.62),CN.stoneD,L,[0,.23,0]);mk(new THREE.BoxGeometry(.82,.08,.7),CN.stone,L,[0,.5,0]);
@@ -1823,12 +1835,13 @@ const MACC={sea:new THREE.Group(),forest:new THREE.Group(),cn:new THREE.Group()}
       return P.map(([x,y])=>[x*s,y*s]);};
     for(const sd of[-1,1]){const W=new THREE.Group();W.position.set(sd*.66,LY+.06,.05);W.rotation.set(0,sd>0?-.18:Math.PI+.18,sd*.08);G.add(W);
       const g=new THREE.ExtrudeGeometry(shapeOf(wingPts(.7)),{depth:.04,bevelEnabled:false});g.translate(0,0,-.02);mk(g,WM,W);
-      for(const [tx,ty] of[[.82,.6],[.6,.12],[.34,-.02]]){const d=Math.hypot(tx,ty-.3)*.7;mk(new THREE.CylinderGeometry(.012,.02,d,5).translate(0,d/2,0),BM,W,[0,.3*.7,.025],[0,0,-Math.atan2(tx,ty-.3)],[1,1,1],false);}}
-    // 頂上的小紅燈籠
-    const Lt=new THREE.Group();Lt.position.set(0,LY+.42,.02);G.add(Lt);const LR=.2,prof=[];for(let i=0;i<=10;i++){const t=i/10;prof.push(new THREE.Vector2(LR*(.42+.58*Math.sin(Math.PI*t)),(t-.5)*LR*1.8));}
-    mk(new THREE.CylinderGeometry(.1,.13,.06,12),CN.gold,Lt,[0,.03,0]);mk(new THREE.LatheGeometry(prof,14),CN.cloth,Lt,[0,.06+LR*.9+.02,0]);
-    for(const sy of[-1,1])mk(new THREE.CylinderGeometry(LR*.48,LR*.48,LR*.18,14),CN.gold,Lt,[0,.08+LR*.9+sy*LR*.86,0]);
-    mk(new THREE.SphereGeometry(.045,10,8),CN.gold,Lt,[0,.1+LR*1.9+.04,0]);mk(new THREE.ConeGeometry(.012,.12,4),CN.gold,Lt,[0,.1+LR*1.9+.13,0],[0,0,0],[1,1,1],false);}
+      for(const [tx,ty] of[[.82,.6],[.6,.12],[.34,-.02]]){const d=Math.hypot(tx,ty-.3)*.7;for(const bz of[.025,-.025])mk(new THREE.CylinderGeometry(.012,.02,d,5).translate(0,d/2,0),BM,W,[0,.3*.7,bz],[0,0,-Math.atan2(tx,ty-.3)],[1,1,1],false);}}   // 翼骨前後兩面都有（左翼看到的是背面）
+    // 小紅燈籠掛在左翼下面（翅膀提著燈籠）：放頭頂會擋到後面匾額「好運連連」、掛耳朵會擋到耳朵；頭頂只留一顆小金寶珠
+    const Lt=new THREE.Group();Lt.position.set(-.93,LY+.16,.12);G.add(Lt);CNSWAY.push({g:Lt,ph:.7,amp:.1});const LR=.12,prof=[];for(let i=0;i<=10;i++){const t=i/10;prof.push(new THREE.Vector2(LR*(.42+.58*Math.sin(Math.PI*t)),(t-.5)*LR*1.8));}
+    mk(new THREE.CylinderGeometry(.009,.009,.24,4),CN.gold,Lt,[0,-.12,0],[0,0,0],[1,1,1],false);const LB=new THREE.Group();LB.position.y=-.24-LR*.95;Lt.add(LB);
+    mk(new THREE.LatheGeometry(prof,12),CN.cloth,LB);for(const sy of[-1,1])mk(new THREE.CylinderGeometry(LR*.48,LR*.48,LR*.2,12),CN.gold,LB,[0,sy*LR*.88,0]);
+    mk(new THREE.ConeGeometry(LR*.22,LR*1.1,6),CN.fin,LB,[0,-LR*1.55,0],[Math.PI,0,0]);
+    mk(new THREE.SphereGeometry(.07,12,10),CN.gold,G,[0,LY+.5,.02]);mk(new THREE.ConeGeometry(.035,.12,6),CN.fin,G,[0,LY+.6,.02]);}
   const K=new THREE.Group();K.position.set(1.12,2.02,.62);G.add(K);mk(new THREE.CylinderGeometry(.01,.01,.2,4),CN.redD,K,[0,-.1,0],[0,0,0],[1,1,1],false);
   mk(new THREE.TorusGeometry(.11,.035,6,4),CN.fin,K,[0,-.32,0],[0,0,Math.PI/4]);mk(new THREE.SphereGeometry(.04,8,6),CN.gold,K,[0,-.48,0],[0,0,0],[1,1,1],false);mk(new THREE.ConeGeometry(.07,.32,6),CN.redD,K,[0,-.66,0],[Math.PI,0,0]);
   CNSWAY.push({g:K,ph:1.3,amp:.12});}
@@ -1967,8 +1980,7 @@ if(TAV3_ON&&STG3_ON){
       cnPlum(G,sd*5.2,0,zw-1.2,1.25,sd);cnPlum(G,sd*9.4,0,zw-1.6,1.1,-sd);cnBamboo(G,sd*7.2,0,zw-1.0,5,3.6);cnBamboo(G,sd*10.8,0,zw-.9,4,3.2);}
     // 門樓後面的正廳屋頂（有深度）、遠處的寶塔與屋簷剪影、山
     T3(new THREE.BoxGeometry(10.4,4.6,3.6),toonT(TX.stageWall,{rep:[6.5,.78],midM:[.8,.7,.8],shdM:[.6,.46,.62]}),[0,2.3,Z-6.2],[0,0,0],[1,1,1],false);cnRoof(G,0,4.6,Z-6.2,5.4,1.9,2.2,{lift:.65,over:.6,wing:.8,rafter:false});   // 後面正廳：一間間的格扇牆＋屋頂
-    {const px=12.5,pz=Z-24;for(let k=0;k<6;k++){const w=2.6-k*.32,y=k*1.35;T3(new THREE.BoxGeometry(w*.7,1.0,w*.7),CN.redD,[px,y+.5,pz],[0,.3,0],[1,1,1],false);T3(new THREE.ConeGeometry(w*.75,.55,4),CN.tileD,[px,y+1.25,pz],[0,Math.PI/4+.3,0],[1,1,1],false);}
-      T3(new THREE.ConeGeometry(.12,1.1,6),CN.gold,[px,8.6,pz],[0,0,0],[1,1,1],false);}
+    cnPagoda(G,12.5,0,Z-24,1);   // 遠處寶塔（v3 cnPagoda）
     for(let i=0;i<9;i++){const x=-40+i*10+R3()*4;T3(new THREE.SphereGeometry(1,20,8,0,6.283,0,Math.PI/2),CN.tileD,[x,-.1,-38-R3()*8],[0,R3()*3,0],[7+R3()*3,3+R3()*2.5,4],false).userData.noCast=1;}
     for(let x=-24;x<24;x+=3.2+R3()*1.5){if(Math.abs(x)<7)continue;const w=2+R3()*1.4,z=Z-15-R3()*5;T3(new THREE.BoxGeometry(w,1.6,1.4),CN.lac,[x,.8,z],[0,0,0],[1,1,1],false);T3(new THREE.ConeGeometry(w*.78,.7,4),CN.tileD,[x,1.95,z],[0,Math.PI/4,0],[1,.8,.55],false);}
     cnSkyLanterns(G,14,-26,26,3,18,Z-18,Z-40,2.2);points(G,60,-8,8,0,6,Z-3,Z+4,LEAFFALL_V,PETAL_F);}
@@ -2039,7 +2051,7 @@ if(TAV3_ON&&STG3_ON){
     for(const sd of[-1,1])cnDrum(G,sd*6.9,FY,-4.3,-sd*.42);   // 兩旁大紅鼓（v3 cnDrum）
     for(const sd of[-1,1]){cnPlum(G,sd*8.6,FY,-6.4,1.6,-sd);cnPlum(G,sd*7.6,FY,-10.2,1.4,sd);cnBamboo(G,sd*10.4,FY,-7.8,6,4.6);cnBamboo(G,sd*12.2,FY,-5.2,5,4.0);}
     for(let i=0;i<9;i++){const x=-44+i*11+R3()*4;T3(new THREE.SphereGeometry(1,20,8,0,6.283,0,Math.PI/2),CN.tileD,[x,FY,-34-R3()*10],[0,R3()*3,0],[8+R3()*4,3+R3()*2.4,5],false).userData.noCast=1;}
-    {const px=-13,pz=-26;for(let k=0;k<6;k++){const w=2.6-k*.32,y=FY+k*1.35;T3(new THREE.BoxGeometry(w*.7,1.0,w*.7),CN.redD,[px,y+.5,pz],[0,.3,0],[1,1,1],false);T3(new THREE.ConeGeometry(w*.75,.55,4),CN.tileD,[px,y+1.25,pz],[0,Math.PI/4+.3,0],[1,1,1],false);}}
+    cnPagoda(G,-13,FY,-26,1);   // 遠處寶塔（v3 cnPagoda）
     cnSkyLanterns(G,16,-30,30,4,20,-25,-50,2.4);points(G,70,-9,9,FY+.2,6,-8,3,LEAFFALL_V,PETAL_F);}
   BUILD=TAV3;}
 // 主題場景的動畫：水草搖、魚游、水母上下、光束晃；演唱會舞台照舊
