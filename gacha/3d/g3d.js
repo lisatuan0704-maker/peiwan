@@ -132,6 +132,13 @@ const OLN=OLM.clone();OLN.uniforms={...OLM.uniforms,uDim:{value:0}};   // 不受
 const HC=new Map();
 function hull(geo){if(HC.has(geo))return HC.get(geo);let g=geo.clone();for(const k of Object.keys(g.attributes))if(k!=='position')g.deleteAttribute(k);g=mergeVertices(g,1e-4);g.computeVertexNormals();HC.set(geo,g);return g;}
 function ol(mesh,m=OLM){mesh.add(new THREE.Mesh(hull(mesh.geometry),m));return mesh;}
+// 抹平過的描邊外殼（Taubin 平滑：一推一拉不會縮小）：凹凸很多的 Tripo 模型直接描邊，黑邊會從每道縫裡透出來變成一身黑點 → 只描外輪廓
+function smoothHull(geo,it=10){const g=hull(geo).clone(),pa=g.attributes.position,n=pa.count,ix=g.index.array,nb=Array.from({length:n},()=>new Set());
+  for(let i=0;i<ix.length;i+=3){const a=ix[i],b=ix[i+1],c=ix[i+2];nb[a].add(b).add(c);nb[b].add(a).add(c);nb[c].add(a).add(b);}
+  const A=nb.map(s=>[...s]);let P=Float32Array.from(pa.array);
+  for(let t=0;t<it*2;t++){const f=t%2?-.53:.5,Q=new Float32Array(P.length);for(let i=0;i<n;i++){const L=A[i];let x=0,y=0,z=0;for(const j of L){x+=P[j*3];y+=P[j*3+1];z+=P[j*3+2];}const k=L.length?1/L.length:0;
+    for(let d=0;d<3;d++){const c=P[i*3+d],av=L.length?[x,y,z][d]*k:c;Q[i*3+d]=c+f*(av-c);}}P=Q;}
+  pa.array.set(P);pa.needsUpdate=true;g.computeVertexNormals();return g;}
 function mk(geo,mat,parent,p=[0,0,0],r=[0,0,0],s=[1,1,1],outline=true,olm=OLM){const m=new THREE.Mesh(geo,mat);m.position.set(...p);m.rotation.set(...r);m.scale.set(...s);parent.add(m);if(outline)ol(m,olm);return m;}
 // 貼圖（臉、泡泡、硬幣面）：不打光
 const TEX_F=`uniform sampler2D map;uniform float uDim,uOp;uniform vec3 uDimC;varying vec2 vUv;void main(){vec4 t=texture2D(map,vUv);if(t.a<.5||uOp<.5)discard;gl_FragColor=vec4(mix(t.rgb,uDimC,uDim),1.);}`;
@@ -668,7 +675,8 @@ const VIS=4.2,FOV_F=4;   // 最後鏡頭：可見高度（世界單位）、視�
 function resLayout(it,ksMax=4,dx=0){const im=IMG['f_'+it.k]||IMG['raw_'+it.k],w=im.width,h=im.height,wide=W/H>=1.45;let o;
   if(wide){const bot=Math.round(H*.84),top0=Math.round(H*.06),cx=Math.round(W*.58)-dx,ks=Math.max(1,Math.min(ksMax,Math.floor(Math.min((bot-top0)/h,W*.46/w))));
     const titleX=Math.round(W*.2),titleCY=Math.round(H*.34);o={ks,bot,cx,titleX,titleCY,starsY:titleCY+12,plateX:titleX,plateY:titleCY+40};}
-  else{const titleCY=Math.round(H*.21),bot=Math.round(H*.77),top0=titleCY+29,ks=Math.max(1,Math.min(ksMax,Math.floor(Math.min((bot-top0)/h,W*.62/w))));o={ks,bot,cx:Math.round(W/2)-dx,titleX:Math.round(W/2),titleCY,starsY:titleCY+12,plateX:Math.round(W/2),plateY:bot+6};}
+  else{const tall=W/H<.75,titleCY=Math.round(H*(tall?.235:.21)),bot=Math.round(tall?Math.min(H*.77,H-106):H*.77),top0=titleCY+29,   // 手機直立：家具與名牌往上讓出「圖鑑／音效」那排（11/21 名牌被圖鑑鈕壓到）
+    ks=Math.max(1,Math.min(ksMax,Math.floor(Math.min((bot-top0)/h,W*.62/w))));o={ks,bot,cx:Math.round(W/2)-dx,titleX:Math.round(W/2),titleCY,starsY:titleCY+12,plateX:Math.round(W/2),plateY:bot+6};}
   const fw=w*o.ks,fh=h*o.ks;return{im,w,h,fw,fh,left:Math.round(o.cx-fw/2),top:o.bot-fh,...o};}
 function inLayout(it,F,ksMax,dx){const L=resLayout(it,ksMax,dx),wpp=VIS/H,unit=L.ks*PPU*wpp,ce=Math.cos(EL30),se=Math.sin(EL30);
   const[fx,fy]=FIT[F.k]||[0,0],Tx=unit*F.x0-(L.left-fx*L.ks-W/2)*wpp,Tu=unit*F.u0-(H/2-(L.bot-fy*L.ks))*wpp;   // 讓家具斜角外框的左下角落在原圖的左下角（再加上量出來的位移）
@@ -1412,13 +1420,14 @@ const STG_S=new THREE.Group(),STG_F=new THREE.Group(),TAV_S=new THREE.Group(),TA
 // 扭蛋滾向門口時，牆上的小燈籠從外往內一盞盞亮起、最後是門口兩盞大的；稀有＝升級那一拍燈籠一起閃成金紅；
 // 限定＝一條金龍從天上盤下來、繞著扭蛋轉，門一開就往天上衝（cnFX）。轉像素用中華夜晚色盤 CN_PAL。
 const STG_C=new THREE.Group(),TAV_C=new THREE.Group();for(const G of[STG_C,TAV_C]){G.visible=false;world.add(G);}
-const CN={red:toon('#ee6a5a','#c8343e','#7a1f33',{rim:'#ffc4b0',rimA:.2}),redD:toon('#b8323c','#8a2234','#4a1028'),
-  gold:toon('#ffe27a','#f2b53e','#b8692a',{spec:.5}),tile:toon('#5e3b82','#4b2f6c','#2a1838',{side:DS}),tileD:toon('#4b2f6c','#3b2559','#1a1028'),
-  teal:toon('#8fd9bb','#3f7f78','#2a4a50'),blue:toon('#8ec8ff','#5b6fd6','#3b3f86'),stone:toon('#e6dce4','#bba3b2','#7a6680'),stoneD:toon('#bba3b2','#9a8499','#5c4a63'),
-  plaster:toon('#fff6ec','#e9d6de','#a890a8'),lion:toon('#f3e9ee','#c9b2c2','#9a8499',{rim:'#ffffff',rimA:.25,side:DS}),lac:toon('#4b2f6c','#2f1d4a','#1a1028'),cloth:toon('#ee6a5a','#c8343e','#7a1f33',{side:DS}),
+const CN={red:toon('#ee6a5a','#d9443f','#9c2a3a',{rim:'#ffc4b0',rimA:.2}),redD:toon('#b8323c','#9c2a3a','#5a1426'),
+  gold:toon('#ffe27a','#f2b53e','#b8692a',{spec:.5}),tile:toon('#5e3b82','#4b2f6c','#241638',{side:DS}),tileD:toon('#4b2f6c','#3b2559','#1a1028'),
+  teal:toon('#8fd9bb','#3f7f78','#2a4a50'),blue:toon('#8ec8ff','#5b6fd6','#3b3f86'),stone:toon('#d9c4cc','#bba3b2','#7a6680'),stoneD:toon('#bba3b2','#9a8499','#5c4a63'),
+  plaster:toon('#fff6ec','#d9c4cc','#9a8499'),lion:toon('#fff6ec','#d9c4cc','#9a8499',{rim:'#ffffff',rimA:.25,side:DS}),lac:toon('#4b2f6c','#2f1d4a','#1a1028'),cloth:toon('#ee6a5a','#d9443f','#9c2a3a',{side:DS}),
   blos:toon('#ffd4dc','#f290a8','#c8648a'),blosW:toon('#ffffff','#ffeef2','#e9b9b4'),branch:toon('#8a4b22','#5a3438','#3a2622'),
   bam:toon('#9cb35e','#5fae9a','#2a4a50'),bamL:toon('#bff0da','#7a9450','#3f7f78',{side:DS}),skin:toon('#fff6ec','#f3d3c4','#c99a8e'),
-  moon:toon('#fff6ec','#fff3c2','#fbe1cf',{noDim:true}),dragon:toon('#ffe27a','#f2b53e','#b8692a',{spec:1,rim:'#fff3c2',rimA:.5}),fin:toon('#ff9a85','#e0404a','#9c2a3a')};
+  tileR:toon('#734896','#5e3b82','#3b2559'),   // 筒瓦一條條（v3：原本跟瓦溝同一種深色＋近黑暗面，屋頂看起來是一條條黑線 → 筒瓦比瓦溝亮）
+  moon:toon('#fff6ec','#fff3c2','#fbe1cf',{noDim:true}),dragon:toon('#ffe27a','#f2b53e','#b8692a',{spec:1,rim:'#fff3c2',rimA:.5}),fin:toon('#ff9a85','#d9443f','#9c2a3a')};
 CN.moon.uniforms.uEmis.value.setRGB(.05,.04,.03);
 const CN_PAL=['#1a1028','#241638','#2f1d4a','#3b2559','#4b2f6c','#5e3b82','#734896','#2a2a5e','#3b3f86','#5b6fd6','#8ec8ff','#d2f0ff',
   '#3a0e1c','#5a1426','#7a1f33','#9c2a3a','#b8323c','#d9443f','#ee6a5a','#ff9a85','#ffc4b0','#a24a75','#c8648a','#e27d9c','#f290a8','#ffb3c0','#ffd4dc','#ffeef2',
@@ -1429,19 +1438,35 @@ const CNL=[],CNSKY=[],CNSWAY=[];let CNDRG=null;   // 燈籠（亮度 cnFX 控制
 // ---- 中華卡池 v2 精緻化（D 11/21「精緻度不夠高，這次主打精緻風，不要難看的色塊」）----
 // 大面積不再是一整片單色：牆板、門板、額枋、走馬板、石裙牆、屋瓦、帷幕、粉牆飾帶都貼「手繪紋樣貼圖」，再照卡通打光分三階明暗。
 // 貼圖只用中華色盤裡的顏色、硬邊（轉像素時才不會變成一片抖動雜點）；暗面乘「玫瑰紫」（犬尤的陰影色，不是黑）。
-const TT_F=`uniform sampler2D uSM,uTex;uniform mat4 uSMM;uniform float uSMOn,uPLi,uDim,uRim;uniform vec3 uKey,uPLp,uPLc,uDimC,uRimC,uEmis,uMidM,uShdM;uniform vec2 uRep,uOff;
+const TT_F=`uniform sampler2D uSM,uTex,uTexM,uTexS;uniform mat4 uSMM;uniform float uSMOn,uPLi,uDim,uRim,uSnap;uniform vec3 uKey,uPLp,uPLc,uDimC,uRimC,uEmis,uMidM,uShdM;uniform vec2 uRep,uOff;
 varying vec3 vN;varying vec3 vW;varying vec2 vUv;
-void main(){vec3 N=normalize(vN);if(!gl_FrontFacing)N=-N;vec3 V=normalize(cameraPosition-vW);vec3 t=texture2D(uTex,vUv*uRep+uOff).rgb;
+void main(){vec3 N=normalize(vN);if(!gl_FrontFacing)N=-N;vec3 V=normalize(cameraPosition-vW);vec2 tu=vUv*uRep+uOff;vec3 t=texture2D(uTex,tu).rgb;
 float d=dot(N,uKey);float lv=d>.42?2.:(d>-.12?1.:0.);if(uSMOn>.5&&lv>.5){vec4 q=uSMM*vec4(vW+N*.05,1.);vec3 sp=q.xyz*.5+.5;if(sp.x>0.&&sp.x<1.&&sp.y>0.&&sp.y<1.&&sp.z<1.&&sp.z-.0015>texture2D(uSM,sp.xy).r)lv-=1.;}
-vec3 c=t*(lv>1.5?vec3(1.):(lv>.5?uMidM:uShdM));if(!gl_FrontFacing)c=t*uShdM*.85;
+vec3 c;if(uSnap>.5){c=lv>1.5?t:(lv>.5?texture2D(uTexM,tu).rgb:texture2D(uTexS,tu).rgb);if(!gl_FrontFacing)c=texture2D(uTexS,tu).rgb;}   /* 中華手繪貼圖：亮／中／暗三張都是色盤裡的顏色（不乘色，轉像素時不會變成一片網點） */
+else{c=t*(lv>1.5?vec3(1.):(lv>.5?uMidM:uShdM));if(!gl_FrontFacing)c=t*uShdM*.85;}
 float fr=1.-max(dot(N,V),0.);if(uRim>0.&&fr>.68&&d>-.4)c=mix(c,uRimC,uRim);
 vec3 L=uPLp-vW;float dl=length(L);float pl=max(dot(N,L/max(dl,.001)),0.)*uPLi/(1.+dl*dl*.4);c+=uPLc*floor(pl*4.+.5)/4.;
 c=mix(c,uDimC,uDim);c+=uEmis;gl_FragColor=vec4(c,1.);}`;
-function toonT(tex,o={}){const u={...GU,uTex:{value:tex},uRep:{value:new THREE.Vector2(...(o.rep||[1,1]))},uOff:{value:new THREE.Vector2(...(o.off||[0,0]))},
+function toonT(tex,o={}){const SV=cnShade(tex,o.midM||[.88,.8,.86],o.shdM||[.66,.5,.66]);const u={...GU,uTex:{value:tex},uTexM:{value:SV?SV[0]:tex},uTexS:{value:SV?SV[1]:tex},uSnap:{value:SV?1:0},uRep:{value:new THREE.Vector2(...(o.rep||[1,1]))},uOff:{value:new THREE.Vector2(...(o.off||[0,0]))},
   uMidM:{value:new THREE.Vector3(...(o.midM||[.88,.8,.86]))},uShdM:{value:new THREE.Vector3(...(o.shdM||[.66,.5,.66]))},uRimC:{value:C(o.rim||'#ffffff')},uRim:{value:o.rimA||0},uEmis:{value:new THREE.Color(0,0,0)}};
   if(o.noDim)u.uDim={value:0};return new THREE.ShaderMaterial({uniforms:u,vertexShader:TOON_V,fragmentShader:TT_F,side:o.side||THREE.FrontSide});}
+// v3 色盤吸附：手繪貼圖畫完先把每一點吸到中華色盤最近的顏色；卡通打光的「中」「暗」兩階不再乘色（乘出來的顏色不在色盤裡＝轉像素時一片網點），
+// 改成照色盤找「比它暗一階／兩階」的顏色另畫兩張（cnShade，照材質的 midM／shdM 算一次就快取）
+const CNP=(()=>{const L=CN_PAL.map(h=>{const c=C(h);return{h,r:c.r,g:c.g,b:c.b,L:oklab(h)};});return L;})(),CNPK=new Map();
+const okOf=(r,g,b)=>oklab('#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''));
+function cnNear(r,g,b,ex){const k=(r<<16|g<<8|b)+(ex?'|'+ex:'');let v=CNPK.get(k);if(v)return v;const q=okOf(r,g,b),lum=ex?ex.L.x:9;let best=null,bd=1e9;
+  for(const p of CNP){if(ex&&p.L.x>=lum-.015)continue;const d=(p.L.x-q.x)**2+(p.L.y-q.y)**2+(p.L.z-q.z)**2;if(d<bd){bd=d;best=p;}}if(!best)best=ex;CNPK.set(k,best);return best;}
+function cnShade(tex,mid,shd){const D=tex&&tex.userData&&tex.userData.cnPix;if(!D)return null;const key=mid.join()+'/'+shd.join();tex.userData.cnSV=tex.userData.cnSV||{};if(tex.userData.cnSV[key])return tex.userData.cnSV[key];
+  const out=[mid,shd].map(()=>new ImageData(D.width,D.height));const d=D.data,map=new Map();
+  for(let i=0;i<d.length;i+=4){const k=d[i]<<16|d[i+1]<<8|d[i+2];let m=map.get(k);if(!m){const p=CNP.find(p=>Math.round(p.r*255)===d[i]&&Math.round(p.g*255)===d[i+1]&&Math.round(p.b*255)===d[i+2]);
+      const m1=cnNear(d[i]*mid[0],d[i+1]*mid[1],d[i+2]*mid[2],p),m2=cnNear(d[i]*shd[0],d[i+1]*shd[1],d[i+2]*shd[2],m1);m=[m1,m2];map.set(k,m);}
+    for(let j=0;j<2;j++){const o=out[j].data;o[i]=Math.round(m[j].r*255);o[i+1]=Math.round(m[j].g*255);o[i+2]=Math.round(m[j].b*255);o[i+3]=255;}}
+  const R=out.map(im=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').putImageData(im,0,0);const t=new THREE.CanvasTexture(c);
+    t.colorSpace=tex.colorSpace;t.magFilter=tex.magFilter;t.minFilter=tex.minFilter;t.wrapS=tex.wrapS;t.wrapT=tex.wrapT;t.anisotropy=tex.anisotropy;return t;});
+  tex.userData.cnSV[key]=R;return R;}
 function cnCanvas(w,h,draw){const c=document.createElement('canvas');c.width=Math.max(4,Math.round(w));c.height=Math.max(4,Math.round(h));const x=c.getContext('2d');x.imageSmoothingEnabled=false;draw(x,c.width,c.height);
-  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.NoColorSpace;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t;}
+  {const im=x.getImageData(0,0,c.width,c.height),d=im.data;for(let i=0;i<d.length;i+=4){const p=cnNear(d[i],d[i+1],d[i+2]);d[i]=Math.round(p.r*255);d[i+1]=Math.round(p.g*255);d[i+2]=Math.round(p.b*255);d[i+3]=255;}x.putImageData(im,0,0);c._pix=im;}   // 每一點吸到色盤
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.NoColorSpace;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;t.userData.cnPix=c._pix;return t;}
 const CK={R1:'#ee6a5a',R2:'#d9443f',R3:'#b8323c',R4:'#9c2a3a',R5:'#7a1f33',G1:'#fff3c2',G2:'#ffe27a',G3:'#f2b53e',G4:'#d9952f',G5:'#b8692a',
   T1:'#8fd9bb',T2:'#5fae9a',T3:'#3f7f78',T4:'#2a4a50',B1:'#8ec8ff',B2:'#5b6fd6',B3:'#3b3f86',W1:'#fff6ec',W2:'#f3d3c4',S1:'#e9d6de',S2:'#d9c4cc',S3:'#bba3b2',S4:'#9a8499',S5:'#7a6680',P1:'#734896',P2:'#5e3b82',P3:'#4b2f6c',P4:'#3b2559'};
 const fr=(x,X,Y,W,H,c)=>{x.fillStyle=c;x.fillRect(Math.round(X),Math.round(Y),Math.max(1,Math.round(W)),Math.max(1,Math.round(H)));};
@@ -1500,9 +1525,10 @@ function cnOverlay(G,tex,w,h,pos,rot=[0,0,0],o={}){const m=new THREE.Mesh(new TH
 function cnBracket(G,x,y,z,sd,L=.55){const H=L*.62,pts=[[0,0],[L,0],[L*.92,-H*.16]];for(let i=1;i<=10;i++){const t=i/10,xx=L*.92*(1-t),yy=-H*.16-H*.84*Math.pow(t,.7)+Math.sin(t*Math.PI*3)*H*.07;pts.push([xx,yy]);}pts.push([0,-H]);
   const g=new THREE.ExtrudeGeometry(shapeOf(pts.map(([a,b])=>[a*sd,b])),{depth:.07,bevelEnabled:false});g.translate(0,0,-.035);mk(g,CN.gold,G,[x,y,z]);
   mk(new THREE.ExtrudeGeometry(shapeOf(pts.map(([a,b])=>[a*sd*.7,b*.7])),{depth:.08,bevelEnabled:false}).translate(0,0,-.04),CN.redD,G,[x,y-.02,z],[0,0,0],[1,1,1],false);}
+const TX_LANT=cnCanvas(48,32,(x,w,h)=>{fr(x,0,0,w,h,'#ff9a85');for(let k=0;k<12;k++){fr(x,k*4,0,1,h,'#d9443f');fr(x,k*4+1,0,1,h,'#ee6a5a');}fr(x,0,0,w,2,'#d9443f');fr(x,0,h-2,w,2,'#d9443f');});
 // 燈籠：pivot 在吊點（晃的時候繞吊點擺）；12 段車床體＝卡通打光自然出一條條竹骨；上下金箍、紅流蘇
 function cnLant(G,x,yTop,z,R,o={}){const cord=o.cord??.3,P=new THREE.Group();P.position.set(x,yTop,z);G.add(P);
-  const m=toon('#ff9a85','#d9443f','#9c2a3a',{noDim:true}),L=new THREE.Group();L.position.y=-cord-R*.92;P.add(L);
+  const m=toonT(TX_LANT,{noDim:true,midM:[.9,.7,.75],shdM:[.7,.5,.6]}),L=new THREE.Group();L.position.y=-cord-R*.92;P.add(L);   // v3：燈籠身上一條條竹骨（貼圖），不是一顆光滑紅球
   if(cord>0)mk(new THREE.CylinderGeometry(.012,.012,cord,4),CN.lac,P,[0,-cord/2,0],[0,0,0],[1,1,1],false);
   const prof=[];for(let i=0;i<=10;i++){const t=i/10;prof.push(new THREE.Vector2(R*(.34+.66*Math.sin(Math.PI*t)),(t-.5)*R*1.7));}
   mk(new THREE.LatheGeometry(prof,12),m,L);for(const sy of[-1,1])mk(new THREE.CylinderGeometry(R*.44,R*.44,R*.16,12),CN.gold,L,[0,sy*R*.86,0]);
@@ -1525,7 +1551,7 @@ function cnRoof(G,cx,y0,cz,hw,hd,rise,o={}){const lift=o.lift??.5,ov=o.over??.5;
     {const pts=[];for(let i=0;i<=24;i++)pts.push(at(i/24*2-1,0,sd));RF.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),48,o.eaveR||.075,6,false));}
     for(const su of[-1,1]){const pts=[];for(let j=0;j<=10;j++){const q=at(su*(1-j/10*.14),j/10,sd);q.y+=.07;pts.push(q);}RF.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),12,(o.eaveR||.075)*1.15,6,false));}
     if(o.rafter!==false){const n2=Math.round((hw+ov)*2/.24);for(let k=0;k<=n2;k++){const u=k/n2*2-1,a=at(u*.97,0,sd),b=at(u*.97,.22,sd);a.y-=.07;b.y-=.07;RR.push(new THREE.TubeGeometry(new THREE.LineCurve3(a,b),1,.035,4,false));}}}
-  mk(mergeGeometries(RB),o.ribM||CN.tileD,G,[0,0,0],[0,0,0],[1,1,1],false);mk(mergeGeometries(RF),CN.tileD,G);if(RR.length)mk(mergeGeometries(RR),CN.teal,G,[0,0,0],[0,0,0],[1,1,1],false);
+  mk(mergeGeometries(RB),o.ribM||CN.tileR,G,[0,0,0],[0,0,0],[1,1,1],false);mk(mergeGeometries(RF),CN.tileD,G);if(RR.length)mk(mergeGeometries(RR),CN.teal,G,[0,0,0],[0,0,0],[1,1,1],false);
   const ry=y0+rise,rl=(hw+ov)*.84;mk(new THREE.BoxGeometry(rl*2,.24,.26),CN.tileD,G,[cx,ry+.08,cz]);mk(new THREE.BoxGeometry(rl*2,.05,.28),CN.gold,G,[cx,ry+.22,cz],[0,0,0],[1,1,1],false);
   if(o.wing!==0)for(const sd of[-1,1])cnWing(G,cx+sd*rl,ry+.16,cz,sd,o.wing??.6,CN.lac,0);
   if(o.pearl!==false){mk(new THREE.SphereGeometry(.13,12,10),CN.gold,G,[cx,ry+.4,cz]);mk(new THREE.ConeGeometry(.07,.2,8),CN.fin,G,[cx,ry+.6,cz]);}
@@ -1548,18 +1574,90 @@ function cnDome(G,maz=-30,mel=13){const m=new THREE.Mesh(new THREE.SphereGeometr
   vec2 q=floor(vec2(az,el)*1.6);float s=h(q);if(el>6.&&s>.986&&fract(s*31.+uT*.0004)<.6)c=vec3(1.,.95,.9);
   float md=length(vec2((az-(${maz.toFixed(1)}))*.98,el-(${mel.toFixed(1)})));if(md<4.2){c=vec3(1.,.97,.9);if(h(floor(vec2(az,el)*1.3))>.82)c=vec3(.98,.9,.82);}else if(md<5.4)c=mix(c,vec3(1.,.82,.78),.5);else if(md<7.)c=mix(c,vec3(.85,.55,.72),.25);
   c=mix(c,uDimC,uDim*.7);gl_FragColor=vec4(c,1.);}`}));m.userData.noCast=1;G.add(m);}
-// 梅樹：彎彎的枝幹（遞迴分枝）＋粉白梅花
-function cnPlum(G,x,y,z,s,flip=1){const B=[],F=[[],[]];const br=(p,dir,len,r,d)=>{const e=p.clone().addScaledVector(dir,len),mid=p.clone().lerp(e,.5).add(V3((R3()-.5)*.2*len,(R3()-.5)*.1*len,(R3()-.5)*.1*len));
-    B.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([p,mid,e]),6,r,5,false));
-    if(d>0)for(let k=0;k<(d>1?2:3);k++)br(e,dir.clone().add(V3((R3()-.5)*1.5+flip*.25,.25+R3()*.45,(R3()-.5)*.6)).normalize(),len*.72,r*.66,d-1);
-    for(let k=0;k<(d<2?9:3);k++){const q=p.clone().lerp(e,R3());F[R3()<.72?0:1].push([q.x+(R3()-.5)*.14,q.y+(R3()-.5)*.14,q.z+(R3()-.5)*.14,1.4+R3()*.9,R3()*3,R3()*3]);}};
-  br(V3(x,y,z),V3(.18*flip,1,0).normalize(),1.15*s,.12*s,3);mk(mergeGeometries(B),CN.branch,G);inst(FLG,CN.blos,F[0],G);inst(FLG,CN.blosW,F[1],G);}
-// 竹叢：一根根竹子＋竹節＋頂上一簇簇竹葉
-function cnBamboo(G,x,y,z,n,h){const S=[],N=[],LV=[];for(let k=0;k<n;k++){const bx=x+(R3()-.5)*.9,bz=z+(R3()-.5)*.6,hh=h*(.7+R3()*.45),lean=(R3()-.5)*.12;
-    S.push(new THREE.CylinderGeometry(.045,.055,hh,6).translate(0,hh/2,0).rotateZ(lean).translate(bx,y,bz));
-    for(let yy=.45;yy<hh;yy+=.42+R3()*.1)N.push(new THREE.CylinderGeometry(.06,.06,.035,6).translate(0,yy,0).rotateZ(lean).translate(bx,y,bz));
-    for(let j=0;j<16;j++){const yy=hh*(.55+R3()*.45);LV.push([bx-Math.sin(lean)*yy+(R3()-.5)*.6,y+yy,bz+(R3()-.5)*.4,2.6+R3()*1.4,R3()*.8,R3()*6,R3()*.8]);}}
-  mk(mergeGeometries(S),CN.bam,G);mk(mergeGeometries(N),CN.teal,G,[0,0,0],[0,0,0],[1,1,1],false);inst(LFG,CN.bamL,LV,G);}
+// ---- 中華卡池 v3 精緻化（D 11/21 晚：「還是很多都很不夠精緻」——截圖指紅布簾、梅樹、竹子、大鼓）----
+// 共通：每個道具用自己的亂數（不吃共用 R3，改一個不會讓整個場景的其他東西換位置）；細枝不描黑邊（像素畫面上會變成一條條黑線）
+// 漸細的管子（樹枝、竹竿）：沿曲線一圈圈，半徑從 r0 漸變到 r1
+function taperTube(pts,r0,r1,rs=6){const cv=new THREE.CatmullRomCurve3(pts,false,'centripetal'),n=Math.max(4,(pts.length-1)*5),g=new THREE.TubeGeometry(cv,n,1,rs,false),pa=g.attributes.position,c=V3(),v=V3();
+  for(let i=0;i<=n;i++){cv.getPointAt(i/n,c);const r=r0+(r1-r0)*(i/n);for(let j=0;j<=rs;j++){const k=i*(rs+1)+j;v.fromBufferAttribute(pa,k).sub(c).multiplyScalar(r).add(c);pa.setXYZ(k,v.x,v.y,v.z);}}
+  g.computeVertexNormals();return g;}
+// 從 a 到 b 的一根棍子（半徑 r0→r1）
+function segG(a,b,r0,r1=r0,rs=6){const d=V3().subVectors(b,a),L=d.length(),g=new THREE.CylinderGeometry(r1,r0,L,rs);g.translate(0,L/2,0);g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(V3(0,1,0),d.normalize()));g.translate(a.x,a.y,a.z);return g;}
+// 梅樹 v3：深色、一折一折的枝幹（梅枝的樣子），越往外越細；花是一朵朵平的五瓣小花（粉、白、朝鏡頭），
+// 一簇簇開在轉折處與枝頭、中間留空讓枝幹看得到；枝頭一顆深粉花苞。舊版是粗棕管子＋一團團粉色雜點
+const PLUM_M={bark:toon('#5a3438','#3a2622','#241638',{rim:'#c99a8e',rimA:.22}),fP:toon('#ffd4dc','#f290a8','#c8648a',{side:DS}),fW:toon('#ffffff','#ffeef2','#e9b9b4',{side:DS}),
+  bud:toon('#f290a8','#c8648a','#a24a75'),core:toon('#fff3c2','#ffd25e','#d9952f')};
+const PLUM_FG=(()=>{const P=[];for(let i=0;i<40;i++){const a=i/40*6.2832,r=.52+.48*Math.pow(Math.abs(Math.cos(a*2.5)),.7);P.push([Math.cos(a+Math.PI/2)*r,Math.sin(a+Math.PI/2)*r]);}return new THREE.ShapeGeometry(shapeOf(P));})(),
+  BALL=new THREE.SphereGeometry(1,7,5);
+function cnPlum(G,x,y,z,s,flip=1){const r=rng(Math.round(Math.abs(x*97+z*31+s*13))+5),B=[],FP=[],FW=[],BD=[],CO=[];
+  const turn=(d,a,b)=>{const o=d.clone().applyAxisAngle(V3(0,0,1),a).applyAxisAngle(V3(0,1,0),b);if(o.y<.08)o.y=.08;return o.normalize();};
+  const bloom=(p,n,sp)=>{for(let k=0;k<n;k++){const q=V3(p.x+(r()-.5)*sp,p.y+(r()-.5)*sp*.8,p.z+(r()-.5)*sp*.5),sc=(.065+r()*.03)*Math.min(1.2,s/1.3);
+    (r()<.6?FP:FW).push([q.x,q.y,q.z+.03,sc,(r()-.5)*.6,(r()-.5)*.6,r()*6]);if(r()<.55)CO.push([q.x,q.y,q.z+.045,sc*.24]);}};
+  const br=(p,dir,len,rad,d)=>{const pts=[p.clone()];let q=p.clone(),dd=dir.clone();
+    for(let k=0;k<3;k++){dd=turn(dd,(r()-.5)*.75,(r()-.5)*.5);q=q.clone().addScaledVector(dd,len/3);pts.push(q);}
+    const rEnd=rad*.6;B.push(taperTube(pts,rad,rEnd,d>1?7:5));
+    if(d<=1){for(let k=1;k<pts.length;k++)if(r()<.8)bloom(pts[k],2+Math.floor(r()*3),.13*s);BD.push([q.x,q.y,q.z,.028*s]);}
+    if(d>0){br(q,turn(dd,flip*(.35+r()*.3),(r()-.5)*.6),len*.74,rEnd,d-1);br(q,turn(dd,-flip*(.6+r()*.4),(r()-.5)*.8),len*.6,rEnd*.8,d-1);
+      if(d>=2&&r()<.75)br(pts[1+Math.floor(r()*2)],turn(dd,flip*(.95+r()*.4),(r()-.5)*.6),len*.45,rad*.5,d-2);}};
+  br(V3(x,y,z),V3(.16*flip,1,0).normalize(),1.0*s,.12*s,3);
+  B.push(new THREE.ConeGeometry(.2*s,.28*s,8,1,true).translate(x,y+.12*s,z));   // 樹根往外撐
+  mk(mergeGeometries(B),PLUM_M.bark,G);inst(PLUM_FG,PLUM_M.fP,FP,G);inst(PLUM_FG,PLUM_M.fW,FW,G);inst(BALL,PLUM_M.bud,BD,G);inst(BALL,PLUM_M.core,CO,G);}
+// 竹叢 v3：竹竿一根根分開（看得出是幾根）、上細下粗、淺色竹節；上半段的節長出細枝，枝頭一叢往下垂的細長竹葉（扇形 4～6 片），竿頂一叢往上
+const BAM_M={culm:toon('#9cb35e','#7a9450','#56703f',{rim:'#e6fff3',rimA:.22}),node:toon('#56703f','#56703f','#2a4a50'),
+  leaf:toon('#9cb35e','#7a9450','#56703f',{side:DS}),leafD:toon('#7a9450','#56703f','#2a4a50',{side:DS})};
+const BAM_LG=new THREE.ShapeGeometry(shapeOf([[0,0],[.024,.05],[.032,.15],[.022,.26],[0,.34],[-.022,.26],[-.032,.15],[-.024,.05]]));
+function cnBamboo(G,x,y,z,n,h){const r=rng(Math.round(Math.abs(x*53+z*17+h*7))+9),S=[],N=[],L1=[],L2=[];
+  for(let k=0;k<n;k++){const bx=x+(k-(n-1)/2)*.3+(r()-.5)*.12,bz=z+(r()-.5)*.5,hh=h*(.75+r()*.35),lean=(r()-.5)*.16,rad=.048+r()*.012;
+    const base=V3(bx,y,bz),tip=V3(bx+Math.sin(lean)*hh,y+Math.cos(lean)*hh,bz);S.push(taperTube([base,base.clone().lerp(tip,.5).add(V3(lean*.15,0,0)),tip],rad,rad*.55,7));
+    const nn=Math.floor(hh/.4);for(let i=1;i<=nn;i++){const t=i/(nn+.5),p=base.clone().lerp(tip,t),rr=rad*(1-.42*t);N.push(new THREE.CylinderGeometry(rr*1.2,rr*1.2,.032,7).rotateZ(-lean).translate(p.x,p.y,p.z));
+      if(t>.42&&r()<.8){const sd=r()<.5?-1:1,tw=p.clone().add(V3(sd*(.12+r()*.06),.05+r()*.04,(r()-.5)*.12));N.push(segG(p,tw,.01,.006,4));
+        const m=4+Math.floor(r()*3);for(let j=0;j<m;j++){const a=sd*(.75+(j/(m-1)-.5)*1.5)+(r()-.5)*.2;(r()<.6?L1:L2).push([tw.x,tw.y,tw.z+.01,1+r()*.4,(r()-.5)*.5,(r()-.5)*.7,Math.PI+a]);}}}
+    for(let j=0;j<5;j++)(r()<.5?L1:L2).push([tip.x,tip.y-.04,tip.z+.01,.9+r()*.3,(r()-.5)*.4,(r()-.5)*.5,(j/4-.5)*1.6+(r()-.5)*.2]);}
+  mk(mergeGeometries(S),BAM_M.culm,G);mk(mergeGeometries(N),BAM_M.node,G,[0,0,0],[0,0,0],[1,1,1],false);inst(BAM_LG,BAM_M.leaf,L1,G);inst(BAM_LG,BAM_M.leafD,L2,G);}
+// 紅帷幕 v3：真的有一道道褶子的布（不是平板＋畫上去的條紋）：上面整片垂下、中段被金繩收攏到柱子那側、下面再散開；
+// 收攏處褶子變深（卡通打光自然出亮暗）；布面暗紋、上緣金帶、下緣金回紋滾邊＋流蘇。x0＝柱子那側、x1＝往戲台中間
+const TX_CUR=cnCanvas(64,256,(x,w,h)=>{fr(x,0,0,w,h,CK.R2);
+  for(let yy=22;yy<h-34;yy+=16)for(let xx=(yy/16%2)*8;xx<w;xx+=16){fr(x,xx+3,yy,2,1,CK.R1);fr(x,xx+2,yy+1,4,1,CK.R1);fr(x,xx+3,yy+2,2,1,CK.R1);}   // 小菱形暗紋（淡）
+  fr(x,0,0,w,4,CK.G4);fr(x,0,4,w,8,CK.G3);fr(x,0,5,w,1,CK.G1);fr(x,0,11,w,1,CK.G5);for(let k=4;k<w;k+=8)fr(x,k,7,3,2,CK.G2);fr(x,0,12,w,2,CK.R4);
+  const hy=h-32;fr(x,0,hy,w,22,CK.R5);fr(x,0,hy,w,2,CK.G2);fr(x,0,hy+2,w,1,CK.G5);meander(x,1,hy+6,w-2,12,CK.G3,2);fr(x,0,hy+20,w,2,CK.G4);
+  for(let k=0;k<w;k+=2){fr(x,k,hy+22,1,8+(k%4?0:2),k%4?CK.G3:CK.G4);}   // 金流蘇
+  fr(x,w-2,0,2,h-32,CK.R4);});
+function cnCurtain(G,x0,x1,top,bot,mid,z){const NU=30,NV=40,P=[],UV=[],I=[],sg=Math.sign(x1-x0);
+  const fw=v=>{const y=top-(top-bot)*v;if(y>=mid){const t=(top-y)/(top-mid);return .17+.83*Math.pow(1-t,1.45);}const t=(mid-y)/(mid-bot);return .17+.48*Math.pow(t,.7);};
+  for(let j=0;j<=NV;j++){const v=j/NV,y=top-(top-bot)*v,f=fw(v),amp=.035+.12*(1-f);
+    for(let i=0;i<=NU;i++){const u=i/NU;P.push(x0+(x1-x0)*f*u,y,z+amp*Math.sin(u*Math.PI*9+.6)*(.3+.7*Math.min(1,u*4))+.06*Math.sin(v*3.14));UV.push(u,1-v);}}
+  for(let j=0;j<NV;j++)for(let i=0;i<NU;i++){const a=j*(NU+1)+i,b=a+NU+1;if(sg>0)I.push(a,b,a+1,b,b+1,a+1);else I.push(a,a+1,b,b,a+1,b+1);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(UV,2));g.setIndex(I);g.computeVertexNormals();
+  mk(g,toonT(TX_CUR,{side:DS,midM:[.86,.78,.86],shdM:[.62,.46,.62]}),G,[0,0,0],[0,0,0],[1,1,1],false);
+  const cx=x0+(x1-x0)*.085,rr=Math.abs(x1-x0)*.1;   // 金繩收攏（一圈橫的金繩）＋垂下來的金結紅流蘇
+  mk(new THREE.TorusGeometry(rr,.028,6,16),CN.gold,G,[cx,mid,z],[Math.PI/2,0,0],[1,1,1.6],false);mk(new THREE.TorusGeometry(rr*1.05,.02,6,16),CN.gold,G,[cx,mid-.07,z],[Math.PI/2,0,0],[1,1,1.6],false);
+  const tx=cx+sg*rr*.9;mk(new THREE.SphereGeometry(.05,10,8),CN.gold,G,[tx,mid-.1,z+.12]);mk(new THREE.CylinderGeometry(.035,.035,.05,8),CN.gold,G,[tx,mid-.17,z+.12],[0,0,0],[1,1,1],false);
+  mk(new THREE.ConeGeometry(.07,.34,8,1,true),CN.fin,G,[tx,mid-.36,z+.12],[Math.PI,0,0]);}
+// 戲台兩旁的格扇窗 v3：裡面點著燈的窗紙（暖黃漸層、會發亮）＋燈籠錦窗格（深紅木格、每格中間一個小方框）；下面四分之一是朱漆裙板（金框＋卷雲）
+const TX_WIN=cnCanvas(96,188,(x,w,h)=>{const kb=Math.round(h*.74);
+  for(let y=0;y<kb;y++)fr(x,0,y,w,1,y<kb*.3?'#fff3c2':(y<kb*.65?'#fbe1cf':'#ffc4b0'));
+  const W1='#5a1426',W2='#9c2a3a',cs=24,ox=(w%cs)/2;
+  for(let cy=0;cy<kb;cy+=cs)for(let cxx=-cs+ox;cxx<w;cxx+=cs){fr(x,cxx,cy,cs,2,W1);fr(x,cxx,cy,2,cs,W1);fr(x,cxx,cy+2,cs,1,W2);
+    const m=cs/2;fr(x,cxx+m-4,cy+m-4,9,1,W1);fr(x,cxx+m-4,cy+m+4,9,1,W1);fr(x,cxx+m-4,cy+m-4,1,9,W1);fr(x,cxx+m+4,cy+m-4,1,9,W1);
+    fr(x,cxx+m,cy,1,m-4,W1);fr(x,cxx+m,cy+m+5,1,m-5,W1);fr(x,cxx,cy+m,m-4,1,W1);fr(x,cxx+m+5,cy+m,m-5,1,W1);}
+  fr(x,0,kb,w,h-kb,CK.R3);fr(x,0,kb,w,3,W1);bevel(x,5,kb+7,w-10,h-kb-12,2,CK.G2,CK.G4);fr(x,7,kb+9,w-14,h-kb-16,CK.R4);cloud(x,w/2,kb+(h-kb)/2+1,8,CK.G3,2);});
+// 大鼓 v3：鼓身中間微微鼓起（朱漆）、前後兩圈金邊＋金鼓釘；鼓面米白牛皮：紅圈、金細圈、正中紅底金「福」；
+// 鼓架四腳外撐（深朱漆、金腳套）、四面橫撐；兩根鼓槌（紅布包頭）斜靠在鼓架旁
+let TX_DRUM=null;const STICK_M=toon('#d9952f','#8a4b22','#5a3438');
+function cnDrum(G,x,y,z,ry){const Dg=new THREE.Group();Dg.position.set(x,y,z);Dg.rotation.y=ry;G.add(Dg);
+  if(!TX_DRUM)TX_DRUM=cnCanvas(128,128,(c,w,h)=>{const m=w/2,ring=(R,col)=>{c.fillStyle=col;c.beginPath();c.arc(m,m,R,0,7);c.fill();};
+    fr(c,0,0,w,h,'#fbe1cf');ring(63,'#c8343e');ring(56,'#fbe1cf');ring(51,'#f2b53e');ring(48,'#fbe1cf');
+    for(let k=0;k<8;k++){const a=k/8*6.2832+.39;cloud(c,m+Math.cos(a)*41,m+Math.sin(a)*41,4,'#e27d9c',1.6);}
+    ring(31,'#f2b53e');ring(28,'#d9443f');c.fillStyle='#ffe27a';c.font=`900 38px ${CN_FONT}`;c.textAlign='center';c.textBaseline='middle';c.fillText('福',m,m+3);});
+  const R=.64,L=.56,CY=1.66,prof=[];for(let i=0;i<=12;i++){const t=i/12;prof.push(new THREE.Vector2(R+.07*Math.cos((t-.5)*Math.PI),(t-.5)*L));}
+  mk(new THREE.LatheGeometry(prof,32),CN.red,Dg,[0,CY,0],[Math.PI/2,0,0]);
+  const face=toonT(TX_DRUM,{midM:[.94,.88,.9],shdM:[.76,.64,.72]});for(const sz of[1,-1]){mk(new THREE.CircleGeometry(R,32),face,Dg,[0,CY,sz*L/2+sz*.002],[0,sz>0?0:Math.PI,0],[1,1,1],false);
+    mk(new THREE.TorusGeometry(R+.01,.032,6,40),CN.gold,Dg,[0,CY,sz*L/2]);
+    const P=[];for(let k=0;k<26;k++){const a=k/26*6.2832;P.push([Math.cos(a)*(R+.035),CY+Math.sin(a)*(R+.035),sz*(L/2-.07),1]);}inst(new THREE.SphereGeometry(.03,6,5),CN.gold,P,Dg);}
+  const LG=[],FT=[];for(const lx of[-1,1])for(const lz of[-1,1]){const a=V3(lx*.62,0,lz*.36),b=V3(lx*.42,1.12,lz*.2);LG.push(segG(a,b,.05,.038,6));FT.push([a.x,.04,a.z,1]);}
+  for(const lz of[-1,1])LG.push(segG(V3(-.56,.4,lz*.31),V3(.56,.4,lz*.31),.03,.03,5));for(const lx of[-1,1])LG.push(segG(V3(lx*.55,.4,-.31),V3(lx*.55,.4,.31),.03,.03,5));
+  mk(mergeGeometries(LG),CN.redD,Dg);inst(new THREE.CylinderGeometry(.065,.075,.08,8),CN.gold,FT,Dg);
+  for(const [a,b] of[[V3(.74,.04,.42),V3(.5,1.22,.5)],[V3(.98,.04,.3),V3(.66,1.2,.48)]]){mk(segG(a,b,.022,.022,5),STICK_M,Dg);mk(new THREE.SphereGeometry(.065,10,8),CN.fin,Dg,[b.x,b.y,b.z]);}
+  return Dg;}
 // 石獅（坐姿、捲鬃、腳下金繡球）
 function cnLion(G,x,z,sd){const L=new THREE.Group();L.position.set(x,0,z);L.rotation.y=-sd*.3;G.add(L);
   mk(new THREE.BoxGeometry(.74,.46,.62),CN.stoneD,L,[0,.23,0]);mk(new THREE.BoxGeometry(.82,.08,.7),CN.stone,L,[0,.5,0]);
@@ -1571,7 +1669,7 @@ function cnLion(G,x,z,sd){const L=new THREE.Group();L.position.set(x,0,z);L.rota
   // 石材雙面：模型上的小破洞看到的是石頭內側（不是描邊的黑）
   const geoOf=gl=>{gl.scene.updateMatrixWorld(true);const ps=[];gl.scene.traverse(o=>{if(o.isMesh){const g=o.geometry.clone().applyMatrix4(o.matrixWorld);for(const a of Object.keys(g.attributes))if(a!=='position'&&a!=='normal')g.deleteAttribute(a);if(!g.attributes.normal)g.computeVertexNormals();ps.push(g);}});return ps;};
   GLL.loadAsync('tavern/cn_lion.glb'+DV).then(gl=>{const ps=geoOf(gl);if(!ps.length)return;
-    for(const c of[...L.children])c.visible=false;for(const g of ps)mk(g,CN.lion,L,[0,0,0],[0,0,0],[-sd,1,1]);}).catch(()=>{});}
+    for(const c of[...L.children])c.visible=false;for(const g of ps)mk(g,CN.lion,L,[0,0,0],[0,0,0],[-sd,1,1],false).add(new THREE.Mesh(smoothHull(g),OLM));}).catch(()=>{});}   // v3：只描抹平過的外輪廓（直接描邊，黑邊從縫裡透出來變成一身黑點）
 // 字牌（匾額、春聯）：畫布寫字
 const CN_FONT='"Microsoft JhengHei","PingFang TC","Noto Sans TC","Noto Sans CJK TC",sans-serif';
 function cnBoard(G,txt,w,h,pos,{vert=false,bg='#2f1d4a',fg='#ffd25e',edge='#f2b53e',frame=CN.gold,rot=[0,0,0]}={}){const cw=vert?64:Math.round(64*w/h),ch=vert?Math.round(64*h/w):64,c=document.createElement('canvas');c.width=cw*2;c.height=ch*2;const x=c.getContext('2d');
@@ -1581,13 +1679,14 @@ function cnBoard(G,txt,w,h,pos,{vert=false,bg='#2f1d4a',fg='#ffd25e',edge='#f2b5
   const B=new THREE.Group();B.position.set(...pos);B.rotation.set(...rot);G.add(B);mk(new THREE.BoxGeometry(w+.1,h+.1,.07),frame,B,[0,0,-.04]);
   const f=new THREE.Mesh(new THREE.PlaneGeometry(w,h),texMat(texOf(c)));f.position.z=.002;B.add(f);return B;}
 // 孔明燈：遠處一盞盞慢慢升上去（themeFX 更新高度）
-function cnSkyLanterns(G,n,x0,x1,y0,y1,z0,z1,s=1){const geo=new THREE.CylinderGeometry(.16*s,.11*s,.3*s,4,1);for(let i=0;i<n;i++){const m=toon('#fff3c2','#ffc58f','#e39a5c',{noDim:true});m.uniforms.uEmis.value.setRGB(.35,.2,.06);
+function cnSkyLanterns(G,n,x0,x1,y0,y1,z0,z1,s=1){const geo=new THREE.CylinderGeometry(.16*s,.11*s,.3*s,4,1);for(let i=0;i<n;i++){const m=toon('#fff3c2','#ffd25e','#d9952f',{noDim:true});m.uniforms.uEmis.value.setRGB(.35,.2,.06);
   const g=new THREE.Mesh(geo,m);g.rotation.y=R3()*3;g.userData.noCast=1;G.add(g);CNSKY.push({g,x:x0+R3()*(x1-x0),z:z0+R3()*(z1-z0),y0,y1,ph:R3(),sp:.000022+R3()*.00002});}}
 const PETAL_F=`uniform float uDim;varying float vK;void main(){vec2 q=abs(gl_PointCoord-.5);if(q.x+q.y>.5)discard;vec3 c=fract(vK)<.6?vec3(1.,.83,.86):vec3(1.,.95,.96);gl_FragColor=vec4(c*(1.-uDim*.5),1.);}`;
-// 漏窗（圓框＋格子）
-function cnLattice(G,x,y,z,r,frame=CN.stoneD,bar=CN.lac){mk(new THREE.TorusGeometry(r,.06,6,24),frame,G,[x,y,z+.02]);mk(new THREE.CircleGeometry(r,20),CN.lac,G,[x,y,z-.005],[0,0,0],[1,1,1],false);
-  const B=[];for(let k=-2;k<=2;k++){const a=Math.sqrt(Math.max(0,r*r-(k*r/3)**2));B.push(new THREE.BoxGeometry(.035,a*2,.03).translate(x+k*r/3,y,z+.008),new THREE.BoxGeometry(a*2,.035,.03).translate(x,y+k*r/3,z+.008));}
-  mk(mergeGeometries(B),CN.plaster,G,[0,0,0],[0,0,0],[1,1,1],false);}
+// 漏窗 v3（圓框＋點燈的窗紙＋古錢紋窗格）：舊版是深紫底＋白色十字格，遠看像排水孔的鐵網
+const TX_LOU=cnCanvas(72,72,(x,w,h)=>{const m=w/2;x.fillStyle='#fbe1cf';x.fillRect(0,0,w,h);x.fillStyle='#fff3c2';x.beginPath();x.arc(m,m-2,24,0,7);x.fill();
+  x.strokeStyle='#5a3438';x.lineWidth=3.4;for(let gy=-1;gy<=4;gy++)for(let gx=-1;gx<=4;gx++){x.beginPath();x.arc(gx*20+6,gy*20+6,13,0,7);x.stroke();}});
+function cnLattice(G,x,y,z,r,frame=CN.stoneD){mk(new THREE.TorusGeometry(r,.065,6,28),frame,G,[x,y,z+.02]);mk(new THREE.TorusGeometry(r*.9,.025,5,28),frame,G,[x,y,z+.03],[0,0,0],[1,1,1],false);
+  const w=new THREE.Mesh(new THREE.CircleGeometry(r,28),texMat(TX_LOU));w.position.set(x,y,z-.005);w.userData.noCast=1;G.add(w);}
 
 const STAGES={gen:STG3,sea:STG_S,forest:STG_F,cn:STG_C},HOUSES={gen:TAV3,sea:TAV_S,forest:TAV_F,cn:TAV_C};
 const curStage=()=>STAGES[THEME],curHouse=()=>HOUSES[THEME];
@@ -1698,7 +1797,7 @@ const LEAFFALL_F=`uniform float uDim;varying float vK;void main(){vec2 q=abs(gl_
 // ---- 扭蛋機換主題：機身／蓋子／耳朵換色，加各主題的小配件 ----
 const MTH={gen:{body:['#ffb3c0','#f290a8','#c8648a','#ffeef2'],lid:['#ffb3c0','#f290a8','#c8648a'],ear:['#ffd4dc','#ffb3c0','#e27d9c'],plat:['#f4b8cf','#d98fb6','#8a58a8','#ffeef2']},
   sea:{body:['#bff0da','#8fd9bb','#5fae9a','#e6fff3'],lid:['#8ec8ff','#5b6fd6','#5a48a0'],ear:['#d2f0ff','#8ec8ff','#5b6fd6'],plat:['#d2f0ff','#8ec8ff','#5b6fd6','#e6fff3']},
-  cn:{body:['#ee6a5a','#d9443f','#9c2a3a','#ffc4b0'],lid:['#ffe27a','#f2b53e','#b8692a'],ear:['#ffd4dc','#ffb3c0','#e27d9c'],plat:['#d9443f','#b8323c','#7a1f33','#ffd25e']},
+  cn:{body:['#ee6a5a','#d9443f','#9c2a3a','#ffc4b0'],lid:['#734896','#5e3b82','#3b2559','#d4c6ff'],ear:['#ff9a85','#d9443f','#9c2a3a'],plat:['#d9443f','#b8323c','#7a1f33','#ffd25e']},
   forest:{body:['#9cb35e','#7a9450','#56703f','#e6fff3'],lid:['#f290a8','#c8648a','#7d3a63'],ear:['#bff0da','#9cb35e','#56703f'],plat:['#e39a5c','#b8692a','#8a4b22','#ffe2c2']}};
 const MACC={sea:new THREE.Group(),forest:new THREE.Group(),cn:new THREE.Group()};body.add(MACC.sea,MACC.forest,MACC.cn);
 {const LY=3.6,G=MACC.sea;BUILD=G;
@@ -1714,14 +1813,37 @@ const MACC={sea:new THREE.Group(),forest:new THREE.Group(),cn:new THREE.Group()}
   for(const [x,z] of[[-.95,.62],[.95,.62]]){mk(new THREE.SphereGeometry(.09,8,6),FOR.flP,G,[x,.42,z],[0,0,0],[1,1,1],false);mk(new THREE.SphereGeometry(.05,8,6),FOR.flY,G,[x,.45,z+.06],[0,0,0],[1,1,1],false);}
 }
 {const LY=3.6,G=MACC.cn;BUILD=G;
-  {const WM=toon('#9a5f9e','#5e3b82','#3b2559',{rim:'#d4c6ff',rimA:.4});for(const sd of[-1,1])cnWing(G,sd*1.06,LY-.02,.12,sd,.5,WM,-sd*.35);}   // 蓋子兩側的小蝙蝠翼（小惡魔）
-  mk(new THREE.SphereGeometry(.22,16,10),CN.gold,G,[0,LY+.34,.44],[0,0,0],[1.5,.55,.9]);mk(new THREE.SphereGeometry(.12,12,10),CN.gold,G,[0,LY+.44,.44]);
+  // v3（D 11/21「轉蛋的帽子也是無法理解」：金色蓋子＋一坨金球＋兩片紫色葉子形的翼，看起來是一頂看不懂的黃帽子）→
+  // 蓋子改深紫漆（machTheme 的 cn.lid，跟紅機身分得開）、金邊；貓耳深紫、耳內朱紅；頂上站一盞小紅燈籠（金頂金底、紅流蘇），一看就是中華；
+  // 兩側一對小蝙蝠翼（小惡魔）：正對鏡頭攤開、上緣一道弧到翼尖、下緣三道內凹弧，翼骨細細的深紫
+  {const WM=toon('#7a64c8','#5a48a0','#3b2559',{rim:'#d4c6ff',rimA:.45,side:DS}),BM=toon('#4b2f6c','#3b2559','#241638');
+    const wingPts=s=>{const P=[[0,0],[0,.36]];for(let i=1;i<=8;i++){const t=i/8;P.push([.82*t,.36+.34*Math.sin(t*Math.PI*.62)]);}
+      const tips=[[.82,.6],[.6,.12],[.34,-.02]];let a=tips[0];
+      for(const b of[...tips.slice(1),[0,0]]){const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);for(let i=1;i<=6;i++){const t=i/6,k=.13*L*Math.sin(t*Math.PI);P.push([a[0]+dx*t-dy/L*k,a[1]+dy*t+dx/L*k]);}a=b;}
+      return P.map(([x,y])=>[x*s,y*s]);};
+    for(const sd of[-1,1]){const W=new THREE.Group();W.position.set(sd*.66,LY+.06,.05);W.rotation.set(0,sd>0?-.18:Math.PI+.18,sd*.08);G.add(W);
+      const g=new THREE.ExtrudeGeometry(shapeOf(wingPts(.7)),{depth:.04,bevelEnabled:false});g.translate(0,0,-.02);mk(g,WM,W);
+      for(const [tx,ty] of[[.82,.6],[.6,.12],[.34,-.02]]){const d=Math.hypot(tx,ty-.3)*.7;mk(new THREE.CylinderGeometry(.012,.02,d,5).translate(0,d/2,0),BM,W,[0,.3*.7,.025],[0,0,-Math.atan2(tx,ty-.3)],[1,1,1],false);}}
+    // 頂上的小紅燈籠
+    const Lt=new THREE.Group();Lt.position.set(0,LY+.42,.02);G.add(Lt);const LR=.2,prof=[];for(let i=0;i<=10;i++){const t=i/10;prof.push(new THREE.Vector2(LR*(.42+.58*Math.sin(Math.PI*t)),(t-.5)*LR*1.8));}
+    mk(new THREE.CylinderGeometry(.1,.13,.06,12),CN.gold,Lt,[0,.03,0]);mk(new THREE.LatheGeometry(prof,14),CN.cloth,Lt,[0,.06+LR*.9+.02,0]);
+    for(const sy of[-1,1])mk(new THREE.CylinderGeometry(LR*.48,LR*.48,LR*.18,14),CN.gold,Lt,[0,.08+LR*.9+sy*LR*.86,0]);
+    mk(new THREE.SphereGeometry(.045,10,8),CN.gold,Lt,[0,.1+LR*1.9+.04,0]);mk(new THREE.ConeGeometry(.012,.12,4),CN.gold,Lt,[0,.1+LR*1.9+.13,0],[0,0,0],[1,1,1],false);}
   const K=new THREE.Group();K.position.set(1.12,2.02,.62);G.add(K);mk(new THREE.CylinderGeometry(.01,.01,.2,4),CN.redD,K,[0,-.1,0],[0,0,0],[1,1,1],false);
   mk(new THREE.TorusGeometry(.11,.035,6,4),CN.fin,K,[0,-.32,0],[0,0,Math.PI/4]);mk(new THREE.SphereGeometry(.04,8,6),CN.gold,K,[0,-.48,0],[0,0,0],[1,1,1],false);mk(new THREE.ConeGeometry(.07,.32,6),CN.redD,K,[0,-.66,0],[Math.PI,0,0]);
   CNSWAY.push({g:K,ph:1.3,amp:.12});}
+// 中華卡池的舞台陣紋（v3：原本是通用的八芒星魔法陣，跟中華不搭）→ 外圈一整圈回紋、八朵卷雲、八顆小菱形，正中還是貓掌
+const MTEX_CN=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=512;const x=cv.getContext('2d'),c=256;x.strokeStyle=x.fillStyle='#fff';x.lineCap='square';x.lineJoin='miter';
+  const ring=(r,w)=>{x.lineWidth=w;x.beginPath();x.arc(c,c,r,0,7);x.stroke();};ring(247,5);ring(233,2);ring(195,2);ring(150,3);ring(64,3);ring(80,1.5);
+  const U=[[0,0],[0,1],[1,1],[1,.28],[.38,.28],[.38,.66],[.7,.66]],N=48;x.lineWidth=3;
+  for(let i=0;i<N;i++){const a0=i/N*Math.PI*2,da=Math.PI*2/N*.86;x.beginPath();U.forEach(([u,v],j)=>{const a=a0+u*da,r=203+v*24,px=c+Math.cos(a)*r,py=c+Math.sin(a)*r;j?x.lineTo(px,py):x.moveTo(px,py);});x.stroke();}
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2+Math.PI/8;cloud(x,c+Math.cos(a)*172,c+Math.sin(a)*172,13,'#fff',3);}
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2,px=c+Math.cos(a)*172,py=c+Math.sin(a)*172;x.beginPath();x.moveTo(px,py-8);x.lineTo(px+6,py);x.lineTo(px,py+8);x.lineTo(px-6,py);x.closePath();x.fill();}
+  x.beginPath();x.ellipse(c,c+12,22,17,0,0,7);x.fill();for(const[dx,dy]of[[-26,-14],[-10,-30],[10,-30],[26,-14]]){x.beginPath();x.arc(c+dx,c+dy,9,0,7);x.fill();}
+  return new THREE.CanvasTexture(cv);})();
 BUILD=TAV3;
 function machTheme(k){const T=MTH[k];const set=(m,c)=>{m.uniforms.uLit.value.set(c[0]);m.uniforms.uMid.value.set(c[1]);m.uniforms.uShd.value.set(c[2]);if(c[3])m.uniforms.uRimC.value.set(c[3]);};
-  set(MC.pink,T.body);set(MC.lid,T.lid);set(MC.earO,T.lid);set(MC.ear,T.ear);set(STGM,T.plat);MACC.sea.visible=k==='sea';MACC.forest.visible=k==='forest';MACC.cn.visible=k==='cn';}
+  set(MC.pink,T.body);set(MC.lid,T.lid);set(MC.earO,T.lid);set(MC.ear,T.ear);set(STGM,T.plat);MACC.sea.visible=k==='sea';MACC.forest.visible=k==='forest';MACC.cn.visible=k==='cn';magic.material.uniforms.map.value=k==='cn'?MTEX_CN:mTex;}
 
 // ---- 小屋：複製酒館小屋（MKH0~MKH1 是房子本體、MKV0~MKV1 是藤蔓），換材質 ----
 function houseClone(G,map,tileG){const ch=TAV3.children,parts=[...ch.slice(MKH0,MKH1),...ch.slice(MKV0,MKV1)];
@@ -1897,10 +2019,9 @@ if(TAV3_ON&&STG3_ON){
     T3(new THREE.TorusGeometry(MR,.13,8,72),CN.gold,[0,MY,ZB+.17]);T3(new THREE.TorusGeometry(MR+.3,.05,6,72),CN.gold,[0,MY,ZB+.17],[0,0,0],[1,1,1],false);
     {const mz=ZB-3.6,mx=-1.7,my=MY+1.05;T3(new THREE.CircleGeometry(1.9,48),CN.moon,[mx,my,mz],[0,0,0],[1,1,1],false);for(const [x,y,r] of[[-.6,.5,.34],[.3,.9,.22],[.5,-.2,.38],[-.4,-.6,.2]])T3(new THREE.CircleGeometry(r,20),CN.skin,[mx+x,my+y,mz+.02],[0,0,0],[1,1,1],false);
       cnPlum(G,1.9,FY,ZB-1.6,1.55,-1);}
-    for(const sd of[-1,1]){const cx=sd*4.85,cy=FY+2.85,w=1.9,h=3.7;T3(new THREE.BoxGeometry(w,h,.04),CN.lac,[cx,cy,ZB+.17],[0,0,0],[1,1,1],false);const B=[];
-      for(const [a,b,c,d] of[[0,h/2,w,.1],[0,-h/2,w,.1],[w/2,0,.1,h],[-w/2,0,.1,h]])B.push(new THREE.BoxGeometry(c,d,.07).translate(cx+a,cy+b,ZB+.2));
-      for(let i=1;i<4;i++)B.push(new THREE.BoxGeometry(.045,h,.04).translate(cx-w/2+i*w/4,cy,ZB+.2));for(let j=1;j<6;j++)B.push(new THREE.BoxGeometry(w,.045,.04).translate(cx,cy-h/2+j*h/6,ZB+.2));
-      mk(mergeGeometries(B),CN.gold,G,[0,0,0],[0,0,0],[1,1,1],false);}
+    for(const sd of[-1,1]){const cx=sd*4.85,cy=FY+2.85,w=1.9,h=3.7,wm=new THREE.Mesh(new THREE.PlaneGeometry(w,h),texMat(TX_WIN));wm.position.set(cx,cy,ZB+.17);wm.userData.noCast=1;G.add(wm);   // v3 格扇窗：點燈的窗紙＋燈籠錦窗格（貼圖），外面金框
+      const B=[];for(const [a,b,c,d] of[[0,h/2,w+.12,.12],[0,-h/2,w+.12,.12],[w/2,0,.12,h],[-w/2,0,.12,h]])B.push(new THREE.BoxGeometry(c,d,.08).translate(cx+a,cy+b,ZB+.21));
+      mk(mergeGeometries(B),CN.gold,G);}
     // 四根大柱、額枋、斗栱、匾額、掛落（金色回紋＋紅流蘇）、兩側紅帷幕
     for(const x of[-5.0,5.0])for(const z of[-6.1,-8.05]){T3(new THREE.CylinderGeometry(.24,.26,5.85,16),CN.red,[x,FY+2.92,z]);T3(new THREE.CylinderGeometry(.36,.4,.24,14),CN.stone,[x,FY+.12,z]);
       for(const y of[FY+.4,FY+5.2])T3(new THREE.CylinderGeometry(.265,.265,.08,16),CN.gold,[x,y,z],[0,0,0],[1,1,1],false);}
@@ -1911,18 +2032,11 @@ if(TAV3_ON&&STG3_ON){
       for(let x=Math.min(xa,xb);x<=Math.max(xa,xb)+.01;x+=.32){B.push(new THREE.BoxGeometry(.04,.36,.04).translate(x,4.8,-6.0));B.push(new THREE.BoxGeometry(.2,.04,.04).translate(x+.1,4.71+((Math.round(x/.32)&1)?.18:0),-6.0));}
       mk(mergeGeometries(B),CN.gold,G,[0,0,0],[0,0,0],[1,1,1],false);
       for(let k=0;k<4;k++){const x=sd*(1.9+k*.9);T3(new THREE.SphereGeometry(.05,8,6),CN.gold,[x,4.55,-6.0],[0,0,0],[1,1,1],false);T3(new THREE.ConeGeometry(.07,.36,6),CN.fin,[x,4.33,-6.0],[Math.PI,0,0]);}
-      const x0=sd*4.75,x1=sd*3.75,top=FY+5.3,mid=FY+2.5;T3(shapeG([[x0,top],[x1,top],[x0+(x1-x0)*.3,mid+.7],[x0+(x1-x0)*.16,mid],[x0+(x1-x0)*.6,FY+.02],[x0,FY+.02]],.06,-.03),toonT(TX.curtain,{side:DS,rep:[1/1.2,1/6],off:[0,-FY/6]}),[0,0,-5.85]);
-      T3(new THREE.TorusGeometry(.12,.04,6,12),CN.gold,[x0+(x1-x0)*.2,mid+.08,-5.78]);T3(new THREE.ConeGeometry(.06,.34,6),CN.gold,[x0+(x1-x0)*.2,mid-.22,-5.78],[Math.PI,0,0]);}
+      cnCurtain(G,sd*4.75,sd*3.75,FY+5.3,FY+.02,FY+2.5,-5.8);}   // v3 有褶子的紅帷幕
     cnRoof(G,0,5.55,-7.1,5.6,1.2,1.9,{lift:.75,over:.75,wing:.78});
     // 簷下的紅燈籠（兩旁大、中間小）
     for(const sd of[-1,1]){cnLant(G,sd*2.1,5.45,-5.25,.24,{cord:.24});cnLant(G,sd*3.6,5.45,-5.25,.24,{cord:.34});cnLant(G,sd*6.0,6.05,-4.75,.34,{cord:.32});}
-    // 兩旁大紅鼓（鼓架、牛皮鼓面、金鼓釘）
-    for(const sd of[-1,1]){const Dg=new THREE.Group();Dg.position.set(sd*6.9,FY,-4.3);Dg.rotation.y=-sd*.42;G.add(Dg);
-      for(const lx of[-.55,.55])for(const lz of[-.3,.3])mk(new THREE.BoxGeometry(.08,1.0,.08),CN.redD,Dg,[lx,.5,lz],[lz>0?.12:-.12,0,lx>0?-.1:.1]);
-      mk(new THREE.BoxGeometry(1.25,.08,.7),CN.redD,Dg,[0,.98,0]);mk(new THREE.CylinderGeometry(.66,.66,.52,24),CN.red,Dg,[0,1.66,0],[Math.PI/2,0,0]);
-      mk(new THREE.CircleGeometry(.6,24),CN.skin,Dg,[0,1.66,.27],[0,0,0],[1,1,1],false);mk(new THREE.CircleGeometry(.22,18),CN.fin,Dg,[0,1.66,.275],[0,0,0],[1,1,1],false);
-      {const P=[];for(let k=0;k<18;k++){const a=k/18*6.283;P.push([Math.cos(a)*.63,1.66+Math.sin(a)*.63,.265,1]);}inst(new THREE.SphereGeometry(.035,6,5),CN.gold,P,Dg);}
-      for(const a of[-.2,.2])mk(new THREE.CylinderGeometry(.03,.03,.9,6),CN.wood||CN.branch,Dg,[.75,1.0+a,.3],[0,0,.6+a]);}
+    for(const sd of[-1,1])cnDrum(G,sd*6.9,FY,-4.3,-sd*.42);   // 兩旁大紅鼓（v3 cnDrum）
     for(const sd of[-1,1]){cnPlum(G,sd*8.6,FY,-6.4,1.6,-sd);cnPlum(G,sd*7.6,FY,-10.2,1.4,sd);cnBamboo(G,sd*10.4,FY,-7.8,6,4.6);cnBamboo(G,sd*12.2,FY,-5.2,5,4.0);}
     for(let i=0;i<9;i++){const x=-44+i*11+R3()*4;T3(new THREE.SphereGeometry(1,20,8,0,6.283,0,Math.PI/2),CN.tileD,[x,FY,-34-R3()*10],[0,R3()*3,0],[8+R3()*4,3+R3()*2.4,5],false).userData.noCast=1;}
     {const px=-13,pz=-26;for(let k=0;k<6;k++){const w=2.6-k*.32,y=FY+k*1.35;T3(new THREE.BoxGeometry(w*.7,1.0,w*.7),CN.redD,[px,y+.5,pz],[0,.3,0],[1,1,1],false);T3(new THREE.ConeGeometry(w*.75,.55,4),CN.tileD,[px,y+1.25,pz],[0,Math.PI/4+.3,0],[1,1,1],false);}}
@@ -2067,9 +2181,9 @@ function loop(t){if(innerWidth!==lastVW||innerHeight!==lastVH)onResize();if(!pau
 // ---------- 介面 ----------
 let HEAD='';function mkHead(){const P=POOLS[THEME];HEAD=`${LIVE?'<button class="p closeX" id="bx" aria-label="回小屋">×</button>':'<div class="p tag">試做頁・不會扣真的貓貓幣</div>'}<div class="p head"><small>FURNITURE GACHA</small><b>家具扭蛋</b><em class="pool">${P.name}<i>${P.sub}</i></em>${limitHTML()}</div>`;}
 function limitHTML(){const st=poolState(THEME);if(st.perm)return '';
-  if(st.open)return `<span class="lim${st.left<DAY?' last':''}"><b>LIMITED</b><i>${leftTxt(st.left)}</i>${twDate(st.end)} 結束</span>`;
-  if(st.soon)return `<span class="lim off"><b>COMING</b><i>即將登場</i>${twDate(st.start)} 開始</span>`;
-  return `<span class="lim off"><b>CLOSED</b><i>已結束</i>${twDate(st.end)} 結束</span>`;}
+  if(st.open)return `<span class="lim${st.left<DAY?' last':''}"><b>LIMITED</b><i>${leftTxt(st.left)}</i><u>${twDate(st.end)} 結束</u></span>`;
+  if(st.soon)return `<span class="lim off"><b>COMING</b><i>即將登場</i><u>${twDate(st.start)} 開始</u></span>`;
+  return `<span class="lim off"><b>CLOSED</b><i>已結束</i><u>${twDate(st.end)} 結束</u></span>`;}
 mkHead();
 const walletHTML=()=>`<div class="p wallet"><i></i><span>${wallet.toLocaleString()}</span></div>`+(tixOn()?`<div class="p tixw" title="家具券：抽到重複的家具會變成券，可以在圖鑑換家具"><i>券</i><span>${TIX}</span></div>`:'');
 // v508 抽卡鈕第三行：抽完剩多少（不夠寫還差多少），餘額變了原地改字；抽十次上面貼保底小貼紙（主機規則是每次十連必有一件稀有以上，沒有累積保底，不寫「再 N 抽」）
@@ -2133,16 +2247,16 @@ function resultUI(){const P=plan;mkHead();
 // 名牌跟名牌絕對不疊、不出畫面、不壓到標題／金幣／按鈕；其餘照「離原位近、少蓋到別件家具」挑位置（上面的名牌先定位）
 function unclutter(P){const els=[...ui.querySelectorAll('.gname')];if(!els.length)return;const o=stageEl.getBoundingClientRect();
   const box=e=>{const r=e.getBoundingClientRect();return[(r.left-o.left)/S,(r.top-o.top)/S,(r.right-o.left)/S,(r.bottom-o.top)/S];};
-  const UIb=[uiRect('.head'),uiRect('.wallet'),...[...ui.querySelectorAll('.btns button,.btns .g10')].map(b=>{const r=b.getBoundingClientRect();return[(r.left-o.left)/S-3,(r.top-o.top)/S-3,(r.right-o.left)/S+3,(r.bottom-o.top)/S+3];})].filter(Boolean),FB=(P.room?P.room.items:[]).map(x=>x&&x.bx);   // 按鈕列的外框橫跨整個畫面，只閃真的按鈕
+  const UIb=[uiRect('.head'),uiRect('.wallet'),uiRect('.tixw'),uiRect('.closeX'),uiRect('.tag'),...[...ui.querySelectorAll('.btns button,.btns .g10')].map(b=>{const r=b.getBoundingClientRect();return[(r.left-o.left)/S-3,(r.top-o.top)/S-3,(r.right-o.left)/S+3,(r.bottom-o.top)/S+3];})].filter(Boolean),FB=(P.room?P.room.items:[]).map(x=>x&&x.bx);   // 按鈕列的外框橫跨整個畫面，只閃真的按鈕
   const ar=(a,t)=>Math.max(0,Math.min(a[2],t[2])-Math.max(a[0],t[0]))*Math.max(0,Math.min(a[3],t[3])-Math.max(a[1],t[1]));
   const done=[];
   els.map((e,i)=>({e,i,b:box(e)})).sort((a,b)=>a.b[1]-b.b[1]).forEach(({e,i,b})=>{const w=b[2]-b[0],h=b[3]-b[1],cx=(b[0]+b[2])/2,y0=b[1],own=FB[i];
-    const ys=[0,1,-1,2,-2,3,-3,4,5].map(k=>y0+k*(h+1));if(own)ys.push(own[1]-h-2,own[3]+1);
-    let best=null,bs=1e18;
+    const ys=[0,1,-1,2,-2,3,-3,4,-4,5,-5,6,-6,7,8].map(k=>y0+k*(h+1));if(own)ys.push(own[1]-h-2,own[3]+1);   // 11/21：手機十件擠在一起時，原本只找上下 5 排，找不到就留在原位壓到券／按鈕 → 多找幾排，真的沒有就挑「疊到最少」的
+    let best=null,bs=1e18,alt=null,as=1e18;
     for(const y of ys)for(const f of[0,-.3,.3,-.6,.6,-.9,.9,-1.2,1.2]){const x=cx+f*w,q=[x-w/2,y,x+w/2,y+h];
-      if(q[0]<2||q[2]>W-2||q[1]<2||q[3]>H-2||UIb.some(u=>hitR(q,u))||done.some(d=>hitR(q,[d[0]-1,d[1]-1,d[2]+1,d[3]+1])))continue;
+      if(q[0]<2||q[2]>W-2||q[1]<2||q[3]>H-2)continue;if(UIb.some(u=>hitR(q,u))||done.some(d=>hitR(q,[d[0]-1,d[1]-1,d[2]+1,d[3]+1]))){const pen=UIb.reduce((a,u)=>a+ar(q,u),0)*4+done.reduce((a,d)=>a+ar(q,d),0)*3+Math.hypot(x-cx,y-y0)*.1;if(pen<as){as=pen;alt=q;}continue;}
       const sc=Math.hypot(x-cx,(y-y0)*1.6)+FB.reduce((a,t,j)=>a+(t?ar(q,t)*(j===i?.15:.6):0),0);if(sc<bs){bs=sc;best=q;}}
-    const q=best||b;done.push(q);if(best&&(Math.abs(q[0]-b[0])>.5||Math.abs(q[1]-b[1])>.5)){e.style.left=`calc(${((q[0]+q[2])/2).toFixed(1)}px*var(--s))`;e.style.top=`calc(${q[1].toFixed(1)}px*var(--s))`;}});}
+    if(!best)best=alt;const q=best||b;done.push(q);if(best&&(Math.abs(q[0]-b[0])>.5||Math.abs(q[1]-b[1])>.5)){e.style.left=`calc(${((q[0]+q[2])/2).toFixed(1)}px*var(--s))`;e.style.top=`calc(${q[1].toFixed(1)}px*var(--s))`;}});}
 async function begin(n,seed,given){const r=rng(seed);const seen=new Set(),on=tixOn(),TI=tixInfo();const res=given||roll(n,r).map(it=>{const had=OWN.has(it.k)||seen.has(it.k);seen.add(it.k);const dup=on&&had;return{...it,nw:!had,dup,tix:dup?(TI.dup[it.r]||0):0};});
   if(!given){const g=res.reduce((a,x)=>a+(x.tix||0),0);if(g){TIX+=g;saveTix();}}res.forEach(it=>OWN.add(it.k));saveOwn();fired=new Set();faceKey='';
   const Fs=await Promise.all(res.map(it=>loadFurn(it.k)));

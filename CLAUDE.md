@@ -10,7 +10,7 @@
 - 資料庫：houseTix/<key>{balance,lastTx}、houseTixTx/<key>/<id>（只有主機寫、本人／店員可讀）；houseInv 的異色一樣是 houseInv/<key>/<k~n>/<id>{src:'tix'}。
   **規則第二十八批**（tests/security-rules-v428/build/harden-phase28.cjs）：上面兩個節點＋擺設／拜訪快照接受 `k~n`（舊規則 /^[a-z0-9_]{1,60}$/ 會擋）。
 - 扭蛋頁（tt-room-kit/gacha/3d → sync_to_site.py）：中華場景＝月夜戲台（待機）＋朱紅宅門（酒館那一鏡），手繪紋樣貼圖（toonT）、Tripo 石獅（tavern/cn_lion.glb）、
-  燈籠一盞盞亮、限定＝金龍盤旋（cnFX，龍身程式做的管狀、龍頭是 Tripo tavern/cn_dragon_head.glb，cn_prop_glb_tex.py 保留貼圖減面；載不到退回程式做的頭）；音效 cnSfx（燈籠小鈴、金龍、銅鑼）；g3d.js?v=86。中華色盤 CN_PAL。POOLS.cn.lim＝主機檔期表沒有它就整個藏起來（網站比主機早上也不會變常駐池）。
+  燈籠一盞盞亮、限定＝金龍盤旋（cnFX，龍身程式做的管狀、龍頭是 Tripo tavern/cn_dragon_head.glb，cn_prop_glb_tex.py 保留貼圖減面；載不到退回程式做的頭）；音效 cnSfx（燈籠小鈴、金龍、銅鑼）；g3d.js?v=87。中華色盤 CN_PAL。POOLS.cn.lim＝主機檔期表沒有它就整個藏起來（網站比主機早上也不會變常駐池）。
   家具券：右上餘額、結果名牌「券+N」、圖鑑兌換面板（店裡視窗風格）；試做頁的券存在 localStorage tt_gacha_tix。重複的家具不交給「去擺放」。
 - 大廳：lobby-ui/gacha.js（TTGachaHost.tix／tixInfo／tixOpen／tixCost／buyTix／loadInfo、事件 tt-house-tix）、house.js（背包／擺放／拜訪吃 `k~n`、
   「我的家具」上方家具券膠囊、FX_SETS 加中華「金粉紅韻／紅燈籠夜」）。
@@ -18,6 +18,15 @@
   「只補新的」：暫存區先跑 build.py 拿圖與清單，再把新家具的圖接到正式 atl.png 下面、補 SPR／HOUSE_KEYS／HOUSE_VARS（異色 DEF 照原色複製）／catalog.json。
   ⚠ 圖集 1.6MB → 3.1MB（多 144 件 1 倍圖）；之後可考慮把異色分一張圖集用到才載。
 - 燈效（room.html 直接改）：LFX 加中華燈具（宮燈立架、蝠翼燈籠＝candle；雙燈籠立架、燈籠串、寶塔燈＝新型別 lanterns 多盞各自閃、右向圖另給座標），異色由 HOUSE_VARS 照原色共用燈效。
+- 扭蛋頁 v3 精緻化（D 11/22「還是很多都很不夠精緻」＋截圖紅布簾／梅樹／竹子／大鼓、「轉蛋的帽子也是無法理解」、「UI 也重疊」）：
+  紅帷幕改真的有褶子的布（cnCurtain：上整片、中段金繩收攏、下散開＋金回紋滾邊流蘇）；格扇窗改點燈窗紙＋燈籠錦（TX_WIN）；漏窗改點燈窗紙＋古錢紋（TX_LOU）；
+  大鼓重做（cnDrum：腰鼓形、兩圈金鼓釘、鼓面「福」、四腳外撐鼓架、交叉鼓槌）；梅樹重做（深色一折一折的枝、五瓣平面小花粉白兩色、花苞）；竹叢重做（一根根分開、深色竹節、細枝垂葉）；
+  燈籠身上竹骨貼圖（TX_LANT）；石獅只描抹平過的外輪廓（smoothHull，原本一身黑點）；舞台陣紋換中華版（MTEX_CN，machTheme 換貼圖）；
+  扭蛋機頂：深紫蓋＋朱紅耳內、頂上一盞小紅燈籠、兩側正面攤開的小蝙蝠翼（原本金蓋＋金球＋紫葉子看不懂）。
+  **中華的顏色一律用 CN_PAL 裡的顏色**（不在色盤裡＝轉像素時整片網點）；手繪貼圖 cnCanvas 畫完每點吸到色盤，toonT 的中／暗兩階另做兩張色盤貼圖（cnShade），不再乘色。
+  介面：家具券膠囊不再壓金幣（top 40）、正式版跟著金幣讓出關閉鈕；卡池鈕跟檔期牌拉開；手機直立結果頁三顆鈕固定一排、名牌與圖鑑鈕分開、檔期牌只留「剩 N 天」、卡池拉片半圓完整露出；
+  十連名牌也避開家具券／關閉鈕，找不到空位挑疊最少的。檢查工具 scratchpad ui_overlap.cjs（8 種大小 × 試做／正式 × 待機／單抽／十連）。
+  ⚠ **sync_to_site.py 不帶參數會寫進主資料夾 peiwan**（11/22 寫錯一次、已只還原 gacha/）：一律 `python gacha/sync_to_site.py C:/tinytavern/cn-wt`。
 - 異色圖：tt-room-kit/bed/cnvar.py（依每格材質重新上色＋吸到乾淨色階，原色檔不動）；D 11/21「主色沒問題，細節換色後要更乾淨」→ 已加金邊／金飾分組與吸色。
 - 驗證：主機測試 29/29、規則第二十八批 31/31、大廳端 39/39、端到端（真的 lib/gacha.js＋模擬資料庫）14/14；通用／人魚卡池回歸截圖正常。
 - 版本：verTag v561、ver.json 561、lobby-view 561、house.js／house.css／gacha.js ?v=561、house.js VER 561、gacha.js VER 561。
