@@ -10,7 +10,7 @@
 - 資料庫：houseTix/<key>{balance,lastTx}、houseTixTx/<key>/<id>（只有主機寫、本人／店員可讀）；houseInv 的異色一樣是 houseInv/<key>/<k~n>/<id>{src:'tix'}。
   **規則第二十八批**（tests/security-rules-v428/build/harden-phase28.cjs）：上面兩個節點＋擺設／拜訪快照接受 `k~n`（舊規則 /^[a-z0-9_]{1,60}$/ 會擋）。
 - 扭蛋頁（tt-room-kit/gacha/3d → sync_to_site.py）：中華場景＝月夜戲台（待機）＋朱紅宅門（酒館那一鏡），手繪紋樣貼圖（toonT）、Tripo 石獅（tavern/cn_lion.glb）、
-  燈籠一盞盞亮、限定＝金龍盤旋（cnFX，龍身程式做的管狀、龍頭是 Tripo tavern/cn_dragon_head.glb，cn_prop_glb_tex.py 保留貼圖減面；載不到退回程式做的頭）；音效 cnSfx（燈籠小鈴、金龍、銅鑼）；g3d.js?v=91。中華色盤 CN_PAL。POOLS.cn.lim＝主機檔期表沒有它就整個藏起來（網站比主機早上也不會變常駐池）。
+  燈籠一盞盞亮、限定＝金龍盤旋（cnFX，龍身程式做的管狀、龍頭是 Tripo tavern/cn_dragon_head.glb，cn_prop_glb_tex.py 保留貼圖減面；載不到退回程式做的頭）；音效 cnSfx（燈籠小鈴、金龍、銅鑼）；g3d.js?v=92（家具模型 DV ?v=76）。中華色盤 CN_PAL。POOLS.cn.lim＝主機檔期表沒有它就整個藏起來（網站比主機早上也不會變常駐池）。
   家具券：右上餘額、結果名牌「券+N」、圖鑑兌換面板（店裡視窗風格）；試做頁的券存在 localStorage tt_gacha_tix。重複的家具不交給「去擺放」。
 - 大廳：lobby-ui/gacha.js（TTGachaHost.tix／tixInfo／tixOpen／tixCost／buyTix／loadInfo、事件 tt-house-tix）、house.js（背包／擺放／拜訪吃 `k~n`、
   「我的家具」上方家具券膠囊、FX_SETS 加中華「金粉紅韻／紅燈籠夜」）。
@@ -32,6 +32,14 @@
   介面：家具券膠囊不再壓金幣（top 40）、正式版跟著金幣讓出關閉鈕；卡池鈕跟檔期牌拉開；手機直立結果頁三顆鈕固定一排、名牌與圖鑑鈕分開、檔期牌只留「剩 N 天」、卡池拉片半圓完整露出；
   十連名牌也避開家具券／關閉鈕，找不到空位挑疊最少的。檢查工具 scratchpad ui_overlap.cjs（8 種大小 × 試做／正式 × 待機／單抽／十連）。
   ⚠ **sync_to_site.py 不帶參數會寫進主資料夾 peiwan**（11/22 寫錯一次、已只還原 gacha/）：一律 `python gacha/sync_to_site.py C:/tinytavern/cn-wt`。
+- 家具尺寸（D 11/22「麻將桌可以再大點」「椅子不夠大，之後要做小人坐下」「橋不夠寬，至少要讓小人走上去，拍照小屋」）：
+  麻將桌 2×2→**3×3**（四家立牌、兩層牌牆、籌碼、橫撐）；圈椅、太師椅模型放大（寬深 ×1.4、高 ×1.2／1.15，跟酒館日常木椅一樣大；bed/set_props_S_e.py se_scale）；
+  朱紅小拱橋 1×3→**2×4**（橋面寬 0.8、緩拱、兩頭石階）。模型 bed/set_props_S_n5.py，取景 props/hs_*/meta.json、sets/S_cn/props.tsv、manifest（舊檔 bed/_backup_1122_sizes/）。
+  重算：r7s2.sh（PALX=cn）→ `OSFX=_t4 PALX=cn bash to_p1t.sh` → cnvar.py → room/pack.py → house-trial/build.py → house-lobby/build.py（暫存）→ **house-lobby/patch_replace.py**（新工具：換掉正式版已有家具的圖，接在 atl.png 下面）；
+  扭蛋：gacha/img（含 ~1..3）、items.json w/h、3d/room/room.json（麻將桌照 3×3、橋照 2×4 家具的 A/doll/dij）、export_gacha_all.py 重匯 glb、DV 加一。
+  **可以走上去的家具**（house/room.html v562 段，DEF.walk {h0,h,p,half}）：不擋路（blocked(except,walk)）、只能從兩頭上下（walkStepOK）、站上去的小人／朋友照拱形抬高（walkH、liftP）、畫在橋前面（behind）、
+  別的家具不能放在橋上。測試 scratchpad cn/e2e_bridge.cjs 8 項（真的大廳＋模擬資料庫）。⚠ 手機搖桿從側邊推還是能上橋（只擋了點地板找路）。
+  預覽屋：tt-room-kit/room/house-cn36.html（36 件各一個、白天光線；scratchpad make_cn36.py＋walk_patch.py 產生）。
 - 異色圖：tt-room-kit/bed/cnvar.py（依每格材質重新上色＋吸到乾淨色階，原色檔不動）；D 11/21「主色沒問題，細節換色後要更乾淨」→ 已加金邊／金飾分組與吸色。
 - 驗證：主機測試 29/29、規則第二十八批 31/31、大廳端 39/39、端到端（真的 lib/gacha.js＋模擬資料庫）14/14；通用／人魚卡池回歸截圖正常。
 - 版本：verTag v561、ver.json 561、lobby-view 561、house.js／house.css／gacha.js ?v=561、house.js VER 561、gacha.js VER 561。
