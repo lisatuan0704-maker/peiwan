@@ -10,6 +10,7 @@
  window.TTGame=!!(window.TTMobile&&mg);
  if(window.TTGame)document.documentElement.classList.add('ttm-game');   // 遊戲畫面不加 tt-mobile（mobile-home.css 用它把大廳場景藏起來）
  else if(window.TTMobile)document.documentElement.classList.add('tt-mobile');
+ else document.documentElement.classList.add('tt-desk');   // v555：電腦版標記（lobby-ui/ui-size.css 只在電腦版收小視窗）
  window.ttNavigate=url=>{
   let framed=false;try{framed=window.parent!==window&&window.parent.location.pathname.endsWith('/lobby-view.html');}catch{}
   if(framed)window.parent.location.assign(url);else window.location.assign(url);
@@ -19,7 +20,7 @@
   try{if(window.parent!==window&&window.parent.location.pathname.endsWith('/lobby-view.html'))a.target='_top';}catch{}
  },true);
  if(window.self!==window.top||new URLSearchParams(location.search).has('preview'))return;
- if(matchMedia('(hover: hover) and (pointer: fine)').matches){query.set('v','560');location.replace('lobby-view.html?'+query.toString()+location.hash);
+ if(matchMedia('(hover: hover) and (pointer: fine)').matches){query.set('v','562');location.replace('lobby-view.html?'+query.toString()+location.hash);
   // v532：跳轉要等一下才生效，這段時間瀏覽器會把整份 1.5MB 大廳的圖片、程式、資料庫連線全部跑一遍，外框再載一次＝兩倍下載 → 後面的內容當純文字吞掉不處理
   try{document.write('<plaintext style="display:none">');}catch(e){}}
 })();

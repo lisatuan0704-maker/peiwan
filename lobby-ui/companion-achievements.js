@@ -63,7 +63,8 @@
    const frame=document.createElement('img');frame.src='img/frames/companions/'+c.id+'.webp';frame.alt=c.name+'角色頭像框獎勵';frame.className='companion-ach-frame';art.append(doll,frame);
    const title=document.createElement('h3');title.textContent='與'+c.name+'的十小時';
    const description=document.createElement('p');description.textContent='專屬獎勵 · '+c.name+'角色頭像框';
-   const button=document.createElement('button');button.type='button';button.textContent=c.unlocked?'前往使用頭像框 ↗':'查看獎勵頭像框 ↗';button.onclick=()=>root.__openFrames?.();
+   // v555 拿掉箭頭（D：擠到第二行很怪）
+   const button=document.createElement('button');button.type='button';button.textContent=c.unlocked?'前往使用頭像框':'查看獎勵頭像框';button.onclick=()=>root.__openFrames?.();
    card.append(art,title,description,progEl(c),button);grid.append(card);
   }
   const note=document.createElement('p');note.className='companion-ach-note';note.textContent='每次委託結束後，這次一起玩的時間會自動算進去（暫停的時間不算）；滿 10 小時自動解鎖，可以到頭像框頁換上。';

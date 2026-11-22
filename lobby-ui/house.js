@@ -22,7 +22,7 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='561';
+const VER='563';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={fx:null,fxHost:{},fxOpen:false,fxTry:null,fxT:0,fxRemote:false,on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
@@ -523,7 +523,7 @@ async function quickVisit(mk){
 function bindSkipTrip(){const b=$('tglSkipTrip'),row=$('setSkipTripRow');if(!b)return;
  const phone=()=>isPhone()||(!!window.TTMobile&&!window.TTGame)||document.body.classList.contains('mhome-on');   // 手機功能首頁不能進小屋，不顯示
  const sync=()=>{if(row)row.hidden=phone();b.classList.toggle('on',skipTrip());b.setAttribute('aria-checked',String(skipTrip()));};
- b.setAttribute('role','switch');b.setAttribute('aria-label','串門子不看翻卡');sync();$('gearBtn')?.addEventListener('click',sync);
+ b.setAttribute('role','switch');b.setAttribute('aria-label','隨機拜訪不看翻卡');sync();$('gearBtn')?.addEventListener('click',sync);   // v562 D：設定名稱也不用「串門子」→ 隨機拜訪
  b.addEventListener('click',()=>{try{localStorage.setItem(SKIP_KEY,skipTrip()?'0':'1');}catch(_){}sync();try{SFX.tap();}catch(_){}});}
 // 試看面板用（?tripdemo=1）：自己＋隨機名單裡幾位的資料
 async function tripSample(){const mk=KEY();if(!mk||!DB())return [];let all={};try{all=(await DB().ref(R()+'/houseDir').limitToLast(6).once('value')).val()||{};}catch(_){}

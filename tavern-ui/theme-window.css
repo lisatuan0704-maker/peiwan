@@ -236,3 +236,12 @@ html body .cast-select:disabled{opacity:.6!important;cursor:not-allowed!importan
   #shopWindow .shop-content{overflow:visible!important}
   #shopWindow #shopFrame{width:calc(100% + 186px)!important;max-width:none}
 }
+
+/* v555 名簿、冒險者資訊也拿掉左上白色頁籤（D：「那個空白方塊又出現了」；v391 只拿掉商城的），上緣平直、跟商城一樣 */
+#rosterWindow .heading::before,#rosterWindow .heading::after,#profileWindow .heading::before,#profileWindow .heading::after{display:none!important;content:none!important}
+#rosterWindow,#profileWindow{border-top-left-radius:22px!important}
+#rosterWindow .window-head,#profileWindow .window-head{border-radius:21px 21px 0 0!important}
+/* v555 冒險者資訊「詳細資訊」鈕：跟分頁同一排、粉色膠囊，點了開大廳的介紹卡 */
+#profileWindow .tabs .cast-card-btn{margin-left:auto!important;align-self:center;border:2px solid var(--sk-ink)!important;border-radius:999px!important;background:linear-gradient(180deg,#FF8DB5,#FF5C93)!important;color:#fff!important;font-weight:900!important;padding:5px 14px!important;box-shadow:0 3px 0 rgba(28,33,86,.22)!important;cursor:pointer}
+#profileWindow .tabs .cast-card-btn::after{display:none!important}
+#profileWindow .tabs .cast-card-btn:hover{transform:translateY(-1px)}

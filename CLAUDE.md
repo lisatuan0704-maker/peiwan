@@ -1,5 +1,25 @@
 # 小小酒館修改紀錄
 
+## 2026/11/22 v562 設定「串門子不看翻卡」改名「隨機拜訪不看翻卡」（Claude）
+- D 11/08 說「串門子」像中國用語、小屋一律叫「拜訪」（v506）；v535 新加的設定列又寫了「串門子」→ lobby.html 設定列、house.js 開關讀報名稱一起改。程式註解裡的「串門子」客人看不到，沒動。
+- 版本：verTag v562、ver.json 562、lobby-view 562、fixed-view.js 轉址 v=562（lobby 載入 fixed-view.js?v=562）、house.js?v=562（VER 不動，room.html 沒改）。
+- 升版要改的地方（v561 起）：verTag、ver.json、lobby-view.html 的 source v、**fixed-view.js 的 query.set('v')** 與 lobby 載入它的 ?v=，再加改過的檔各自的 ?v=。
+
+## 2026/11/22 v561 電腦版介面縮小、我的酒館左側選單、訂單票卡、吊卡／續單主題款（Claude；只動電腦版畫面）
+- D 11/18「整體都很大」→ 試做在 worktree ui-size（分支 claude/ui-size，原本叫 v555 試做），D 11/22「可以先上線了」。以正式站 v560 為底合併上線，版本 v561。
+- 介面縮小：lobby-view.html 螢幕比 1280×720 大時，多出來的放大只給七成（1920×1080：1.5→1.35 倍）；lobby-ui/ui-size.css 收小常駐視窗。
+  fixed-view.js 給電腦版加 html.tt-desk，ui-size.css／hub-fit.css／hub-fit.js 都只在 tt-desk 生效，手機（v560 遊戲畫面）不受影響。
+- 我的酒館（lobby-ui/hub-fit.css／.js）：分頁改左側選單、錢包照設計稿重排、訂單改票卡堆疊（滑過讓開、點了往右抽出）。只改擺法，資料、寫入、按鈕處理器全是原本的。
+- 訂單票卡（lobby-ui/order-ticket.js／.css，TTTicket.build 只畫畫面）：收據鋸齒邊＋右邊可撕票根、虹光描邊、中間是冒險者繪師 Q 繪抽的描邊印章＋水印（tk-stamp-*／tk-wm-*），
+  不指定冒險者放補上後腳的店貓 tk-mascot.png；已付款＝票根上的店貓臉郵戳（tk-paid-face.png，虹光字＋細白邊），已取消郵戳寫「已取消」＋褪色，等待付款沒有章。滑鼠在上面才輕輕傾斜。
+- 訂單歷史只列點單（play／table，lobby.html ttHistOrder，live.js 同用）；儲值、買時裝等不列（進行中的待付款儲值照舊顯示）。背包不列飲品分類（live-wardrobe.js）。
+- 吊卡（renewCardHtml）與續單視窗（openRenew）換成委託進度卡同一套主題（tt-quest／rn-*，樣式在 order-guide.css）；合併時保留 v556～v558 的邏輯：
+  結束時間不同就每人一行（pcRows，主題款樣式也在 order-guide.css）、續單鈕只點名快結束的人、多人時名單勾選要幫誰續（rn-pick，標「少續 N 分」）。續單金額、寫入沒動。
+- 其他：冒險者資訊多「詳細資訊 ↗」開大廳同一張介紹卡（tavern-ui/index.html）；成就頭像框按鈕字拿掉箭頭；私訊標頭鈕修正。
+- 版本：verTag v561、ver.json 561、lobby-view 561、fixed-view.js 561、bridge 561→tavern-ui index 561→時裝間比較 561→live-wardrobe 561、live.js／ui-size／hub-fit／order-ticket／order-guide.css／companion-achievements ?v=561。
+- 測試：payment-safety-v273、hub-actions-v299、social-v347、mobile-v353、viewport-v352、presence-v354、cart-checkout-v501 通過。order-display-names-v377 從 v510 起就壞（缺 cancelStateOf 等），
+  這次補上輔助函式後訂單卡、吊卡、續單視窗的名字檢查都過，剩最後「續單通知」那段的假資料跟不上 v556 的 doRenew（正式站版本一樣失敗，跟這次無關）。
+  本機預覽（模擬資料庫）截圖：單人吊卡、兩人不同時結束的吊卡、續單視窗單人／多人勾選／都不勾；手機遊戲畫面載入沒有錯誤。
 ## 2026/11/21 v561 中華卡池＋家具券新制度＋色違（Claude；分支 claude/cn-pool，等 D 預覽說「上」）
 - D 11/21 拍板：中華卡池 **11/23（一）04:00～12/07（一）04:00**；**從中華開始所有卡池**抽到重複家具不再多一件、改給「家具券」
   （普通 1／稀有 3／限定 10 張）；券在扭蛋「家具圖鑑」點已收集的家具兌換：原色再一件 2／5／15、異色每色 6／15／40（要先抽到原色）。
@@ -1730,3 +1750,14 @@ tavern-ui/daily-v494.js NAMES：髮型 俏皮外翹髮／甜心側馬尾／刺�
 - 背包／商店縮圖（thumbOf）一律畫 2 倍畫布（1 倍家具放大 2 倍、中華 2 倍原樣），大小比例不變、細線不會縮斷。
 - 測試：e2e_cn 14/14（等待改成「等到小屋／扭蛋頁載好」，測試環境小屋全部載完要 15～17 秒，改版前後差不多）、e2e_bridge 8/8、cap_scene 5/5、cap_cn2x（中華 2 倍實景）。
 - 工具：scratchpad cn/cn2x_apply.py（整合）、cn/cn2x_refresh.py（拿掉件＋重建 cn2.webp，可重跑）、cn/sheet_a2.py（總表）；bed/rr2x.sh（改模型後整套重算）、bed/cnvar.py 加 CNV_T4（_t4x2）、bed/anim_mask.py 加 AM_T4。
+
+## 2026/11/23 v563 中華卡池上線版（Claude；合併正式站 v562 之後）
+- 正式站 v561／v562 被別的改動用掉 → 這批＝**v563**（verTag、ver.json、lobby-view、house.js／gacha.js 的 VER、lobby.html 的 house／gacha ?v）。
+- D 在勾選頁（tt-room-kit/house-picker/cn-pick，selection_1123.json）勾 **64 件**＝中華卡池（限定 5／稀有 12／普通 47）；每件原色＋玄墨／翡翠／桃花三異色。
+  小屋＝scratchpad cn/cn2x_sync.py（2 倍圖 house/cn2.webp、天蓬床／涼亭／拱橋／大河 1 倍）；扭蛋端＝cn/cn_gacha_sync.py（清單、1 倍縮圖、十連房間、卡池表、主機 gacha-pools.json）。
+- D 備註全部照修（細節見上面 v562e 段與 bed/_fix_*_1123.py）；尺寸照小人重排：牆件放大 1.3～1.5、桌椅放大加寬、編鐘架 1×4、拱橋 **3×6**。
+- 大河自動封口：room.html riverCap()／sprKey()——同方向沿流向前後 4 格沒有別節 → 換 _ca／_cb／_cab 圖（DEF.vs_river.waterc 水面遮罩）；
+  RCAP_LO＝['b','a']（dir 0 格子小的那端＝模型 +x）。大河描邊先接鄰節再描 → 沒有接縫線。模型 bed/set_props_S_n5.py RIVER_CAP、算圖 bed/river_caps.sh。
+- 仙鶴燭台改「仙鶴擺件」（拿掉燭光）、竹叢盆改「青花竹屏風」（1×3）。
+- 還沒做：10 件異色差異低於三成（竹屏風、仙鶴、石桌、荷花缸、畫缸、青石板、兩件盆景、圓毯、掛軸）要做釉色／石色專屬異色。
+- 付款主機貼上檔＝C:	inytavern\server\pay-cn1121-貼上主機.txt（中華 64 件，主機測試 29/29、23 項）；規則＝security/database.rules.json（第二十八批）。
