@@ -1,5 +1,21 @@
 # 小小酒館修改紀錄
 
+## 2026/11/22 v561 電腦版介面縮小、我的酒館左側選單、訂單票卡、吊卡／續單主題款（Claude；只動電腦版畫面）
+- D 11/18「整體都很大」→ 試做在 worktree ui-size（分支 claude/ui-size，原本叫 v555 試做），D 11/22「可以先上線了」。以正式站 v560 為底合併上線，版本 v561。
+- 介面縮小：lobby-view.html 螢幕比 1280×720 大時，多出來的放大只給七成（1920×1080：1.5→1.35 倍）；lobby-ui/ui-size.css 收小常駐視窗。
+  fixed-view.js 給電腦版加 html.tt-desk，ui-size.css／hub-fit.css／hub-fit.js 都只在 tt-desk 生效，手機（v560 遊戲畫面）不受影響。
+- 我的酒館（lobby-ui/hub-fit.css／.js）：分頁改左側選單、錢包照設計稿重排、訂單改票卡堆疊（滑過讓開、點了往右抽出）。只改擺法，資料、寫入、按鈕處理器全是原本的。
+- 訂單票卡（lobby-ui/order-ticket.js／.css，TTTicket.build 只畫畫面）：收據鋸齒邊＋右邊可撕票根、虹光描邊、中間是冒險者繪師 Q 繪抽的描邊印章＋水印（tk-stamp-*／tk-wm-*），
+  不指定冒險者放補上後腳的店貓 tk-mascot.png；已付款＝票根上的店貓臉郵戳（tk-paid-face.png，虹光字＋細白邊），已取消郵戳寫「已取消」＋褪色，等待付款沒有章。滑鼠在上面才輕輕傾斜。
+- 訂單歷史只列點單（play／table，lobby.html ttHistOrder，live.js 同用）；儲值、買時裝等不列（進行中的待付款儲值照舊顯示）。背包不列飲品分類（live-wardrobe.js）。
+- 吊卡（renewCardHtml）與續單視窗（openRenew）換成委託進度卡同一套主題（tt-quest／rn-*，樣式在 order-guide.css）；合併時保留 v556～v558 的邏輯：
+  結束時間不同就每人一行（pcRows，主題款樣式也在 order-guide.css）、續單鈕只點名快結束的人、多人時名單勾選要幫誰續（rn-pick，標「少續 N 分」）。續單金額、寫入沒動。
+- 其他：冒險者資訊多「詳細資訊 ↗」開大廳同一張介紹卡（tavern-ui/index.html）；成就頭像框按鈕字拿掉箭頭；私訊標頭鈕修正。
+- 版本：verTag v561、ver.json 561、lobby-view 561、fixed-view.js 561、bridge 561→tavern-ui index 561→時裝間比較 561→live-wardrobe 561、live.js／ui-size／hub-fit／order-ticket／order-guide.css／companion-achievements ?v=561。
+- 測試：payment-safety-v273、hub-actions-v299、social-v347、mobile-v353、viewport-v352、presence-v354、cart-checkout-v501 通過。order-display-names-v377 從 v510 起就壞（缺 cancelStateOf 等），
+  這次補上輔助函式後訂單卡、吊卡、續單視窗的名字檢查都過，剩最後「續單通知」那段的假資料跟不上 v556 的 doRenew（正式站版本一樣失敗，跟這次無關）。
+  本機預覽（模擬資料庫）截圖：單人吊卡、兩人不同時結束的吊卡、續單視窗單人／多人勾選／都不勾；手機遊戲畫面載入沒有錯誤。
+
 ## 2026/11/20 v560 手機版改成直立手遊介面（Claude；電腦版不受影響）
 - D：「手機頁整體更優化視覺跟操作便利一些，把手機介面當作一款手遊製作」「手遊是直立的」「確保手機的畫面不會卡」。比稿（C:\tinytavern\設計稿\手機手遊介面_1120\）D 選 A1 店內視窗風＋扭蛋維持 A2 的粉色菱形＋PICK UP! 緞帶。
 - 只在 html.ttm-game（v546 起手機預設的遊戲畫面）生效；金流、訂單、資料庫寫入都沒動。v559 這號沒用到（交辦時說有人推過 v559，實際正式站停在 v558）。

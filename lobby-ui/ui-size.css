@@ -1,0 +1,21 @@
+/* v555 電腦版介面收小（D 11/18：「整體都很大」）。只在電腦版（html.tt-desk，fixed-view.js 加的）生效，手機不受影響。
+   整體縮放在 lobby-view.html（大螢幕的放大打七折）；這裡把原本幾乎撐滿畫面高度的視窗收到約八成，上下留空間讓大廳透出來，
+   並把共用視窗（點單／設定／錢包／VIP）的標題區壓矮。全部集中在這個檔，要退回只要拿掉 lobby.html 最後那行引用。 */
+
+/* 闆卡手帳：原本寬 min(95vw,146vh) → 高度約 99%。手帳裡的版面是照整本大小排的，只收外框會把下面切掉，
+   所以改成整本等比縮到 84%（zoom）；只在大螢幕（大廳畫面高 760 以上，約 1920×1080 起）縮，筆電維持原樣免得字太小 */
+@media (min-height:760px){html.tt-desk body .bkOuter{zoom:.84}}
+
+
+/* 共用視窗的標題區壓矮：大字、標題牌、上下留白都收一點 */
+html.tt-desk body .tt-live-ui .panel-head{padding-top:9px!important;padding-bottom:7px!important}
+html.tt-desk body .tt-live-ui .panel-head .outline-word{font-size:42px!important}
+html.tt-desk body .tt-live-ui .panel-head .title-chip{padding:5px 24px 2px 13px!important}
+html.tt-desk body .tt-live-ui .panel-head h1{font-size:24px!important}
+html.tt-desk body .tt-live-ui .panel-head p{margin-top:2px!important;margin-bottom:0!important}
+html.tt-desk body .tt-live-ui .menu-ribbon{padding-top:7px!important;padding-bottom:7px!important}
+html.tt-desk body .tt-live-ui .menu-ribbon b{padding-top:6px!important;padding-bottom:6px!important}
+
+
+/* 商城、背包（整頁的時裝間）：四周多留一點空間 */
+html.tt-desk body #ttApprovedUI>iframe{max-width:min(1250px,90vw)!important;max-height:min(850px,88vh)!important}

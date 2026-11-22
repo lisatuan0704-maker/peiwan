@@ -1,0 +1,51 @@
+/* v555 訂單票卡（定案：戊＋碎鑽亮片＋貓臉郵戳）。票面固定 560×210，外面用 transform:scale 縮放。
+   D 11/19「好卡，做薄薄的跟滑鼠移動就好，不用強調 3D」：所有圖層攤平成一張（沒有厚度、陰影層、自己擺動），
+   右邊攤開那張滑鼠在上面時整張輕輕傾斜，光和彩虹跟著滑鼠走——只改 transform，不重畫，才不會卡。 */
+.tkr-stage{position:relative;width:560px;height:210px}
+.tkr{position:relative;width:560px;height:210px;--mx:0;--my:0;
+  --t1:#1C2156;--t2:#4b4775;--t3:#9a77d8;--dash:rgba(28,33,86,.38);--s1:#fff;--s2:rgba(255,255,255,.9);--wm:rgba(255,255,255,.82);--embD:rgba(70,40,130,.28);--embL:rgba(255,255,255,.9);
+  color:var(--t1);text-align:left;line-height:normal;font-family:'LINE Seed TW','TT Huninn',sans-serif!important;transition:transform .35s ease-out}
+.tkr.is-live{will-change:transform}
+.tkr *{box-sizing:border-box}
+.tkr img{max-width:none!important;max-height:none!important;image-rendering:auto}
+.tkr .tkr-a{position:absolute;margin:0}
+.tkr .tkr-L{position:absolute;inset:0;overflow:hidden;clip-path:var(--tk)}
+.tkr .tkr-sv{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+/* 大廳視窗的小圖示規則（.tt-live-ui svg：深藍描邊 1.8）會傳進票面，郵戳字變黑黑的（D 11/19）→ 票面裡的 svg 一律不繼承描邊 */
+html body .tkr svg{fill:none;stroke:none;stroke-width:1}
+.tkr .tkr-win{overflow:hidden}
+.tkr .tkr-vt{writing-mode:vertical-rl;line-height:1}
+.tkr .tkr-film{background:linear-gradient(115deg,rgba(232,220,255,.92),rgba(255,226,242,.92) 55%,rgba(220,234,255,.92))}
+.tkr .tkr-stubbg{position:absolute;top:0;right:0;bottom:0;background:linear-gradient(170deg,rgba(190,160,250,.8),rgba(255,160,205,.8))}
+.tkr .tkr-sheen{background:linear-gradient(118deg,rgba(255,255,255,0) 28%,rgba(255,255,255,.34) 42%,rgba(255,255,255,.08) 52%,rgba(255,255,255,0) 64%)}
+/* 虹光：白線遮罩裡一片比票大的彩虹，滑鼠動時用 transform 推它（不重畫） */
+.tkr .tkr-holo{position:absolute;inset:0;overflow:hidden;-webkit-mask:var(--m) 0 0/100% 100% no-repeat;mask:var(--m) 0 0/100% 100% no-repeat}
+.tkr .tkr-pw.tkr-holo{inset:auto}
+.tkr .tkr-hg{position:absolute;left:-40%;top:-60%;width:180%;height:220%;
+  background:linear-gradient(100deg,transparent 40%,rgba(255,255,255,.9) 48%,transparent 56%),linear-gradient(118deg,#e868b4,#a57af0,#4fb0ee,#3fcfae,#e9bd3f,#ea6aa8,#9f7cf2,#4fb0ee,#e868b4);
+  transform:translate(calc(var(--mx)*-90px),calc(var(--my)*-40px));transition:transform .35s ease-out}
+.tkr .tkr-bd{position:absolute;inset:0;filter:drop-shadow(0 1px 0 rgba(70,46,140,.4))}
+/* 跟著滑鼠的反光 */
+.tkr .tkr-glare>i{position:absolute;left:-50%;top:-80%;width:200%;height:260%;opacity:0;
+  background:radial-gradient(closest-side,rgba(255,255,255,.55),rgba(255,255,255,.12) 55%,transparent);
+  transform:translate(calc(var(--mx)*160px),calc(var(--my)*70px));transition:transform .35s ease-out,opacity .35s}
+.tkr.is-hov .tkr-glare>i{opacity:1}
+.tkr .tkr-mono{font-family:ui-monospace,Consolas,'LINE Seed TW',monospace!important}
+.tkr .tkr-lat{font-family:'Tavern Numerals','TT Latin','Coiny',sans-serif!important}
+/* 收據明細 */
+.tkr .tkr-rc{font-size:12px;font-weight:700;line-height:1.62;color:var(--t1)}
+.tkr .tkr-ttl{font:400 17px/1.62 'TT Title','TT Latin',sans-serif!important;letter-spacing:.08em}
+/* 標題列右邊印日期：票堆只露上緣時也看得出是哪一天 */
+.tkr .tkr-ttl{display:flex;justify-content:space-between;align-items:baseline}
+.tkr .tkr-ttl>b{font-size:19px;font-weight:400;letter-spacing:.04em;color:var(--t1)}
+.tkr .tkr-sub{font-size:9.5px;color:var(--t3);letter-spacing:.12em}
+.tkr .tkr-dash{border-top:1.5px dashed var(--dash);margin:5px 0}
+.tkr .tkr-row{display:flex;justify-content:space-between;gap:10px;min-width:0}
+.tkr .tkr-row>span{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tkr .tkr-row>b{flex:0 1 auto;min-width:0;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:inherit;text-align:right}
+.tkr .tkr-row.is-sub{color:var(--t2)}
+.tkr .tkr-row.is-total{font-size:14px;font-weight:800}
+.tkr .tkr-row.is-total>b{max-width:none;flex:none}
+/* 已取消：票堆裡整張褪成灰的，一眼分得出來（不用半透明：疊在下面那張的字會透上來） */
+.tt-stack-item .tkr[data-stamp=void]{filter:grayscale(.85) brightness(1.05) contrast(.82)}
+@media (prefers-reduced-motion:reduce){.tkr,.tkr *{animation:none!important;transition:none!important}}

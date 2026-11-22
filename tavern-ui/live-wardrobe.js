@@ -407,7 +407,7 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
   try{top.bkBubbleTap(i);}catch(e){tell('購買沒有開始，請重新打開商城');return;}   // 大廳的購買確認框（商城開著時確認框在最上層，live.css）
   const t0=Date.now(),poll=setInterval(()=>{if(category!=='bubbles'||Date.now()-t0>30000){clearInterval(poll);return;}if(CS.owns(c.k,top.__owned||{},lv)){clearInterval(poll);renderBubbles();tell('已買下並換上「'+c.n+'」');}},600);
  }
- function render(){
+ function render(){if(area==='bag'&&category==='other')category='hair';   // v555 背包沒有飲品分類
   document.body.dataset.shopCategory=category;document.body.dataset.area=area;document.body.dataset.section=bagSection;
   bagNav.hidden=area!=='bag';bagNav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.archive===bagSection)));
   const collecting=area==='bag'&&bagSection==='collection';
@@ -428,7 +428,7 @@ const priceT=(n,o)=>isCat(o)?catT(n):goldT(n);
   const dyeShop=area==='store'&&category==='dye';
   if(!dyeShop){$('#dyeDialog').hidden=true;dyeDraft=null;}
   $('#singles').hidden=dyeShop;$('#singles').classList.toggle('showing-bundles',mode==='bundles');$('#bundles').hidden=mode!=='bundles';$('#dyeShop').hidden=!dyeShop;$('#detail').hidden=dyeShop;
-  const cats=[...(area==='store'?[['bundles','當季套組']]:[]),...categories,...(area==='store'?[['dye','染髮券']]:[])];
+  const cats=[...(area==='store'?[['bundles','當季套組']]:[]),...categories.filter(([id])=>area==='store'||id!=='other'),...(area==='store'?[['dye','染髮券']]:[])];   // v555 背包不列飲品（D：飲料是請冒險者喝的，不是自己的收藏）
   $('#categories').innerHTML=cats.map(([id,name])=>'<button data-category="'+id+'" aria-pressed="'+(id===category)+'"'+(id==='dye'?' class="cat-dye"':'')+'><span>'+name+'</span></button>').join('');
   if(jellyNext){const j=$('#categories [data-category="'+jellyNext+'"]');jellyNext=null;if(j&&!motionOff())j.classList.add('jelly');}
   $$('[data-category]').forEach(b=>b.onclick=()=>{jellyNext=b.dataset.category;category=b.dataset.category;selected=null;render();});

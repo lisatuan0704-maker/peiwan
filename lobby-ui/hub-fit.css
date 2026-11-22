@@ -1,0 +1,307 @@
+/* v555 電腦版「一個版面看完、不用一直往下滑」（配合 lobby-ui/hub-fit.js）。只在 html.tt-desk（電腦版）生效。 */
+
+/* ===== 我的酒館：標頭與分頁壓矮，內容多一點空間 ===== */
+html.tt-desk body #ttHub .hub-header{padding-top:8px!important;padding-bottom:6px!important;min-height:0!important}
+html.tt-desk body #ttHub .hub-header h1{font-size:26px!important;margin-top:2px!important}
+html.tt-desk body #ttHub .hub-tabs{padding-top:7px!important;padding-bottom:7px!important}
+html.tt-desk body #ttHub .hub-tabs button{padding-top:4px!important;padding-bottom:3px!important;min-height:0!important}
+
+/* ===== 通訊錄：左名單、右對話 ===== */
+html.tt-desk body #ttHub #frM #frBody.tt-contacts.tt-split{grid-template-columns:290px minmax(0,1fr)!important;grid-template-rows:auto auto auto minmax(0,1fr)!important;column-gap:16px!important;row-gap:8px!important;padding:12px 16px!important}
+html.tt-desk body #ttHub #frBody.tt-split>.contacts-heading,html.tt-desk body #ttHub #frBody.tt-split>.contacts-result{display:none!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contacts-my-status{grid-area:1/1!important;padding:8px 10px!important;margin:0!important;display:flex!important;flex-wrap:wrap;align-items:center;gap:6px}
+html.tt-desk body #ttHub #frBody.tt-split .contacts-my-status strong{font-size:14px!important;margin:0!important;padding-left:20px!important}
+html.tt-desk body #ttHub #frBody.tt-split .contacts-my-status strong::before{width:13px!important;height:16px!important;margin-top:-8px!important}
+html.tt-desk body #ttHub #frBody.tt-split .contacts-status-note{display:none!important}
+html.tt-desk body #ttHub #frBody.tt-split .contacts-status-buttons{gap:5px!important}
+html.tt-desk body #ttHub #frBody.tt-split .contacts-status-buttons button{font-size:12px!important;padding:3px 8px 2px!important;border-width:2px!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contacts-search{grid-area:2/1!important;height:36px!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contacts-tabs{grid-area:3/1!important;gap:6px!important}
+html.tt-desk body #ttHub #frBody.tt-split .contacts-tabs button{font-size:12.5px!important;padding:4px 10px 3px!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contacts-list{grid-area:4/1!important;display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;gap:6px!important;padding:2px 4px 6px 2px!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry{width:100%!important;flex:none!important;grid-template-columns:46px minmax(0,1fr) auto!important;gap:9px!important;padding:7px 10px 7px 14px!important;cursor:pointer;transition:transform .15s,box-shadow .15s}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry:hover{transform:translateX(3px)}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry.tt-picked{background:linear-gradient(110deg,#FFE4EF,#FFF6FA)!important;box-shadow:inset 0 0 0 2px #FFB3CF,0 3px 0 rgba(28,33,86,.2)!important}
+
+
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-info strong{font-size:14.5px!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-info .contact-presence{font-size:11px!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-last{font-size:11.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:1px 0 0!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-unread{font-size:11px!important;padding:1px 7px!important}
+/* 好友、冒險者那列的按鈕移到右邊對話的標頭；邀請／封鎖列照舊留按鈕 */
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=friend] .contact-actions,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=staff] .contact-actions{display:none!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry .contact-action{font-size:12px!important;padding:3px 9px!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contacts-empty{padding:12px!important}
+
+/* 右欄 */
+html.tt-desk body #ttHub #frBody.tt-split>.tt-chat-pane{grid-area:1/2/5/3;position:relative;min-height:0;display:flex;flex-direction:column;border:2px solid var(--sk-ink,#1C2156);border-radius:14px;background:linear-gradient(170deg,#fff,#F7FAFF);box-shadow:inset 0 0 0 2px #CFEFFF,0 3px 0 rgba(28,33,86,.14);overflow:hidden}
+html.tt-desk body #ttHub .tt-chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;color:var(--sk-mute,#7C7FA8);position:relative;overflow:hidden}
+html.tt-desk body #ttHub .tt-chat-empty small{font:900 11px/1 'TT Latin',sans-serif;letter-spacing:3px;color:#FF5C93}
+html.tt-desk body #ttHub .tt-chat-empty b{font-size:20px;color:var(--sk-ink,#1C2156);letter-spacing:1px}
+html.tt-desk body #ttHub .tt-chat-empty p{margin:0;font-size:13px}
+html.tt-desk body #ttHub .tt-chat-empty::before{content:"";width:56px;height:56px;margin-bottom:6px;border:2px solid #B9A6FF;transform:rotate(45deg);border-radius:6px;animation:ttHubSpin 9s linear infinite;background:linear-gradient(135deg,#FFE4EF,#E7F4FF)}
+@keyframes ttHubSpin{to{transform:rotate(405deg)}}
+html.tt-desk body #ttHub .tt-chat-pane:has(#dmM.on) .tt-chat-empty{display:none}
+/* 私訊搬進右欄 */
+html.tt-desk body #ttHub #dmM.tt-in-pane{position:static!important;inset:auto!important;display:none!important;flex:1;min-height:0;padding:0!important;background:none!important;backdrop-filter:none!important;z-index:auto!important;opacity:1!important;transform:none!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane.on{display:flex!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane>.gcard{width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;margin:0!important;display:flex!important;flex-direction:column;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;animation:none!important;transform:none!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane .gtop{flex:none;padding:8px 12px!important;display:flex!important;align-items:center;gap:10px}
+html.tt-desk body #ttHub #dmM.tt-in-pane .gtop .gx{display:none!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-body{flex:1;min-height:0;display:flex!important;flex-direction:column;padding:8px 12px 10px!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane #dmLog{flex:1;height:auto!important;min-height:0!important}
+/* 標頭右邊三顆（小屋／移除好友／檢舉）：D 11/20「這邊也沒做好」——通訊錄的 #frBody button 舊規則（左右 12px!important）會蓋過來，
+   三角形被擠出框、字也比較大 → 這裡全部寫死成同一個高度的小鈕，跟右邊框保持距離 */
+html.tt-desk body #ttHub .tt-pane-acts{margin-left:auto;margin-right:6px;display:flex;align-items:center;gap:6px}
+html.tt-desk body #ttHub #frBody .tt-pane-btn{display:inline-flex!important;align-items:center;justify-content:center;gap:4px;height:30px!important;min-height:0!important;padding:0 12px!important;border:2px solid var(--sk-ink,#1C2156)!important;border-radius:9px!important;background:#fff!important;color:var(--sk-ink,#1C2156)!important;font-family:inherit!important;font-size:13px!important;font-weight:800!important;line-height:1!important;letter-spacing:.04em;white-space:nowrap;cursor:pointer;box-shadow:0 2px 0 var(--sk-ink,#1C2156)!important;transition:transform .12s,background .12s}
+html.tt-desk body #ttHub #frBody .tt-pane-btn:hover{background:#FFF0F6!important;transform:translateY(-1px)}
+html.tt-desk body #ttHub #frBody .tt-pane-btn:active{transform:translateY(1px);box-shadow:0 1px 0 var(--sk-ink,#1C2156)!important}
+html.tt-desk body #ttHub #frBody .tt-pane-btn.is-quiet{border-color:#C9CDF0!important;color:#5B5F8F!important;box-shadow:0 2px 0 #C9CDF0!important}
+html.tt-desk body #ttHub #frBody .tt-pane-btn.is-quiet:hover{border-color:var(--sk-pink,#FF4F8B)!important;color:var(--sk-pink,#FF4F8B)!important;box-shadow:0 2px 0 var(--sk-pink,#FF4F8B)!important}
+
+/* ===== 店長布告欄：左標題、右內容 ===== */
+html.tt-desk body #boardBody{position:relative!important;min-height:330px}
+html.tt-desk body #boardBody>.acc{position:static!important;width:240px;margin:0 0 8px!important;overflow:visible!important}
+html.tt-desk body #boardBody>.acc>.accH{cursor:pointer;padding-top:10px!important;padding-bottom:10px!important;transition:transform .15s}
+html.tt-desk body #boardBody>.acc>.accH .tri{transition:transform .2s}
+html.tt-desk body #boardBody>.acc>.accH:hover{transform:translateX(3px)}
+html.tt-desk body #boardBody>.acc.tt-sel>.accH{transform:translateX(8px);box-shadow:inset 4px 0 0 #FF5C93,0 3px 0 rgba(28,33,86,.18)!important;background:linear-gradient(110deg,#FFE4EF,#FFF6FA)!important}
+html.tt-desk body #boardBody>.acc.tt-sel>.accH .tri{transform:rotate(0)}
+html.tt-desk body #boardBody>.acc>.accB{position:absolute!important;left:264px;top:0;right:0;bottom:0;display:none!important;max-height:none!important;overflow:auto!important;margin:0!important;padding:14px 18px!important;border:2px solid var(--sk-ink,#1C2156);border-radius:14px;background:linear-gradient(170deg,#fff,#F7FAFF);box-shadow:inset 0 0 0 2px #CFEFFF}
+html.tt-desk body #boardBody>.acc.tt-sel>.accB{display:block!important;animation:ttPull .3s cubic-bezier(.2,.9,.3,1.2)}
+
+
+/* ===== 設定：所有項目排成兩欄，一頁看完（我的酒館裡、右上齒輪打開的都一樣） ===== */
+html.tt-desk body #setM:not(.hub-embedded) .panel[data-view=settings]{width:min(900px,94vw)!important;max-width:none!important}
+html.tt-desk body #setM .tuning-layout{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;column-gap:26px!important;row-gap:0!important;padding:4px 16px!important;align-items:center}
+html.tt-desk body #setM .tuning-layout>section{display:contents!important}
+html.tt-desk body #setM .tuning-layout .setRow{padding:9px 2px!important;min-height:0!important;margin:0!important}
+html.tt-desk body #setM .tuning-layout .setRow .setT,html.tt-desk body #setM .tuning-layout .setRow strong{font-size:16px!important}
+html.tt-desk body #setM .tuning-layout #roomEntry{margin:8px 0!important;align-self:center}
+html.tt-desk body #setM .actions{margin-top:8px!important;padding-top:8px!important;gap:12px!important}
+html.tt-desk body #setM .actions>a{padding-top:10px!important;padding-bottom:10px!important;min-height:0!important}
+html.tt-desk body #setM:not(.hub-embedded) .panel[data-view=settings] .panel-content{overflow:visible!important}
+html.tt-desk body #ttHub .hub-embedded .panel-content{padding:14px 18px!important}
+
+/* ===== 布告欄：左邊標題不換行 ===== */
+html.tt-desk body #boardBody>.acc{width:250px}
+html.tt-desk body #boardBody>.acc>.accB{left:272px}
+html.tt-desk body #boardBody>.acc>.accH{white-space:nowrap;font-size:17px!important;display:flex!important;align-items:center;gap:8px}
+html.tt-desk body #boardBody>.acc>.accH .mini{margin-left:auto!important;font-size:11px!important}
+html.tt-desk body #boardBody>.acc>.accH .tri{display:none!important}
+
+/* ===== VIP：左「目前的你」、右「這一級的獎勵」，獎勵三格並排 ===== */
+html.tt-desk body #vipM .gcard.panel{width:min(1000px,94vw)!important;max-width:none!important}
+html.tt-desk body #vipM #vipList{display:grid!important;grid-template-columns:minmax(0,.9fr) minmax(0,1.25fr);grid-template-rows:auto auto 1fr;column-gap:18px;row-gap:8px;align-items:start}
+html.tt-desk body #vipM #vipList>*{grid-column:1;margin:0!important}
+html.tt-desk body #vipM #vipList>.vipCard{grid-column:2;grid-row:1/span 3}
+html.tt-desk body #vipM #vipList>.vipNav{grid-row:3;align-self:end}
+html.tt-desk body #vipM .vipCard .vipRws{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+html.tt-desk body #vipM .vipCard .vipRw{display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;min-height:0!important;padding:10px 6px!important}
+html.tt-desk body #vipM .vipCard .vipRw img{max-width:64px;max-height:64px}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-footer{margin-top:2px!important;padding:0!important;min-height:0!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-composer{margin-top:6px!important}
+
+/* ===== 我的酒館 v555b（D：「對話框只能放幾個字、連上下文都看不到」「上面的選項要不要往左側」）：
+   標題與分頁改成左邊一條直的選單，上面整段高度讓給內容 ===== */
+html.tt-desk body #ttHub .hub-card{display:grid!important;grid-template-columns:170px minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important;width:min(1080px,calc(100vw - 80px))!important}
+html.tt-desk body #ttHub .hub-header{grid-column:1;grid-row:1;display:flex!important;align-items:flex-start;gap:6px;padding:16px 10px 10px 16px!important;border-radius:21px 0 0 0!important;
+  background:var(--sk-topband) 0 0/100% 6px no-repeat,linear-gradient(180deg,#fff,#F7FAFF)!important;box-shadow:inset -3px 0 0 var(--sk-ink,#1C2156)!important;border-bottom:0!important}
+html.tt-desk body #ttHub .hub-header>div{flex:1;min-width:0}
+html.tt-desk body #ttHub .hub-header small{font-size:9px!important;letter-spacing:1.5px!important;margin-bottom:6px!important}
+html.tt-desk body #ttHub .hub-header h1{font-size:21px!important;margin:0!important;letter-spacing:1px!important;white-space:nowrap}
+html.tt-desk body #ttHub .hub-header small::before,html.tt-desk body #ttHub .hub-header::after,html.tt-desk body #ttHub .hub-close::after{display:none!important}
+html.tt-desk body #ttHub .hub-close{flex:none;width:32px!important;height:32px!important;font-size:22px!important;line-height:26px!important;margin:0!important}
+html.tt-desk body #ttHub .hub-tabs{grid-column:1;grid-row:2;display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:stretch!important;gap:8px!important;
+  padding:6px 14px 16px 12px!important;box-shadow:inset -3px 0 0 var(--sk-ink,#1C2156)!important;border-radius:0 0 0 21px;overflow:auto;min-height:0}
+html.tt-desk body #ttHub .hub-tabs button{width:100%!important;flex:none!important;text-align:left!important;justify-content:flex-start!important;padding:10px 14px 9px!important;font-size:14px!important}
+html.tt-desk body #ttHub .hub-tabs button:hover{transform:translateX(3px)!important}
+html.tt-desk body #ttHub .hub-mount{grid-column:2;grid-row:1/3;min-height:0}
+
+/* 對話區：標頭、輸入列壓成細條，訊息區留最大 */
+html.tt-desk body #ttHub #dmM.tt-in-pane .gtop{padding:6px 10px!important;min-height:0!important;gap:8px!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-identity small{display:none!important}
+
+
+html.tt-desk body #ttHub #dmM.tt-in-pane #dmTitle{font-size:16px!important;margin:0!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-body{padding:6px 10px 8px!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-composer{position:relative;margin-top:6px!important;gap:6px!important;align-items:center}
+html.tt-desk body #ttHub #dmM.tt-in-pane #dmIn{height:36px!important;min-height:0!important;padding:0 52px 0 12px!important;font-size:14px!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-count{position:absolute;right:96px;top:50%;transform:translateY(-50%);font-size:10px!important;margin:0!important;pointer-events:none}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-composer button{height:36px!important;min-height:0!important;padding:0 14px!important}
+/* 貼圖鈕：上一行「輸入列按鈕左右 14px」比較強會蓋過來，圖示被推出格子（D 11/20「沒在格子裡」）→ 寫成 button.dm-sticker-toggle 蓋回 0 */
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-composer button.dm-sticker-toggle{width:36px!important;height:36px!important;padding:0!important;display:grid!important;place-items:center!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-composer button.dm-sticker-toggle svg{width:22px!important;height:22px!important;margin:0!important}
+html.tt-desk body #ttHub #dmM.tt-in-pane #dmFoot:has(#dmHint:empty){display:none!important}
+html.tt-desk body #ttHub #frBody .tt-pane-btn.is-warn{width:30px!important;padding:0!important;border-color:#F0B6C8!important;background:#FFF5F8!important;box-shadow:0 2px 0 #F0B6C8!important}
+html.tt-desk body #ttHub #frBody .tt-pane-btn.is-warn:hover{border-color:#E14E6B!important;box-shadow:0 2px 0 #E14E6B!important}
+html.tt-desk body #ttHub #frBody .tt-pane-btn.is-warn svg{display:block;width:16px!important;height:16px!important;flex:none}
+
+/* ===== 成就：左右兩塊撐滿整個高度（D 11/19：下面空格好大）；收藏改成一列一列（編號｜圖示｜標題說明｜進度） ===== */
+html.tt-desk body #ttHub #achM .panel-content{align-items:stretch!important}
+html.tt-desk body #ttHub #achM .companion-achievements,html.tt-desk body #ttHub #achM .collection-layout{height:auto!important;min-height:0!important;align-self:stretch!important;box-sizing:border-box}
+/* 一起玩的十小時（D 11/19：空白處好多）：三張直卡太瘦太高、圖只能小小的 → 改成三列（跟右邊收藏同一種列表），
+   圖在左邊跟著列高放大（冒險者壓在頭像框前面），右邊標題、說明，最下面進度條＋按鈕並排 */
+html.tt-desk body #ttHub #achM .companion-ach-grid{flex:1 1 auto!important;display:flex!important;flex-direction:column!important;gap:12px!important;min-height:0}
+html.tt-desk body #ttHub #achM .companion-ach-card{flex:1 1 0;min-height:0!important;height:auto!important;display:grid!important;grid-template-columns:minmax(0,44%) minmax(0,1fr) auto!important;grid-template-rows:1fr auto auto auto 1fr;grid-template-areas:'art . .' 'art t t' 'art d d' 'art p b' 'art . .';column-gap:12px;padding:6px 16px 6px 8px!important;text-align:left!important}
+html.tt-desk body #ttHub #achM .companion-ach-card .companion-ach-art{grid-area:art;height:auto!important;min-height:0;container-type:size;display:flex!important;align-items:center;justify-content:center;gap:0!important}
+html.tt-desk body #ttHub #achM .companion-ach-card .companion-ach-doll{width:auto!important;height:min(98cqh,49cqw)!important;aspect-ratio:118/114;margin-right:-8cqw;position:relative;z-index:1;flex:none}
+html.tt-desk body #ttHub #achM .companion-ach-card .companion-ach-frame{width:min(88cqh,54cqw)!important;height:min(88cqh,54cqw)!important;flex:none}
+html.tt-desk body #ttHub #achM .companion-ach-card h3{grid-area:t;font-size:18px!important;margin:0 0 2px!important}
+html.tt-desk body #ttHub #achM .companion-ach-card p{grid-area:d;font-size:12.5px!important;margin:0!important}
+html.tt-desk body #ttHub #achM .companion-ach-card .companion-ach-prog{grid-area:p;margin:8px 0 0!important;max-width:200px;min-width:0}
+html.tt-desk body #ttHub #achM .companion-ach-card button{grid-area:b;margin:0!important;align-self:end;justify-self:end;white-space:nowrap}
+html.tt-desk body #ttHub #achM #achList.ach-grid{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;gap:12px!important;min-height:0}
+html.tt-desk body #ttHub #achM #achList .ach{flex:1 1 0;container-type:size;display:grid!important;grid-template-columns:34px auto minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;align-content:center!important;align-items:center!important;column-gap:14px!important;row-gap:4px!important;min-height:0!important;height:auto!important;padding:10px 18px!important}
+html.tt-desk body #ttHub #achM #achList .ach .collect-no{grid-column:1;grid-row:1/3;position:static!important;width:auto!important;font-size:14px!important}
+/* 圖示跟著列高放大（D 11/19：空白處好多） */
+html.tt-desk body #ttHub #achM #achList .ach .badge-art{grid-column:2;grid-row:1/3;width:clamp(64px,70cqh,116px)!important;height:clamp(64px,70cqh,116px)!important;margin:0!important}
+html.tt-desk body #ttHub #achM #achList .ach .badge-art img{width:84%!important;height:84%!important}
+html.tt-desk body #ttHub #achM #achList .ach h2{grid-column:3;grid-row:1;margin:0!important;font-size:21px!important;max-width:none!important;white-space:nowrap}
+html.tt-desk body #ttHub #achM #achList .ach p{grid-column:3;grid-row:2;margin:0!important;font-size:14.5px!important;max-width:none!important;white-space:nowrap}
+html.tt-desk body #ttHub #achM #achList .ach .collect-state{grid-column:4;grid-row:1/3;position:static!important;margin:0!important;transform:scale(1.15)}
+/* 對話輸入：字數不再蓋到送出鈕（輸入框本身就限 200 字） */
+html.tt-desk body #ttHub #dmM.tt-in-pane .dm-count{display:none!important}
+/* 迴紋針裝飾：側邊選單時拿掉（原本掛在標頭下方，會壓到分頁） */
+html.tt-desk body #ttHub .hub-header::before{display:none!important}
+/* 頭像（含頭像框）整顆等比縮小：只改外框大小會讓小人跑出框的開口（v429 修過的置中），所以用 zoom 一起縮 */
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-avatar{zoom:.78}
+html.tt-desk body #ttHub #dmM.tt-in-pane .gtop .contact-avatar{zoom:.66;flex:none}
+
+/* ===== 錢包 v555c（照 GPT 設計稿 C:\gen\outputs\wallet-ui_20261119-004750_2.png）：
+   上排三張卡「金幣｜貓貓幣｜掛機收益」，下排兩塊「補充一點快樂（儲值）｜用金幣兌換」。字不截斷、不用捲。 ===== */
+html.tt-desk body #topupM:not(.hub-embedded) .gcard.panel{width:min(1040px,94vw)!important;max-width:none!important}
+html.tt-desk body #topupM #topupBody{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.9fr);grid-template-rows:auto auto auto auto auto;column-gap:14px;row-gap:0;align-items:stretch}
+html.tt-desk body #topupM #topupBody>*{margin:0!important}
+html.tt-desk body #topupM .tt-cat-slot,html.tt-desk body #topupM .tt-cat-box{display:contents!important}
+html.tt-desk body #topupM #topupBody>.section-caption:has(+.tt-cat-slot){display:none!important}
+/* 上排：金幣 */
+html.tt-desk body #topupM .purse-summary{grid-column:1;grid-row:1;min-height:0!important;padding:12px 14px 34px!important;display:block!important;margin-bottom:14px!important}
+html.tt-desk body #topupM .purse-summary .coin-scene,html.tt-desk body #topupM .purse-summary .frame-decoration,html.tt-desk body #topupM .purse-summary .wallet-balance p{display:none!important}
+html.tt-desk body #topupM .purse-summary .wallet-balance{width:100%!important}
+html.tt-desk body #topupM .purse-summary .wallet-balance small{font-size:12px!important}
+html.tt-desk body #topupM .purse-summary .wallet-balance strong{font-size:36px!important;line-height:1.15!important;white-space:nowrap}
+html.tt-desk body #topupM #topupBody>.text-links{grid-column:1;grid-row:1;align-self:end;justify-self:start;z-index:2;display:flex!important;gap:12px;padding:0 0 22px 14px!important}
+html.tt-desk body #topupM #topupBody>.text-links .text-btn{font-size:12px!important;padding:0!important;min-height:0!important;white-space:nowrap}
+/* 上排：貓貓幣 */
+html.tt-desk body #topupM .tt-cat-head{grid-column:2;grid-row:1;display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;align-items:center;column-gap:10px;padding:12px 14px 34px!important;margin-bottom:14px!important}
+html.tt-desk body #topupM .tt-cat-head>div small{font-size:12px!important}
+html.tt-desk body #topupM .tt-cat-head .tt-cat-bal{font-size:36px!important;line-height:1.15!important;white-space:nowrap}
+html.tt-desk body #topupM .tt-cat-head p{display:none!important}
+html.tt-desk body #topupM .tt-cat-link{grid-column:2;grid-row:1;align-self:end;justify-self:start;z-index:2;margin:0 0 22px 14px!important;font-size:12px!important;white-space:nowrap}
+html.tt-desk body #topupM .tt-cat-msg{grid-column:3;grid-row:5;font-size:11px!important}
+/* 上排：掛機收益（整張卡，字都看得到） */
+html.tt-desk body #topupM .tt-idle-slot{grid-column:3;grid-row:1;margin-bottom:14px!important;display:flex}
+html.tt-desk body #topupM .tt-idle-slot>.tt-idle{flex:1;box-sizing:border-box;padding:12px 14px!important;grid-template-columns:36px minmax(0,1fr) auto!important;align-content:center}
+html.tt-desk body #topupM .tt-idle-slot .tt-idle-sub{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+html.tt-desk body #topupM .tt-idle-slot .tt-idle-top{white-space:nowrap;overflow:visible!important}
+/* 下排左：補充一點快樂（用 ::before 畫出外框） */
+html.tt-desk body #topupM #topupBody::before{content:"";grid-column:1/3;grid-row:2/5;border:2px solid var(--sk-ink,#1C2156);border-radius:14px;background:linear-gradient(170deg,#fff,#F8FAFF);box-shadow:inset 0 0 0 2px #E3EEFF}
+html.tt-desk body #topupM #topupBody>.section-caption{grid-column:1/3;grid-row:2;z-index:1;padding:12px 16px 6px!important;display:flex!important;align-items:baseline;justify-content:space-between}
+html.tt-desk body #topupM #topupBody>.packages{grid-column:1/3;grid-row:3;z-index:1;display:flex!important;flex-direction:column;gap:7px!important;padding:0 14px!important}
+html.tt-desk body #topupM #topupBody>.body-note{grid-column:1/3;grid-row:4;z-index:1;padding:8px 16px 12px!important;font-size:11.5px!important;line-height:1.6!important}
+html.tt-desk body #topupM .packages .package:not(.tt-custom-pack){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,.72fr) minmax(0,1.4fr);align-items:center;column-gap:10px;min-height:0!important;padding:8px 14px!important;text-align:left}
+html.tt-desk body #topupM .packages .package:not(.tt-custom-pack) .coupon-id,html.tt-desk body #topupM .packages .package .coupon-arrow,html.tt-desk body #topupM .packages .package .frame-decoration{display:none!important}
+html.tt-desk body #topupM .packages .package:not(.tt-custom-pack) strong{grid-column:1;grid-row:1;font-size:20px!important;line-height:1.1!important;margin:0!important;white-space:nowrap;display:flex;align-items:center;gap:6px}
+html.tt-desk body #topupM .packages .package:not(.tt-custom-pack) p{grid-column:2;grid-row:1;margin:0!important;font-size:14px!important;font-weight:900;text-align:center;white-space:nowrap}
+html.tt-desk body #topupM .packages .package:not(.tt-custom-pack) .tt-bonus{grid-column:3;grid-row:1;margin:0!important;font-size:11.5px!important;line-height:1.35!important;text-align:right;white-space:normal}
+html.tt-desk body #topupM .packages .tt-custom-pack{display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:10px;min-height:0!important;padding:8px 14px!important}
+html.tt-desk body #topupM .tt-custom-pack .coupon-id{grid-column:1;margin:0!important;font-size:12px!important;white-space:nowrap}
+html.tt-desk body #topupM .tt-custom-pack>label,html.tt-desk body #topupM .tt-custom-pack #ttCustomHint{display:none!important}
+html.tt-desk body #topupM .tt-custom-pack .tt-custom-row{grid-column:2;display:flex!important;align-items:center;gap:8px;margin:0!important;min-height:0!important}
+html.tt-desk body #topupM .tt-custom-pack .tt-custom-row input{flex:1;min-width:0;height:34px!important;min-height:0!important;padding:0 10px!important;font-size:14px!important}
+html.tt-desk body #topupM .tt-custom-pack .tt-custom-row button{height:34px!important;min-height:0!important;padding:0 14px!important;white-space:nowrap;writing-mode:horizontal-tb!important}
+/* 下排右：用金幣兌換 */
+html.tt-desk body #topupM .tt-cat-ex{grid-column:3;grid-row:2/5;padding:12px 16px!important;row-gap:8px!important;align-content:start}
+html.tt-desk body #topupM .tt-cat-packs{gap:8px!important}
+html.tt-desk body #topupM .tt-cat-packs button{padding:8px 4px!important;min-height:0!important}
+html.tt-desk body #topupM .tt-cat-want input{height:36px!important;min-height:0!important}
+html.tt-desk body #topupM .tt-cat-sum{padding:6px 10px!important;row-gap:2px!important}
+html.tt-desk body #topupM .tt-cat-go{height:42px!important;min-height:0!important;padding:0!important}
+html.tt-desk body #topupM .tt-cat-note{font-size:11px!important;line-height:1.5!important}
+/* 錢包撐滿整個高度（D 11/19：下面空格好大）：儲值方案那一列吃掉多的高度、四張方案一起變高；右邊兌換區上下排開 */
+html.tt-desk body #ttHub #topupM.hub-embedded .panel-content{display:flex!important;flex-direction:column!important}
+html.tt-desk body #ttHub #topupM.hub-embedded #topupBody{flex:1 1 auto;min-height:0;grid-template-rows:auto auto minmax(0,1fr) auto auto!important}
+html.tt-desk body #ttHub #topupM.hub-embedded #topupBody>.packages{justify-content:stretch;padding-bottom:4px!important}
+html.tt-desk body #ttHub #topupM.hub-embedded #topupBody>.packages>.package{flex:1 1 0;max-height:96px;align-content:center}
+html.tt-desk body #ttHub #topupM.hub-embedded .packages .package:not(.tt-custom-pack) strong{font-size:24px!important}
+html.tt-desk body #ttHub #topupM.hub-embedded .tt-cat-ex{align-content:space-between!important}
+html.tt-desk body #ttHub #topupM.hub-embedded .tt-cat-packs button{padding:16px 4px!important}
+/* 矮螢幕：兌換的長說明收掉，其他都留著 */
+@media (max-height:780px){html.tt-desk body #topupM .tt-cat-note{display:none!important}html.tt-desk body #topupM #topupBody>.body-note{padding-bottom:10px!important}}
+
+/* ===== 左側選單加小圖示（照設計稿） ===== */
+html.tt-desk body #ttHub .hub-tabs button{padding-left:44px!important;background-repeat:no-repeat!important;position:relative}
+html.tt-desk body #ttHub .hub-tabs button::before{content:"";position:absolute;left:12px;top:50%;width:22px;height:22px;margin-top:-11px;background:center/contain no-repeat;image-rendering:pixelated}
+html.tt-desk body #ttHub .hub-tabs button[data-view=friends]::before{background-image:url(assets/chat.png)}
+html.tt-desk body #ttHub .hub-tabs button[data-view=mail]::before{background-image:url(assets/mail.png)}
+html.tt-desk body #ttHub .hub-tabs button[data-view=orders]::before{background-image:url(assets/receipt.png)}
+html.tt-desk body #ttHub .hub-tabs button[data-view=wallet]::before{background-image:url(assets/wallet.png)}
+html.tt-desk body #ttHub .hub-tabs button[data-view=achievements]::before{background-image:url(assets/crown.png)}
+html.tt-desk body #ttHub .hub-tabs button[data-view=settings]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8.4 4.6-.1-2.2 2-1.5-2-3.5-2.4.8a8 8 0 0 0-1.9-1.1L15.6 3h-4l-.5 2.5a8 8 0 0 0-1.9 1.1l-2.4-.8-2 3.5 2 1.5a8 8 0 0 0 0 2.2l-2 1.5 2 3.5 2.4-.8a8 8 0 0 0 1.9 1.1l.5 2.5h4l.5-2.5a8 8 0 0 0 1.9-1.1l2.4.8 2-3.5Z' fill='%23C9B8FF' stroke='%231C2156' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E")}
+/* 三張卡一樣高；大螢幕把下面兩塊撐開一點，不留一大片空白 */
+html.tt-desk body #topupM .purse-summary,html.tt-desk body #topupM .tt-cat-head{height:calc(100% - 14px);box-sizing:border-box}
+html.tt-desk body #topupM .tt-idle-slot>.tt-idle{height:100%;box-sizing:border-box}
+html.tt-desk body #topupM .packages .package:not(.tt-custom-pack) .tt-bonus{white-space:nowrap}
+@media (min-height:780px){
+  html.tt-desk body #topupM.hub-embedded .purse-summary,html.tt-desk body #topupM.hub-embedded .tt-cat-head{padding-top:18px!important;padding-bottom:42px!important}
+  html.tt-desk body #topupM.hub-embedded .purse-summary .wallet-balance strong,html.tt-desk body #topupM.hub-embedded .tt-cat-head .tt-cat-bal{font-size:42px!important}
+  html.tt-desk body #topupM.hub-embedded #topupBody>.packages{gap:10px!important}
+  html.tt-desk body #topupM.hub-embedded .packages .package:not(.tt-custom-pack),html.tt-desk body #topupM.hub-embedded .packages .tt-custom-pack{padding:13px 16px!important}
+  html.tt-desk body #topupM.hub-embedded .packages .package:not(.tt-custom-pack) strong{font-size:23px!important}
+  html.tt-desk body #topupM.hub-embedded #topupBody>.section-caption{padding-top:16px!important;padding-bottom:10px!important}
+  html.tt-desk body #topupM.hub-embedded #topupBody>.body-note{padding-top:12px!important;padding-bottom:16px!important}
+  html.tt-desk body #topupM.hub-embedded .tt-cat-ex{row-gap:14px!important;padding:16px 18px!important}
+  html.tt-desk body #topupM.hub-embedded .tt-cat-packs button{padding:14px 4px!important}
+  html.tt-desk body #topupM.hub-embedded .tt-cat-go{height:48px!important}
+}
+/* 抽出來的票卡放大一點，填滿右邊（大螢幕） */
+
+/* 硬幣是逐格動畫圖（48 一格），不能改外框大小，不然只露出一部分 */
+html.tt-desk body #topupM .tt-cat-head>.nyan{flex:none}
+/* ===== 訂單票根 v555e（D 11/19 草圖）：左邊一疊票根只露上緣，滑過「上面往上、下面往下」讓開、那張往右抽出一點；
+   點了飛到右邊攤開。點單票面＝lobby-ui/order-ticket.css（戊＋碎鑽亮片＋貓臉郵戳，D 11/19 定案）；儲值等其他訂單＝一般白卡 .tt-pf ===== */
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode{position:relative!important;display:grid!important;grid-template-columns:minmax(0,40%) minmax(0,1fr)!important;grid-auto-rows:min-content!important;gap:0 18px!important;align-items:start;overflow:visible!important;max-height:none!important}
+/* 只有一張（沒有別張可以疊）：不留空的票堆，那張置中放大 */
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode.tt-solo{grid-template-columns:minmax(0,1fr)!important}
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode.tt-solo>.tt-ord-rail{display:none}
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode.tt-solo>article.order.tt-pulled{grid-column:1!important;justify-self:center;max-width:660px!important}
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode>.tt-ord-rail{grid-column:1;grid-row:1/span 40;position:relative;min-width:0}
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode>article.order{display:none!important}
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode>.ordPg{grid-column:1;grid-row:41;margin:6px 0 0!important}
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode>.tt-empty{grid-column:1/3}
+/* 票堆 */
+html.tt-desk body #ttHub .tt-ord-rail>.tt-stack-item{position:absolute;left:4px;cursor:pointer;outline:none;transition:transform .34s cubic-bezier(.2,.9,.3,1.12);will-change:transform}
+html.tt-desk body #ttHub .tt-ord-rail>.tt-stack-item.is-on{display:none}
+html.tt-desk body #ttHub .tt-ord-rail>.tt-stack-item:focus-visible{outline:3px solid #FF5C93;outline-offset:3px;border-radius:8px}
+/* 票堆每張底下一點影子，疊起來才分得出來 */
+html.tt-desk body #ttHub .tt-ord-rail>.tt-stack-item>.tt-tk-sc{filter:drop-shadow(0 5px 7px rgba(80,50,150,.22))}
+html.tt-desk body #ttHub .tt-ord-rail>.tt-rail-solo{display:none;margin:30px 8px 0;padding:16px;border:2px dashed #C9B8EE;border-radius:14px;color:#6A64A0;font-size:13px;font-weight:800;text-align:center}
+html.tt-desk body #ttHub .tt-ord-rail.is-solo>.tt-rail-solo{display:block}
+/* 右邊攤開的那張（真的票，按鈕都在這張；原本票卡的日期、標題、單號已經印在票面上） */
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode>article.order.tt-pulled{display:block!important;grid-column:2!important;grid-row:1/span 40!important;margin:22px 0 0!important;padding:0!important;width:100%!important;max-width:640px!important;flex:none!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;animation:none!important}
+html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode>article.order.tt-pulled::before,html.tt-desk body #ttHub #shopM4 #ordList.tt-rail-mode>article.order.tt-pulled::after{display:none!important}
+html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled>.ticket-date,html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled .order-top,html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled .ticket-identity{display:none!important}
+html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled>.ticket-body{margin:14px 4px 0;padding:12px 16px 12px!important;border:2px solid var(--sk-ink,#1C2156)!important;border-radius:14px;background:linear-gradient(170deg,#fff,#F8F6FF)!important;box-shadow:inset 0 0 0 2px #EDE6FF,0 3px 0 rgba(28,33,86,.12)}
+html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled .order-status{margin:0 0 8px!important;font-size:14px!important;font-weight:900;color:#4B2D6F!important}
+html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled .tt-order-note{margin:0 0 8px!important;font-size:13px!important}
+html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled .ticket-bottom{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:8px!important}
+html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled .ticket-footer{display:flex!important;align-items:center;gap:8px;margin:0!important;padding:0!important;border:0!important;background:none!important}
+html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled .tt-order-actions{flex:1 1 auto;width:auto!important;margin:0!important;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+html.tt-desk body #ttHub #ordList.tt-rail-mode>article.order.tt-pulled .ticket-voice{flex-basis:100%}
+
+/* ---- 票面 560×210（外面用 transform:scale 縮放） ---- */
+html.tt-desk body #ttHub .tt-tk-box{position:relative;flex:none}
+html.tt-desk body #ttHub .tt-tk-sc{position:absolute;left:0;top:0;width:560px;height:210px;transform-origin:0 0}
+/* 一般白卡（儲值等，不是點單）：白紙深藍框＋圖示 */
+html.tt-desk body #ttHub .tt-pf{position:absolute;inset:6px 4px;display:flex;align-items:center;gap:22px;padding:18px 30px;border:3px solid var(--sk-ink,#1C2156);border-radius:20px;
+  background:linear-gradient(165deg,#fff,#F7F4FF);box-shadow:inset 0 0 0 4px #EDE6FF,0 4px 0 rgba(28,33,86,.14);color:var(--sk-ink,#1C2156);text-align:left}
+html.tt-desk body #ttHub .tt-pf-ic{flex:none;width:92px;height:92px;image-rendering:pixelated;object-fit:contain}
+html.tt-desk body #ttHub .tt-pf-body{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+html.tt-desk body #ttHub .tt-pf-date{font-size:15px;font-weight:800;color:#6A64A0}
+html.tt-desk body #ttHub .tt-pf h3{margin:0;font-size:26px;font-weight:900;line-height:1.25;color:var(--sk-ink,#1C2156);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.tt-desk body #ttHub .tt-pf-status{margin:0;font-size:16px;font-weight:800;line-height:1.4;color:#4B2D6F;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html.tt-desk body #ttHub .tt-pf-price{padding:5px 15px 4px;border:2px solid var(--sk-ink,#1C2156);border-radius:999px;background:#FF5C93;color:#fff;font-size:17px;font-weight:900;white-space:nowrap;box-shadow:0 2px 0 var(--sk-ink,#1C2156)}
+html.tt-desk body #ttHub .tt-pf[data-st=cancelled]{opacity:.7}
+@media (prefers-reduced-motion:reduce){html.tt-desk body #ttHub .tt-ord-rail>.tt-stack-item{transition:none}}

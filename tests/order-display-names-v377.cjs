@@ -4,7 +4,7 @@ const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'lob
 // Execute the production functions, stopping at the first complete function expression.
 // This avoids coupling the test to an unrelated function's name or copying the resolver.
 function sourceFunction(source,name){
- const found=new RegExp('\\bfunction\\s+'+name+'\\s*\\(').exec(source);
+ const found=new RegExp('\\b(?:async\\s+)?function\\s+'+name+'\\s*\\(').exec(source);   // v561：doRenew 從 v556 起是 async
  assert(found,'production function is present: '+name);
  for(let end=source.indexOf('}',found.index);end>=0;end=source.indexOf('}',end+1)){
   const candidate=source.slice(found.index,end+1);
@@ -18,9 +18,11 @@ let currentOrder,renewalOptions,renderWrites=0;
 const ctx={console,Date,Number,Math,Set,document:{getElementById:id=>nodes[id]||null},issueSent:()=>({}),canSelfCancel:()=>false,backendNumber:()=>null,identity:()=>'',
  myOrdersCache:{},myOrderIds:()=>Object.keys(ctx.myOrdersCache),ORD_PER:7,_ordTab:'active',_ordPage:0,_ordOpen:new Set(),_issueId:null,__renewRes:{},__wallet:1000,
  activeOrder:()=>currentOrder?{id:'qa-order',o:currentOrder}:null,sessionEndOf:()=>Date.now()+3600000,hhmm:()=> '12:00',renewOptions:()=>renewalOptions,RENEW_BUFFER:0,
- shopClose(){},gOpen(id){assert.equal(id,'issueM');},toast(){},db:{ref(){renderWrites++;throw Error('display functions must not access the database');}}};
+ shopClose(){},gOpen(id){assert.equal(id,'issueM');},toast(){},
+ // v561：v510 取消申請狀態、v556～v558 續單（同組名單、挑人續）用到的輔助函式
+ cancelStateOf:()=>null,renewGroup:(id,o)=>[{id,o}],renewStarted:g=>g,renewSpread:()=>false,renewLeftText:()=>'還有 60 分',renewDefaultSel:g=>new Set(g.map(m=>m.id)),_renewSel:null,_renewSelFor:null,db:{ref(){renderWrites++;throw Error('display functions must not access the database');}}};
 ctx.window=ctx;vm.createContext(ctx);
-for(const name of ['esc','ttStaffDisplayName','ttOrderStaffDisplayName','renderMyOrders','bkOrdLine','openIssue','renewCardHtml','openRenew'])vm.runInContext(sourceFunction(html,name),ctx,{filename:'lobby.html:'+name});
+for(const name of ['esc','ttStaffDisplayName','ttOrderStaffDisplayName','ttHistOrder','renderMyOrders','bkOrdLine','openIssue','ja','renewNames','renewPriceOf','unitPerHour','renewCardHtml','openRenew'])vm.runInContext(sourceFunction(html,name),ctx,{filename:'lobby.html:'+name});
 const textStart=live.indexOf('  const text ='),textEnd=live.indexOf('  const geometry =',textStart);
 assert(textStart>=0&&textEnd>textStart,'production HTML escaping helpers are present');
 vm.runInContext(live.slice(textStart,textEnd)+'\n'+sourceFunction(live,'orderCard'),ctx,{filename:'lobby-ui/live.js:orderCard'});
@@ -63,7 +65,7 @@ for(const item of cases){
   const o=orderFor(item,{status,...(group?{groupId:'qa-group',groupSize:3,groupAmount:750,groupStaffNames:Object.freeze(['Caboo','大卡','小mo'])}:{})}),snapshot=JSON.stringify(o);
   const card=ctx.orderCard('qa-order',o),escaped=ctx.esc(item.expected);
   assert(card.includes('<small>與 '+escaped+' 一起玩</small>'),item.label+' '+status+' card heading');
-  assert.equal(card.includes('這張為 '+escaped+' 的陪玩紀錄。'),group,item.label+' group description');
+  assert.equal(card.includes('這張為 '+escaped+' 的委託紀錄。'),group,item.label+' group description');
   if(group)assert(card.includes('整組實付 NT$ 750'),'group total is preserved');
   checkMarkup(card,item,'order card');assert.equal(JSON.stringify(o),snapshot,'card rendering preserves the order and group snapshot');cardCases++;
   ctx.myOrdersCache={'qa-order':o};ctx._ordTab=['done','cancelled'].includes(status)?'history':'active';ctx._ordOpen=new Set(['qa-order']);
@@ -74,7 +76,7 @@ for(const item of cases){
  ctx.openIssue('qa-order');checkMarkup(nodes.issueOrd.innerHTML,item,'issue summary');assert.equal(nodes.issueTx.value,'');
  checkMarkup(ctx.renewCardHtml(),item,'active play card');surfaceCases+=2;
  for(const list of [[],[{mins:30,price:125}]]){
-  renewalOptions={end:Date.now()+3600000,nb:Date.now()+7200000,list};
+  renewalOptions={end:Date.now()+3600000,nb:Date.now()+7200000,list,group:[{id:'qa-order',o:currentOrder}],pick:[{id:'qa-order',o:currentOrder}],lag:[],nbName:ctx.ttOrderStaffDisplayName(currentOrder)};
   ctx.openRenew();checkMarkup(nodes.renewBody.innerHTML,item,'renewal dialog');
   const occurrences=nodes.renewBody.innerHTML.split(ctx.esc(item.expected)).length-1;
   assert.equal(occurrences,2,'both renewal heading and next-booking warning use the resolved name');surfaceCases++;
