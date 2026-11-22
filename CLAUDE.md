@@ -44,6 +44,15 @@
   近側欄杆（模型 -Y 那排，iso／isor 都朝鏡頭）零件標 o['front']；build_props.py `FRONTMASK=1` 多算 {view}_front.png → bed/front_mask.py 縮成 1 倍遮罩 → DEF.vs_bridge.walk.fm（data URL，[iso,isor]）。
   room.html v562b（scratchpad walk_patch2.py）：frontImg／frontOver：小人、朋友站在橋上時，畫完小人再把「前側欄杆」蓋上去（只蓋小人那一塊）；sil／dollLift 照拱形抬高、提亮扣掉前側欄杆；
   搖桿 walkMoveOK：只能從橋頭上下、橋上離欄杆 ≥0.3 格（之前的⚠已修）。e2e_bridge 8/8。⚠ 近距離畫面（小人在橋上每一格、白天／夜晚）還沒逐格看過。
+  **拱橋第三版＋琉璃重簷亭＋荷花大河（11/22 晚，D「還是不夠長」「拱形要感覺得出高低差」「再建一個涼亭，要夠大讓朋友一起進去拍照」「大河流，上面可以放家具」「水做點特效，效能要順」）**：
+  - 拱橋 **2×6**、拱高 0.55（walk.h）、half 1.46、橋面一階一階台階、月洞拱（橋身中空，洞裡看得到水）、尋杖加粗 0.034（D「很像斷了」）、淨瓶每段一根、兩頭石階對稱。
+  - 琉璃重簷亭 vs_pavilion **4×4**：白石台基＋x 兩頭石階（只能從兩頭進出，同拱橋 walk 規則；h0＝0.12 平的）、四根紅柱 1.75（小人＝1.0）、白石欄杆、倒掛楣子、橙色琉璃瓦重簷＋瓦壟、四角紅燈籠（前角不放光暈，會落在亭內小人臉上）、夜裡 light z 0.15 照亮亭內。
+  - 荷花大河 vs_river **4×4、flat**（家具、橋、涼亭可以擺在上面）：兩岸土堤有起伏、水面微波、水邊青石成群、荷葉荷花；一節一節頭尾接成長河無縫（建模多畫鄰節、bed/river_cut.py 沿地面 x＝±1 裁掉，**每次重算 hs_river 後都要再跑**）。水面中間 2 格小人走不過去（waterBlock：找路、搖桿、出生點），要走橋或涼亭。
+  - 前後遮擋改用**深度圖**（bed/walk_depth.py → house/fx/vs_*_dm.png，DEF.walk.dm）：比小人靠鏡頭、又比腳底高不到 occ.low 的點才蓋小人（拱橋 0.30＝華板地栿；涼亭 0.55＝欄杆台基，柱子屋頂不擋臉）。取代 v562b 的手標前側遮罩 fm（front_mask.py 不再用）。
+  - 水面特效（room.html drawWater／drawWaterNight，畫在 1 倍像素小畫布再放大）：拱橋涼亭倒影（深度圖現算 reflOf，異色是自己的顏色）、其他家具與小人上下翻倒影、三種錦鯉、閃光點、順流亮線；夜裡燈光倒映。
+  - 新材質色階 water／water2 加在 pixelize7.py、pixelize7g.py、beauty.py。
+  - 正式版補丁：scratchpad cn/patch_cn3.py（js_depth.js、js_water.js）＋ house-lobby/patch_replace.py vs_bridge。e2e_bridge 8/8（6 格版）、e2e_cn 14/14、cap_scene.cjs 找路 4 項＋無錯誤。
+  - ⚠ 涼亭、大河還**沒進任何卡池或商城**（catalog 先標 gacha、price 0；主機 gacha-pools.json 沒有）→ 等 D 決定放哪裡。扭蛋頁拱橋圖／模型已換（DV v=78、g3d.js?v=94）。
 - 異色圖：tt-room-kit/bed/cnvar.py（依每格材質重新上色＋吸到乾淨色階，原色檔不動）；D 11/21「主色沒問題，細節換色後要更乾淨」→ 已加金邊／金飾分組與吸色。
 - 驗證：主機測試 29/29、規則第二十八批 31/31、大廳端 39/39、端到端（真的 lib/gacha.js＋模擬資料庫）14/14；通用／人魚卡池回歸截圖正常。
 - 版本：verTag v561、ver.json 561、lobby-view 561、house.js／house.css／gacha.js ?v=561、house.js VER 561、gacha.js VER 561。
