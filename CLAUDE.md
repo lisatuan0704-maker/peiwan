@@ -1761,3 +1761,14 @@ tavern-ui/daily-v494.js NAMES：髮型 俏皮外翹髮／甜心側馬尾／刺�
 - 仙鶴燭台改「仙鶴擺件」（拿掉燭光）、竹叢盆改「青花竹屏風」（1×3）。
 - 還沒做：10 件異色差異低於三成（竹屏風、仙鶴、石桌、荷花缸、畫缸、青石板、兩件盆景、圓毯、掛軸）要做釉色／石色專屬異色。
 - 付款主機貼上檔＝C:	inytavern\server\pay-cn1121-貼上主機.txt（中華 64 件，主機測試 29/29、23 項）；規則＝security/database.rules.json（第二十八批）。
+
+## 2026/11/23 v564 中華修正（Claude；D 半夜看 v563 正式站的回饋，D 說自己排、不用問）
+- 付款主機 11/23 已更新（中華 64 件＋家具券，04:00 開）。⚠ 網頁 SSH 貼長行會斷線 → 主機貼上檔改成「壓縮＋短行分 3 段＋最後一段」：
+  tt-room-kit/上線檔_1123/付款主機分段貼上/（產生器 scratchpad cn/split_paste.py）；D 一度貼到 DigitalOcean 機器人主機（root@tinytavern-service-sgp1），付款主機是 GCP pay-server。
+- 梳妝台：鏡面凸塊拿掉；鏡面照 D 給的參考鏡改淡藍＋白斜光，色帶順著反光角度斜向、交界斜紋抖色（成品後製 bed/mirror_paint.py，重算 vanity 後要再跑）；
+  鏡框兩側支臂原本差 0.05 沒接到 → 伸進鏡框＋金鉚釘。
+- 流蘇：cn_props.py 新 fringe()（金帽＋8 條細線散開、尾端長短不一＋金箍），tassel() 全改用；梳妝台垂飾、燈籠四角與下垂、梅瓶都換。重算 vanity/wardrobe/teatable/cabinet/sidetable/lantern。
+- 燈穿透家具：紅燈籠夜的燈暈原本畫在最上層 → 改到夜晚 lightPass（會被前面家具擋）；亭子燈點原本在屋頂面上 → z 0.98（屋簷下小燈籠）＋light.roof（自己屋頂擋光，cutOut）。
+- 月光窗：DEF beam.moon（月夜圓窗 round、海棠花窗 haitang）夜晚地上落窗格形狀月光＋淡藍 screen 一層；白天當一般窗。小屋平常是白天，裝中華光效（借夜）才看得到。
+- 紅燈籠夜不像濾鏡：底色 84,70,110、整室紅調 .05、燈染紅 .4；燈下改「燈籠骨架光紋」ribPool（8 瓣、跟燈晃、在光照層有遮擋）。
+- 扭蛋 DV ?v=85、g3d.js?v=101。

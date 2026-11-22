@@ -14,7 +14,7 @@ const R=()=>typeof ROOT!=='undefined'?ROOT:'peiwan';
 const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const BASE=()=>typeof PAY_API!=='undefined'?PAY_API:'https://pay.tinytavern.tw',API=()=>BASE()+'/api/gacha';
-const VER='563';
+const VER='564';
 const G={ov:null,fr:null,inv:{},off:null,subs:new Set(),busy:false,sched:null,tix:0,tixOk:false,tixSub:null,info:null,infoAt:0,tbusy:false};
 const TIX_FROM0='2026-11-23T04:00:00+08:00';   // 讀不到主機時的備用；以主機 gacha-pools.json 的 tix.from 為準（主機一樣會擋）
 
