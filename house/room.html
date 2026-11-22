@@ -1949,6 +1949,11 @@ function ribPool(ctx,l,f,R,now){const rm=reduceMotion.matches,ph=(l.it?.i??l.it?
   for(let k=0;k<n;k++){const a0=k*TAU/n;gr=ctx.createRadialGradient(0,0,R*.1,0,0,R);gr.addColorStop(0,`rgba(${c},${a*.9})`);gr.addColorStop(.5,`rgba(${c},${a*.45})`);gr.addColorStop(1,`rgba(${c},0)`);
     ctx.fillStyle=gr;ctx.beginPath();ctx.moveTo(Math.cos(a0)*R*.1,Math.sin(a0)*R*.1);ctx.arc(0,0,R,a0,a0+w);ctx.closePath();ctx.fill();}
   ctx.restore();}
+function moonPass(ctx,b,now,op,keep){if(TC.width!==cv.width||TC.height!==cv.height){TC.width=cv.width;TC.height=cv.height;}   // 窗格月光先畫在暫存層，挖掉站在地上的東西再疊上去
+  tg.setTransform(1,0,0,1,0,0);tg.clearRect(0,0,TC.width,TC.height);tg.setTransform(...viewT());tg.globalCompositeOperation='source-over';moonPatch(tg,b,now);
+  tg.save();tg.globalCompositeOperation='destination-out';tg.globalAlpha=1-(keep||0);for(const o of withDecos(order([...solidList(),'me'])))try{sil(tg,o);}catch(e){}
+  for(const P of PEERS.values())try{sil(tg,P.it);}catch(e){}tg.restore();
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation=op;ctx.drawImage(TC,0,0);ctx.restore();}
 function drawNight(now){if(LC.width!==cv.width||LC.height!==cv.height){LC.width=cv.width;LC.height=cv.height;}
   const RPN=projLayers().some(p=>p.kind==='redlantern');
   const amb=(fxNightSet()?FXDEF[fxNightSet()].ambient:THEMES[theme].ambient)||THEMES[theme].ambient||'80,70,90',ls=lightList(now);
@@ -1961,12 +1966,12 @@ function drawNight(now){if(LC.width!==cv.width||LC.height!==cv.height){LC.width=
     const g2=lg.createRadialGradient(f.x,f.y,0,f.x,f.y,fr);
     g2.addColorStop(0,`rgba(${l.L.c},${.55*l.L.a*l.fl})`);g2.addColorStop(1,`rgba(${l.L.c},0)`);lg.save();lg.translate(f.x,f.y);lg.scale(1,.5);lg.translate(-f.x,-f.y);lg.fillStyle=g2;lg.fillRect(f.x-fr,f.y-fr,fr*2,fr*2);lg.restore();});
 
-  for(const b of beamShapes())if(b.bm.night&&b.bm.moon)moonPatch(lg,b,now);
+  for(const b of beamShapes())if(b.bm.night&&b.bm.moon)moonPass(lg,b,now,'lighter',.12);
   for(const b of beamShapes())if(b.bm.night&&!b.bm.moon)for(const B of beamBands(b,'255,236,200')){const f=B.f,gr=lg.createLinearGradient(f[0].x,f[0].y,f[3].x,f[3].y),a=(.5+.06*Math.sin(now/900))*(b.bm.a??1);   // 夜晚的彩繪玻璃光：照亮地板
     gr.addColorStop(0,`rgba(${B.c},${a})`);gr.addColorStop(1,`rgba(${B.c},0)`);lg.save();lg.globalCompositeOperation='lighter';lg.fillStyle=gr;lg.beginPath();f.forEach((p,k)=>k?lg.lineTo(p.x,p.y):lg.moveTo(p.x,p.y));lg.closePath();lg.fill();lg.restore();}
   for(const P of projLayers())if(P.kind!=='rays')drawProj(lg,now,P,P.la??0,true);   // 投影光紋也照亮夜晚的房間
   g.save();g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='multiply';g.drawImage(LC,0,0);g.restore();
-  for(const b of beamShapes())if(b.bm.night&&b.bm.moon){g.save();g.setTransform(...viewT());const bm2={...b,bm:{...b.bm,a:(b.bm.a??1)*.6,c:'140,176,255'}};g.globalCompositeOperation='screen';moonPatch(g,bm2,now,'screen');g.restore();}
+  for(const b of beamShapes())if(b.bm.night&&b.bm.moon)moonPass(g,{...b,bm:{...b.bm,a:(b.bm.a??1)*.6,c:'140,176,255'}},now,'screen',0);
   const RP=projLayers().find(p=>p.kind==='redlantern'),rm=reduceMotion.matches;
   for(const l of ls){if(isMoonT(l.t)||LFX[l.t])continue;lightPass(g,l,0,g=>{const hr=l.wall?16:11,h=g.createRadialGradient(l.x,l.y,0,l.x,l.y,hr);h.addColorStop(0,`rgba(${l.L.c},${.55*l.fl})`);h.addColorStop(1,`rgba(${l.L.c},0)`);g.fillStyle=h;g.fillRect(l.x-hr,l.y-hr,hr*2,hr*2);
     if(RP&&l.t!=='window'){const ph=(l.it?.i??l.it?.c??0)*1.3+(l.it?.j??0),br=rm?1:.85+.15*Math.sin(now/900+ph),R=(RP.hr||26)*br,a=(RP.ha||.55)*Math.min(1.1,l.fl);   // 紅燈籠夜的燈暈（原本畫在最上層、穿過家具）
