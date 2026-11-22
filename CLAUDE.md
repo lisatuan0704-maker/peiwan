@@ -1695,3 +1695,20 @@ tavern-ui/daily-v494.js NAMES：髮型 俏皮外翹髮／甜心側馬尾／刺�
 - 偵測：聽 order-voice.mjs 的 tt-companion-rewards（約每分鐘 /v1/voice/rewards），frames 裡 unlocked 且本機 tt_fc_seen_<闆卡> 沒記過就跳；
   一次一個排隊；教學（#ttCoach）進行中、分頁在背景、還沒載到自己的小人時先等。**每台裝置各跳一次；已經滿 10 小時的老闆更新後第一次進大廳也會跳一次。**
 - 本機預覽工具在 session 88ad685a 的 scratchpad/proto（serve.cjs＝本機 emulator＋假登入＋右上預覽面板；shots.cjs 定時截圖）。
+
+## 2026/11/22 深夜 v562d 涼亭精緻化試做＋遮擋＋動態家具＋涼亭大河進卡池（Claude，D 睡覺時自己排，沒推）
+- D 定調：小屋家具＝動物森友會那樣可愛的微縮模型；花紋要疏、形狀完整（外圈連續描邊、2:1 斜線乾淨、三面平塗）；特效少而精、好拍；遮擋要「裡面會擋住人」。
+- **新上色 bed/mini.py（微縮上色）**：不經過抖動版，直接從 3D（x2 的 id／法線／深度＋beauty 投影）算 1 倍：細小近的零件優先、
+  頂／左／右三面平塗（系列色盤）、外圈連續描邊、前後交界線、同深度部件線（同家族材質不畫）、頂邊亮邊。輸出 {view}_mini.png，大小位置跟 pixel7 一樣。
+  目前只有琉璃重簷亭用；十件中華家具的新舊對照在 scratchpad gptpav/中華十件_現在vs微縮上色.png，等 D 決定要不要全系列換。
+- GPT 輔助：bed/gpt2pix.py（GPT 偽像素→真像素：追 GPT 格線、3D 結構引導對格、光流局部對位、收色盤）；GPT 版面偏離 3D 時不穩，
+  所以涼亭改成「GPT 當設計稿 → 設計做進 3D → mini.py」。GPT 生圖用 C:\gen\gen_image.py。
+- 遮擋（room.html）：occOf 加 occ.ghost＝深度圖 B 通道（Blender 標 front＝1 的頭頂零件，walk_depth.py 的 GHOST 清單）在小人身上半透明；
+  涼亭 occ {low 9, ghost 45}＝柱子欄杆整個擋、梁屋頂燈籠淡淡透；拱橋 occ {low 9} ＋ walk.sq 0.4（liftP 裡把橋上小人往中線靠，名牌／倒影／遮擋判斷一起）。
+  light.day＝false：只在晚上亮（涼亭中央燈白天會把亭內的人洗白）。
+- 動態家具（ANIM 疊層＋bed/anim_mask.py 材質遮罩，不用重算 3D）：宮燈走馬燈 ANIM.zouma（含異色）、涼亭琉璃瓦光掃 ANIM.sheen（白天）、
+  河的錦鯉跳水 wJump（每節 8～12 秒一次；減少動態時不畫）。⚠ 行內註解會吃掉同一行後面的程式（又中一次），註解一律獨立一行，改完 node --check。
+- 進卡池：涼亭＝限定、大河＝普通（重複換券、再買一件用券），三異色（cnvar.py 加 CNV_SRC＝mini、水面配色、涼亭紅柱算主體色）。
+  小屋圖都過 outline.bold（跟其他上架家具一樣）；扭蛋頁 3D 大河要裁成一節（scratchpad cn/glb_cut.py）；十連房間資料 room.json 要有每件（沒有整間不顯示）。
+  付款主機 gacha-pools.json＋pay-cn1121-貼上主機.txt 已重產（中華 38 件）。
+- 測試：e2e_bridge 8/8、e2e_cn 14/14、cap_scene 找路 5/5；遮擋逐格截圖工具 scratchpad cn/cap_pav.cjs、cap_br.cjs；扭蛋抽指定家具 cap_pick.cjs。
