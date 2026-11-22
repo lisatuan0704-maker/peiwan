@@ -1,5 +1,10 @@
 # 小小酒館修改紀錄
 
+## 2026/11/22 v562 設定「串門子不看翻卡」改名「隨機拜訪不看翻卡」（Claude）
+- D 11/08 說「串門子」像中國用語、小屋一律叫「拜訪」（v506）；v535 新加的設定列又寫了「串門子」→ lobby.html 設定列、house.js 開關讀報名稱一起改。程式註解裡的「串門子」客人看不到，沒動。
+- 版本：verTag v562、ver.json 562、lobby-view 562、fixed-view.js 轉址 v=562（lobby 載入 fixed-view.js?v=562）、house.js?v=562（VER 不動，room.html 沒改）。
+- 升版要改的地方（v561 起）：verTag、ver.json、lobby-view.html 的 source v、**fixed-view.js 的 query.set('v')** 與 lobby 載入它的 ?v=，再加改過的檔各自的 ?v=。
+
 ## 2026/11/22 v561 電腦版介面縮小、我的酒館左側選單、訂單票卡、吊卡／續單主題款（Claude；只動電腦版畫面）
 - D 11/18「整體都很大」→ 試做在 worktree ui-size（分支 claude/ui-size，原本叫 v555 試做），D 11/22「可以先上線了」。以正式站 v560 為底合併上線，版本 v561。
 - 介面縮小：lobby-view.html 螢幕比 1280×720 大時，多出來的放大只給七成（1920×1080：1.5→1.35 倍）；lobby-ui/ui-size.css 收小常駐視窗。

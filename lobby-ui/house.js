@@ -511,7 +511,7 @@ async function quickVisit(mk){
 function bindSkipTrip(){const b=$('tglSkipTrip'),row=$('setSkipTripRow');if(!b)return;
  const phone=()=>isPhone()||(!!window.TTMobile&&!window.TTGame)||document.body.classList.contains('mhome-on');   // 手機功能首頁不能進小屋，不顯示
  const sync=()=>{if(row)row.hidden=phone();b.classList.toggle('on',skipTrip());b.setAttribute('aria-checked',String(skipTrip()));};
- b.setAttribute('role','switch');b.setAttribute('aria-label','串門子不看翻卡');sync();$('gearBtn')?.addEventListener('click',sync);
+ b.setAttribute('role','switch');b.setAttribute('aria-label','隨機拜訪不看翻卡');sync();$('gearBtn')?.addEventListener('click',sync);   // v562 D：設定名稱也不用「串門子」→ 隨機拜訪
  b.addEventListener('click',()=>{try{localStorage.setItem(SKIP_KEY,skipTrip()?'0':'1');}catch(_){}sync();try{SFX.tap();}catch(_){}});}
 // 試看面板用（?tripdemo=1）：自己＋隨機名單裡幾位的資料
 async function tripSample(){const mk=KEY();if(!mk||!DB())return [];let all={};try{all=(await DB().ref(R()+'/houseDir').limitToLast(6).once('value')).val()||{};}catch(_){}
