@@ -22,11 +22,11 @@ const KEY=()=>typeof myKey!=='undefined'?myKey:null;
 const DB=()=>typeof db!=='undefined'?db:null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const say=m=>{try{toast(m);}catch(_){}};
-const VER='566';
+const VER='567';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
 const S={fx:null,fxHost:{},fxOpen:false,fxTry:null,fxT:0,fxRemote:false,on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
-  hk:null,seat:null,seatRef:null,room:{},dolls:{},dollWait:{},chatSeen:new Set(),chatLog:[],joinedAt:0,pubT:0,beatT:0,last:null,lastPub:0,leaving:false};
+  hk:null,seat:null,seatRef:null,room:{},dolls:{},dollWait:{},dollW:{},chatSeen:new Set(),chatLog:[],joinedAt:0,pubT:0,beatT:0,last:null,lastPub:0,leaving:false};
 const VIS_NAME={public:'公開',friends:'只限好友',private:'不公開'};
 const VIS_TIP={public:'好友和隨機拜訪的老闆都能進來一起聊天（擺 5 件以上才會出現在隨機拜訪）',friends:'只有好友能進來，不會出現在隨機拜訪',private:'只有你自己，誰都不能進來'};
 const DIR_MIN=5;          // 入住禮 4 件＋至少再擺 1 件，才放進隨機拜訪名單
@@ -95,7 +95,7 @@ async function enter(){
  try{
   if(CT)await CT.covered;
   if(S.on)await teardown();
-  S.key=key;S.hk=key;S.on=true;document.body.classList.add('tt-house-on');
+  S.key=key;S.hk=key;S.on=true;document.body.classList.add('tt-house-on');watchMyDoll();
   try{window.TinyTavernUI?.close?.();}catch(_){}
   setSign('Tiny Tavern・我的小屋',myName()+' 的小屋');
   let h=null;
@@ -124,7 +124,7 @@ async function enter(){
 async function teardown(){flushSave();xpEnd();const seatRef=S.seatRef;S.leaving=true;S.tok=(S.tok||0)+1;
  S.on=false;unsub();closePanel();fxClose();S.fxHost={};clearInterval(S.pubT);clearInterval(S.beatT);S.pubT=S.beatT=0;
  document.body.classList.remove('tt-house-on','tt-house-edit','tt-house-visit');
- S.frame?.remove();S.frame=null;S.visit=null;S.hk=null;S.seat=null;S.seatRef=null;S.room={};S.whoSig=null;S.chatLog=[];S.chatSeen=new Set();renderChat();
+ S.dollW={};S.frame?.remove();S.frame=null;S.visit=null;S.hk=null;S.seat=null;S.seatRef=null;S.room={};S.whoSig=null;S.chatLog=[];S.chatSeen=new Set();renderChat();
  try{gClose('houseShopM');}catch(_){}
  if(seatRef){try{seatRef.onDisconnect().cancel();}catch(_){}try{await seatRef.remove();}catch(_){}}
  S.leaving=false;}
@@ -193,11 +193,14 @@ function routeIn(s){if(typeof s!=='string'||!s)return null;const out=[];
 // 其他人：座位上的人（不含自己、不含斷線的），小人圖從大廳資料讀一次存起來
 function pushPeers(){if(!S.frame)return;const mk=KEY(),now=SNOW(),list=[];
  for(const s of SEATS){const v=S.room[s];if(!v||v.k===mk||!(v.at>now-STALE*2))continue;
-  const d=S.dolls[v.k];if(d===undefined)loadDoll(v.k);
+  const d=S.dolls[v.k];loadDoll(v.k);
   list.push({id:v.k,name:v.name||'旅人',i:+v.i||0,j:+v.j||0,f:v.f<0?-1:1,doll:d||null,r:routeIn(v.r),age0:offOK&&Number.isFinite(v.at)?Math.max(0,Math.min(250,now-v.at)):60});}   // v522 age0：這筆位置在路上走了多久（伺服器時間）
  room('setPeers',list);}
-function loadDoll(k){if(S.dollWait[k])return;S.dollWait[k]=1;
- DB().ref(R()+'/lobby/'+k+'/doll').once('value').then(s=>{const d=s.val()||{};S.dolls[k]=dollCanvasOf(d);redrawDoll(k,d);}).catch(()=>{S.dolls[k]=dollCanvasOf({});}).finally(()=>{S.dollWait[k]=0;pushPeers();});}
+// 11/24 D「小屋裡（自己家、朋友家）可以隨時換裝」：同一間的人換了衣服，大家畫面上的小人跟著換 → 一直聽著每位的 lobby/<key>/doll（離開房間 unsub 一起關）
+function loadDoll(k){if(S.dollW[k])return;S.dollW[k]=1;watch('lobby/'+k+'/doll',d=>{d=d||{};S.dolls[k]=dollCanvasOf(d);redrawDoll(k,d);pushPeers();});}
+function watchMyDoll(){const mk=KEY();if(!mk)return;let first=true;
+ watch('lobby/'+mk+'/doll',d=>{if(first){first=false;return;}if(!d||!S.frame)return;const set=()=>{if(S.frame)room('setMyDoll',dollCanvasOf(d));};set();setTimeout(set,1200);setTimeout(set,3500);});}   // 部件圖第一次用到才載，晚一點再畫兩次
+function openDress(){if(!S.on)return;if(S.mode==='edit')setMode('walk');closePanel();if(S.fxOpen)fxClose();try{gClose('houseShopM');}catch(_){}if(window.openWardrobe)window.openWardrobe();}
 
 // ---------- v504 小屋聊天 ----------
 function onChat(v){const fresh=[];
@@ -465,7 +468,7 @@ async function visit(key,via){
   if(S.on)await teardown();
   useSeat(st);
   try{window.TinyTavernUI?.close?.();window.TTHub?.close?.();window.dmClose?.();}catch(_){}
-  S.visit={key,name,layout:view.layout,size:sizeOk(view.size),paint:view.paint||null,at:view.at||0,via,likes:0,liked:false};S.key=mk;S.hk=key;S.on=true;S.mode='walk';
+  S.visit={key,name,layout:view.layout,size:sizeOk(view.size),paint:view.paint||null,at:view.at||0,via,likes:0,liked:false};S.key=mk;S.hk=key;S.on=true;S.mode='walk';watchMyDoll();
   if(owner&&owner.doll){S.dolls[key]=dollCanvasOf(owner.doll);redrawDoll(key,owner.doll);}
   document.body.classList.add('tt-house-on','tt-house-visit');document.body.classList.remove('tt-house-edit');
   setSign('Tiny Tavern・拜訪小屋',name+' 的小屋');
@@ -589,12 +592,12 @@ function renderPanel(){const box=$('ttVisitPanel');if(!box||!S.panel)return;
 // 扭蛋圖鑑的「集滿獎勵」：同一個系列集到一半解鎖第一階段、集滿解鎖招牌光效（數法跟圖鑑一樣：這個系列的扭蛋家具有幾種）。
 // 解鎖後在自己小屋右下「光效」打開：可以同時開好幾個（混搭），每個各自調亮度／速度／數量／範圍。
 // 存在 houseFx/<闆卡>（第二十四批規則；來玩的人照小屋開放設定看得到）＋這台電腦（規則還沒發布時只有自己看得到）。
-const FX_SETS=[{set:'cn',series:'中華小惡魔',fx:[['金粉紅韻','整間染上暖暖的紅光，金粉從地上慢慢飄起來'],['紅燈籠夜','房間裡掛滿會輕輕晃的紅燈籠，地上一圈圈暖紅的燈影']]},
+const FX_SETS=[{set:'cn',series:'中華小惡魔',fx:[['金粉紅韻','整間染上暖暖的橘紅色調，金光一點一點往上飄'],['紅燈籠夜','關了燈的夜裡，空中飄著點點紅色火星，飄一飄就熄了']]},
  {set:'mermaid',series:'海底人魚屋',fx:[['泡泡藍調','整間染上海底的藍，房間裡飄著泡泡'],['深海天光','海面的光斜斜照進來，地上一圈晃動的水波光']]},
  {set:'forest',series:'森林精靈小屋',fx:[['螢火綠光','整間染上森林的綠，螢火蟲在房間裡飛'],['林間葉影','陽光穿過樹葉，地上一片會晃動的葉影']]}];   // 最新的卡池放最上面（光效面板照這個順序列）
 const FX_P={a:['亮度',30,150,10],s:['速度',30,200,10],n:['數量',0,200,10],r:['範圍',60,160,10]};
 const FX_HAS={mermaid1:'asn',mermaid2:'asnr',forest1:'asnr',forest2:'asnr',cn1:'asn',cn2:'asnr'};   // 調得到哪幾項：沒有粒子就沒有數量、沒有光池就沒有範圍
-const FX_NIGHT={mermaid2:1,cn2:1};   // 夜晚系招牌光效：開了房間會變暗（光才亮眼），可以關掉
+const FX_NIGHT={mermaid2:1,cn2:1};   // 11/23 D：紅燈籠夜關燈（黑黑的）；金粉紅韻是純色調、不關燈   // 夜晚系招牌光效：開了房間會變暗（光才亮眼），可以關掉
 const FX_NAME={};FX_SETS.forEach(st=>st.fx.forEach(([nm],i)=>{FX_NAME[st.set+(i+1)]=nm;}));
 const fxDef=()=>({a:100,s:100,n:100,r:100});
 function fxProgress(set){const ser=FX_SETS.find(x=>x.set===set)?.series;let n=0,own=0;
@@ -697,6 +700,7 @@ const ICON={
  visit:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M3 14 9 9l6 5"/><path d="M5 12.5V21h8v-8.5"/><path d="M15 11l5-4 5 4"/><path d="M17 9.5V21h6V9.5"/></svg>',
  heart:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 23s-9-5.4-9-11.5A4.8 4.8 0 0 1 14 9a4.8 4.8 0 0 1 9 2.5C23 17.6 14 23 14 23z"/></svg>',
  dice:'<svg viewBox="0 0 28 28" aria-hidden="true"><rect x="5" y="5" width="18" height="18" rx="4"/><path d="M10 10h.01M18 10h.01M14 14h.01M10 18h.01M18 18h.01"/></svg>',
+ dress:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M11.5 8.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.6v.6"/><path d="M14 12.9 4.6 19.2a1.3 1.3 0 0 0 .7 2.3h17.4a1.3 1.3 0 0 0 .7-2.3z"/></svg>',
  spark:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M13 3.5l2.3 6.9 6.9 2.3-6.9 2.3L13 21.9l-2.3-6.9-6.9-2.3 6.9-2.3z"/><path d="M21.5 17.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"/></svg>',
  ticket:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2.5a2.5 2.5 0 0 0 0 5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a2.5 2.5 0 0 0 0-5z"/><path d="M17.5 8v2M17.5 13v2M17.5 18v2"/><path class="tt-tix-gem" d="M10.5 9.5l3 4.5-3 4.5-3-4.5z"/></svg>'};   // 家具券（票根＋菱形）
 function btn(id,cls,icon,label,fn){const b=document.createElement('button');b.type='button';b.id=id;b.className=cls;b.innerHTML=ICON[icon]+'<span>'+label+'</span>';b.onclick=fn;return b;}
@@ -705,6 +709,7 @@ function build(){
  const entry=btn('ttHouseBtn','tt-house-entry','houseImg','小屋',enter);
  const hub=$('ttHubButton');if(hub)hub.after(entry);else dock.prepend(entry);
  dock.append(btn('ttHouseExpand','tt-house-only off','grow','擴建',askExpand));   // v507 D：擴建單獨一顆，放在佈置左邊（價格上架、還能再擴才出現）
+ dock.append(btn('ttHouseDress','tt-house-only tt-house-any','dress','換裝',openDress));   // 11/24 D：自己家、朋友家都能隨時換裝（開背包）
  dock.append(btn('ttHouseFx','tt-house-only','spark','光效',()=>S.fxOpen?fxClose():fxOpen()));   // v526 光效：扭蛋集滿獎勵解鎖的系列光效，開關、混搭、調整
  dock.append(btn('ttHouseEdit','tt-house-only','brush','佈置',()=>setMode('edit')));
  dock.append(btn('ttHouseMall','tt-house-only','roller','商城',openMall));   // v510 D：小屋右下多一個商城，專門賣各系列的壁紙跟地板（扭蛋鈕插在家具店前面＝商城右邊）

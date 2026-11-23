@@ -541,7 +541,7 @@ fShadow.rotation.x=-Math.PI/2;fShadow.visible=false;world.add(fShadow);
 // ---------- 家具本體 v5（D 11/07：「平平的很微妙」→ 改用小屋家具的原始 3D 模型）----------
 // 模型：bed/export_gacha_glb.py 從 Blender 原檔轉出（models/<key>.glb，只有幾何＋材質名）。
 // 上色：models/tone.json＝從原圖量出來的「每個材質 8 階顏色＋明暗門檻」，轉到斜角時明暗分布跟原圖一樣；停好後換成原圖（整數倍、一格對一格）。
-const GLL=new GLTFLoader(),FCACHE={},DV='?v=85';let TONE={},FPAL={};   // DV＝資料版本：家具重匯後改這裡，瀏覽器才不會讀到舊的快取
+const GLL=new GLTFLoader(),FCACHE={},DV='?v=89';let TONE={},FPAL={};   // DV＝資料版本：家具重匯後改這裡，瀏覽器才不會讀到舊的快取
 const PPU=45.255,EL30=Math.PI/6;
 function loadFurn(k){return FCACHE[k]||(FCACHE[k]=GLL.loadAsync('models/'+k+'.glb'+DV).then(gl=>{gl.scene.updateMatrixWorld(true);const parts=[];
   gl.scene.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.clone().applyMatrix4(o.matrixWorld);for(const a of Object.keys(g.attributes))if(a!=='position'&&a!=='normal')g.deleteAttribute(a);parts.push({g,mat:o.material.name});});
@@ -1393,7 +1393,7 @@ function stageFX(t){CU.uT.value=t;HEADS.forEach((H,i)=>{if(H.on){H.body.parent.u
 // ---------- 卡池主題（D 11/08：分人魚、森林卡池，「整個場景跟著卡池換」：海洋舞台＋海洋扭蛋機＋貝殼小屋／森林舞台＋森林扭蛋機＋森林小屋；
 // 原本的演唱會舞台＋酒館小屋＝通用）----------
 // 小屋：照酒館小屋的結構（門的位置、大小都一樣，扭蛋才滾得進去）整棟複製，換材質顏色、換屋瓦形狀，再加各主題自己的裝飾跟環境。
-const POOLS={cn:{name:'中華卡池',sub:'中華小惡魔',sets:['cn'],lim:true,fx:[['金粉紅韻',1,'fx/cn_1.jpg','整間染上暖暖的紅光，金粉從地上慢慢飄起來'],['紅燈籠夜',2,'fx/cn_2.jpg','房間裡掛滿會輕輕晃的紅燈籠，地上一圈圈暖紅的燈影']]},
+const POOLS={cn:{name:'中華卡池',sub:'中華小惡魔',sets:['cn'],lim:true,fx:[['金粉紅韻',1,'fx/cn_1.jpg','整間染上暖暖的橘紅色調，金光一點一點往上飄'],['紅燈籠夜',2,'fx/cn_2.jpg','關了燈的夜裡，空中飄著點點紅色火星，飄一飄就熄了']]},
   sea:{name:'人魚卡池',sub:'海底人魚屋',sets:['mermaid'],fx:[['泡泡藍調',1,'fx/mermaid_1.jpg','整間染上海底的藍，房間裡飄著泡泡'],['深海天光',2,'fx/mermaid_2.jpg','海面的光斜斜照進來，地上一圈晃動的水波光']]},
   forest:{name:'森林卡池',sub:'森林精靈小屋',sets:['forest'],fx:[['螢火綠光',1,'fx/forest_1.jpg','整間染上森林的綠，螢火蟲在房間裡飛'],['林間葉影',2,'fx/forest_2.jpg','陽光穿過樹葉，地上一片會晃動的葉影']]},gen:{name:'通用',sub:'酒館日常＋萬用（常駐系列）',sets:['daily','basic']}};   // D 11/08：「日常跟萬用系列就是通用裡的，他們兩個是常駐系列」
 // ---------- 限定卡池檔期（D 11/08「要幫現在的兩個限定小屋卡池加時效，之後統一為兩周一輪替」「更新點為周一的凌晨 4:00」）----------

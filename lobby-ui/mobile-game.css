@@ -84,7 +84,7 @@ html.ttm-game body #ttMainDock>button>:is(img,svg){display:none!important}
 html.ttm-game body #ttMainDock>button::before{content:""!important;display:block!important;position:static!important;flex:none;width:30px!important;height:30px!important;margin:0!important;background:center/contain no-repeat!important;image-rendering:pixelated;transform:none!important;border:0!important;box-shadow:none!important;opacity:1!important}
 html.ttm-game body #ttMainDock>#ttHouseBtn::before{background-image:var(--ic-house)!important}
 html.ttm-game body #ttMainDock>#dressBtn::before,html.ttm-game body #ttMainDock>#ttHouseMall::before{background-image:var(--ic-shop)!important}
-html.ttm-game body #ttMainDock>#wardBtn::before{background-image:var(--ic-bag)!important}
+html.ttm-game body #ttMainDock>#wardBtn::before,html.ttm-game body #ttMainDock>#ttHouseDress::before{background-image:var(--ic-bag)!important}
 html.ttm-game body #ttMainDock>#ttgMenu::before{background-image:var(--ic-menu)!important}
 html.ttm-game body #ttMainDock>#ttHouseFx::before{background-image:var(--ic-star)!important}
 html.ttm-game body #ttMainDock>#ttHouseEdit::before{background-image:var(--ic-chair)!important}
@@ -102,6 +102,7 @@ html.ttm-game body #ttMainDock>#ttHouseExpand{order:0}
 html.ttm-game body #ttMainDock>#ttHouseFx{order:1}
 html.ttm-game body #ttMainDock>#ttHouseEdit{order:2}
 html.ttm-game body #ttMainDock>#ttHouseMall{order:4}
+html.ttm-game body #ttMainDock>#ttHouseDress{order:5}   /* 11/24 小屋換裝（自己家、朋友家都有） */
 html.ttm-game body #ttMainDock>#ttgMenu{order:9}
 /* 大廳：小屋、商城、背包、扭蛋＋選單 */
 html.ttm-game:not(.ttg-house) body #ttMainDock>button:not(#ttHouseBtn,#wardBtn,#dressBtn,#ttHouseGacha,#ttgMenu){display:none!important}
@@ -267,6 +268,8 @@ html.ttm-game body #ttHouseTop .tt-house-btn{height:36px!important;min-width:0!i
 html.ttm-game body #ttHouseTop .tt-house-btn span{font-size:12.5px!important;white-space:nowrap!important;position:static!important}
 html.ttm-game body #ttHouseTop .tt-house-btn svg{width:18px!important;height:18px!important}
 html.ttm-game body #ttHouseTop #ttHouseHelp{display:none!important}
+/* 11/24 修：上面 .tt-house-btn 的 display 蓋過了「自己家／別人家才有的鈕」→ 在自己家也冒出讚、下一間、我的小屋 */
+html.ttm-game body:not(.tt-house-visit) #ttHouseTop .tt-visit-only,html.ttm-game body.tt-house-visit #ttHouseTop .tt-own-only{display:none!important}
 html.ttm-game body #ttHouseTop #ttHouseBack{order:-1;background:var(--g-ink)!important;color:#fff!important}
 html.ttm-game body #ttHouseTop #ttHouseBack *{color:#fff!important;stroke:#fff!important}
 html.ttm-game.ttg-edit body #ttHouseTop{display:none!important}

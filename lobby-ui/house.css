@@ -108,7 +108,7 @@ html body.tt-house-xprev .ttc .ttcCard{width:320px;max-width:320px;box-sizing:bo
 #ttHouseKeys kbd{display:inline-block;font:inherit;font-size:11px;line-height:1.4;padding:0 6px;margin:0 2px;border:1.5px solid #fff;border-radius:5px;background:rgba(255,255,255,.14);box-shadow:0 1px 0 rgba(28,33,86,.6)}
 
 /* v504 小屋串門子：在別人家（tt-house-visit）不能佈置、沒有家具店；自己家才有「串門子」「教學」 */
-body.tt-house-visit .tt-house-only,body.tt-house-visit .tt-own-only,body:not(.tt-house-visit) .tt-visit-only{display:none!important}
+body.tt-house-visit .tt-house-only:not(.tt-house-any),body.tt-house-visit .tt-own-only,body:not(.tt-house-visit) .tt-visit-only{display:none!important}
 #ttHouseTop .tt-house-btn[hidden]{display:none!important}
 #ttVisitLike.on{color:#fff;background:linear-gradient(180deg,#FF7AA8,#FF3F80);box-shadow:inset 0 0 0 2px rgba(255,255,255,.55),0 4px 0 var(--sk-ink,#1C2156)}
 #ttVisitLike.on svg{fill:#fff}

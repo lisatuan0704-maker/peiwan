@@ -856,7 +856,7 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(158,134,214,.55)
 .petal{position:fixed;z-index:11;pointer-events:none;width:13px;height:13px;border-radius:62% 0 62% 0;opacity:0;
   box-shadow:inset 0 0 3px rgba(255,255,255,.6);animation:petalFall linear forwards}
 @keyframes petalFall{0%{transform:translate(0,-30px) rotate(0);opacity:0}10%{opacity:.5}90%{opacity:.5}100%{transform:translate(var(--px,50px),104vh) rotate(420deg);opacity:0}}
-body.in-forest .petal{display:none}
+body.in-forest .petal,body.tt-house-on .petal{display:none}   /* 11/23 D：小屋裡不要飄花瓣 */
 
 /* ================= v51:大廳狀態通知 ================= */
 #notifs{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:180;display:flex;flex-direction:column;gap:8px;width:min(330px,90vw);align-items:stretch;pointer-events:none}
@@ -1708,7 +1708,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v566</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v567</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -8283,7 +8283,7 @@ window.__hasCard=myKey?null:false;
 (function(){
   const cols=['#F7C6DB','#F7A8C6','#E9D5EC','#fff','#DBCDEF'];
   function petal(){
-    if(document.hidden||document.body.classList.contains('in-forest')||document.body.classList.contains('mhome-on')) return;
+    if(document.hidden||document.body.classList.contains('in-forest')||document.body.classList.contains('mhome-on')||document.body.classList.contains('tt-house-on')) return;
     const p=document.createElement('div'); p.className='petal';
     p.style.left=Math.random()*100+'vw'; p.style.background=cols[Math.floor(Math.random()*cols.length)];
     p.style.setProperty('--px',(Math.random()*120-60)+'px');
@@ -8920,7 +8920,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/photo-mode.js?v=532"></script><link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=566"><script src="lobby-ui/house.js?v=566"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=566"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=567"><script src="lobby-ui/house.js?v=567"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=567"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>
@@ -8940,7 +8940,7 @@ const root=document.getElementById('voiceInbox');if(root)mountVoiceInbox({root,a
 <script type="module" src="lobby-ui/support.mjs?v=440"></script>
 <link rel="stylesheet" href="lobby-ui/mobile-app.css?v=532"><link rel="stylesheet" href="lobby-ui/mobile-theme.css?v=535">
 <script src="lobby-ui/mobile-app.js?v=560"></script>
-<link rel="stylesheet" href="lobby-ui/mobile-game.css?v=560"><script src="lobby-ui/mobile-game.js?v=560"></script>
+<link rel="stylesheet" href="lobby-ui/mobile-game.css?v=567"><script src="lobby-ui/mobile-game.js?v=560"></script>
 <script src="lobby-ui/idle-income.js?v=505"></script>
 <script src="lobby-ui/vip-card.js?v=513"></script>
 <script src="lobby-ui/companion-celebrate.js?v=557"></script>
