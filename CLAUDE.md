@@ -1,5 +1,17 @@
 # 小小酒館修改紀錄
 
+## 2026/11/25 v569 Firebase 帳單：語音收件匣每 5 秒問一次（Claude；網站這半邊已修，主機那半邊待做）
+- 帳單（11/1～24）：Firebase 即時資料庫 1,789 元，從 11/13 一天約 90 元漲到 11/23 約 250 元，預估整月 2,926 元。
+- 流量分析（firebase database:profile，11/25 06:21 台灣時間 60 秒，結果 C:\tinytavern\profile-0625.txt）：`/orderVoiceV1` 一分鐘被整包讀 88 次、每次 76KB＝6.7MB／分鐘（約一天 9.7GB），其他路徑都很小。
+- 原因：語音主機 `/v1/voice/inbox`（rehearsal.cjs）每次都 `ref('orderVoiceV1').once('value')` 讀整份語音資料（單越多越大，所以費用一直漲）；
+  網站 voice-rehearsal.mjs mountVoiceInbox 在大廳與冒險者手札每 5 秒問一次 → 每個開著的分頁一天約 1.3GB。小屋、大廳走路都不是主因。
+- 網站修法（v569）：收件匣看情況問——有單在等接／正在玩／20 分鐘內開始＝15 秒（背景 60 秒），其他 3 分鐘（背景 10 分鐘），單快開始前自己提早醒來；
+  下單／確認語音成功（order-voice.mjs 發 tt-voice-refresh）、切回分頁時馬上問。order-voice.mjs：登記／確認語音卡住時越試越慢（5→10→20→40 秒，確認最多 1 分鐘、登記最多 5 分鐘）；頭像框時數 60 秒→5 分鐘且背景不問。
+- 驗證：scratchpad inbox569.test.mjs 19 項（假時鐘數間隔、提醒照常、重試放慢）；瀏覽器開大廳 32 秒只問 1 次（舊版 6～7 次）、大廳與手札無錯誤。
+- 主機待做：inbox 改成只讀這位的單（orders 依 customerId 查＋各單 jobs/<id>/data＋inboxHidden/<自己>），registerOrder 不要整包讀 secureV1，approve／check 也不要整包讀；舊單／舊 jobs 定期清。
+- Firebase 工具：C:\tinytavern\tools-firebase（node_modules\.bin\firebase.cmd，D 已登入）；Claude 的 Bash 裝到 AppData 的東西 D 的終端機看不到，要裝在 C:\tinytavern 底下。
+- 版本：verTag v569、ver.json 569、lobby-view 569、voice-rehearsal.mjs?v=569、order-voice.mjs?v=569（大廳與手札）、partner verTag v425／PT_VER 26。
+
 ## 2026/11/22 v562 設定「串門子不看翻卡」改名「隨機拜訪不看翻卡」（Claude）
 - D 11/08 說「串門子」像中國用語、小屋一律叫「拜訪」（v506）；v535 新加的設定列又寫了「串門子」→ lobby.html 設定列、house.js 開關讀報名稱一起改。程式註解裡的「串門子」客人看不到，沒動。
 - 版本：verTag v562、ver.json 562、lobby-view 562、fixed-view.js 轉址 v=562（lobby 載入 fixed-view.js?v=562）、house.js?v=562（VER 不動，room.html 沒改）。
