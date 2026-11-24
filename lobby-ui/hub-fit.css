@@ -32,6 +32,29 @@ html.tt-desk body #ttHub #frM #frBody.tt-split .contact-unread{font-size:11px!im
 html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=friend] .contact-actions,
 html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=staff] .contact-actions{display:none!important}
 html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry .contact-action{font-size:12px!important;padding:3px 9px!important}
+/* 邀請／封鎖／屏蔽列（左欄只有兩百多像素）：名字自己一排、狀態小字在下一排；
+   邀請的三顆按鈕再往下一排、靠左對齊名字；封鎖／屏蔽只有一顆按鈕，跟小字同一排、靠右 */
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=request],
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=block],
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=hide]{grid-template-columns:46px minmax(0,1fr) auto!important;column-gap:9px!important;row-gap:2px!important;cursor:default}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=request]:hover,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=block]:hover,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=hide]:hover{transform:none}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=request] .contact-info,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=block] .contact-info,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=hide] .contact-info{display:contents!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=request] .contact-avatar,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=block] .contact-avatar,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=hide] .contact-avatar{grid-column:1;grid-row:1/span 3;align-self:center}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=request] .contact-info strong,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=block] .contact-info strong,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=hide] .contact-info strong{grid-column:2/-1;grid-row:1;min-width:0}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=request] .contact-info .contact-presence{grid-column:2/-1;grid-row:2;min-width:0;margin:0!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=request] .contact-actions{grid-column:2/-1;grid-row:3;justify-content:flex-start!important;margin-top:4px!important}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=block] .contact-info .contact-presence,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=hide] .contact-info .contact-presence{grid-column:2;grid-row:2;min-width:0;margin:0!important;align-self:center}
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=block] .contact-actions,
+html.tt-desk body #ttHub #frM #frBody.tt-split .contact-entry[data-kind=hide] .contact-actions{grid-column:3;grid-row:2}
 html.tt-desk body #ttHub #frM #frBody.tt-split .contacts-empty{padding:12px!important}
 
 /* 右欄 */
