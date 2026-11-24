@@ -35,4 +35,5 @@ node test-phase25.cjs rules-before-v539.json $NEW || rc=1
 node test-phase26.cjs rules-before-v552.json $NEW || rc=1
 node test-phase27.cjs rules-before-v554.json $NEW || rc=1
 node test-phase28.cjs rules-before-cn1121.json $NEW || rc=1
+node test-phase29.cjs rules-before-inboxlite1125.json $NEW || rc=1
 exit $rc

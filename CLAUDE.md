@@ -8,7 +8,15 @@
 - 網站修法（v569）：收件匣看情況問——有單在等接／正在玩／20 分鐘內開始＝15 秒（背景 60 秒），其他 3 分鐘（背景 10 分鐘），單快開始前自己提早醒來；
   下單／確認語音成功（order-voice.mjs 發 tt-voice-refresh）、切回分頁時馬上問。order-voice.mjs：登記／確認語音卡住時越試越慢（5→10→20→40 秒，確認最多 1 分鐘、登記最多 5 分鐘）；頭像框時數 60 秒→5 分鐘且背景不問。
 - 驗證：scratchpad inbox569.test.mjs 19 項（假時鐘數間隔、提醒照常、重試放慢）；瀏覽器開大廳 32 秒只問 1 次（舊版 6～7 次）、大廳與手札無錯誤。
-- 主機待做：inbox 改成只讀這位的單（orders 依 customerId 查＋各單 jobs/<id>/data＋inboxHidden/<自己>），registerOrder 不要整包讀 secureV1，approve／check 也不要整包讀；舊單／舊 jobs 定期清。
+- 主機（ops/deploy-inboxlite-1125.sh，security-v428 4a7c9cd，等 D 在 DigitalOcean 主機 root 終端機貼）→ tinytavern-service:20261125-inboxlite：
+  新 inbox-lite.cjs：收件匣只讀冒險者綁定兩格、這位的單（老闆用 orders 依 customerId 查；冒險者讀 orders）、最新 20 張＋要隱藏的單的 jobs/<id>/data、自己的 inboxHidden；
+  /v1/voice/check 只讀 staffAccounts／staffBindings；registerOrder 的 secureFor 只讀 members／owners／characters 名字（不整包讀 secureV1）；
+  新 worker-skip.cjs：process() 回 deleted 的單這次開機內不再每 30 秒重跑（重開機各跑一次）。
+  驗證：新舊逐項比對 31 項（收件匣 8 種身分、隱藏 8 種、點單檢查 4 種、語音登記 10 種）回應與資料庫結果一模一樣、新版 0 次整包讀；新測試 inbox-lite-1125.test.cjs 9 項（舊程式 5 項失敗）；
+  主機原本測試 138 項照過；工作迴圈實跑 23 張收掉的單：舊版每輪 46 次租約交易、新版第二輪起 0；假主機演練（TT_ROOT）通過，重貼／對不上／已部署三種都會停。
+  主機副本：session 68683f03 的 framefix/root 少了 voicepool／interviewdm（不是主機實況），插入點也對過 voicepool、roomstay、interviewdm、hourfix 版本。
+  ⚠ 還沒改：registerOrder／approveOrder／recordTime 仍對整個 orderVoiceV1 做 transaction（每次動作一次，不是輪詢）；store.pending()／reconcileBookingLifecycle 每輪各讀一次整個 orders（單越多越大，之後要歸檔舊單，注意 syncCommerce 會把還在 commerce 的單重建）。
+- 規則第二十九批（harden-phase29、test-phase29 8 項；快照 rules-before-inboxlite1125.json）：orderVoiceV1/orders 加 .indexOn customerId（主機依老闆查單時只傳那位的），讀寫權限不變。沒發布也能用（Firebase 會整包 orders 傳給主機再挑）。
 - Firebase 工具：C:\tinytavern\tools-firebase（node_modules\.bin\firebase.cmd，D 已登入）；Claude 的 Bash 裝到 AppData 的東西 D 的終端機看不到，要裝在 C:\tinytavern 底下。
 - 版本：verTag v569、ver.json 569、lobby-view 569、voice-rehearsal.mjs?v=569、order-voice.mjs?v=569（大廳與手札）、partner verTag v425／PT_VER 26。
 

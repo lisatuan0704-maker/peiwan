@@ -960,7 +960,12 @@
     },
     "orderVoiceV1": {
       ".read": false,
-      ".write": false
+      ".write": false,
+      "orders": {
+        ".indexOn": [
+          "customerId"
+        ]
+      }
     },
     "socialV1": {
       "control": {
