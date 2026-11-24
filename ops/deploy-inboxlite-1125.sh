@@ -10,6 +10,7 @@ set -euo pipefail
 export PYTHONIOENCODING=utf-8
 R="${TT_ROOT:-}"
 TAG=20261125-inboxlite
+# v2：docker 舊紀錄被清掉時改看系統紀錄（第一版在主機停在「找不到 BOOKING_ROOM_READY」，沒有變動）
 UNIT=$R/etc/systemd/system/tinytavern-service.service
 say(){ printf '\n== %s\n' "$*"; }
 CUR=$(grep -o 'tinytavern-service:[A-Za-z0-9._-]*' "$UNIT" | head -1 | cut -d: -f2)
@@ -247,8 +248,24 @@ JS
 say "核對主機上的程式"
 python3 "$T0/patch.py" check "$SRC/order-voice-bot" || { rm -rf "$T0"; exit 1; }
 if [ -z "$R" ]; then
-  PRE=$(docker logs tinytavern-service 2>&1 | grep -xE '(BOOKING_ROOM_READY|ORDER_NOTIFY_READY|STAFF_DM_READY|VIP_CELEBRATE_READY|ROLES_STARTED|COUNTER_STARTED|RECRUIT_STARTED)' | sort -u || true)
-  echo "$PRE" | grep -qx BOOKING_ROOM_READY || { rm -rf "$T0"; echo "目前的服務狀態不明（找不到 BOOKING_ROOM_READY），為了安全停止，正式服務沒有變動。請拍給 Claude。"; exit 1; }
+  MARK='(BOOKING_ROOM_READY|ORDER_NOTIFY_READY|STAFF_DM_READY|VIP_CELEBRATE_READY|ROLES_STARTED|COUNTER_STARTED|RECRUIT_STARTED)'
+  PRE=$(docker logs tinytavern-service 2>&1 | grep -xE "$MARK" | sort -u || true)
+  ST=''
+  if ! echo "$PRE" | grep -qx BOOKING_ROOM_READY; then
+    # v2（11/25 第一次貼時停在這裡）：主機開了好幾天，docker 的舊紀錄可能被清掉 → 改看系統紀錄裡「這次啟動之後」的標記
+    ST=$(docker inspect -f '{{.State.StartedAt}}' tinytavern-service 2>/dev/null || true)
+    SINCE=$(date -d "$ST" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || true)
+    if [ -n "$SINCE" ]; then PRE=$(journalctl -u tinytavern-service --since "$SINCE" -o cat --no-pager 2>/dev/null | grep -xE "$MARK" | sort -u || true); fi
+  fi
+  if ! echo "$PRE" | grep -qx BOOKING_ROOM_READY; then
+    say "找不到語音主機的啟動紀錄，先不換版（正式服務沒有變動）。下面這段請拍給 Claude："
+    docker ps -a --filter name=tinytavern-service --format '{{.Names}}｜{{.Status}}｜{{.Image}}' 2>/dev/null || true
+    echo "啟動時間：${ST:-?}｜docker 紀錄行數：$(docker logs tinytavern-service 2>&1 | wc -l)｜紀錄設定：$(docker inspect -f '{{json .HostConfig.LogConfig}}' tinytavern-service 2>/dev/null || true)"
+    echo "系統紀錄裡的啟動標記："; journalctl -u tinytavern-service -o cat --no-pager 2>/dev/null | grep -xE "$MARK" | sort | uniq -c || true
+    echo "最近的紀錄："; docker logs --tail 12 tinytavern-service 2>&1 | grep -v -i webhook | cut -c1-150 || true
+    rm -rf "$T0"; exit 1
+  fi
+  echo "啟動標記：$(echo $PRE)"
   code(){ curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "http://127.0.0.1:8081$1" || true; }
   P1=$(code /v1/voice/session);P2=$(code /v1/rooms/session);P3=$(code /v1/voice/accept);P4=$(code /v1/voice/inbox)
   echo "重啟前：voice=$P1 rooms=$P2 accept=$P3 inbox=$P4"
