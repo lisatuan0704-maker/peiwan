@@ -8,7 +8,7 @@
 - 網站修法（v569）：收件匣看情況問——有單在等接／正在玩／20 分鐘內開始＝15 秒（背景 60 秒），其他 3 分鐘（背景 10 分鐘），單快開始前自己提早醒來；
   下單／確認語音成功（order-voice.mjs 發 tt-voice-refresh）、切回分頁時馬上問。order-voice.mjs：登記／確認語音卡住時越試越慢（5→10→20→40 秒，確認最多 1 分鐘、登記最多 5 分鐘）；頭像框時數 60 秒→5 分鐘且背景不問。
 - 驗證：scratchpad inbox569.test.mjs 19 項（假時鐘數間隔、提醒照常、重試放慢）；瀏覽器開大廳 32 秒只問 1 次（舊版 6～7 次）、大廳與手札無錯誤。
-- 主機（ops/deploy-inboxlite-1125.sh，security-v428 4a7c9cd，等 D 在 DigitalOcean 主機 root 終端機貼）→ tinytavern-service:20261125-inboxlite：
+- 主機（ops/deploy-inboxlite-1125.sh v2，security-v428 f2c5190，等 D 在 DigitalOcean 主機 root 終端機貼；第一版 4a7c9cd 在主機停在「找不到 BOOKING_ROOM_READY」沒變動——主機開 5 天 docker 舊紀錄被清，v2 改看 journalctl）→ tinytavern-service:20261125-inboxlite：
   新 inbox-lite.cjs：收件匣只讀冒險者綁定兩格、這位的單（老闆用 orders 依 customerId 查；冒險者讀 orders）、最新 20 張＋要隱藏的單的 jobs/<id>/data、自己的 inboxHidden；
   /v1/voice/check 只讀 staffAccounts／staffBindings；registerOrder 的 secureFor 只讀 members／owners／characters 名字（不整包讀 secureV1）；
   新 worker-skip.cjs：process() 回 deleted 的單這次開機內不再每 30 秒重跑（重開機各跑一次）。
