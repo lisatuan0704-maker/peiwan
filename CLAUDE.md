@@ -1,5 +1,26 @@
 # 小小酒館修改紀錄
 
+## 2026/11/26 v570 客人「明明換了 VIP1 頭像框」，闆卡還是花圈框（Claude）
+- D 轉客人回報＋截圖：闆卡上是花圈框、下面膠囊寫「VIP 1 · 迎賓」。v518 修過同一句抱怨（VIP 框沒發佈），這次是剩下的三條路：
+  1. 框只記在這台裝置（localStorage tt_frame），而且每次進場 publishProfile 都整包帶 frm → 換手機、換瀏覽器、清過網站資料後，
+     那邊預設的花圈框（wr1 不用任何條件就發佈）會寫上去蓋掉原本選的 VIP 框；自己的闆卡在 wr1 時也不看伺服器。兩台裝置輪流開就輪流互蓋。
+  2. VIP 資料（訂單）超過 5 秒才到：左上角頭像框只在載入後 5 秒補套一次，之後靠 tt-companion-rewards 事件順便重套；
+     v569 把那個事件從 1 分鐘拉成 5 分鐘（而且分頁在背景不發）→ 左上角最久停在花圈框 5 分鐘，pub.vip 也沒補發。
+  3. frm 跟 vip／成就／DC 名字／頭貼同一包 update，任何一欄被規則擋，框也跟著沒寫進去，而且沒有聲音。
+- 修法（lobby.html）：伺服器上的 lobby/<闆卡>/pub/frm 才算數。
+  ・publishProfile 不再帶 frm；新增 publishFrame()＝單獨 set pub/frm，只有「親手點選」和「進場對帳」會呼叫。
+  ・frameSync(remote)：自己的 lobby 資料第一次到（lobbyWant 的監聽裡，k===myKey）對一次——伺服器有認得的框就套回這台（寫回 tt_frame）；
+    伺服器沒有 → 把這台的補上去；這台沒對過帳（沒有 tt_frame_sync）而且「這台是別的框、伺服器是花圈框」→ 當作被蓋掉，以這台為準補寫一次。
+    解鎖資料還沒到（frameUsable false）就先不動，updateVipChip 與 tt-companion-rewards 會再叫一次。對完帳寫 tt_frame_sync=1。
+  ・對完帳之後這次開頁不再跟伺服器（另一台同時改，要重新整理才跟）；因為例行發佈不帶 frm，開著的舊分頁不會把別台的選擇蓋回去。
+  ・updateVipChip：frameUsable() 的結果變了就 frameSync()＋applyFrame()（不用等 5 秒或 5 分鐘）；VIP 等級變了補一次 publishProfile。
+  ・自己的闆卡（drawFullCard）：還沒對完帳時用 pub.frm，不用這台記的。
+- 已經被蓋掉的客人：在「當初選 VIP 框的那台裝置」重新整理一次就會自動補寫回去；或在任何一台重新點一次框（之後換裝置都會跟著）。
+- 沒做：升上 VIP 不會自動換框（要自己到「更換頭像框」點），VIP 視窗只有預覽圖；聊天氣泡 tt_bub／pub.bub 是同一種「只記在這台＋整包發佈」的寫法，還沒改。
+- 測試：scratchpad frlay/_frtest.html（把 lobby.html 裡的對帳區塊原文抽出來、假資料庫，18 種情境全過：新裝置、舊裝置被蓋、VIP 資料晚到、另一台改選、沒有闆卡不寫…）；
+  本機開大廳（沒登入、不寫資料）確認沒有新的主控台錯誤、__frameSync 套用後左上角與記號正確。沒有用真帳號實測發佈。
+- 版本：verTag v570、ver.json 570、lobby-view 570。
+
 ## 2026/11/25 v569 Firebase 帳單：語音收件匣每 5 秒問一次（Claude；網站這半邊已修，主機那半邊待做）
 - 帳單（11/1～24）：Firebase 即時資料庫 1,789 元，從 11/13 一天約 90 元漲到 11/23 約 250 元，預估整月 2,926 元。
 - 流量分析（firebase database:profile，11/25 06:21 台灣時間 60 秒，結果 C:\tinytavern\profile-0625.txt）：`/orderVoiceV1` 一分鐘被整包讀 88 次、每次 76KB＝6.7MB／分鐘（約一天 9.7GB），其他路徑都很小。

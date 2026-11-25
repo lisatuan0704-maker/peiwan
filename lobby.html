@@ -1708,7 +1708,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v569</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v570</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2491,7 +2491,8 @@ function publishProfile(){
         }
       } }catch(e){}
     /* v518：curFrame 在頭像框那段的函式裡面，這裡一直讀不到 → VIP 框從來沒發佈，闆卡與別人看到的都是花圈框；改用 __curFrame，解鎖條件確認了才發佈 */
-    try{ const cf=window.__curFrame&&window.__curFrame(); if(cf&&(cf==='wr1'||(window.__frameUsable&&window.__frameUsable()))) pub.frm=cf; }catch(e){}
+    /* v570：頭像框不再跟這一包一起發佈。每次進場都把「這台裝置記的框」寫上去的話，換手機、換瀏覽器時那邊預設的花圈框會把原本選的 VIP 框蓋掉；
+       而且這一包只要有一欄被擋，框也跟著寫不進去。現在只有親手點選、或進場對帳時才單獨寫 pub/frm（頭像框那段的 publishFrame／frameSync） */
     try{ if(typeof curBub!=='undefined'&&curBub) pub.bub=bubActiveKey(); }catch(e){}
     if(!Object.keys(pub).length) return;
     const clean=(typeof dollSafe==='function')?dollSafe(pub):pub;
@@ -2883,7 +2884,7 @@ function drawFullCard(b){
     const side=stage.querySelector('.pcBeside');
     const isMe=!!(myKey&&popTarget&&popTarget.myKey===myKey);
     const photo=isMe?ttMyPhoto():ttPhotoOf(b);
-    const myFr=isMe&&window.__curFrame?window.__curFrame():null;   /* v518：自己的闆卡直接用目前戴的框（發佈晚一點到也不會先看到花圈框） */
+    const myFr=isMe&&window.__curFrame&&(!window.__frameSynced||window.__frameSynced())?window.__curFrame():null;   /* v518：自己的闆卡直接用目前戴的框（發佈晚一點到也不會先看到花圈框） */
     const fid=ttFrameId(myFr&&(myFr==='wr1'||(window.__frameUsable&&window.__frameUsable()))?myFr:pub.frm);
     if(fid==='wr1'){ const inner=ttFrame(stage,{anim:isMe,box:(photo?TTF_CARDPIC:TTF_CARD)}); ttFill(inner,b.doll,photo); }
     else{ const inner=ttFrame(stage,{art:fid,photo:!!photo}); ttFill(inner,b.doll,photo); }
@@ -6023,7 +6024,7 @@ if(db){
     let dirty=false;
     want.forEach(k=>{
       if(lobbyExtraOff[k]||!/^[A-Za-z0-9_-]{1,200}$/.test(k))return;
-      const ref=db.ref(ROOT+'/lobby/'+k),h=s=>{if(TTWorldScope.isolated)return;const v=s.val();if(v)lobbyExtra[k]=v;else delete lobbyExtra[k];lobbyMerge();};
+      const ref=db.ref(ROOT+'/lobby/'+k),h=s=>{if(TTWorldScope.isolated)return;const v=s.val();if(v)lobbyExtra[k]=v;else delete lobbyExtra[k];lobbyMerge();if(v&&k===myKey){const fr=v.pub?v.pub.frm:undefined;try{if(window.__frameSync)window.__frameSync(fr);else window.__framePending={frm:fr};}catch(e){}}};   /* v570：頭像框以伺服器上的為準 */
       ref.on('value',h,()=>{});lobbyExtraOff[k]=()=>ref.off('value',h);
     });
     Object.keys(lobbyExtraOff).forEach(k=>{
@@ -7094,6 +7095,38 @@ const SFX=(function(){
   applyFrame();
   /* VIP 資料晚到時補套一次 */
   setTimeout(function(){ try{ if(curFrame!=='wr1') applyFrame(); }catch(e){} },5000);
+  /* v570 頭像框跟著帳號走（D 11/26：客人說明明換了 VIP1，闆卡還是花圈框）。
+     以前框只記在這台裝置（tt_frame），而且每次進場都整包發佈：換手機、換瀏覽器、清過網站資料之後，
+     那邊預設的花圈框會被發佈出去，把原本選的 VIP 框蓋掉；兩台裝置輪流開就輪流互蓋。
+     現在伺服器上的 pub/frm 才算數：自己的大廳資料第一次到時對一次（frameSync），之後只有親手點選才會寫。
+     tt_frame_sync＝這台裝置已經對過帳。沒對過的舊裝置：伺服器是花圈框、這台選的是別的 → 當作被蓋掉，以這台為準補寫一次。 */
+  let frameSynced=false, frameRemote, frameRemoteSeen=false;
+  window.__frameSynced=function(){ return frameSynced; };
+  function publishFrame(){
+    try{
+      if(typeof db==='undefined'||!db||!myKey) return;
+      if(window.__hasCard===null){ setTimeout(publishFrame,2000); return; }
+      if(window.__hasCard!==true) return;
+      if(curFrame!=='wr1'&&!frameUsable()) return;
+      db.ref(ROOT+'/lobby/'+myKey+'/pub/frm').set(curFrame).catch(function(){});
+    }catch(e){}
+  }
+  function frameSync(remote){
+    if(arguments.length){ frameRemote=remote; frameRemoteSeen=true; }
+    if(frameSynced||!frameRemoteSeen) return;
+    const r=(typeof frameRemote==='string'&&FRAMES2.some(x=>x.cls===frameRemote))?frameRemote:null;
+    let done=false; try{ done=localStorage.getItem('tt_frame_sync')==='1'; }catch(e){}
+    let push=false;
+    if(!r||(r==='wr1'&&curFrame!=='wr1'&&!done)){
+      if(curFrame!=='wr1'&&!frameUsable()) return;   /* 解鎖資料（VIP、夥伴時數）還沒到：先不動，資料到了會再對一次 */
+      push=true;
+    }else if(r!==curFrame){ curFrame=r; try{localStorage.setItem('tt_frame',curFrame);}catch(e){} }
+    frameSynced=true; try{localStorage.setItem('tt_frame_sync','1');}catch(e){}
+    if(push) publishFrame();
+    applyFrame(); try{ buildFrames2(); }catch(e){}
+  }
+  window.__frameSync=frameSync;
+  if(window.__framePending){ const _fp=window.__framePending; window.__framePending=null; try{ frameSync(_fp.frm); }catch(e){} }
   function sparkBurst(el,color){
     const r=el.getBoundingClientRect();
     for(let k=0;k<10;k++){ const s=document.createElement('div'); s.className='spk3';
@@ -7128,7 +7161,8 @@ const SFX=(function(){
         if(frameSaving)return;
         if(!f.own){ cell.classList.remove('shake'); void cell.offsetWidth; cell.classList.add('shake'); return; }
         if(f.companion){frameSaving=true;try{const result=await window.TTVoiceOrders.equipFrame(f.cls);if(result.key!==myKey||result.frameId!==f.cls)throw Error('ACCOUNT_CHANGED')}catch(e){toast('尚未完成解鎖或儲存失敗，請稍後重試');return}finally{frameSaving=false}}
-        curFrame=f.cls; try{localStorage.setItem('tt_frame',curFrame);}catch(e){}
+        curFrame=f.cls; try{localStorage.setItem('tt_frame',curFrame);localStorage.setItem('tt_frame_sync','1');}catch(e){}
+        frameSynced=true; publishFrame();   /* v570：親手選的才寫到伺服器 */
         applyFrame(); buildFrames2(gid);
         const av=document.getElementById('h2ava'); if(av) sparkBurst(av,'#F6CE5A');
         try{ SFX.clink(); }catch(e){}
@@ -7138,7 +7172,7 @@ const SFX=(function(){
   }
   window.__openFrames=()=>{ buildFrames2('fgrid'); gOpen('frameM'); };
   window.__buildFrames2=buildFrames2;
-  window.addEventListener('tt-companion-rewards',()=>{buildFrames2();applyFrame();});
+  window.addEventListener('tt-companion-rewards',()=>{frameSync();buildFrames2();applyFrame();});
   document.getElementById('h2ava').addEventListener('click',()=>{ if(window.bookOpen) bookOpen(); else window.__openFrames(); });
   /* --- VIP 系統(v407 門檻定案:3000/10000/15000/22000/30000;改 VIP_CFG 的 need,admin.html VIP_TIERS_ADMIN 同步)
      v491 點單優惠券停用，改為每升一級送一次回饋金幣 gift（金額改這裡要同步 harden-phase8.cjs 的 GIFT 並重新發布規則） --- */
@@ -7167,12 +7201,18 @@ const SFX=(function(){
     return {spent,lv,cur:lv?VIP_CFG[lv-1]:null,next:VIP_CFG[lv]||null};
   }
   window.__vipInfo=vipInfo;
-  let _lastVip=null, _vipArmed=false;
+  let _lastVip=null, _vipArmed=false, _lastFrameOk=null, _lastPubVip=null;
   setTimeout(()=>{ _vipArmed=true; },3500);   // 載入後才開始偵測升級,避免一進場就放彩帶
   function updateVipChip(){
     const info=vipInfo(), chip=document.getElementById('h2vip');
     if(chip){ chip.innerHTML='<img class="h2ic" alt=""> '+(info.lv?('VIP '+info.lv+' · '+info.cur.nm):'VIP 會員');
       const im=chip.querySelector('img'); if(im) im.src=AICON.crown; }
+    /* v570：VIP 資料晚到或剛升級時，頭像框「能不能戴」的結果變了 → 還沒對完的頭像框再對一次，並重畫左上角的頭像框
+       （以前只在載入後 5 秒補套一次，資料再晚到就一直是花圈框）；VIP 等級變了也補發佈，別人看到的闆卡才會跟上 */
+    try{ const fu=!!(window.__frameUsable&&window.__frameUsable());
+      if(fu!==_lastFrameOk){ _lastFrameOk=fu; if(window.__frameSync) window.__frameSync();
+        if(fu&&window.__curFrame&&window.__curFrame()!=='wr1'&&window.applyFrame) window.applyFrame(); } }catch(e){}
+    if(info.lv!==_lastPubVip){ const first=_lastPubVip===null; _lastPubVip=info.lv; if(!first) setTimeout(function(){ try{ publishProfile(); }catch(e){} },600); }
     /* 升級慶祝(僅在載入後、等級真的上升時) */
     if(_lastVip===null || !_vipArmed){ _lastVip=info.lv; }
     else if(info.lv>_lastVip){ _lastVip=info.lv;
