@@ -19,6 +19,11 @@
 - 規則第二十九批（harden-phase29、test-phase29 8 項；快照 rules-before-inboxlite1125.json）：orderVoiceV1/orders 加 .indexOn customerId（主機依老闆查單時只傳那位的），讀寫權限不變。沒發布也能用（Firebase 會整包 orders 傳給主機再挑）。
 - Firebase 工具：C:\tinytavern\tools-firebase（node_modules\.bin\firebase.cmd，D 已登入）；Claude 的 Bash 裝到 AppData 的東西 D 的終端機看不到，要裝在 C:\tinytavern 底下。
 - 版本：verTag v569、ver.json 569、lobby-view 569、voice-rehearsal.mjs?v=569、order-voice.mjs?v=569（大廳與手札）、partner verTag v425／PT_VER 26。
+- 上線（11/25）：網站 v569 已推、D 已貼主機 v2（20261125-inboxlite 健康）、已發布規則第二十九批。量測（C:\tinytavern\profile-*.txt，報表解析 scratchpad prof.py）：
+  資料庫下載每分鐘 修正前 7.1MB → 早上 08:39 穩定後 0.97MB → 晚上 21:30（3 分鐘）0.50MB；整包讀 /orderVoiceV1 從 88 次／分 → 0。
+  21:30 剩下的九成是收件匣：兩個 Discord 身分（635128227664494644、742724276934672425）從早上到晚上一直約每 6 秒問一次＝還開著 v569 以前的舊分頁（新版最快 15 秒），
+  它們每次讓主機整包讀 orderVoiceV1/orders（冒險者那邊）＋最多 20 張 jobs。主機自己每 30 秒的 pending／reconcile 也整包讀 orders，單越多越大 → 之後要做「收掉的語音單搬去封存」。
+  ⚠ 21:30 那次大廳幾乎沒人（3 分鐘只有 1 次走路寫入），不是人多時的樣本；位置同步的流量要另外找人多的時段量。
 
 ## 2026/11/22 v562 設定「串門子不看翻卡」改名「隨機拜訪不看翻卡」（Claude）
 - D 11/08 說「串門子」像中國用語、小屋一律叫「拜訪」（v506）；v535 新加的設定列又寫了「串門子」→ lobby.html 設定列、house.js 開關讀報名稱一起改。程式註解裡的「串門子」客人看不到，沒動。
