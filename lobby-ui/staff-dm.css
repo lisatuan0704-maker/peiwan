@@ -16,6 +16,14 @@
 .sdm-badge{position:absolute;right:-6px;top:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--pink);color:#fff;font-style:normal;font-size:11px;font-weight:900;display:grid;place-items:center;border:2px solid var(--ink);padding:0 4px}
 /* v523：手札夜間模式整張卡片的字會變淺色，但私訊框和泡泡是白底 → 白底區塊固定用深色字 */
 .sdm-pane,.sdm-bubble,.sdm-pane-head{color:var(--ink)}
+/* 手札 v426：白底區塊的字改成寫死色碼＋!important，不管夜間模式之後再加什麼規則都不會被蓋成淺色；
+   回覆輸入框在白底那一列，夜間也固定白底深色字。直接落在深色卡片上的標題、說明、空白提示則固定用淺色 */
+.sdm .sdm-pane,.sdm .sdm-pane-head,.sdm .sdm-pane-head b,.sdm .sdm-bubble,.sdm .sdm-row,.sdm .sdm-row-top b,.sdm .sdm-st-btn{color:#1C2156!important}
+.sdm .sdm-time,.sdm .sdm-last,.sdm .sdm-row-top small,.sdm .sdm-pane .sdm-empty{color:#5C6196!important}
+.sdm .sdm-input{background:#fff!important;color:#1C2156!important;border-color:#B9C2EE!important}
+.sdm .sdm-input::placeholder{color:#8389B5!important}
+body.dark .sdm .sdm-head h2{color:#F0EAFB!important}
+body.dark .sdm .sdm-hint,body.dark .sdm .sdm-list>.sdm-empty{color:#B9ADD6!important}
 .sdm-pane{display:flex;flex-direction:column;border:2px solid var(--ink);border-radius:14px;background:linear-gradient(170deg,#fff,#F6FAFF);box-shadow:inset 0 0 0 2px #CFEFFF;min-width:0;overflow:hidden}
 .sdm-pane>.sdm-empty{margin:auto}
 .sdm-pane-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 14px;border-bottom:2px solid #D3D8F2;background:#fff}
