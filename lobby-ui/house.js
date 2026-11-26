@@ -24,7 +24,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const say=m=>{try{toast(m);}catch(_){}};
 const VER='567';
 const SIZE_NAME={S:'小件',M:'中件',L:'大件'},TIER_NAME={1:'簡單',2:'標準',3:'精緻'};
-const S={fx:null,fxHost:{},fxOpen:false,fxTry:null,fxT:0,fxRemote:false,on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',thumbs:{},sign:null,key:null,
+const S={fx:null,fxHost:{},fxOpen:false,fxTry:null,fxT:0,fxRemote:false,on:false,frame:null,cat:null,byKey:{},inv:{},layout:null,subs:[],mode:'walk',saveT:0,buying:false,shopSet:'酒館日常',shopKind:'all',bagKind:'all',bagQ:'',bagOpen:false,newShown:new Map(),thumbs:{},sign:null,key:null,
   vis:'public',visit:null,joining:false,seen:new Set(),panel:false,visitors:{},friends:null,
   hk:null,seat:null,seatRef:null,room:{},dolls:{},dollWait:{},dollW:{},chatSeen:new Set(),chatLog:[],joinedAt:0,pubT:0,beatT:0,last:null,lastPub:0,leaving:false};
 const VIS_NAME={public:'公開',friends:'只限好友',private:'不公開'};
@@ -69,6 +69,46 @@ function isNew(k){const n=newGet();return !!n&&(!!n.k[k]||invTop(k)>Math.max(n.b
 function newAdd(keys){const n=newGet(true);if(!n)return;for(const k of keys)if(S.byKey[k]||!S.cat)n.k[k]=1;
  const ks=Object.keys(n.k);if(ks.length>60)for(const k of ks.slice(0,ks.length-60))delete n.k[k];newPut();}
 function newClear(k){const n=newGet(true);if(!n||(!n.k[k]&&!isNew(k)))return;delete n.k[k];n.c[k]=Math.max(SNOW(),invTop(k));newPut();}
+// v572 D 11/26：NEW 只在「這一次」打開佈置時顯示——收起佈置（完成／Esc／離開小屋）就把「這次清單上列出來過的 NEW」當成看過，下次打開不用一件一件點掉。
+// 只算真的列出來超過 NEW_SEEN_MS 的（S.newShown：家具 → 第一次列出來的時間）；停在別的分類沒列到的、程式自己切回散步（進門、開場教學）的都不算，留到下次。
+const NEW_SEEN_MS=700;
+function newSeenShown(){const mk=S.key||KEY(),sh=S.newShown;if(!mk||S.visit||!sh.size)return;const n=newGet(true);if(!n)return;const now=performance.now();let ch=false;
+ for(const [k,t] of sh)if(now-t>=NEW_SEEN_MS&&(n.k[k]||isNew(k))){delete n.k[k];n.c[k]=Math.max(SNOW(),invTop(k));ch=true;}
+ if(ch)newPut();}
+// v572「我的家具」分類＋搜尋（D 11/26：家具種類越來越多，很難找到想要的）。牆上的一律「壁掛」；落地的照下面這張表（一件可以放兩類，例如吊床＝椅子＋床）。
+// 之後新增的家具沒列進表：catalog.json 有 cat 欄就用它，沒有就照名字猜（BAG_RULES，由上往下第一個符合的），都猜不到放「擺飾」。
+const BAG_CATS=[['table','桌子'],['seat','椅子'],['store','櫃子'],['bed','床'],['screen','屏風'],['plant','植物'],['wall','壁掛'],['light','燈具'],['rug','地毯'],['kitchen','廚房衛浴'],['scene','造景'],['decor','擺飾']];
+const BAG_OF={},BAG_MEMO=new Map();
+for(const [cat,keys] of Object.entries({
+ table:'vf_desk vf_coffeetable vf_counter vr_desk vr_sidetable vr_dining vr_s_a_sidetable vr_s_g_desk vr_s_i_teatable vl_turtletable vl_fishbowl vp_stumptable vp_diningtable vp_potting vs_mahjong vanity teatable sidetable vs_roundtable vs_baxian vs_shuan vs_chatai vs_stonetable',
+ seat:'vf_chair vf_heartchair vf_sofa vf_stepstool vr_chair vr_sofa vr_armchair vr_sofa2b vr_s_e_hammock vl_clamchair vl_starpouf vl_sofa vl_shellsofa vp_stumpstool vp_mosssofa vp_flowerchair vp_logbench vp_branchchair vp_armchair vs_luohan vs_meirenta vs_quanyi vs_taishi vs_bench2',
+ store:'vf_wardrobe vf_bookshelf vf_nightstand vf_dresser vf_chest vf_coatrack vf_cupboard vf_sideboard vf_aquarium vf_toychest vr_wardrobe vr_dresser vr_bookshelf vr_rack vr_cubeshelf vr_s_b_bookshelf vr_s_d_wardrobe vr_s_g_rack vl_coralshelf vl_treasure vl_wardrobe vl_crates vl_sideboard vl_curio vp_vineshelf wardrobe vs_duobao vs_dingxiang cabinet vs_chest vs_yaogui vs_bookcase',
+ bed:'vf_bed vr_bed vr_dblbedb vr_s_g_bed vr_s_e_hammock vl_shellbed vp_leafbed bed vs_luohan vs_meirenta',
+ screen:'vs_screen vs_moongate vs_fanscreen vs_bamboo vp_vinearch',
+ plant:'vf_plant vf_flowerstand vf_tallplant vr_s_g_plant vr_s_h_cauldron vl_kelp vl_coraltree vp_acornpot vp_fern vp_sunflower vp_plantladder vs_huajia vs_penjing vs_plum vs_jar',
+ light:'vl_corallamp vl_jellylamp vp_mushlamp vp_jarshelf vp_branchlamp vs_palacelamp vs_pagoda vs_lanternpost',
+ rug:'vf_rug vf_rug2 vf_runner vr_rug vl_rug vl_rug2 vp_rug vp_runner vp_rug2 vs_rug3 vs_paving vs_rug2 vs_rug4',
+ kitchen:'vf_teacart vf_kitchen vf_cupboard vr_sink vr_fridge vr_stove vr_bathtub vr_basin vr_s_a_dessertcart vs_dimsumcart',
+ scene:'vl_reef vp_mushhouse vp_well vp_mossrock vp_pond vs_bridge vs_pavilion vs_river vs_well',
+ decor:'vf_catbed vf_fireplace vf_aquarium vf_barrels vr_s_a_plushpile vr_s_b_fireplace vr_s_g_mirror vl_aquarium vl_wheel vl_anchor vl_barrel vl_helmet vl_pearlstand vl_bubbletube vl_fishbowl vp_berrybasket vp_wagon vp_hedgehog vp_easel vp_beehive vs_sedan vs_bianzhong vs_drum vs_birdcage vs_yijia vs_guzheng vs_ding vs_pipa vs_umbrella vs_winejars vs_crane vs_huagang'}))for(const k of keys.split(' '))BAG_OF[k]=BAG_OF[k]?BAG_OF[k]+' '+cat:cat;
+const BAG_RULES=[['rug',/毯|地坪|地墊/],['screen',/屏風|插屏|門罩|拱門/],['store',/櫃|書架|書格|層架|箱|多寶格/],['bed',/床/],['seat',/椅|沙發|凳|坐墊|榻/],['table',/桌|几|書案|吧台|工作台|梳妝台|茶台/],['light',/燈/],['plant',/盆|花架|植物/],['kitchen',/爐台|流理|冰箱|浴缸|洗手|廚/]];
+function bagCats(c){const b=(c.base&&S.byKey[c.base])||c;let v=BAG_MEMO.get(b.k);if(v)return v;
+ if(b.kind==='wall')v=['wall'];else{const t=b.cat||BAG_OF[b.k];if(t)v=String(t).split(' ');else{const r=BAG_RULES.find(x=>x[1].test(b.name||''));v=[r?r[0]:'decor'];}}
+ BAG_MEMO.set(b.k,v);return v;}
+// 搜尋：名字裡有這幾個字＝1（排前面）；打的是分類名（椅子、衛浴…）或系列名（森林、人魚…）＝2；都不是＝0。空白、「・」不算字
+const BAG_SETS={'酒館日常':['日常'],'萬用系列':['萬用'],'海底人魚屋':['海底','人魚'],'森林精靈小屋':['森林','精靈'],'中華小惡魔':['中華','小惡魔','惡魔']};
+const bagNorm=s=>String(s||'').toLowerCase().replace(/[\s　・]+/g,'');
+function bagMatch(c,q){if(bagNorm(c.name).includes(q))return 1;if(q.length<2)return 0;
+ const cs=bagCats(c);if(BAG_CATS.some(([k,n])=>n.includes(q)&&cs.includes(k)))return 2;
+ const st=c.set||'';return st.startsWith(q)||(BAG_SETS[st]||[]).some(a=>a.startsWith(q))?2:0;}
+function bagFind(v){S.bagQ=v;const i=$('ttHouseFind');if(i&&i.value!==v)i.value=v;}
+// 收起佈置：NEW 全部當成看過、搜尋清掉（下次打開從頭開始）
+function bagLeave(silent){if(!S.bagOpen)return;S.bagOpen=false;if(!silent)newSeenShown();S.newShown=new Map();if(S.bagQ)bagFind('');}
+// 打開佈置：有新家具就回到「全部」（NEW 排在最前面，才不會藏在別的分類裡）；正在貼壁紙／鋪地板不動
+function bagEnter(){if(S.bagOpen)return;S.bagOpen=true;S.newShown=new Map();if(S.bagKind==='pw'||S.bagKind==='pf'||S.bagKind==='all'||!S.cat)return;
+ const pl=placed();if(S.cat.some(c=>owned(c.k)-(pl[c.k]||0)>0&&isNew(c.k)))S.bagKind='all';}
+// 佈置清單的縮圖大小：電腦跟著下排格子（--tt-hb-pic），手機照舊 136
+const bagPic=()=>{if(window.TTGame)return 136;let v=0;try{v=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tt-hb-pic'),10);}catch(_){}return v>40?v:104;};
 
 // ---------- 進出小屋 ----------
 function dollCanvasOf(doll){const c=document.createElement('canvas');c.width=c.height=64;try{window.drawDollTo(c,doll||{},'idle');}catch(_){}return c;}
@@ -116,14 +156,14 @@ async function enter(){
   openFrame('我的小屋',()=>{
     fxP.then(v=>{if(S.on&&S.hk===key&&!S.visit){S.fx=v;fxInvChanged();fxApply();}});
     reveal();renderBag();publish(room('layout'));room('spawn',+S.seat||0);S.last=null;pubPos();pushPeers();   // 快照跟著目前的擺設（第一次進來、入住禮剛擺好也要有）
-    if(window.TTCoach&&!TTCoach.seen(TOUR_KEY))setTimeout(()=>{if(S.on&&!S.visit)houseTour();},400);else if(!S.layout)say('歡迎回家！入住禮已經幫你擺好了');});
-  setMode('walk');renderTop();renderChat();renderExpand();setTimeout(renderExpand,2000);
+    if(window.TTCoach&&!TTCoach.seen(TOUR_KEY))setTimeout(()=>{if(S.on&&!S.visit)houseTour(true);},400);else if(!S.layout)say('歡迎回家！入住禮已經幫你擺好了');});
+  setMode('walk',true);renderTop();renderChat();renderExpand();setTimeout(renderExpand,2000);
  }finally{S.joining=false;if(!S.frame||!S.on)reveal();}
 }
 // 關掉目前的房間（自己的或別人的）：起身、停掉同步，不換回大廳的名牌；回大廳用 exit()
 async function teardown(){flushSave();xpEnd();const seatRef=S.seatRef;S.leaving=true;S.tok=(S.tok||0)+1;
  S.on=false;unsub();closePanel();fxClose();S.fxHost={};clearInterval(S.pubT);clearInterval(S.beatT);S.pubT=S.beatT=0;
- document.body.classList.remove('tt-house-on','tt-house-edit','tt-house-visit');
+ bagLeave();document.body.classList.remove('tt-house-on','tt-house-edit','tt-house-visit');
  S.dollW={};S.frame?.remove();S.frame=null;S.visit=null;S.hk=null;S.seat=null;S.seatRef=null;S.room={};S.whoSig=null;S.chatLog=[];S.chatSeen=new Set();renderChat();
  try{gClose('houseShopM');}catch(_){}
  if(seatRef){try{seatRef.onDisconnect().cancel();}catch(_){}try{await seatRef.remove();}catch(_){}}
@@ -232,14 +272,14 @@ function renderChat(){const box=$('ttHouseChat');if(!box)return;const log=box.qu
 
 // ---------- 新手教學（v495）：第一次進小屋，整片變灰、虛線圈起要點的地方；右上「教學」可以再看一次 ----------
 const TOUR_KEY='tt_house_tour_v1';
-function houseTour(){if(!window.TTCoach||!S.on||S.visit)return;if(S.mode!=='walk')setMode('walk');try{gClose('houseShopM');}catch(_){}
+function houseTour(auto){if(!window.TTCoach||!S.on||S.visit)return;if(S.mode!=='walk')setMode('walk',auto===true);try{gClose('houseShopM');}catch(_){}
  const room=()=>{try{return S.frame.contentWindow.TTRoom.roomRect();}catch(_){return null;}},cat=()=>$('ttCatCount')?.closest('[data-cat-pop],.tt-funds-row,div')||$('ttCatCount');
  const daily=TTCat.dailyOn()?'每天在大廳說說話、待滿 10 分鐘，完成每日任務就送 '+TTCat.DAILY+' 貓貓幣。':'11/7 起，每天在大廳說說話、待滿 10 分鐘，完成每日任務就送 '+TTCat.DAILY+' 貓貓幣。';
  TTCoach.run([
   {target:room,pad:4,title:'歡迎來到你的小屋！',text:'這間房間是你專屬的，入住禮的四件家具已經幫你擺好了。\n點地板，小人就會走過去；按住拖曳可以移動視角，滾輪可以放大縮小。'},
   {target:()=>$('ttHouseGacha'),title:'扭蛋',text:'用貓貓幣抽家具：單抽 120、十連 1,200。抽到的家具會先收進「我的家具」。'+(tixOn()?'\n抽到重複的家具會變成家具券，可以在扭蛋圖鑑換「再一件」或異色家具。':'')},
   {target:cat,title:'貓貓幣',text:daily+'\n名牌上這個硬幣就是你現在有的貓貓幣。'},
-  {target:()=>$('ttHouseEdit'),title:'佈置',text:'按這裡，右邊會打開「我的家具」：點一件拿出來，移到想放的地方再點一下就擺好。\n點房間裡的家具，可以拿起來重新擺。'},
+  {target:()=>$('ttHouseEdit'),title:'佈置',text:'按這裡，下面會打開「我的家具」：可以用分類或搜尋找想要的家具，點一件拿出來，移到想放的地方再點一下就擺好。\n點房間裡的家具，可以拿起來重新擺。'},
   ...($('ttHouseExpand')&&!$('ttHouseExpand').classList.contains('off')?[{target:()=>$('ttHouseExpand'),title:'擴建',text:'房間不夠擺？花貓貓幣可以把房間擴大（14→18→22 格），原本的家具都留在原位。'}]:[]),
   {target:()=>$('ttHouseVisit'),title:'拜訪',text:'邀請在線上的好友進你的小屋一起聊天（最多 4 人），或隨機去別人的小屋坐坐。\n也可以在這裡決定誰能進來。'},
   {target:()=>$('ttHouseChat'),title:'小屋聊天',text:'在這裡打字，說的話會出現在小人頭上，小屋裡的人都看得到。'},
@@ -260,25 +300,43 @@ function publish(layout){const key=S.key;if(!key||!DB()||S.visit||!Array.isArray
  return DB().ref(R()).update(ch).then(()=>{S.listed=!!ch['houseDir/'+key];}).catch(()=>{});}
 
 // ---------- 佈置模式 ----------
-function setMode(m){if(S.visit)m='walk';if(m!=='edit'&&S.ptool){S.ptool=null;room('paintTool',null);}S.mode=m;document.body.classList.toggle('tt-house-edit',m==='edit');if(m==='edit'){closePanel();fxClose();}renderKeys();
+function setMode(m,silent){if(S.visit)m='walk';if(m!=='edit'&&S.ptool){S.ptool=null;room('paintTool',null);}S.mode=m;document.body.classList.toggle('tt-house-edit',m==='edit');if(m==='edit'){bagEnter();closePanel();fxClose();}else bagLeave(silent);renderKeys();   // silent＝程式自己切回散步（進門、開場教學），不算客人看過 NEW
  try{const T=S.frame?.contentWindow?.TTRoom;if(T&&T.mode()!==m)T.setMode(m);}catch(_){}
- renderBag();requestAnimationFrame(()=>{try{S.frame?.contentWindow?.TTRoom?.frame();}catch(_){}});}
+ renderBag();requestAnimationFrame(frameFit);}
+// v572 佈置時家具在畫面下排：18、22 格的大房間放不進上面那一塊時，讓房間往上躲到名牌後面（insets 的 t 少讓一點），不要被家具列擋住
+function frameFit(){S.editUp=0;room('frame');if(S.mode!=='edit'||window.TTGame)return;
+ const bag=$('ttHouseBag')?.getBoundingClientRect(),rr=room('roomRect');if(!bag||!bag.height||!rr||!(rr.height>0))return;
+ const over=Math.round(rr.top+rr.height-(bag.top-30));if(over>2){S.editUp=over*2;room('frame');}}
+// 分類列排不下時可以左右捲：哪一邊還有沒露出來的就把那一邊淡出；目前選的分類捲進看得到的範圍
+function bagEdge(show){const tb=document.querySelector('#ttHouseBag .tt-hb-tabs');if(!tb||!tb.clientWidth)return;
+ if(show){const on=tb.querySelector('[aria-pressed="true"]');if(on){const a=on.offsetLeft-tb.offsetLeft,z=a+on.offsetWidth;if(a<tb.scrollLeft+24)tb.scrollLeft=Math.max(0,a-24);else if(z>tb.scrollLeft+tb.clientWidth-24)tb.scrollLeft=z-tb.clientWidth+24;}}
+ const max=tb.scrollWidth-tb.clientWidth;tb.classList.toggle('more-l',tb.scrollLeft>4);tb.classList.toggle('more-r',max-tb.scrollLeft>4);}
 function renderBag(){const box=$('ttHouseBag');if(!box||!S.cat)return;
- const kinds=[['all','全部'],['floor','地板'],['wall','牆面'],['pw','貼壁紙'],['pf','鋪地板']];
- const list=S.cat.filter(c=>owned(c.k)>0&&(S.bagKind==='all'||c.kind===S.bagKind));
- const tabs=kinds.map(([k,n])=>'<button type="button" data-bk="'+k+'" aria-pressed="'+(S.bagKind===k)+'">'+n+'</button>').join('');
- box.querySelector('.tt-hb-tabs').innerHTML=tabs;
+ const q=bagNorm(S.bagQ),paint=!q&&(S.bagKind==='pw'||S.bagKind==='pf');
+ const pl=placed(),lf=k=>owned(k)-(pl[k]||0);   // 房間裡擺了幾件只問一次（原本每件家具問一次）
+ const mine=S.cat.filter(c=>owned(c.k)>0),has={},hasNew={},nws=new Set();
+ for(const c of mine){const nw=lf(c.k)>0&&isNew(c.k);if(nw)nws.add(c.k);for(const t of bagCats(c)){has[t]=1;if(nw)hasNew[t]=1;}}
+ const tab=(k,n,cls)=>'<button type="button" data-bk="'+k+'" aria-pressed="'+(!q&&S.bagKind===k)+'"'+(cls?' class="'+cls+'"':'')+'>'+n+'</button>';
+ const tabs=tab('all','全部',nws.size?'dot':'')+BAG_CATS.map(([k,n])=>tab(k,n,has[k]?(hasNew[k]?'dot':''):'zero')).join('')+'<i class="tt-hb-sep" aria-hidden="true"></i>'+tab('pw','貼壁紙','tool')+tab('pf','鋪地板','tool');
+ const tb=box.querySelector('.tt-hb-tabs'),tbNew=tb._h!==tabs;if(tbNew){const x=tb.scrollLeft;tb.innerHTML=tabs;tb._h=tabs;tb.scrollLeft=x;}bagEdge(tbNew);   // 內容沒變就不重畫（重畫會把捲到一半的位置、按到一半的按鈕換掉）
+ const clr=box.querySelector('.tt-hb-clear');if(clr)clr.hidden=!S.bagQ;
  renderExpand();renderTix();
  const grid=box.querySelector('.tt-hb-grid');
- box.classList.toggle('paint',S.bagKind==='pw'||S.bagKind==='pf');
- if(S.bagKind==='pw'||S.bagKind==='pf'){renderPaintBag(box,grid);return;}
+ box.classList.toggle('paint',paint);
+ if(paint){grid._h=null;renderPaintBag(box,grid);return;}
  const tip=box.querySelector('.tt-hb-tip');if(tip)tip.textContent='點家具拿出來，移到房間裡再點一下放好；點房間裡的家具可以移動。';
+ const list=q?mine.map(c=>({c,m:bagMatch(c,q)})).filter(x=>x.m):mine.filter(c=>S.bagKind==='all'||bagCats(c).includes(S.bagKind)).map(c=>({c,m:1}));
  const ix=new Map(S.cat.map((c,i)=>[c.k,i])),rk=c=>(ix.get(c.base)??ix.get(c.k))*4+(isVar(c)?(+c.var||+String(c.k).split('~')[1]||3):0);   // 異色排在原色後面（玄墨、翡翠、桃花）
- const rows=list.map(c=>{const n=left(c.k);return {c,n,nw:n>0&&isNew(c.k),o:rk(c)};}).sort((a,b)=>b.nw-a.nw||a.o-b.o);   // v509 NEW 的排最前面
- grid.innerHTML=rows.length?rows.map(({c,n,nw})=>'<button type="button" class="tt-hb-item'+(n>0?'':' none')+(nw?' new':'')+'" data-k="'+c.k+'" title="'+esc(c.name)+'">'
-   +(nw?'<i class="tt-hb-new">NEW</i>':'')+'<span class="tt-hb-pic"><img alt="" data-thumb="'+c.k+'"></span><b>'+esc(c.name)+'</b><small>'+(n>0?'剩 '+n+' 件':'都擺出來了')+'</small></button>').join('')
-  :'<p class="tt-hb-empty">背包裡還沒有家具，去扭蛋抽幾件回家吧</p>';
- fillThumbs(grid,136);}   // 家具店、佈置清單同一個比例（1 倍）
+ const rows=list.map(({c,m})=>({c,n:lf(c.k),nw:nws.has(c.k),m,o:rk(c)})).sort((a,b)=>b.nw-a.nw||a.m-b.m||a.o-b.o);   // v509 NEW 的排最前面；搜尋時名字對到的排在分類／系列對到的前面
+ // 異色家具（<本名>・玄墨／翡翠／桃花）：格子窄，整個名字會被切成「…」看不出是哪一色 → 名字只留本名，顏色做成圖左下角的小標；數量只在還有兩件以上時標
+ const html=rows.length?rows.map(({c,n,nw})=>{const vn=isVar(c)&&c.name.includes('・')?c.name.split('・'):null;
+   return '<button type="button" class="tt-hb-item'+(n>0?'':' none')+(nw?' new':'')+'" data-k="'+c.k+'" title="'+esc(c.name)+(n>0?'（剩 '+n+' 件）':'（都擺出來了）')+'">'
+   +(nw?'<i class="tt-hb-new">NEW</i>':'')+'<em class="tt-hb-n">'+(n>1?'×'+n:n>0?'':'已擺')+'</em><span class="tt-hb-pic"><img alt="" data-thumb="'+c.k+'">'
+   +(vn?'<i class="tt-hb-var v'+(+c.var||0)+'">'+esc(vn.slice(1).join('・'))+'</i>':'')+'</span><b>'+esc(vn?vn[0]:c.name)+'</b><small>'+(n>0?'剩 '+n+' 件':'都擺出來了')+'</small></button>';}).join('')
+  :'<p class="tt-hb-empty">'+(q?'找不到「'+esc(S.bagQ.trim())+'」，換個關鍵字試試':S.bagKind==='all'?'背包裡還沒有家具，去扭蛋抽幾件回家吧':'這一類還沒有家具，去扭蛋抽抽看')+'</p>';
+ if(grid._h!==html){const x=grid.scrollLeft,y=grid.scrollTop;grid.innerHTML=html;grid._h=html;grid.scrollLeft=x;grid.scrollTop=y;}
+ if(S.bagOpen&&S.mode==='edit'){const t=performance.now();for(const r of rows)if(r.nw&&!S.newShown.has(r.c.k))S.newShown.set(r.c.k,t);}   // 這次列出來過的 NEW（收起佈置時當成看過）
+ fillThumbs(grid,bagPic());}   // 家具店、佈置清單同一個比例（1 倍）
 // 家具券餘額（「我的家具」上面一條）：餘額由 lobby-ui/gacha.js 盯著（TTGachaHost.tix、tt-house-tix 事件）；新制度開始前、沒有券時不顯示。點了打開扭蛋（圖鑑裡換家具）
 const tixOn=()=>{try{return !!window.TTGachaHost?.tixOpen?.();}catch(_){return false;}};
 function renderTix(){const el=document.querySelector('#ttHouseBag .tt-hb-tix');if(!el)return;const H=window.TTGachaHost;let n=0,open=false;
@@ -296,7 +354,7 @@ function renderPaintBag(box,grid){const kind=S.bagKind==='pw'?'w':'f',pre=kind==
    +'<div class="tt-hb-pacts"><button type="button" data-pfill="1"'+(cur?'':' disabled')+'>整間貼上</button><button type="button" data-pclear="1">整間還原</button></div>'
   :'<p class="tt-hb-empty">還沒有'+word+'，到右下的「商城」看看各系列的'+word+'</p><div class="tt-hb-pacts"><button type="button" data-pmall="1">去商城</button><button type="button" data-pclear="1">整間還原</button></div>');}
 function paintSelect(kind,theme){S.ptool=kind?{kind,theme:theme||''}:null;room('paintTool',S.ptool);renderBag();renderKeys();}
-function paintStart(kind,theme){try{gClose('houseShopM');}catch(_){}S.bagKind=kind==='w'?'pw':'pf';setMode('edit');setTimeout(()=>paintSelect(kind,theme),60);}
+function paintStart(kind,theme){try{gClose('houseShopM');}catch(_){}S.bagKind=kind==='w'?'pw':'pf';bagFind('');setMode('edit');setTimeout(()=>paintSelect(kind,theme),60);}
 // 從背包拿一件出來（點背包的格子、買完「現在擺」、扭蛋完 placeNew 都走這裡）；拿出來就不算 NEW 了
 function bagPick(k){if(left(k)<=0){say('這件都擺出來了，點房間裡的它就能移動');return false;}
  let ok=false;try{ok=S.frame.contentWindow.TTRoom.grabNew(k)!==false;}catch(_){}
@@ -304,18 +362,18 @@ function bagPick(k){if(left(k)<=0){say('這件都擺出來了，點房間裡的�
 // v509 扭蛋結果畫面關掉後叫這個（keys：這次抽到的家具，最稀有的在前）：標成 NEW、打開佈置和「我的家具」，把第一件拿在手上準備擺。
 // 不在自己的小屋（例如在別人家）就什麼都不做、回 false；背包資料還沒到就等最多 3 秒，等不到就只打開背包
 function placeNew(keys){const list=(Array.isArray(keys)?keys:[keys]).filter(k=>typeof k==='string'&&k);
- if(!S.on||S.visit||!S.key||S.key!==KEY())return false;
+ if(!S.on||S.joining||S.visit||!S.key||S.key!==KEY())return false;   // v572：進門還沒跑完（S.joining）先回 false，扭蛋那邊每 0.5 秒會再試——不然進門結尾切回散步，佈置又被收起來
  newAdd(list);try{gClose('houseShopM');}catch(_){}
- S.bagKind='all';setMode('edit');const g=document.querySelector('#ttHouseBag .tt-hb-grid');if(g)g.scrollTop=0;   // 跟按「佈置」一樣；NEW 排在最上面
+ S.bagKind='all';bagFind('');setMode('edit');const g=document.querySelector('#ttHouseBag .tt-hb-grid');if(g){g.scrollTop=0;g.scrollLeft=0;}   // 跟按「佈置」一樣；NEW 排在最上面
  const k=list[0],tok=S.pnTok=(S.pnTok||0)+1,t0=Date.now();if(!k)return true;
  const step=first=>{if(S.pnTok!==tok||!S.on||S.visit||S.mode!=='edit'||(!first&&room('holding')))return;   // 等的途中離開、收起佈置、自己拿了別的就不搶
   if(S.frame&&S.frame._ok&&left(k)>0){bagPick(k);return;}
   if(Date.now()-t0<3000)setTimeout(step,150);};
  step(true);return true;}
 async function fillThumbs(root,size){const R=S.frame?.contentWindow?.TTRoom;if(!R)return;
- for(const im of root.querySelectorAll('img[data-thumb]')){const k=im.dataset.thumb,ck=k+'@'+size;
-  if(S.thumbs[ck]){im.src=S.thumbs[ck];continue;}
-  try{const u=await R.thumbAsync(k,size);if(u){S.thumbs[ck]=u;im.src=u;}}catch(_){}}}
+ for(const im of root.querySelectorAll('img[data-thumb]')){const k=im.dataset.thumb,ck=k+'@'+size;if(im._tk===ck)continue;   // 已經放好的不重放
+  if(S.thumbs[ck]){im.src=S.thumbs[ck];im._tk=ck;continue;}
+  try{const u=await R.thumbAsync(k,size);if(u){S.thumbs[ck]=u;im.src=u;im._tk=ck;}}catch(_){}}}
 
 // ---------- 家具店（大廳的 houseShopM 視窗）----------
 function shopHead(mall){const m=$('houseShopM');if(!m)return;const set=(q,t)=>{const e=m.querySelector(q);if(e)e.textContent=t;};
@@ -366,7 +424,8 @@ document.addEventListener('click',e=>{
   else{const t=pb.dataset.pt;paintSelect(S.ptool&&S.ptool.kind===kind&&S.ptool.theme===t?null:kind,t);}
   return;}
  const b=e.target.closest('#ttHouseBag [data-bk],#ttHouseBag [data-k]');if(b){
-  if(b.dataset.bk){S.bagKind=b.dataset.bk;const pk=S.bagKind==='pw'?'w':S.bagKind==='pf'?'f':null;if(S.ptool&&S.ptool.kind!==pk)paintSelect(null);renderBag();return;}
+  if(b.dataset.bk){const same=S.bagKind===b.dataset.bk&&!S.bagQ;S.bagKind=b.dataset.bk;bagFind('');const pk=S.bagKind==='pw'?'w':S.bagKind==='pf'?'f':null;if(S.ptool&&S.ptool.kind!==pk)paintSelect(null);renderBag();
+   if(!same){const g=document.querySelector('#ttHouseBag .tt-hb-grid');if(g){g.scrollLeft=0;g.scrollTop=0;}}return;}   // 換分類：搜尋清掉、清單捲回最前面
   bagPick(b.dataset.k);
   return;}
  const v=e.target.closest('#ttVisitPanel [data-vis],#ttVisitPanel [data-go],#ttVisitPanel [data-invite],#ttVisitPanel [data-kick],#ttVisitPanel .tt-vp-random,#ttVisitPanel .tt-vp-close');if(v){
@@ -702,7 +761,8 @@ const ICON={
  dice:'<svg viewBox="0 0 28 28" aria-hidden="true"><rect x="5" y="5" width="18" height="18" rx="4"/><path d="M10 10h.01M18 10h.01M14 14h.01M10 18h.01M18 18h.01"/></svg>',
  dress:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M11.5 8.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.6v.6"/><path d="M14 12.9 4.6 19.2a1.3 1.3 0 0 0 .7 2.3h17.4a1.3 1.3 0 0 0 .7-2.3z"/></svg>',
  spark:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M13 3.5l2.3 6.9 6.9 2.3-6.9 2.3L13 21.9l-2.3-6.9-6.9-2.3 6.9-2.3z"/><path d="M21.5 17.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"/></svg>',
- ticket:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2.5a2.5 2.5 0 0 0 0 5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a2.5 2.5 0 0 0 0-5z"/><path d="M17.5 8v2M17.5 13v2M17.5 18v2"/><path class="tt-tix-gem" d="M10.5 9.5l3 4.5-3 4.5-3-4.5z"/></svg>'};   // 家具券（票根＋菱形）
+ ticket:'<svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2.5a2.5 2.5 0 0 0 0 5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5a2.5 2.5 0 0 0 0-5z"/><path d="M17.5 8v2M17.5 13v2M17.5 18v2"/><path class="tt-tix-gem" d="M10.5 9.5l3 4.5-3 4.5-3-4.5z"/></svg>',   // 家具券（票根＋菱形）
+ find:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>',x:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>'};
 function btn(id,cls,icon,label,fn){const b=document.createElement('button');b.type='button';b.id=id;b.className=cls;b.innerHTML=ICON[icon]+'<span>'+label+'</span>';b.onclick=fn;return b;}
 function build(){
  const dock=$('ttMainDock');if(!dock||$('ttHouseBtn'))return;
@@ -720,10 +780,29 @@ function build(){
   btn('ttHouseVisit','tt-house-btn tt-own-only','visit','拜訪',()=>S.panel?closePanel():openPanel()),btn('ttHouseHelp','tt-house-btn tt-own-only','help','教學',houseTour),btn('ttHouseBack','tt-house-btn','back','回大廳',exit));
 // v495 D：右邊的放大／縮小／整間拿掉（滾輪縮放、按住拖曳照樣能用），「我的家具」改成右側整欄
  const bag=document.createElement('section');bag.id='ttHouseBag';bag.setAttribute('aria-label','我的家具');
- bag.innerHTML='<header><span class="tt-hb-title"><b>我的家具</b><small>MY FURNITURE</small></span><div class="tt-hb-acts"><button type="button" class="tt-hb-shop">去扭蛋</button><button type="button" class="tt-hb-done">完成</button></div><div class="tt-hb-tabs"></div></header>'
-  +'<p class="tt-hb-tip">點家具拿出來，移到房間裡再點一下放好；點房間裡的家具可以移動。</p>'
+ // v572 D 11/26：改到畫面下排——上列＝分類＋搜尋（在分類右邊）＋家具券＋去扭蛋／完成，下列＝家具（電腦左右捲；手機照舊直的三欄）
+ bag.innerHTML='<header><span class="tt-hb-title"><b>我的家具</b><small>MY FURNITURE</small></span><div class="tt-hb-tabs" role="group" aria-label="家具分類"></div>'
+  +'<label class="tt-hb-search">'+ICON.find+'<input id="ttHouseFind" type="text" inputmode="search" enterkeyhint="search" maxlength="20" autocomplete="off" spellcheck="false" placeholder="搜尋家具" aria-label="用名字搜尋家具">'
+  +'<button type="button" class="tt-hb-clear" hidden aria-label="清除搜尋">'+ICON.x+'</button></label>'
   +'<button type="button" class="tt-hb-tix" hidden title="抽到重複的家具會變成家具券，可以在扭蛋圖鑑換「再一件」或異色家具">'+ICON.ticket+'<span>家具券</span><b>0</b><span>張</span><small>到扭蛋圖鑑換家具 ›</small></button>'
+  +'<div class="tt-hb-acts"><button type="button" class="tt-hb-shop">去扭蛋</button><button type="button" class="tt-hb-done">完成</button></div></header>'
+  +'<p class="tt-hb-tip">點家具拿出來，移到房間裡再點一下放好；點房間裡的家具可以移動。</p>'
   +'<div class="tt-hb-grid"></div>';
+ {const find=bag.querySelector('#ttHouseFind'),grid=bag.querySelector('.tt-hb-grid'),tabs=bag.querySelector('.tt-hb-tabs');let comp=false;
+  // 搜尋：打字就篩（注音還在拼的時候先不篩）；Esc 先清字、再離開輸入框；貼壁紙／鋪地板時打字＝回到找家具
+  const apply=()=>{const v=find.value.slice(0,20);if(v===S.bagQ)return;S.bagQ=v;
+   if(bagNorm(v)&&(S.bagKind==='pw'||S.bagKind==='pf')){S.bagKind='all';if(S.ptool){paintSelect(null);grid.scrollLeft=0;grid.scrollTop=0;return;}}
+   renderBag();grid.scrollLeft=0;grid.scrollTop=0;};
+  find.addEventListener('compositionstart',()=>{comp=true;});find.addEventListener('compositionend',()=>{comp=false;apply();});
+  find.addEventListener('input',()=>{if(!comp)apply();});
+  find.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229)return;
+   if(e.key==='Escape'){e.preventDefault();e.stopPropagation();if(find.value){find.value='';apply();}else find.blur();}
+   else if(e.key==='Enter'){e.preventDefault();apply();}});
+  bag.querySelector('.tt-hb-clear').onclick=e=>{e.preventDefault();find.value='';apply();find.focus({preventScroll:true});};
+  // 電腦：滑鼠滾輪上下滾＝清單／分類左右捲
+  const wheel=el=>el.addEventListener('wheel',e=>{if(window.TTGame||e.ctrlKey||el.scrollWidth<=el.clientWidth+1)return;
+   const d=Math.abs(e.deltaY)>=Math.abs(e.deltaX)?e.deltaY:e.deltaX;if(!d)return;e.preventDefault();el.scrollLeft+=d*(e.deltaMode===1?32:e.deltaMode===2?el.clientWidth:1);},{passive:false});
+  wheel(grid);wheel(tabs);tabs.addEventListener('scroll',()=>bagEdge(),{passive:true});addEventListener('resize',()=>{if(S.on&&S.mode==='edit')bagEdge();});}
  bag.querySelector('.tt-hb-tix').onclick=()=>{if(window.TTGacha)TTGacha.open();};
  bag.querySelector('.tt-hb-shop').onclick=()=>{if(window.TTGacha)TTGacha.open();else openShop();};/* v507 家具店入口拿掉，改去扭蛋 */bag.querySelector('.tt-hb-done').onclick=()=>setMode('walk');
  // v504 串門子側欄（跟「我的家具」同一個位置、同一套外觀）
@@ -770,7 +849,7 @@ function renderKeys(){const el=$('ttHouseKeys');if(!el)return;const hold=S.mode=
   :S.mode!=='edit'?'點地板＝走過去　'+K('按住拖曳')+' 移動視角　'+K('滾輪')+' 放大縮小　按「佈置」開始擺家具'
   :S.ptool?(S.ptool.theme?'點一格＝貼上　':'點一格＝還原　')+K('按住拖曳')+' 連續'+(S.ptool.theme?'貼':'還原')+'　從房間外按住拖曳＝移動視角　'+K('Esc')+' 放下'
   :hold?'移動滑鼠＝搬家具　'+K('點一下')+' 放好　'+K('R')+' 轉向　'+K('Delete')+' 收回背包　'+K('Esc')+' 取消'
-  :'點右邊的家具＝拿出來　點房間裡的家具＝拿起來移動　'+K('按住拖曳')+' 移動視角　'+K('滾輪')+' 放大縮小';}
+  :'點下面的家具＝拿出來　點房間裡的家具＝拿起來移動　'+K('按住拖曳')+' 移動視角　'+K('滾輪')+' 放大縮小';}
 
 // ---------- 給房間（iframe）用的介面 ----------
 window.TTHouse={
@@ -784,7 +863,7 @@ window.TTHouse={
  visiting:()=>S.visit?{key:S.visit.key,name:S.visit.name}:null,
  save,
  changed:()=>{renderBag();renderKeys();},
- modeChanged:m=>{if(S.mode!==m){S.mode=m;document.body.classList.toggle('tt-house-edit',m==='edit');renderBag();}renderKeys();},
+ modeChanged:m=>{if(S.mode!==m){S.mode=m;document.body.classList.toggle('tt-house-edit',m==='edit');if(m==='edit')bagEnter();else bagLeave();renderBag();}renderKeys();},
  dollCanvas:myDollCanvas,
  insets(){const vh=innerHeight,vw=innerWidth;let t=20,b=20,l=20,r=20;
   if(window.TTGame){const tp=document.querySelector('#ttG .ttg-top')?.getBoundingClientRect(),bag=document.body.classList.contains('tt-house-edit')?$('ttHouseBag')?.getBoundingClientRect():null;   // v539 手機：上面名牌、下面佈置清單
@@ -792,8 +871,9 @@ window.TTHouse={
   const sg=$('sign')?.getBoundingClientRect();if(sg&&sg.height)t=Math.max(t,sg.bottom+12);
   const hud=$('hud2')?.getBoundingClientRect();if(hud&&hud.height&&hud.right>vw*.3)t=Math.max(t,hud.bottom+8);
   const dk=$('ttMainDock')?.getBoundingClientRect();if(dk&&dk.height&&!document.body.classList.contains('tt-house-edit'))b=Math.max(b,vh-dk.top+10);
-  const side=document.body.classList.contains('tt-house-edit')?$('ttHouseBag'):S.panel?$('ttVisitPanel'):S.fxOpen?$('ttFxPanel'):null;
-  if(side){const q=side.getBoundingClientRect();if(q.width)r=Math.max(r,vw-q.left+12);}   // 佈置、串門子：右側整欄
+  if(document.body.classList.contains('tt-house-edit')){const q=$('ttHouseBag')?.getBoundingClientRect();if(q&&q.height)b=Math.max(b,vh-q.top+34);if(S.editUp)t=Math.max(20,t-S.editUp);}   // v572 佈置：家具在畫面下排，上面再讓一行操作說明
+  const side=S.panel?$('ttVisitPanel'):S.fxOpen?$('ttFxPanel'):null;
+  if(side){const q=side.getBoundingClientRect();if(q.width)r=Math.max(r,vw-q.left+12);}   // 拜訪、光效：右側整欄
   const ch=$('ttHouseChat')?.getBoundingClientRect();if(ch&&ch.width&&ch.right<vw*.4)l=Math.max(l,ch.right+12);   // 左下的小屋聊天
   return {t,b,l,r};},
  enter,exit,openShop,openMall,visit,randomVisit,placeNew,

@@ -280,3 +280,64 @@ body:not(.tt-house-fxp) #ttFxPanel,body:not(.tt-house-on) #ttFxPanel,body.tt-hou
 .tt-hb-tix:active{transform:translateY(1px);box-shadow:0 1px 0 var(--sk-ink,#1C2156)}
 html.ttm-game body #ttHouseBag .tt-hb-tix{padding:2px 10px 2px 6px}
 html.ttm-game body #ttHouseBag .tt-hb-tix small{display:none}
+
+/* ===== v572 「我的家具」改到畫面下排＋分類＋搜尋（D 11/26：家具種類越來越多，很難找到想要的） =====
+   電腦：畫面最下面一條——上列＝分類＋搜尋＋家具券＋去扭蛋／完成，下列＝家具（左右捲，滑鼠滾輪也能捲）。
+        佈置時左下的小屋聊天先收起來（說的話照樣冒在小人頭上），那行白字操作說明移到這一條的上面。
+   手機（html.ttm-game）本來就是底部一張卡：維持直的三欄，只多分類列（左右滑）與搜尋。 */
+:root{--tt-hb-pic:104px}
+@media (max-height:760px){:root{--tt-hb-pic:88px}html:not(.ttm-game) #ttHouseBag .tt-hb-item b{font-size:11px}}
+html:not(.ttm-game) #ttHouseBag{top:auto;left:16px;right:16px;bottom:12px;width:auto;gap:4px;padding:9px 12px 6px}
+html:not(.ttm-game) #ttHouseBag header{flex-wrap:nowrap;gap:10px}
+html:not(.ttm-game) #ttHouseBag .tt-hb-title{margin-right:0;flex:none}
+html:not(.ttm-game) #ttHouseBag .tt-hb-tip{display:none}
+html:not(.ttm-game) body.tt-house-edit #ttHouseChat{display:none!important}
+html:not(.ttm-game) #ttHouseKeys.edit{left:50%;bottom:calc(var(--tt-hb-pic) + 135px);max-width:calc(100% - 60px)}
+#ttHouseBag .tt-hb-tabs{flex:1 1 0;width:auto;min-width:0;flex-wrap:nowrap;align-items:center;overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;scrollbar-width:none;padding:3px 2px}
+#ttHouseBag .tt-hb-tabs::-webkit-scrollbar{display:none}
+#ttHouseBag .tt-hb-tabs button{flex:none;white-space:nowrap;padding:5px 12px}
+#ttHouseBag .tt-hb-tabs button.zero:not([aria-pressed="true"]){border-color:#B9C0E2;color:#8A90B8}   /* 這一類還沒有家具：淡一點，照樣能點 */
+#ttHouseBag .tt-hb-tabs button.dot{position:relative}
+#ttHouseBag .tt-hb-tabs button.dot::after{content:"";position:absolute;right:1px;top:0;width:7px;height:7px;border:1.5px solid #fff;border-radius:50%;background:#FF4F8B}   /* 這一類有新家具 */
+#ttHouseBag .tt-hb-tabs button.tool:not([aria-pressed="true"]){border-style:dashed}   /* 貼壁紙、鋪地板是工具，不是家具分類 */
+#ttHouseBag .tt-hb-tabs.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}   /* 右邊還有分類沒露出來：邊緣淡出 */
+#ttHouseBag .tt-hb-tabs.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px);mask-image:linear-gradient(90deg,transparent,#000 30px)}
+#ttHouseBag .tt-hb-tabs.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent)}
+.tt-hb-sep{flex:none;width:2px;height:20px;border-radius:2px;background:#C3CBEE;margin:0 2px}
+.tt-hb-search{flex:none;position:relative;display:flex;align-items:center;gap:4px;width:178px;height:34px;box-sizing:border-box;padding:0 6px 0 30px;border:2px solid var(--sk-ink,#1C2156);border-radius:999px;background:#fff;cursor:text}
+.tt-hb-search:focus-within{box-shadow:0 0 0 3px #BFE6FF}
+.tt-hb-search>svg{position:absolute;left:9px;top:50%;width:16px;height:16px;transform:translateY(-50%);fill:none;stroke:var(--sk-mute,#5C6196);stroke-width:2.6;stroke-linecap:round;pointer-events:none}
+#ttHouseBag .tt-hb-search input{flex:1;min-width:0;width:100%;height:100%;margin:0;padding:0;border:0;border-radius:0;outline:0;box-shadow:none;background:transparent;font:inherit;font-size:13px;font-weight:700;color:var(--sk-ink,#1C2156)}
+#ttHouseBag .tt-hb-search input::placeholder{color:#9AA0C8;font-weight:400}
+#ttHouseBag .tt-hb-clear{flex:none;width:20px;height:20px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:#E3E7F8;color:var(--sk-ink,#1C2156);cursor:pointer}
+#ttHouseBag .tt-hb-clear[hidden]{display:none}
+#ttHouseBag .tt-hb-clear svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round}
+#ttHouseBag .tt-hb-clear:hover{background:#FFD3E3}
+.tt-hb-n{display:none;font-style:normal}
+html body #ttHouseBag .tt-hb-n:empty{display:none}
+#ttHouseBag .tt-hb-pic{position:relative}
+.tt-hb-var{position:absolute;left:0;bottom:1px;padding:0 6px;border:1.5px solid #fff;border-radius:999px;background:#5C6196;color:#fff;font:700 10px/1.5 var(--sk-head,'LINE Seed TW'),sans-serif;font-style:normal;white-space:nowrap;pointer-events:none}   /* 異色家具的顏色小標 */
+.tt-hb-var.v1{background:#33334A}.tt-hb-var.v2{background:#2B9877}.tt-hb-var.v3{background:#F0689A}
+html:not(.ttm-game) #ttHouseBag .tt-hb-tix{align-self:center;flex:none}
+html:not(.ttm-game) #ttHouseBag .tt-hb-tix small{display:none}
+html:not(.ttm-game) #ttHouseBag .tt-hb-acts{flex:none}
+html:not(.ttm-game) #ttHouseBag .tt-hb-grid{flex:none;display:flex;gap:8px;align-items:flex-start;height:calc(var(--tt-hb-pic) + 50px);box-sizing:border-box;overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;padding:4px 3px;scrollbar-width:thin;scrollbar-color:#C3CBEE transparent}
+html:not(.ttm-game) #ttHouseBag .tt-hb-item{flex:none;width:calc(var(--tt-hb-pic) + 22px);box-sizing:border-box;gap:1px;padding:3px 4px 4px;border-radius:12px}
+html:not(.ttm-game) #ttHouseBag .tt-hb-item b{line-height:16px}
+html:not(.ttm-game) #ttHouseBag :is(.tt-hb-pic,.tt-hb-pic img){width:var(--tt-hb-pic);height:var(--tt-hb-pic)}
+html:not(.ttm-game) #ttHouseBag .tt-hb-item small{display:none}
+html:not(.ttm-game) #ttHouseBag .tt-hb-n{display:block;position:absolute;right:5px;top:5px;z-index:1;padding:0 6px;border-radius:999px;background:var(--sk-ink,#1C2156);color:#fff;font:700 11px/1.5 var(--sk-head,'LINE Seed TW'),sans-serif;pointer-events:none}
+html:not(.ttm-game) #ttHouseBag .tt-hb-item.none .tt-hb-n{background:#7C83AE}
+html:not(.ttm-game) #ttHouseBag .tt-hb-new{left:4px;top:4px}
+html:not(.ttm-game) #ttHouseBag .tt-hb-empty{margin:auto;width:100%}
+html:not(.ttm-game) #ttHouseBag .tt-hb-pacts{flex:none;flex-direction:column;justify-content:center;width:132px;margin:0}
+html:not(.ttm-game) #ttHouseBag .tt-hb-pacts button{flex:none}
+html.ttm-game body #ttHouseBag header{gap:6px 8px}
+html.ttm-game body #ttHouseBag .tt-hb-title{order:1}
+html.ttm-game body #ttHouseBag .tt-hb-tix{order:2;align-self:center}
+html.ttm-game body #ttHouseBag .tt-hb-tix span{display:none}   /* 手機上列放不下：只留票根圖示＋張數 */
+html.ttm-game body #ttHouseBag .tt-hb-acts{order:3}
+html.ttm-game body #ttHouseBag .tt-hb-tabs{order:4;flex:1 1 calc(100% - 132px)}
+html.ttm-game body #ttHouseBag .tt-hb-search{order:5;width:120px;height:32px}
+html.ttm-game body #ttHouseBag .tt-hb-search input{font-size:16px}   /* 16px 以上，iPhone 點輸入框才不會自動放大畫面 */
+@media (max-width:1640px){html:not(.ttm-game) #ttHouseBag .tt-hb-title small{display:none}html:not(.ttm-game) #ttHouseBag .tt-hb-tabs button{padding:5px 10px}html:not(.ttm-game) #ttHouseBag .tt-hb-search{width:160px}}   /* 畫面沒那麼寬：英文小標收掉，分類才排得下 */

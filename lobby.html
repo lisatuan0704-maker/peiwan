@@ -1708,7 +1708,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v571</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v572</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2536,7 +2536,7 @@ function applyBub(){document.body.classList.remove('artBub','bub3s');}
    那邊預設的「沒有氣泡」會被發佈出去，把原本選的蓋掉；背包資料晚到時，買來的氣泡也會先被發佈成空的。
    現在伺服器上的 pub/bub 才算數：自己的大廳資料第一次到時對一次（bubSync），之後只有親手點選才會寫。
    tt_bub_sync＝這台裝置已經對過帳。沒對過的舊裝置：伺服器是空的、這台選的是別的 → 當作被蓋掉，以這台為準補寫一次。 */
-let bubSynced=false, bubRemote, bubRemoteSeen=false;
+let bubSynced=false, bubRemote, bubRemoteSeen=false, bubOwnedOk=false;
 function bubOwned(k){ return TTChatSkins.owns(k,window.__owned,window.__vipInfo?.()?.lv||0); }
 function bubMirror(){ try{ if(typeof myKey!=='undefined'&&myKey&&agents.has(myKey)){ const b=agents.get(myKey).b; b.pub=b.pub||{}; b.pub.bub=curBub; } }catch(e){} }
 function publishBub(){
@@ -2562,7 +2562,21 @@ function bubSync(remote){
   if(push) publishBub();
   bubMirror();
   try{ if(document.getElementById('bkBubList')) bkBubbleRender(); }catch(e){}
+  bubDrop();
 }
+/* v572：伺服器上留著「這個帳號沒有的金幣款」（10/23 以前的預設值 12＝香檳絹光、被退款的氣泡）——以前每次進場發佈會順便改回白框，
+   v571 拿掉例行發佈後沒人收回，別人會一直看到付費款。背包資料確定到了（bubOwnedOk，owned 監聽叫 __bubOwned）還是沒有，就改回白框並寫回去。
+   VIP 款不收（等級資料是分批到的，沒辦法確定「真的沒有」）。 */
+function bubDrop(){
+  try{
+    if(!bubSynced||!bubOwnedOk||curBub==='none'||typeof myKey==='undefined'||!myKey||window.__ownedLoaded!==myKey) return;
+    const c=TTChatSkins.catalog.find(function(x){ return x.k===curBub; }); if(!c||c.lv||bubOwned(curBub)) return;
+    curBub='none'; try{localStorage.setItem('tt_bub',curBub);}catch(e){}
+    publishBub(); bubMirror();
+    try{ if(document.getElementById('bkBubList')) bkBubbleRender(); }catch(e){}
+  }catch(e){}
+}
+window.__bubOwned=function(){ bubOwnedOk=true; bubSync(); bubDrop(); };   /* 背包資料到了／變了（owned 監聽） */
 window.__bubSync=bubSync;
 window.__bubSynced=function(){ return bubSynced; };
 window.__setBub=function(k){k=TTChatSkins.normalize(k);if(!bubOwned(k))return;curBub=k;
@@ -7645,7 +7659,7 @@ function tbPick(id){ const t=TT_TABLES[id]; if(!t) return;
   function dmtPlace(){   // 電腦：放在聊天框（含每日任務標籤；小屋裡是小屋聊天）上面；手機版位置交給 CSS
     const el=_dmtEl; if(document.documentElement.classList.contains('ttm-on')){ el.style.bottom=''; return; }
     let top=innerHeight-16;
-    ['chatbox','chattoggle','ttDailyChip','ttHouseChat'].forEach(id=>{ const e=document.getElementById(id); if(!e||!e.getClientRects().length) return;
+    ['chatbox','chattoggle','ttDailyChip','ttHouseChat','ttHouseBag'].forEach(id=>{   /* v572：小屋佈置時家具列在最下面，小卡排到它上面（不然蓋住最左邊兩格） */ const e=document.getElementById(id); if(!e||!e.getClientRects().length) return;
       if(getComputedStyle(e).visibility==='hidden') return; const r=e.getBoundingClientRect(); if(r.height) top=Math.min(top,r.top); });
     el.style.bottom=Math.max(12,Math.min(innerHeight-(el.offsetHeight||64)-8,Math.round(innerHeight-top+10)))+'px'; }
   function dmtTimer(){ clearTimeout(_dmtT); _dmtT=setTimeout(dmtHide,6000); }
@@ -8304,7 +8318,7 @@ window.__hasCard=myKey?null:false;
       const keys=Object.keys(owned).filter(k=>k!=='dyeTickets'&&k!=='dyedHairSets'&&k!=='vip3Outfit'&&k!=='baseStart'&&!k.startsWith('bubble_'));
       if(document.getElementById('bkBubList'))setTimeout(bkBubbleRender,0);
       const fresh=loaded?keys.filter(k=>!seen.has(k)&&!window.TTRetiredOutfits?.retired(k,window.__shopCfg?.[k])):[];
-      keys.forEach(k=>seen.add(k));loaded=true;window.__owned=owned;window.__ownedLoaded=key;try{window.TTVipOutfit?.refresh();}catch(e){}try{window.__bubSync&&window.__bubSync();}catch(e){}
+      keys.forEach(k=>seen.add(k));loaded=true;window.__owned=owned;window.__ownedLoaded=key;try{window.TTVipOutfit?.refresh();}catch(e){}try{window.__bubOwned&&window.__bubOwned();}catch(e){}
       const seated=me();if(seated&&TTSeats.current(seated)&&!owned[TTSeats.current(seated)])TTSeats.clear(seated);
       if(window.__dressRefresh)window.__dressRefresh();
       if(fresh.length&&window.celebrate){const nm=owned[fresh[0]]?.name||'新時裝';
@@ -8996,7 +9010,7 @@ function shake(id){ const el=document.getElementById(id); if(!el) return; el.sty
 <link rel="stylesheet" href="lobby-ui/hub.css?v=297">
 <script src="lobby-ui/hub.js?v=299"></script>
 <script src="lobby-ui/photo-mode.js?v=532"></script><link rel="stylesheet" href="lobby-ui/coach.css?v=495"><script src="lobby-ui/coach.js?v=496"></script><script src="lobby-ui/lobby-tour.js?v=508"></script>
-<link rel="stylesheet" href="lobby-ui/house.css?v=567"><script src="lobby-ui/house.js?v=567"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=567"></script>
+<link rel="stylesheet" href="lobby-ui/house.css?v=572"><script src="lobby-ui/house.js?v=572"></script><script src="lobby-ui/house-trip.js?v=549"></script><script src="lobby-ui/gacha.js?v=567"></script>
 <link rel="stylesheet" href="lobby-ui/social-design.css?v=350">
 <script src="lobby-ui/social-design.js?v=490"></script>
 <script src="lobby-ui/membership.js?v=516"></script>
