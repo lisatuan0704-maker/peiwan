@@ -1708,7 +1708,7 @@ body.artBub.bub3s .npc .bub{
 
 <div id="emptyMsg">酒館剛開張，還沒有闆闆進來坐<br>成為第一位在大廳留下身影的人吧！</div>
 
-<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v570</div>
+<div id="verTag" style="position:fixed;left:10px;bottom:5px;z-index:60;font-size:10px;color:#7A5E8C;background:rgba(255,250,253,.72);padding:1px 8px;border-radius:8px">v571</div>
 <div id="hint2">點地板移動你的小人 · 方向鍵也可以 · 想讓他自己逛可開啟左上角「掛機亂走」</div>
 <button id="joinBtn" onclick="ttNavigate('card.html')">✦ 我也要做闆卡</button>
 
@@ -2493,7 +2493,8 @@ function publishProfile(){
     /* v518：curFrame 在頭像框那段的函式裡面，這裡一直讀不到 → VIP 框從來沒發佈，闆卡與別人看到的都是花圈框；改用 __curFrame，解鎖條件確認了才發佈 */
     /* v570：頭像框不再跟這一包一起發佈。每次進場都把「這台裝置記的框」寫上去的話，換手機、換瀏覽器時那邊預設的花圈框會把原本選的 VIP 框蓋掉；
        而且這一包只要有一欄被擋，框也跟著寫不進去。現在只有親手點選、或進場對帳時才單獨寫 pub/frm（頭像框那段的 publishFrame／frameSync） */
-    try{ if(typeof curBub!=='undefined'&&curBub) pub.bub=bubActiveKey(); }catch(e){}
+    /* v571：聊天氣泡也不再跟這一包一起發佈（跟頭像框同一個毛病：新裝置預設的「沒有氣泡」會把原本選的蓋掉；
+       背包資料比這一包晚到時，買來的氣泡也會被當成沒有 → 發佈成空的）。改由 publishBub／bubSync 單獨寫 pub/bub */
     if(!Object.keys(pub).length) return;
     const clean=(typeof dollSafe==='function')?dollSafe(pub):pub;
     /* v505：夥伴頭像框（companion_*）要跟伺服器上那一個一樣，兩台裝置戴不同框時整包會被拒（VIP、成就、DC 名字也跟著不同步）
@@ -2530,10 +2531,45 @@ function bubKeyFor(a){
   return 'none';
 }
 function applyBub(){document.body.classList.remove('artBub','bub3s');}
-window.__setBub=function(k){k=TTChatSkins.normalize(k);if(!TTChatSkins.owns(k,window.__owned,window.__vipInfo?.()?.lv||0))return;curBub=k;
-  try{localStorage.setItem('tt_bub',curBub);localStorage.setItem('tt_bub_explicit','1');}catch(e){} applyBub();
-  try{ if(typeof myKey!=='undefined'&&myKey&&agents.has(myKey)){ const b=agents.get(myKey).b; b.pub=b.pub||{}; b.pub.bub=curBub; } }catch(e){}
-  try{ publishProfile(); }catch(e){} };
+/* v571 聊天氣泡跟著帳號走（D 11/26：頭像框修好後，同一種寫法的氣泡一起改）。
+   以前氣泡只記在這台裝置（tt_bub），而且每次進場都整包發佈：換手機、換瀏覽器、清過網站資料之後，
+   那邊預設的「沒有氣泡」會被發佈出去，把原本選的蓋掉；背包資料晚到時，買來的氣泡也會先被發佈成空的。
+   現在伺服器上的 pub/bub 才算數：自己的大廳資料第一次到時對一次（bubSync），之後只有親手點選才會寫。
+   tt_bub_sync＝這台裝置已經對過帳。沒對過的舊裝置：伺服器是空的、這台選的是別的 → 當作被蓋掉，以這台為準補寫一次。 */
+let bubSynced=false, bubRemote, bubRemoteSeen=false;
+function bubOwned(k){ return TTChatSkins.owns(k,window.__owned,window.__vipInfo?.()?.lv||0); }
+function bubMirror(){ try{ if(typeof myKey!=='undefined'&&myKey&&agents.has(myKey)){ const b=agents.get(myKey).b; b.pub=b.pub||{}; b.pub.bub=curBub; } }catch(e){} }
+function publishBub(){
+  try{
+    if(typeof db==='undefined'||!db||!myKey) return;
+    if(window.__hasCard===null){ setTimeout(publishBub,2000); return; }
+    if(window.__hasCard!==true) return;
+    if(curBub!=='none'&&!bubOwned(curBub)) return;
+    db.ref(ROOT+'/lobby/'+myKey+'/pub/bub').set(curBub).catch(function(){});
+  }catch(e){}
+}
+function bubSync(remote){
+  if(arguments.length){ bubRemote=remote; bubRemoteSeen=true; }
+  if(bubSynced||!bubRemoteSeen) return;
+  const r=(typeof bubRemote==='string'&&bubRemote)?TTChatSkins.normalize(bubRemote):null;
+  let done=false; try{ done=localStorage.getItem('tt_bub_sync')==='1'; }catch(e){}
+  let push=false;
+  if(r===null||(r==='none'&&curBub!=='none'&&!done)){
+    if(curBub!=='none'&&!bubOwned(curBub)) return;   /* 背包、VIP 資料還沒到：先不動，資料到了會再對一次 */
+    push=true;
+  }else if(r!==curBub){ curBub=r; try{localStorage.setItem('tt_bub',curBub);}catch(e){} }
+  bubSynced=true; try{localStorage.setItem('tt_bub_sync','1');}catch(e){}
+  if(push) publishBub();
+  bubMirror();
+  try{ if(document.getElementById('bkBubList')) bkBubbleRender(); }catch(e){}
+}
+window.__bubSync=bubSync;
+window.__bubSynced=function(){ return bubSynced; };
+window.__setBub=function(k){k=TTChatSkins.normalize(k);if(!bubOwned(k))return;curBub=k;
+  try{localStorage.setItem('tt_bub',curBub);localStorage.setItem('tt_bub_explicit','1');localStorage.setItem('tt_bub_sync','1');}catch(e){} applyBub();
+  bubSynced=true; bubMirror();
+  publishBub(); };   /* v571：親手選的才寫到伺服器 */
+if(window.__bubPending){ const _bp=window.__bubPending; window.__bubPending=null; try{ bubSync(_bp.bub); }catch(e){} }
 applyBub();
 
 
@@ -6024,7 +6060,7 @@ if(db){
     let dirty=false;
     want.forEach(k=>{
       if(lobbyExtraOff[k]||!/^[A-Za-z0-9_-]{1,200}$/.test(k))return;
-      const ref=db.ref(ROOT+'/lobby/'+k),h=s=>{if(TTWorldScope.isolated)return;const v=s.val();if(v)lobbyExtra[k]=v;else delete lobbyExtra[k];lobbyMerge();if(v&&k===myKey){const fr=v.pub?v.pub.frm:undefined;try{if(window.__frameSync)window.__frameSync(fr);else window.__framePending={frm:fr};}catch(e){}}};   /* v570：頭像框以伺服器上的為準 */
+      const ref=db.ref(ROOT+'/lobby/'+k),h=s=>{if(TTWorldScope.isolated)return;const v=s.val();if(v)lobbyExtra[k]=v;else delete lobbyExtra[k];lobbyMerge();if(v&&k===myKey){const fr=v.pub?v.pub.frm:undefined;try{if(window.__frameSync)window.__frameSync(fr);else window.__framePending={frm:fr};}catch(e){}const bb=v.pub?v.pub.bub:undefined;try{if(window.__bubSync)window.__bubSync(bb);else window.__bubPending={bub:bb};}catch(e){}}};   /* v570：頭像框以伺服器上的為準 */
       ref.on('value',h,()=>{});lobbyExtraOff[k]=()=>ref.off('value',h);
     });
     Object.keys(lobbyExtraOff).forEach(k=>{
@@ -7212,7 +7248,7 @@ const SFX=(function(){
     try{ const fu=!!(window.__frameUsable&&window.__frameUsable());
       if(fu!==_lastFrameOk){ _lastFrameOk=fu; if(window.__frameSync) window.__frameSync();
         if(fu&&window.__curFrame&&window.__curFrame()!=='wr1'&&window.applyFrame) window.applyFrame(); } }catch(e){}
-    if(info.lv!==_lastPubVip){ const first=_lastPubVip===null; _lastPubVip=info.lv; if(!first) setTimeout(function(){ try{ publishProfile(); }catch(e){} },600); }
+    if(info.lv!==_lastPubVip){ const first=_lastPubVip===null; _lastPubVip=info.lv; try{ if(window.__bubSync) window.__bubSync(); }catch(e){} if(!first) setTimeout(function(){ try{ publishProfile(); }catch(e){} },600); }
     /* 升級慶祝(僅在載入後、等級真的上升時) */
     if(_lastVip===null || !_vipArmed){ _lastVip=info.lv; }
     else if(info.lv>_lastVip){ _lastVip=info.lv;
@@ -8268,7 +8304,7 @@ window.__hasCard=myKey?null:false;
       const keys=Object.keys(owned).filter(k=>k!=='dyeTickets'&&k!=='dyedHairSets'&&k!=='vip3Outfit'&&k!=='baseStart'&&!k.startsWith('bubble_'));
       if(document.getElementById('bkBubList'))setTimeout(bkBubbleRender,0);
       const fresh=loaded?keys.filter(k=>!seen.has(k)&&!window.TTRetiredOutfits?.retired(k,window.__shopCfg?.[k])):[];
-      keys.forEach(k=>seen.add(k));loaded=true;window.__owned=owned;window.__ownedLoaded=key;try{window.TTVipOutfit?.refresh();}catch(e){}
+      keys.forEach(k=>seen.add(k));loaded=true;window.__owned=owned;window.__ownedLoaded=key;try{window.TTVipOutfit?.refresh();}catch(e){}try{window.__bubSync&&window.__bubSync();}catch(e){}
       const seated=me();if(seated&&TTSeats.current(seated)&&!owned[TTSeats.current(seated)])TTSeats.clear(seated);
       if(window.__dressRefresh)window.__dressRefresh();
       if(fresh.length&&window.celebrate){const nm=owned[fresh[0]]?.name||'新時裝';
