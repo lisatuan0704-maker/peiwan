@@ -341,3 +341,23 @@ html.ttm-game body #ttHouseBag .tt-hb-tabs{order:4;flex:1 1 calc(100% - 132px)}
 html.ttm-game body #ttHouseBag .tt-hb-search{order:5;width:120px;height:32px}
 html.ttm-game body #ttHouseBag .tt-hb-search input{font-size:16px}   /* 16px 以上，iPhone 點輸入框才不會自動放大畫面 */
 @media (max-width:1640px){html:not(.ttm-game) #ttHouseBag .tt-hb-title small{display:none}html:not(.ttm-game) #ttHouseBag .tt-hb-tabs button{padding:5px 10px}html:not(.ttm-game) #ttHouseBag .tt-hb-search{width:160px}}   /* 畫面沒那麼寬：英文小標收掉，分類才排得下 */
+/* ===== v573 電腦：拿著家具時下排先滑下去（D 11/27 選的；手機 v560 本來就這樣）＋家具列、分類列按住左鍵拖著捲 =====
+   房間照「沒有下排」的大小擺（不再小一級）；拿著家具＝body.tt-house-hold，下排滑到畫面外不擋房間，那行操作說明跟著掉到最下面。 */
+html:not(.ttm-game) #ttHouseBag{transition:transform .26s cubic-bezier(.3,.8,.3,1)}
+html:not(.ttm-game) #ttHouseKeys.edit{transition:bottom .26s cubic-bezier(.3,.8,.3,1)}
+html:not(.ttm-game) #ttHouseBag :is(.tt-hb-grid,.tt-hb-tabs){user-select:none;-webkit-user-select:none}
+html:not(.ttm-game) #ttHouseBag :is(.tt-hb-grid,.tt-hb-tabs) img{-webkit-user-drag:none}
+html:not(.ttm-game) #ttHouseBag :is(.tt-hb-grid,.tt-hb-tabs).dragging,html:not(.ttm-game) #ttHouseBag :is(.tt-hb-grid,.tt-hb-tabs).dragging *{cursor:grabbing!important}
+html:not(.ttm-game) #ttHouseBag :is(.tt-hb-grid,.tt-hb-tabs).dragging>*{pointer-events:none}   /* 拖的時候格子不要跟著滑過變色、浮起來 */
+/* 下排收起來（右上角小箭頭）：只留上面那一列，家具那一排沉到畫面外；拿著家具時照樣整條滑走（下面那條規則排在後面） */
+#ttHouseBag .tt-hb-fold{display:none}
+html:not(.ttm-game) #ttHouseBag .tt-hb-fold{display:grid;place-items:center;width:34px;padding:0;border:3px solid var(--sk-ink,#1C2156);border-radius:12px;background:#fff;color:var(--sk-ink,#1C2156);cursor:pointer;box-shadow:0 3px 0 var(--sk-ink,#1C2156)}
+#ttHouseBag .tt-hb-fold svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+#ttHouseBag .tt-hb-fold:hover{background:#FFF0F6}
+#ttHouseBag .tt-hb-fold:active{transform:translateY(2px);box-shadow:0 1px 0 var(--sk-ink,#1C2156)}
+body.tt-house-fold #ttHouseBag .tt-hb-fold svg{transform:rotate(180deg)}
+html:not(.ttm-game) body.tt-house-fold #ttHouseBag{transform:translateY(var(--tt-hb-fold,170px))}
+html:not(.ttm-game) body.tt-house-fold #ttHouseKeys.edit{bottom:66px}
+html:not(.ttm-game) body.tt-house-hold #ttHouseBag{transform:translateY(calc(100% + 30px));pointer-events:none}
+html:not(.ttm-game) body.tt-house-hold #ttHouseKeys.edit{bottom:14px}
+@media (prefers-reduced-motion:reduce){html:not(.ttm-game) #ttHouseBag,html:not(.ttm-game) #ttHouseKeys.edit,#ttHouseBag .tt-hb-fold svg{transition:none}}
